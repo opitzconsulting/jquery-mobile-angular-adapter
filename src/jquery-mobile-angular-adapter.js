@@ -140,7 +140,7 @@
      * - transition (optional): Transition to be used.
      * - reverse (optional): If the transition should be executed in reverse style
      */
-    angular.service('$pageLocation', function() {
+    angular.service('$activePage', function() {
         return function() {
             if (arguments.length==0) {
                var currPage = $.mobile.activePage;

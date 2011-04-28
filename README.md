@@ -4,13 +4,13 @@ JQuery Mobile Angular Adapter
 Description
 -------------
 
-Integration between jQuery Mobile and angular.js. Needed as jQuery Mobile
+Integration between jquery mobile and angular.js. Needed as jquery mobile
 enhances the pages with new elements and styles and so does angular.
 
-Ensures that angular enhances a page right after jQuery Mobile has finished enhancing the page.
+Ensures that angular enhances a page right after jquery mobile has finished enhancing the page.
 By this, all elements have the correct styles, and angular can take them
 and modify them (e.g. copy rows for lists, ...). This ordering is also needed as
-jQuery Mobile only enhances pages when they are navigated to, and not
+jquery mobile only enhances pages when they are navigated to, and not
 all at once (as angular does in autoinit mode).
 
 Furthermore automatically refreshs the jquery mobile widgets when the corresponding
@@ -20,7 +20,7 @@ and if someone changes it's value programmatically, the refresh-function needs t
 The integration between jquery mobile and angular watches for such changes in the model
 and automatically calls the refresh function.
 
-Finally provides a templating mechanism, so that jqurey mobile can style elements in advance,
+Finally provides a templating mechanism, so that jquery mobile can style elements in advance,
 that may be used later by angular for dynamic component changes. This is similar to the switch
 statement in angular. However, jquery mobile does not always allow an extra nesting of elements
 into custom elements. E.g. if there should be two templates for an li element,
@@ -51,6 +51,10 @@ Also creates a global scope to provide communication between the different page 
 If a controller named `MainController` exists it will become the controller
 for the global scope.
 
+The global scope can be access via the function `$.mobile.globalScope`:
+If no parameter is supplied this returns the current global scope.
+If a parameter is supplied this will set the current global scope.
+
 
 
 Tags, Directives and Services
@@ -63,7 +67,7 @@ all jquery mobile navigation actions.
 Usage: E.g. `<a href="#" ngm:click="myFn()">`
 
 
-### Service $pageLocation
+### Service $activePage
 Service to access and change the current page.
 A call without parameters returns the current page id, a call with parameters
 changes the current page.
@@ -73,12 +77,7 @@ Parameters (see $.mobile.changePage)
 - transition (optional): Transition to be used.
 - reverse (optional): If the transition should be executed in reverse style
 
-Usage: E.g. `$pageLocation('page2')
-
-### Function $.mobile.globalScope
-Helper function to access the global scope.
-If no parameter is supplied this returns the current global scope.
-If a parameter is supplied this will set the current global scope.
+Usage: E.g. `$activePage('page2')`
 
 
 Templating
@@ -96,22 +95,19 @@ The template name is stored in the variable personTemplate. By changing this
 variable in the controller, is is possible to switch between the two layouts.
 
 
-				<ul data-role="listview" data-inset="true" data-theme="c">
-                    <li ngm:define="personReadonly">
-						<a href="#person">
-							{{person.name}}</a>
-                    </li>
-					<li ngm:define="personEdit">
-						<a href="#person">
-							{{person.name}}</a>
-						<a href="" data-icon="delete" ng:mclick="deletePerson(person)" ngm:fadein="700"></a>
-					</li>
-					<li ng:repeat="person in personList"
-						ngm:use="personTemplate">
-                    </li>
-                </ul>
+    <ul data-role="listview" data-inset="true" data-theme="c">
+        <li ngm:define="personReadonly">
+		    <a href="#person">{{person.name}}</a>
+        </li>
+        <li ngm:define="personEdit">
+            <a href="#person">{{person.name}}</a>
+            <a href="" data-icon="delete" ng:mclick="deletePerson(person)" ngm:fadein="700"></a>
+        </li>
+        <li ng:repeat="person in personList" ngm:use="personTemplate">
+        </li>
+    </ul>
 
 
 For smooth fadings between template changes, there is also the directive `ngm:fadein`.
-This specifies that the display of the coresponding element (in the delete button in the example)
+This specifies that the display of the coresponding element (the delete button in the example)
 should be done via a transition lasting a defined amount of milliseconds (the value of the attribute).

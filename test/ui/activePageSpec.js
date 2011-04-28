@@ -1,4 +1,4 @@
-describe("pageLocation", function() {
+describe("activePage", function() {
 	var compile, element, scope;
 
 	beforeEach(function() {
@@ -18,24 +18,24 @@ describe("pageLocation", function() {
         loadHtml('/jqmng/test/ui/test-fixture.html');
         runs(function() {
             var scope = frame().$.mobile.globalScope();
-            var pageLocation = scope.$service("$pageLocation");
-            expect(pageLocation()).toEqual("start");
+            var activePage = scope.$service("$activePage");
+            expect(activePage()).toEqual("start");
         });
 
     });
 
     it('should be able to change to page', function() {
-        var pageLocation;
+        var activePage;
         loadHtml('/jqmng/test/ui/test-fixture.html');
         runs(function() {
             var scope = frame().$.mobile.globalScope();
-            pageLocation = scope.$service("$pageLocation");
-            expect(pageLocation()).toEqual("start");
-            pageLocation("page2");
+            activePage = scope.$service("$activePage");
+            expect(activePage()).toEqual("start");
+            activePage("page2");
         });
         waitsForAsync();
         runs(function() {
-            expect(pageLocation()).toEqual("page2");
+            expect(activePage()).toEqual("page2");
         });
 
     });

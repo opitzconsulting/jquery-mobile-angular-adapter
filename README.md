@@ -83,8 +83,8 @@ Usage: E.g. `$activePage('page2')`
 Templating
 -----------
 Templates can be defined using the attribute `ngm:define` and referenced by the attribute
-`ngm:use`. The value of the `ngm:define` defines the template name that should be defined.
-The value of the `ngm:use` attribute defines an expression that returns the template name
+`ngm:switch`. The value of the `ngm:define` defines the template name that should be defined.
+The value of the `ngm:switch` attribute defines an expression that returns the template name
 to be inserted. This expression is watched, so whenever the expression changes,
 the corresponding template is used.
 
@@ -103,7 +103,7 @@ variable in the controller, is is possible to switch between the two layouts.
             <a href="#person">{{person.name}}</a>
             <a href="" data-icon="delete" ng:mclick="deletePerson(person)" ngm:fadein="700"></a>
         </li>
-        <li ng:repeat="person in personList" ngm:use="personTemplate">
+        <li ng:repeat="person in personList" ngm:switch="personTemplate">
         </li>
     </ul>
 

@@ -12,7 +12,7 @@ describe("templating", function(){
 	  });
 
     it('should copy attributes and content', function() {
-        var element = angular.element('<div><span ngm:define="tpl1" a1="v1">sp1</span><span ngm:use="\'tpl1\'"></span></div>');
+        var element = angular.element('<div><span ngm:define="tpl1" a1="v1">sp1</span><span ngm:switch="\'tpl1\'"></span></div>');
         var spans = element.children("span"); 
         var span1 = angular.element(spans[0]);
         var span2 = angular.element(spans[1]);
@@ -27,7 +27,7 @@ describe("templating", function(){
     });
 
     it('should watch the template id', function() {
-        var element = angular.element('<div><span ngm:define="tpl1">sp1</span><span ngm:define="tpl2">sp2</span><span ngm:use="tplId">noop</span></div>');
+        var element = angular.element('<div><span ngm:define="tpl1">sp1</span><span ngm:define="tpl2">sp2</span><span ngm:switch="tplId">noop</span></div>');
         compile(element);
         // initially, the variable for the template is undefined,
         // so the span should be hidden
@@ -44,7 +44,7 @@ describe("templating", function(){
     });
     
     it('should work with ng:repeat', function() {
-        var element = angular.element('<div ng:init="objs=[{name:\'aaa\'},{name:\'bbb\'}]"><span ngm:define="tpl1" a="v1">1{{obj.name}}</span><span ngm:define="tpl2" a="v2">2{{obj.name}}</span><span ng:repeat="obj in objs" ngm:use="tplId"></span></div>');
+        var element = angular.element('<div ng:init="objs=[{name:\'aaa\'},{name:\'bbb\'}]"><span ngm:define="tpl1" a="v1">1{{obj.name}}</span><span ngm:define="tpl2" a="v2">2{{obj.name}}</span><span ng:repeat="obj in objs" ngm:switch="tplId"></span></div>');
         compile(element);
         var spans = element.children("span");
         expect(spans.length).toEqual(4);

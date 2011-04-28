@@ -197,7 +197,7 @@
     });
 
 	/**
-	 * Defines a template to be used later by {@ngm:use}. The value of the
+	 * Defines a template to be used later by {@ngm:switch}. The value of the
 	 * attribute is the template id.
 	 */
 	angular.widget("@ngm:define", function(expression, element) {
@@ -222,9 +222,9 @@
 	 * that evaluates to a template id defined by {@ngm:define}. When the expression
 	 * changes, the template also changes.
 	 */
-	angular.widget("@ngm:use", function(expression, element) {
+	angular.widget("@ngm:switch", function(expression, element) {
 		var compiler = this;
-		element.removeAttr('ngm:use');
+		element.removeAttr('ngm:switch');
 		return function(element) {
 			var scope = this;
 

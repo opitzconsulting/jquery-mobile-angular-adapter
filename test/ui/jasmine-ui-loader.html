@@ -1,0 +1,78 @@
+<html>
+<head>
+<script type="text/javascript">
+(function() {
+    // Callback
+    if (parent.beforeFramecontent) {
+    	parent.beforeFramecontent();
+    }
+    
+	var pageUrl, username, password, pageText;
+    function readParams() {
+    	pageUrl = param("url");
+    	username = param("username");
+    	password = param("password");
+	};
+    
+    function param(name){
+	  var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
+	  if (!results) { return undefined; }
+	  return decodeURIComponent(results[1].replace(/\+/g, " ")) || undefined;
+	};
+	
+	function loadPage() {
+		var xmlhttp;
+		if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
+			xmlhttp = new XMLHttpRequest();
+		} else {// code for IE6, IE5
+			xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		}
+		if (username) {
+			console.log("BASIC authentication: "+username+" "+password);
+			xmlhttp.open("GET", pageUrl, false, username, password);
+		} else {
+			xmlhttp.open("GET", pageUrl, false);
+		}
+		xmlhttp.send();
+		var status = xmlhttp.status;
+		if (status!=200) {
+			throw "Error during loading page "+pageUrl+": "+xmlhttp.statusText;
+		}
+		pageText = xmlhttp.responseText;
+	};
+	
+	function parsePage() {
+		var regex = /<head>((?:.|\n|\r)*)<\/head>[^<>]*(?:<body[^>]*>((?:.|\n|\r)*)<\/body>)?/i;
+		var match = regex.exec(pageText);
+		window.pageHead = match[1];
+		window.pageBody = match[2];
+	}
+	
+	readParams();
+	loadPage();
+	parsePage();
+	
+	document.write(pageHead);
+})();
+</script>
+</head>
+<body>
+	<script type="text/javascript">
+	if (pageBody) {
+		document.write(pageBody);
+	}
+    // Callback
+    if (parent.afterFramecontent) {
+    	parent.afterFramecontent();
+    }
+    // install onload callback...
+    if (parent.frameReady) {
+		if ( document.addEventListener ) {
+			window.addEventListener( "load", parent.frameReady, false );
+		} else {
+			window.attachEvent( "onload", parent.frameReady );
+		}
+    };
+	</script>
+</body>
+</html>

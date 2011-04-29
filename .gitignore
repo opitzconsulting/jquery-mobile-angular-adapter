@@ -3,5 +3,8 @@
 # Ignore target
 target
 
-# Ignore workspace
+# Ignore IDEA files
+.idea
+*.iml
+*.ipr
 *.iws

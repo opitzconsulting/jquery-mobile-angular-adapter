@@ -1,110 +1,177 @@
 /**
- * The MIT License
- *
- * Copyright (c) 2011 Tobias Bosch (OPITZ CONSULTING GmbH, www.opitz-consulting.com)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * @fileoverview Jasmine JsTestDriver Adapter.
+ * @author misko@hevery.com (Misko Hevery)
  */
-/**
- * @fileoverview Jasmine Async JsTestDriver Adapter.
- * Adapted from an old version of
- * https://github.com/angular/angular.js/blob/master/lib/jasmine-jstd-adapter/JasmineAdapter.js
- * written by ibolmo@gmail.com (Olmo Maldonado) and misko@hevery.com (Misko Hevery)
- * @author tobias.bosch@opitz-consulting.com (Tobias Bosch)
- */
+(function(window) {
+  var rootDescribes = new Describes(window);
+  var describePath = [];
+  rootDescribes.collectMode();
 
-(function(describe, it, beforeEach, afterEach, addResult){
+  var jasmineTest = TestCase('Jasmine Adapter Tests', null, 'jasmine test case');
 
-var frame = function(parent, name){
-	var caseName = '';
-	if (parent && parent.caseName) caseName = parent.caseName + ' ';
-	if (name) caseName += name;
+  var jasminePlugin = {
+      name:'jasmine',
+      runTestConfiguration: function(testRunConfiguration, onTestDone, onTestRunConfigurationComplete){
+        if (testRunConfiguration.testCaseInfo_.template_ !== jasmineTest) return;
 
-	var before = [],
-		after = [];
+        var jasmineEnv = jasmine.currentEnv_ = new jasmine.Env();
+        rootDescribes.playback();
+        var specLog = jstestdriver.console.log_ = [];
+        var start;
+        jasmineEnv.specFilter = function(spec) {
+          return rootDescribes.isExclusive(spec);
+        };
+        jasmineEnv.reporter = {
+          log: function(str){
+            specLog.push(str);
+          },
 
-	return {
-		name: name,
-		caseName: caseName,
-		parent: parent,
-		testCase: AsyncTestCase(caseName),
-		before: before,
-		after: after,
-		runBefore: function(){
-			if (parent) parent.runBefore.apply(this);
-			for (var i = 0, l = before.length; i < l; i++) before[i].apply(this);
-		},
-		runAfter: function(){
-			for (var i = 0, l = after.length; i < l; i++) after[i].apply(this);
-			if (parent) parent.runAfter.apply(this);
-		}
-	};
-};
+          reportRunnerStarting: function(runner) { },
 
-var currentFrame = frame(null, null);
+          reportSpecStarting: function(spec) {
+            specLog = jstestdriver.console.log_ = [];
+            start = new Date().getTime();
+          },
 
-jasmine.Env.prototype.describe = function(description, context){
-	currentFrame = frame(currentFrame, description);
-	var result = describe.call(this, description, context);
-	currentFrame = currentFrame.parent;
-	return result;
-};
-  
-jasmine.Env.prototype.it = function(description, closure){
-	var result = it.call(this, description, closure),
-		currentSpec = this.currentSpec,
-		frame = this.jstdFrame = currentFrame,
-		name = 'test that it ' + description;
-
-	if (this.jstdFrame.testCase.prototype[name])
-		throw "Spec with name '" + description + "' already exists.";
-	
-	this.jstdFrame.testCase.prototype[name] = function(queue){
-		jasmine.getEnv().currentSpec = currentSpec;
-		jasmine.getEnv().exceptions = [];
-		jasmine.getEnv().errors = [];
-		frame.runBefore.apply(currentSpec);
-		var onend = function() {
-			frame.runAfter.apply(currentSpec);
-			// check the results...
-			var resultItems = currentSpec.results().getItems();
-			var messages = [];
-			for ( var i = 0; i < resultItems.length; i++) {
-	              if (!resultItems[i].passed()) {
-	            	  if (resultItems[i].trace) {
-	            		  throw resultItems[i].trace;
-	            	  } else {
-	            		  fail(resultItems[i].toString());
-	            	  }
-	              }
+          reportSpecResults: function(spec) {
+            var suite = spec.suite;
+            var results = spec.results();
+            if (results.skipped) return;
+            var end = new Date().getTime();
+            var messages = [];
+            var resultItems = results.getItems();
+            var state = 'passed';
+            for ( var i = 0; i < resultItems.length; i++) {
+              if (!resultItems[i].passed()) {
+                state = resultItems[i].message.match(/AssertionError:/) ? 'error' : 'failed';
+                messages.push({
+                  message: resultItems[i].toString(),
+                  name: resultItems[i].trace.name,
+                  stack: formatStack(resultItems[i].trace.stack)
+              });
+              }
             }
-			
-		};
-		queue.call(function(callbacks) {
-			onend = callbacks.add(onend);
-			currentSpec.queue.start(onend);
-		});
-	};
-	return result;
-};
+            onTestDone(
+              new jstestdriver.TestResult(
+                suite.getFullName(),
+                spec.description,
+                state,
+                jstestdriver.angular.toJson(messages),
+                specLog.join('\n'),
+                end - start));
+          },
 
-//Patch Jasmine for proper stack traces
+          reportSuiteResults: function(suite) {},
+
+          reportRunnerResults: function(runner) {
+            onTestRunConfigurationComplete();
+          }
+        };
+        jasmineEnv.execute();
+        return true;
+      },
+      onTestsFinish: function(){
+        jasmine.currentEnv_ = null;
+        rootDescribes.collectMode();
+      }
+  };
+  jstestdriver.pluginRegistrar.register(jasminePlugin);
+
+  function formatStack(stack) {
+    var lines = (stack||'').split(/\r?\n/);
+    var frames = [];
+    for (i = 0; i < lines.length; i++) {
+      if (!lines[i].match(/\/jasmine[\.-]/)) {
+        frames.push(lines[i].replace(/https?:\/\/\w+(:\d+)?\/test\//, '').replace(/^\s*/, '      '));
+      }
+    }
+    return frames.join('\n');
+  }
+
+  function noop(){}
+  function Describes(window){
+    var describes = {};
+    var beforeEachs = {};
+    var afterEachs = {};
+    // Here we store:
+    // 0: everyone runs
+    // 1: run everything under ddescribe
+    // 2: run only iits (ignore ddescribe)
+    var exclusive = 0;
+    var collectMode = true;
+    intercept('describe', describes);
+    intercept('xdescribe', describes);
+    intercept('beforeEach', beforeEachs);
+    intercept('afterEach', afterEachs);
+
+    function intercept(functionName, collection){
+      window[functionName] = function(desc, fn){
+        if (collectMode) {
+          collection[desc] = function(){
+            jasmine.getEnv()[functionName](desc, fn);
+          };
+        } else {
+          jasmine.getEnv()[functionName](desc, fn);
+        }
+      };
+    }
+    window.ddescribe = function(name, fn){
+      if (exclusive < 1) {
+        exclusive = 1; // run ddescribe only
+      }
+      window.describe(name, function(){
+        var oldIt = window.it;
+        window.it = function(name, fn){
+          fn.exclusive = 1; // run anything under ddescribe
+          jasmine.getEnv().it(name, fn);
+        };
+        try {
+          fn.call(this);
+        } finally {
+          window.it = oldIt;
+        };
+      });
+    };
+    window.iit = function(name, fn){
+      exclusive = fn.exclusive = 2; // run only iits
+      jasmine.getEnv().it(name, fn);
+    };
+
+
+    this.collectMode = function() {
+      collectMode = true;
+      exclusive = 0; // run everything
+    };
+    this.playback = function(){
+      collectMode = false;
+      playback(beforeEachs);
+      playback(afterEachs);
+      playback(describes);
+
+      function playback(set) {
+        for ( var name in set) {
+          set[name]();
+        }
+      }
+    };
+
+    this.isExclusive = function(spec) {
+      if (exclusive) {
+        var blocks = spec.queue.blocks;
+        for ( var i = 0; i < blocks.length; i++) {
+          if (blocks[i].func.exclusive >= exclusive) {
+            return true;
+          }
+        }
+        return false;
+      }
+      return true;
+    };
+  }
+
+})(window);
+
+// Patch Jasmine for proper stack traces
 jasmine.Spec.prototype.fail = function (e) {
   var expectationResult = new jasmine.ExpectationResult({
     passed: false,
@@ -116,19 +183,3 @@ jasmine.Spec.prototype.fail = function (e) {
   }
   this.results_.addResult(expectationResult);
 };
-
-jasmine.Env.prototype.beforeEach = function(closure) {
-	beforeEach.call(this, closure);
-	currentFrame.before.push(closure);
-};
-
-jasmine.Env.prototype.afterEach = function(closure) {
-	afterEach.call(this, closure);
-	currentFrame.after.push(closure);
-};
-
-// Reset environment with overriden methods.
-jasmine.currentEnv_ = null;
-jasmine.getEnv();
-
-})(jasmine.Env.prototype.describe, jasmine.Env.prototype.it, jasmine.Env.prototype.beforeEach, jasmine.Env.prototype.afterEach, jasmine.NestedResults.prototype.addResult);

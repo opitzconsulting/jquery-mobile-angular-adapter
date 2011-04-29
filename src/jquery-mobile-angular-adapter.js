@@ -119,7 +119,12 @@
             var res = oldRes.apply(this, arguments);
             var scope = this;
             scope.$watch(name, function(value) {
-                element.selectmenu("refresh");
+                var data = element.data();
+                if (data.selectmenu) {
+                    element.selectmenu("refresh");
+                } else if (data.slider) {
+                    element.slider("refresh");
+                }
             });
             return res;
         }

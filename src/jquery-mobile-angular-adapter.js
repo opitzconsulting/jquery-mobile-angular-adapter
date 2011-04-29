@@ -66,7 +66,8 @@
 		var oldWidgetInstance = $.data(this[0], 'page');
 		var res = oldPage.apply(this, arguments);
 		if (oldWidgetInstance == undefined) {
-			angular.compile(this)(getGlobalScope());
+			var childScope = getGlobalScope().$new();
+            angular.compile(this)(childScope);
 		}
         return res;
 	};
@@ -202,7 +203,6 @@
 	 */
 	angular.widget("@ngm:define", function(expression, element) {
 		element.removeAttr('ngm:define');
-		var compiler = this;
         templates[expression] = element;
 		// hide the element, but do not remove it from the dom,
 		// as otherwise the iteration in angular over the dom

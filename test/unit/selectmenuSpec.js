@@ -22,11 +22,11 @@ describe("selectmenu", function() {
                     '</div>');
             var select = element.find("#mysel");
             expect(select[0].value).toEqual("v1");
-            var globalScope = $.mobile.globalScope();
-            expect(globalScope.$get('mysel')).toEqual("v1");
+            var scope = select.scope();
+            expect(scope.$get('mysel')).toEqual("v1");
             select[0].value = "v2";
             select.change();
-            expect(globalScope.$get('mysel')).toEqual("v2");
+            expect(scope.$get('mysel')).toEqual("v2");
     });
 
     it('should save the model value into the ui', function() {
@@ -36,14 +36,14 @@ describe("selectmenu", function() {
                     '</div>' +
                     '</div>');
             var select = element.find("#mysel2");
-            var globalScope = $.mobile.globalScope();
+            var scope = select.scope();
             expect(select[0].value).toEqual("v1");
             // jquery mobile creates a new span
             // that displays the actual value of the select box.
             var valueSpan = element.find(".ui-btn-text");
             expect(valueSpan.text()).toEqual("v1");
-            globalScope.$set("mysel2", "v2");
-            globalScope.$eval();
+            scope.$set("mysel2", "v2");
+            scope.$eval();
             expect(select[0].value).toEqual("v2");
             valueSpan = element.find(".ui-btn-text");
             expect(valueSpan.text()).toEqual("v2");

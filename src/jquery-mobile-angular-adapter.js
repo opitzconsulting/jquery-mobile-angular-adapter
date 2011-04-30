@@ -24,6 +24,9 @@
 /**
  * Integration between jQuery Mobile and angular.js. Needed as jQuery Mobile
  * enhances the pages with new elements and styles and so does angular.
+ * <p>
+ * Provides the variable $.mobile.inPagePreCompile to detect whether
+ * the page is currently enhances by jquery mobile, but not by angular.
  */
 
 /*
@@ -60,17 +63,40 @@
         }
     };
 
-	// create an own scope for every page when the page is initialized.
-	var oldPage = $.fn.page;
+	// saves the fact whether the original page()
+    // method is currently enhancing the page.
+    $.mobile.inPagePreCompile = false;
+
+	/*
+	 * create an own scope for every page when the page is initialized.
+	 */
+    var recursivePageCall = false;
+    var oldPage = $.fn.page;
 	$.fn.page = function() {
-		var oldWidgetInstance = $.data(this[0], 'page');
-		var res = oldPage.apply(this, arguments);
-		if (oldWidgetInstance == undefined) {
-			var childScope = getGlobalScope().$new();
+		var self = this;
+        function callOrigPage() {
+            var oldPageCompile = $.mobile.inPagePreCompile;
+            $.mobile.inPagePreCompile = true;
+            var res = oldPage.apply(self, arguments);
+            $.mobile.inPagePreCompile = oldPageCompile;
+            return res;
+        }
+        var oldRecursivePageCall = recursivePageCall;
+        recursivePageCall = true;
+        var instanceExists = this.data() && this.data().page;
+        var res = callOrigPage();
+		if (!instanceExists && !oldRecursivePageCall) {
+            // sometime widgets like the selectmenu create
+            // dynamic pages (e.g. for selecting values, ...).
+            // Those pages only contain generic markup,
+            // nothing that angular needs to enhance!
+            var childScope = getGlobalScope().$new();
             angular.compile(this)(childScope);
 		}
+        recursivePageCall = oldRecursivePageCall;
         return res;
 	};
+
 
 	// listen to pageshow and update the angular $location-service.
 	// Prevents an errornous back navigation when navigating to another page.
@@ -105,25 +131,66 @@
 		  linkFn.$inject = ['$updateView'];
 		  return linkFn;
 		});
-	
+
     /*
-     * Need to call refresh on the jquery mobile selectmenu,
-     * when angular changes the data.
-     * For this, we are wrapping the old select widget...
+     * Integration of the slider and selectmenu widget of jquery mobile:
+     * Prevent the normal create call for the widget, and let angular
+     * do the initialization. This is important as angular
+     * might create new elements (e.g. in ng:repeat), and the widgets of jquery mobile
+     * register listeners to elements.
      */
+    $.fn.origSlider = $.fn.slider;
+    $.fn.slider = function() {
+        var instanceExists = this.data() && this.data().slider;
+        if ($.mobile.inPagePreCompile && arguments.length==0 && !instanceExists) {
+            // Prevent initialization during precompile,
+            // and mark the element so that the angular widget
+            // can create the widget!
+            this.attr('mwidget', 'slider');
+            return this;
+        } else {
+            return this.origSlider.apply(this, arguments);
+        }
+    }
+
+    $.fn.origSelectmenu = $.fn.selectmenu;
+    $.fn.selectmenu = function() {
+        var instanceExists = this.data() && this.data().selectmenu;
+        if ($.mobile.inPagePreCompile && arguments.length==0 && !instanceExists) {
+            // Prevent initialization during precompile,
+            // and mark the element so that the angular widget
+            // can create the widget!
+            this.attr('mwidget', 'selectmenu');
+            return this;
+        } else {
+            return this.origSelectmenu.apply(this, arguments);
+        }
+    }
+
     var oldSelect = angular.widget('select');
     angular.widget('select', function(element){
         var name = element.attr('name');
         var oldRes = oldSelect.apply(this, arguments);
         var myRes = function($updateView, $defer, element) {
+            var mwidget = element.attr('mwidget');
+            var created = false;
+            // The current element may not be inserted into the dom correctly yet
+            // (e.g. due to ng:repeat). However, some jquery mobile
+            // widgets like selectmenu
+            // create siblings to the element in the dom, which is only working,
+            // if the element is part of the dom already.
+            // Therefor the creation of the widget is deferred, after the
+            // angular compilation.
+            $defer(function() {
+                element[mwidget]();
+                element[mwidget]('refresh');
+                created = true;
+            });
             var res = oldRes.apply(this, arguments);
             var scope = this;
             scope.$watch(name, function(value) {
-                var data = element.data();
-                if (data.selectmenu) {
-                    element.selectmenu("refresh");
-                } else if (data.slider) {
-                    element.slider("refresh");
+                if (created) {
+                    element[mwidget]('refresh');
                 }
             });
             return res;
@@ -131,6 +198,8 @@
         myRes.$inject = oldRes.$inject;
         return myRes;
     });
+
+
 })(angular);
 
 

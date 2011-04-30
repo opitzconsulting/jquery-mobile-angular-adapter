@@ -1,17 +1,18 @@
 describe("compile integration", function() {
-    var compile, element, scope;
+    var element, scope;
+
+    function compile(html) {
+        // create a jquery mobile page widget. This should
+        // initialize jquery mobile and also angular js!
+        element = $(html);
+        element.page();
+        // get the angularJs scope from the jquery element.
+        scope = element.scope();
+    }
 
     beforeEach(function() {
         element = null;
-        compile = function(html) {
-            // create a jquery mobile page widget. This should
-            // initialize jquery mobile and also angular js!
-            element = $(html);
-            element.page();
-            // get the angularJs scope from the jquery element.
-            scope = element.scope();
-        };
-
+        scope = null;
     });
 
     it('should access and change the global scope via $.mobile.globalScope', function() {

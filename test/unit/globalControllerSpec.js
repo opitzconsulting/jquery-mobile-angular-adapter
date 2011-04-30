@@ -1,18 +1,19 @@
 describe("mainController", function() {
-	var compile, element, scope;
+    var element, scope;
 
-	beforeEach(function() {
-		element = null;
-        compile = function(html) {
-			// create a jquery mobile page widget. This should
-			// initialize jquery mobile and also angular js!
-            element = $(html);
-			element.page();
-			// get the angularJs scope from the jquery element.
-			scope = element.scope();
-		};
+    function compile(html) {
+        // create a jquery mobile page widget. This should
+        // initialize jquery mobile and also angular js!
+        element = $(html);
+        element.page();
+        // get the angularJs scope from the jquery element.
+        scope = element.scope();
+    }
 
-	});
+    beforeEach(function() {
+        element = null;
+        scope = null;
+    });
 
     it('should use the global controller als global scope', function() {
         $.mobile.globalScope(null);

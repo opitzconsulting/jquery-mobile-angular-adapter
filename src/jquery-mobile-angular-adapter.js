@@ -171,10 +171,19 @@
     var oldSelect = angular.widget('select');
     angular.widget('select', function(element){
         var name = element.attr('name');
+        var disabled = element.attr('disabled');
         var oldRes = oldSelect.apply(this, arguments);
         var myRes = function($updateView, $defer, element) {
             var mwidget = element.attr('mwidget');
             var created = false;
+            function updateEnabled(element) {
+                var disabled = element.attr('disabled');
+                if (disabled) {
+                    element[mwidget]('disable');
+                } else {
+                    element[mwidget]('enable');
+                }
+            }
             // The current element may not be inserted into the dom correctly yet
             // (e.g. due to ng:repeat). However, some jquery mobile
             // widgets like selectmenu
@@ -185,6 +194,7 @@
             $defer(function() {
                 element[mwidget]();
                 element[mwidget]('refresh');
+                updateEnabled(element);
                 created = true;
             });
             var res = oldRes.apply(this, arguments);
@@ -192,6 +202,19 @@
             scope.$watch(name, function(value) {
                 if (created) {
                     element[mwidget]('refresh');
+                }
+            });
+            var oldVal;
+            // Detect changes in the disabled attribute.
+            // Needs to be done last in the eval cycle,
+            // as angular sets this attribute.
+            scope.$onEval(Number.MAX_VALUE, function(){
+                var val = element.attr('disabled');
+                if (val!=oldVal) {
+                    oldVal = val;
+                    if (created) {
+                        updateEnabled(element);
+                    }
                 }
             });
             return res;

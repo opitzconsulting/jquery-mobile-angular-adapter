@@ -119,5 +119,30 @@ describe("slider", function() {
         });
 
     });
+
+    it('should use the diabled attribute', function() {
+        loadHtml('/jqmng/test/ui/test-fixture.html');
+        runs(function() {
+            compile('<div id="page1" data-role="page">' +
+                    '<div data-role="content">' +
+                    '<select ng:repeat="item in [1]" name="mysel2" id="mysel2" data-role="slider" disabled="{{disabled}}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                    '</div>' +
+                    '</div>');
+            waitsForAsync();
+            runs(function() {
+                var select = element.find("#mysel2");
+                var scope = select.scope();
+                scope.$set('disabled', false);
+                scope.$eval();
+                var disabled = select.slider('option', 'disabled');
+                expect(disabled).toEqual(false);
+                scope.$set('disabled', true);
+                scope.$eval();
+                var disabled = select.slider('option', 'disabled');
+                expect(disabled).toEqual(true);
+            });
+        });
+
+    })
 });
 

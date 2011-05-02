@@ -73,7 +73,7 @@
     var recursivePageCall = false;
     var oldPage = $.fn.page;
 	$.fn.page = function() {
-		var self = this;
+        var self = this;
         function callOrigPage() {
             var oldPageCompile = $.mobile.inPagePreCompile;
             $.mobile.inPagePreCompile = true;
@@ -94,6 +94,7 @@
             angular.compile(this)(childScope);
 		}
         recursivePageCall = oldRecursivePageCall;
+
         return res;
 	};
 
@@ -112,7 +113,7 @@
 
 
 /*
- * Modification of the angular widgets for the integration with jquery mobile.
+ * Integration of jquery mobile and angular widgets.
  */
 (function(angular) {
 	/* A widget for clicks.
@@ -204,9 +205,32 @@
 
 
 /*
+ * onactiveate and onpassivate callbacks for scopes
+ */
+(function(angular, $) {
+    $('div').live('pagebeforehide',function(event, ui){
+        var currPageScope = $(event.target).scope();
+        var nextPage = ui.nextPage;
+        var nextPageScope = nextPage && nextPage.scope();
+        if (currPageScope.onPassivate) {
+            currPageScope.onPassivate.call(currPageScope, nextPageScope);
+        }
+    });
+
+    $('div').live('pagebeforeshow',function(event, ui){
+        var currPageScope = $(event.target).scope();
+        var prevPage = ui.prevPage;
+        var prevPageScope = prevPage && prevPage.scope();
+        if (currPageScope.onActivate) {
+            currPageScope.onActivate.call(currPageScope, prevPageScope);
+        }
+    });
+})(angular, $);
+
+/*
  * Special angular services for jquery mobile
  */
-(function(angular) {
+(function(angular,window) {
     /*
      * Service for page navigation.
      * A call without parameters returns the current page id.
@@ -236,7 +260,7 @@
         };
     });
 
-})(angular);
+})(angular,window);
 
 
 /*

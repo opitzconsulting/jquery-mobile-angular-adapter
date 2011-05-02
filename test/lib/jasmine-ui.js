@@ -89,21 +89,18 @@ jasmine.asyncwait = {};
         if (!username) {
             username = '';
         }
-        ;
         if (!password) {
             password = '';
         }
-        ;
         return startPath + "jasmine-ui-loader.html?url=" + page + "&username=" + username + "&password=" + password;
     }
 
     function deleteElement(id) {
         var element = document.getElementById(id);
         if (element) {
-            var parent = element.parentElement;
+            var parent = element.parentNode;
             parent.removeChild(element);
         }
-        ;
     }
 
     function createFrameElementInBody(id, url) {

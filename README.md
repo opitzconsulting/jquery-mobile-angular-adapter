@@ -55,6 +55,17 @@ The global scope can be access via the function `$.mobile.globalScope`:
 If no parameter is supplied this returns the current global scope.
 If a parameter is supplied this will set the current global scope.
 
+Callbacks for page changes
+--------------
+On page change, the integration looks for a method named `onPassivate` in the
+current page scope. If the function exists it will
+be called with the scope of the new page as parameter.
+Afterwards, the function `onActivate` is searched for on the new scope
+and called with the old scope as parameter. By this, pages can commuicate with each other
+very easily.
+
+Note that for creating a function in a scope just assign a controller for that page,
+e.g. `<div data-role="page" ng:controller="MyController">`.
 
 
 Tags, Directives and Services
@@ -111,3 +122,34 @@ variable in the controller, is is possible to switch between the two layouts.
 For smooth fadings between template changes, there is also the directive `ngm:fadein`.
 This specifies that the display of the coresponding element (the delete button in the example)
 should be done via a transition lasting a defined amount of milliseconds (the value of the attribute).
+
+
+
+Modularization
+---------------
+To modularize an angular jquery mobile application, use the following schema:
+
+- For every jquery mobile page one JS-file with a controller for that page.
+  To communicate with the controllers of other pages use the
+  `onActivate` and `onPassivate` functions (see above). Usually, the `GlobalController` should
+  not be needed.
+- For every jquery mobile page one HTML-file that only contains
+  the div with the jquery mobile page and the `ng:controller` attribute for the controller.
+  However, due to the page loading in jquery mobile, this cannot contain any css nor JS links.
+  See the jquery mobile documentation for further details about loading external pages.
+  E.g.
+
+
+    <html>
+        <body>
+            <div id="mypage" data-role="page" ng:controller="MyPageController">
+            ...
+            </div>
+        </body>
+    </html>
+
+
+- One `index.html` that includes the libraries and all CSS files
+
+Note that the links between the pages should have the following form: `<a href="#mypage.html">`.
+

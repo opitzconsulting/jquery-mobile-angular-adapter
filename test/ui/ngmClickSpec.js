@@ -43,7 +43,25 @@ describe("ngmClick", function() {
         });
     });
 
-    it('should stop the default jquery mobile navigation if used', function() {
+    it('should stop the default jquery mobile navigation if used with click', function() {
+        loadHtml('/jqmng/test/ui/test-fixture.html');
+        runs(function() {
+            compile('<div id="page1" data-role="page">' +
+                    '<div data-role="content"><a id="mylink" href="#start" ngm:click="clicked=true"' +
+                    '</div>');
+            var link = element.find("#mylink");
+            expect(frame().document.location.hash).toEqual("");
+            var evt = frame().document.createEvent('MouseEvents');
+            evt.initMouseEvent('click', true, true, null, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+            link[0].dispatchEvent(evt);
+        });
+        waitsForAsync();
+        runs(function() {
+            expect(frame().document.location.hash).toEqual("");
+        });
+    });
+
+    it('should stop the default jquery mobile navigation if used with vclick', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html');
         runs(function() {
             compile('<div id="page1" data-role="page">' +
@@ -58,5 +76,4 @@ describe("ngmClick", function() {
             expect(frame().document.location.hash).toEqual("");
         });
     });
-
 });

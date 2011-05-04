@@ -50,26 +50,22 @@ describe("activatePassivateSpec", function() {
 
 
     it('should call onActivate when the page is initially shown', function() {
-        loadHtml('/jqmng/test/ui/test-fixture.html');
-        instrumentHtml(instrumentPage);
+        loadHtml('/jqmng/test/ui/test-fixture.html', instrumentPage);
         runs(function() {
             expect(activateCallCount).toEqual(1);
             expect(activateThis.name).toEqual("StartController");
             expect(activatePrevScope).toEqual(null);
         });
     });
-
     it('should not call onPassivate when the page is initially shown', function() {
-        loadHtml('/jqmng/test/ui/test-fixture.html');
-        instrumentHtml(instrumentPage);
+        loadHtml('/jqmng/test/ui/test-fixture.html',instrumentPage);
         runs(function() {
             expect(passivateCallCount).toEqual(0);
         });
     });
 
     it('should call onActivate when the page is changed', function() {
-        loadHtml('/jqmng/test/ui/test-fixture.html');
-        instrumentHtml(instrumentPage);
+        loadHtml('/jqmng/test/ui/test-fixture.html', instrumentPage);
         runs(function() {
             var startPageScope = frame().$("#start").scope();
             var activePage = startPageScope.$service("$activePage");
@@ -83,8 +79,7 @@ describe("activatePassivateSpec", function() {
     });
 
     it('should call onPassivate when the page is changed', function() {
-        loadHtml('/jqmng/test/ui/test-fixture.html');
-        instrumentHtml(instrumentPage);
+        loadHtml('/jqmng/test/ui/test-fixture.html',instrumentPage);
         runs(function() {
             var startPageScope = frame().$("#start").scope();
             var activePage = startPageScope.$service("$activePage");
@@ -96,7 +91,6 @@ describe("activatePassivateSpec", function() {
             expect(passivateNextScope.name).toEqual("Page2Controller");
         });
     });
-
     // TODO create a test for back navigation.
     // However, this does not work well in iframe, see https://bugs.webkit.org/show_bug.cgi?id=40451
 

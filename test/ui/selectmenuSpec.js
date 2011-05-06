@@ -9,8 +9,8 @@ describe("selectmenu", function() {
         // create a jquery mobile page widget and init it.
         // Note: It is important to add it to the page,
         // as some widget rely on that (e.g. selectmenu).
-        frame().$("body").append(html);
-        element = frame().$("#testpage");
+        testframe().$("body").append(html);
+        element = testframe().$("#testpage");
         element.page();
         // get the angularJs scope from the jquery element.
         scope = element.scope();
@@ -40,7 +40,7 @@ describe("selectmenu", function() {
             // find the menu and click on the second entry
             var popup = element.find(".ui-selectmenu");
             var options = popup.find("li");
-            var option = frame().$(options[1]);
+            var option = testframe().$(options[1]);
             option.trigger('vclick');
             expect(scope.$get('mysel')).toEqual("v2");
         });
@@ -64,7 +64,7 @@ describe("selectmenu", function() {
             // find the menu and click on the second entry
             var popup = element.find(".ui-selectmenu");
             var options = popup.find("li");
-            var option = frame().$(options[1]);
+            var option = testframe().$(options[1]);
             option.trigger('vclick');
             expect(scope.$get('mysel')).toEqual("v2");
         });

@@ -67,7 +67,7 @@ describe("activatePassivateSpec", function() {
     it('should call onActivate when the page is changed', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', instrumentPage);
         runs(function() {
-            var startPageScope = frame().$("#start").scope();
+            var startPageScope = testframe().$("#start").scope();
             var activePage = startPageScope.$service("$activePage");
             reset();
             expect(activateCallCount).toEqual(0);
@@ -81,7 +81,7 @@ describe("activatePassivateSpec", function() {
     it('should call onPassivate when the page is changed', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html',instrumentPage);
         runs(function() {
-            var startPageScope = frame().$("#start").scope();
+            var startPageScope = testframe().$("#start").scope();
             var activePage = startPageScope.$service("$activePage");
             reset();
             expect(passivateCallCount).toEqual(0);

@@ -8,7 +8,7 @@ describe("slider", function() {
     function compile(html) {
         // create a jquery mobile page widget. This should
         // initialize jquery mobile and also angular js!
-        element = frame().$(html);
+        element = testframe().$(html);
         element.page();
         // get the angularJs scope from the jquery element.
         scope = element.scope();

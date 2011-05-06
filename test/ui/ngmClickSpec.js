@@ -2,8 +2,8 @@ describe("ngmClick", function() {
     var element, scope;
 
     function compile(html) {
-        frame().$("body").append(html);
-        element = frame().$("#page1");
+        testframe().$("body").append(html);
+        element = testframe().$("#page1");
         element.page();
         scope = element.scope();
     }
@@ -34,12 +34,12 @@ describe("ngmClick", function() {
                     '<div data-role="content"><a id="mylink" href="#start"' +
                     '</div>');
             var link = element.find("#mylink");
-            expect(frame().document.location.hash).toEqual("");
+            expect(testframe().document.location.hash).toEqual("");
             link.trigger("vclick");
         });
         waitsForAsync();
         runs(function() {
-            expect(frame().document.location.hash).toEqual("#start");
+            expect(testframe().document.location.hash).toEqual("#start");
         });
     });
 
@@ -50,14 +50,14 @@ describe("ngmClick", function() {
                     '<div data-role="content"><a id="mylink" href="#start" ngm:click="clicked=true"' +
                     '</div>');
             var link = element.find("#mylink");
-            expect(frame().document.location.hash).toEqual("");
-            var evt = frame().document.createEvent('MouseEvents');
+            expect(testframe().document.location.hash).toEqual("");
+            var evt = testframe().document.createEvent('MouseEvents');
             evt.initMouseEvent('click', true, true, null, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
             link[0].dispatchEvent(evt);
         });
         waitsForAsync();
         runs(function() {
-            expect(frame().document.location.hash).toEqual("");
+            expect(testframe().document.location.hash).toEqual("");
         });
     });
 
@@ -68,12 +68,12 @@ describe("ngmClick", function() {
                     '<div data-role="content"><a id="mylink" href="#start" ngm:click="clicked=true"' +
                     '</div>');
             var link = element.find("#mylink");
-            expect(frame().document.location.hash).toEqual("");
+            expect(testframe().document.location.hash).toEqual("");
             link.trigger("vclick");
         });
         waitsForAsync();
         runs(function() {
-            expect(frame().document.location.hash).toEqual("");
+            expect(testframe().document.location.hash).toEqual("");
         });
     });
 });

@@ -72,6 +72,7 @@
      */
     var recursivePageCall = false;
     var oldPage = $.fn.page;
+    $.mobile.afterPageCompileQueue = [];
     $.fn.page = function() {
         var self = this;
 
@@ -93,7 +94,15 @@
             // Those pages only contain generic markup,
             // nothing that angular needs to enhance!
             var childScope = getGlobalScope().$new();
+            var queue = [];
+            $.mobile.afterPageCompileQueue = queue;
             angular.compile(this)(childScope);
+            // evaluate the after compile queue
+            queue.reverse();
+            while (queue.length>0) {
+                var entry = queue.pop();
+                entry();
+            }
         }
         recursivePageCall = oldRecursivePageCall;
 
@@ -119,7 +128,8 @@
  */
 (function(angular) {
     /* A widget for clicks.
-     * Just as ng:click. However, also prevents the default action.
+     * Just as ng:click, but reacts to the jquery mobile vclick event, which
+     * includes taps, mousedowns, ...
      */
     angular.directive("ngm:click", function(expression, element) {
         var linkFn = function($updateView, element) {
@@ -127,12 +137,6 @@
             element.bind('vclick', function(event) {
                 var res = self.$tryEval(expression, element);
                 $updateView();
-                event.stopPropagation();
-                event.preventDefault();
-                if (event.originalEvent) {
-                    event.originalEvent.stopPropagation();
-                    event.originalEvent.preventDefault();
-                }
             });
         };
         linkFn.$inject = ['$updateView'];
@@ -174,13 +178,18 @@
         }
     }
 
+
+
     var oldSelect = angular.widget('select');
     angular.widget('select', function(element) {
         var name = element.attr('name');
         var disabled = element.attr('disabled');
         var oldRes = oldSelect.apply(this, arguments);
+        var mwidget = element.attr('mwidget');
+        if (!mwidget) {
+            return oldRes;
+        }
         var myRes = function($updateView, $defer, element) {
-            var mwidget = element.attr('mwidget');
             var created = false;
 
             function updateEnabled(element) {
@@ -199,7 +208,7 @@
             // if the element is part of the dom already.
             // Therefor the creation of the widget is deferred, after the
             // angular compilation.
-            $defer(function() {
+            $.mobile.afterPageCompileQueue.push(function() {
                 element[mwidget]();
                 element[mwidget]('refresh');
                 updateEnabled(element);
@@ -231,6 +240,89 @@
         return myRes;
     });
 
+
+    $.fn.origCheckboxradio = $.fn.checkboxradio;
+    $.fn.checkboxradio = function() {
+        var instanceExists = this.data() && this.data().checkboxradio;
+        if ($.mobile.inPagePreCompile && arguments.length == 0 && !instanceExists) {
+            // Prevent initialization during precompile,
+            // and mark the element so that the angular widget
+            // can create the widget!
+            this.attr('mwidget', 'checkboxradio');
+            return this;
+        } else {
+            var res = this.origCheckboxradio.apply(this, arguments);
+        }
+    }
+
+    var oldInput = angular.widget('input');
+    angular.widget('input', function(element) {
+        var name = element.attr('name');
+        var disabled = element.attr('disabled');
+        var mwidget = element.attr('mwidget');
+        var oldRes = oldInput.apply(this, arguments);
+        if (!mwidget) {
+            return oldRes;
+        }
+        var myRes = function($updateView, $defer, element) {
+            var created = false;
+            function updateEnabled(element) {
+                var disabled = element.attr('disabled');
+                if (disabled) {
+                    element[mwidget]('disable');
+                } else {
+                    element[mwidget]('enable');
+                }
+            }
+
+            // The current element may not be inserted into the dom correctly yet
+            // (e.g. due to ng:repeat). However, some jquery mobile
+            // widgets like chexkboxradio
+            // need the whole dom to work correctly.
+            // Therefor the creation of the widget is deferred, after the
+            // angular compilation.
+            $.mobile.afterPageCompileQueue.push(function() {
+                element[mwidget]();
+                element[mwidget]('refresh');
+                updateEnabled(element);
+                created = true;
+            });
+            // angular usually only binds to the click event.
+            // However, jquery mobile fires the change event
+            // when an entry is clicked.
+            var oldBind = element.bind;
+            element.bind = function() {
+                arguments[0] += " change";
+                return oldBind.apply(this, arguments);
+            }
+            var res = oldRes.apply(this, arguments);
+            var scope = this;
+            // Detect changes from angular
+            scope.$watch(name, function(value) {
+                if (created) {
+                    element[mwidget]('refresh');
+                }
+            });
+            var oldVal;
+            // Detect changes in the disabled attribute.
+            // Needs to be done last in the eval cycle,
+            // as angular sets this attribute, and
+            // we just want to use the result of angular and
+            // then update the ui.
+            scope.$onEval(Number.MAX_VALUE, function() {
+                var val = element.attr('disabled');
+                if (val != oldVal) {
+                    oldVal = val;
+                    if (created) {
+                        updateEnabled(element);
+                    }
+                }
+            });
+            return res;
+        }
+        myRes.$inject = oldRes.$inject;
+        return myRes;
+    });
 
 })(angular);
 

@@ -48,7 +48,7 @@ describe("activatePassivateSpec", function() {
         reset();
     });
 
-
+    /*
     it('should call onActivate when the page is initially shown', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', instrumentPage);
         runs(function() {
@@ -63,6 +63,7 @@ describe("activatePassivateSpec", function() {
             expect(passivateCallCount).toEqual(0);
         });
     });
+    */
 
     it('should call onActivate when the page is changed', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', instrumentPage);
@@ -75,6 +76,9 @@ describe("activatePassivateSpec", function() {
             expect(activateCallCount).toEqual(1);
             expect(activateThis.name).toEqual("Page2Controller");
             expect(activatePrevScope.name).toEqual("StartController");
+        });
+        runs(function() {
+
         });
     });
 
@@ -89,6 +93,9 @@ describe("activatePassivateSpec", function() {
             expect(passivateCallCount).toEqual(1);
             expect(passivateThis.name).toEqual("StartController");
             expect(passivateNextScope.name).toEqual("Page2Controller");
+        });
+        runs(function() {
+
         });
     });
     // TODO create a test for back navigation.

@@ -99,54 +99,6 @@ if(funcsToRun.length>0){funcsToRun.sort(function(a,b){return a.runAtMillis-b.run
 this.runFunctionsWithinRange(oldMillis,nowMillis);}};jasmine.FakeTimer.prototype.scheduleFunction=function(timeoutKey,funcToCall,millis,recurring){this.scheduledFunctions[timeoutKey]={runAtMillis:this.nowMillis+millis,funcToCall:funcToCall,recurring:recurring,timeoutKey:timeoutKey,millis:millis};};jasmine.Clock={defaultFakeTimer:new jasmine.FakeTimer(),reset:function(){jasmine.Clock.assertInstalled();jasmine.Clock.defaultFakeTimer.reset();},tick:function(millis){jasmine.Clock.assertInstalled();jasmine.Clock.defaultFakeTimer.tick(millis);},runFunctionsWithinRange:function(oldMillis,nowMillis){jasmine.Clock.defaultFakeTimer.runFunctionsWithinRange(oldMillis,nowMillis);},scheduleFunction:function(timeoutKey,funcToCall,millis,recurring){jasmine.Clock.defaultFakeTimer.scheduleFunction(timeoutKey,funcToCall,millis,recurring);},useMock:function(){if(!jasmine.Clock.isInstalled()){var spec=jasmine.getEnv().currentSpec;spec.after(jasmine.Clock.uninstallMock);jasmine.Clock.installMock();}},installMock:function(){jasmine.Clock.installed=jasmine.Clock.defaultFakeTimer;},uninstallMock:function(){jasmine.Clock.assertInstalled();jasmine.Clock.installed=jasmine.Clock.real;},real:{setTimeout:jasmine.getGlobal().setTimeout,clearTimeout:jasmine.getGlobal().clearTimeout,setInterval:jasmine.getGlobal().setInterval,clearInterval:jasmine.getGlobal().clearInterval},assertInstalled:function(){if(!jasmine.Clock.isInstalled()){throw new Error("Mock clock is not installed, use jasmine.Clock.useMock()");}},isInstalled:function(){return jasmine.Clock.installed==jasmine.Clock.defaultFakeTimer;},installed:null};jasmine.Clock.installed=jasmine.Clock.real;jasmine.getGlobal().setTimeout=function(funcToCall,millis){if(jasmine.Clock.installed.setTimeout.apply){return jasmine.Clock.installed.setTimeout.apply(this,arguments);}else{return jasmine.Clock.installed.setTimeout(funcToCall,millis);}};jasmine.getGlobal().setInterval=function(funcToCall,millis){if(jasmine.Clock.installed.setInterval.apply){return jasmine.Clock.installed.setInterval.apply(this,arguments);}else{return jasmine.Clock.installed.setInterval(funcToCall,millis);}};jasmine.getGlobal().clearTimeout=function(timeoutKey){if(jasmine.Clock.installed.clearTimeout.apply){return jasmine.Clock.installed.clearTimeout.apply(this,arguments);}else{return jasmine.Clock.installed.clearTimeout(timeoutKey);}};jasmine.getGlobal().clearInterval=function(timeoutKey){if(jasmine.Clock.installed.clearTimeout.apply){return jasmine.Clock.installed.clearInterval.apply(this,arguments);}else{return jasmine.Clock.installed.clearInterval(timeoutKey);}};jasmine.version_={"major":1,"minor":0,"build":2,"revision":1298837858};
     </script>
 
-    <!-- Minified jasmine-ui.js -->
-<script type="text/javascript">
-<!--
-var loadHtml=function(url,username,password){jasmine.getEnv().currentSpec.loadHtml.apply(jasmine.getEnv().currentSpec,arguments);};var waitsForAsync=function(timeout){jasmine.getEnv().currentSpec.waitsForAsync.apply(jasmine.getEnv().currentSpec,arguments);};jasmine.ui={};jasmine.ui.log=function(msg){};(function(window){var frameObject=null;var lastFrameId=0;function newFrameId(){return"jasmineui"+(lastFrameId++);}
-function hideElement(id){var element=document.getElementById(id);if(element){element.style.display='none';}}
-function createFrameElementInBody(id){var frameElement=document.createElement('iframe');frameElement.id=id;frameElement.name=id;frameElement.style.width='100%';frameElement.style.height='100%';var body=document.getElementsByTagName('body')[0];body.appendChild(frameElement);}
-window.testframe=function(reset){if(reset){if(frameObject){hideElement(frameObject.name);}
-var frameId=newFrameId();createFrameElementInBody(frameId);frameObject=window[frameId];}
-return frameObject;};})(window);jasmine.ui.wait={};(function(jasmine,window){var finishedFunctions={};function getLoadUrl(pageUrl,username,password){var lastSlash=pageUrl.lastIndexOf('/');var startPath='';var page='';if(lastSlash!=-1){startPath=pageUrl.substring(0,lastSlash+1);page=pageUrl.substring(lastSlash+1);}else{startPath='';page=pageUrl;}
-if(!username){username='';}
-if(!password){password='';}
-return startPath+"jasmine-ui-loader.html?url="+page+"&username="+username+"&password="+password;}
-jasmine.Spec.prototype.loadHtml=function(url,instrumentCallback,username,password){finishedFunctions={};var spec=this;var error=null;var ready=false;function initAsyncWait(callTime){for(var fnname in jasmine.ui.wait){var fn=jasmine.ui.wait[fnname];var callback=fn(testframe(),callTime);if(callback){finishedFunctions[fnname]=callback;}}}
-window.beforeFramecontent=function(){try{jasmine.ui.log('instrument before content');jasmine.ui.fixHashLinksForBaseTag(testframe());initAsyncWait("beforeContent");}catch(ex){error=ex;}};window.afterFramecontent=function(){try{jasmine.ui.log('instrument after content');initAsyncWait("afterContent");if(instrumentCallback){instrumentCallback(testframe());}}catch(ex){error=ex;}};window.frameReady=function(){jasmine.ui.log("ready");ready=true;};jasmine.ui.log(url);var pageText,pageHead,pageBody;function loadPage(pageUrl){var xmlhttp=new XMLHttpRequest();if(username){jasmine.ui.log("Authentication: "+username+" "+password);xmlhttp.open("GET",pageUrl,false,username,password);}else{xmlhttp.open("GET",pageUrl,false);}
-xmlhttp.send();var status=xmlhttp.status;if(status!=200){error="Error during loading page "+pageUrl+": "+xmlhttp.statusText;}else{pageText=xmlhttp.responseText;}}
-function parsePage(){var regex=/<head>((?:.|\n|\r)*)<\/head>[^<>]*(?:<body[^>]*>((?:.|\n|\r)*)<\/body>)?/i;var match=regex.exec(pageText);pageHead=match[1];pageBody=match[2];}
-function getBaseUrl(url){var protocolIndex=url.indexOf("://");if(protocolIndex==-1){url=document.location.protocol+"//"+document.location.host+url;}
-return url;}
-function writeFrame(){var doc=testframe(true).document;doc.open();doc.write('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">');doc.write('<html>');doc.write('<head>');doc.write('<base href="');doc.write(getBaseUrl(url));doc.write('">');doc.write('<script type="text/javascript">parent.beforeFramecontent();</script>');doc.write(pageHead);doc.write('</head><body>');doc.write(pageBody);doc.write('<script type="text/javascript">');doc.write('parent.afterFramecontent();');doc.write('if ( document.addEventListener ) {');doc.write('  window.addEventListener( "load", parent.frameReady, false );');doc.write('} else {');doc.write('  window.attachEvent( "onload", parent.frameReady );');doc.write('}');doc.write('</script>');doc.write('</body></html>');doc.close();}
-loadPage(url);if(!error){parsePage();writeFrame();}
-this.waitsFor(function(){return ready||error;},"Loading url "+url,20000);this.runs(function(){if(error){jasmine.ui.log("Error during loading url "+url+" "+error);throw error;}else{jasmine.ui.log("Successfully loaded url "+url);}});this.waitsForAsync();};jasmine.Spec.prototype.waitsForAsync=function(timeout){if(!timeout){timeout=5000;}
-jasmine.ui.log("begin waiting for async");this.waits(50);this.waitsFor(function(){var finished=true;for(var name in finishedFunctions){if(!finishedFunctions[name]()){jasmine.ui.log("async waiting for "+name);return false;}}
-jasmine.ui.log("end waiting for async");return true;},"Waiting for end of async work",timeout);};})(jasmine,window);(function(jasmine){jasmine.ui.fixHashLinksForBaseTag=function(window,baseUrl){if(window.addEventListener){window.document.addEventListener('click',function(event){correctAnchorHref(event);},true);}
-if(window.Element.prototype.attachEvent){var oldAttachEvent=window.Element.prototype.attachEvent;window.Element.prototype.attachEvent=function(eventName,fn){var wrappedFn=function(event){correctAnchorHref(event);return fn.apply(this,arguments);};return oldAttachEvent.call(this,eventName,wrappedFn);}
-window.document.attachEvent('onclick',function(event){correctAnchorHref(event);});}
-function correctAnchorHref(event){var element=event.target;if(!element){element=event.srcElement;}
-var anchor=findAnchorInParents(element);if(anchor){mapHrefToDocumentLocation(anchor);}}
-function findAnchorInParents(element){if(element==null){return null;}else if(element.nodeName.toUpperCase()=='A'){return element;}else{return findAnchorInParents(element.parentNode);}}
-function mapHrefToDocumentLocation(anchor){var href=anchor.href;var hashPos=href.indexOf('#');if(hashPos!=-1){var path=href.substring(0,hashPos);if(path==baseUrl){var hash=href.substring(hashPos);var loc=document.location;var docPath=loc.protocol+"//"+loc.host+loc.pathname;anchor.href=docPath+hash;}}}};})(jasmine);(function(){jasmine.ui.wait.instrumentTimeout=function(window,callTime){if(callTime!='beforeContent'){return null;}
-var timeouts={};window.oldTimeout=window.setTimeout;window.setTimeout=function(fn,time){jasmine.ui.log("setTimeout called");var handle;var callback=function(){delete timeouts[handle];jasmine.ui.log("timed out");if(typeof fn=='string'){eval(fn);}else{fn();}};handle=window.oldTimeout(callback,time);timeouts[handle]=true;return handle;};window.oldClearTimeout=window.clearTimeout;window.clearTimeout=function(code){jasmine.ui.log("clearTimeout called");window.oldClearTimeout(code);delete timeouts[code];};return function(){var count=0;for(var x in timeouts){count++;}
-return count==0;};};})();(function(){jasmine.ui.wait.instrumentInterval=function(window,callTime){if(callTime!='beforeContent'){return null;}
-var intervals={};window.oldSetInterval=window.setInterval;window.setInterval=function(fn,time){jasmine.ui.log("setInterval called");var callback=function(){if(typeof fn=='string'){eval(fn);}else{fn();}};var res=window.oldSetInterval(callback,time);intervals[res]='true';return res;};window.oldClearInterval=window.clearInterval;window.clearInterval=function(code){jasmine.ui.log("clearInterval called");window.oldClearInterval(code);delete intervals[code];};return function(){var count=0;for(var x in intervals){count++;}
-return count==0;};};})();(function(jasmine){jasmine.ui.wait.instrumentXhr=function(window,callTime){if(callTime!='beforeContent'){return null;}
-var copyStateFields=['readyState','responseText','responseXML','status','statusText'];var proxyMethods=['abort','getAllResponseHeaders','getResponseHader','open','send','setRequestHeader'];var oldXHR=window.XMLHttpRequest;var openCallCount=0;var DONE=4;window.XMLHttpRequest=function(){this.origin=new oldXHR();var self=this;function copyState(){for(var i=0;i<copyStateFields.length;i++){var field=copyStateFields[i];try{self[field]=self.origin[field];}catch(_){}}}
-function proxyMethod(name){self[name]=function(){if(name=='send'){openCallCount++;}
-var res=self.origin[name].apply(self.origin,arguments);copyState();return res;}}
-for(var i=0;i<proxyMethods.length;i++){proxyMethod(proxyMethods[i]);}
-this.origin.onreadystatechange=function(){if(self.origin.readyState==DONE){openCallCount--;}
-copyState();if(self.onreadystatechange){self.onreadystatechange.apply(self,arguments);}};copyState();};return function(){return openCallCount==0;}}})(jasmine);(function(){var ignoredAnimations={};var animationCount=0;jasmine.ui.ignoreAnimation=function(animName){ignoredAnimations[animName]=true;}
-jasmine.ui.wait.instrumentAnimation=function(window,callTime){if(callTime!='beforeContent'){return null;}
-if(!window.WebKitAnimationEvent){return;}
-var animationElements={};window.document.addEventListener('webkitAnimationStart',function(event){var animName=event.animationName;if(!ignoredAnimations[animName]){animationCount++;}
-jasmine.ui.log("Started animation "+animName);},true);window.document.addEventListener('webkitAnimationEnd',function(event){var animName=event.animationName;if(!ignoredAnimations[animName]){animationCount--;}
-jasmine.ui.log("Stopped animation "+animName);},true);return function(){var elements=[];for(var el in animationElements){elements.push(el);}
-return animationCount==0;};};})();
--->
-</script>
-
     <!-- Minified jasmine-html.js -->
     <script type="text/javascript">
 jasmine.TrivialReporter=function(doc){this.document=doc||document;this.suiteDivs={};this.logRunningSpecs=false;};jasmine.TrivialReporter.prototype.createDom=function(type,attrs,childrenVarArgs){var el=document.createElement(type);for(var i=2;i<arguments.length;i++){var child=arguments[i];if(typeof child==='string'){el.appendChild(document.createTextNode(child));}else{if(child){el.appendChild(child);}}}
@@ -166,11 +118,15 @@ if(!paramMap["spec"])return true;return spec.getFullName().indexOf(paramMap["spe
      #### ADD YOUR LIBS AND SPECS HERE ###############################################################
      ################################################################################################# -->
     <!-- include lib files here... -->
-    <script type="text/javascript" src="ui/activatePassivateSpec.js"></script>
-    <script type="text/javascript" src="ui/activePageSpec.js"></script>
-    <script type="text/javascript" src="ui/ngmClickSpec.js"></script>
+    <script type="text/javascript" src="lib/jasmine-ui.js"></script>
+    <!-- include spec files here... -->
+    <script type="text/javascript" src="ui/checkBoxSpec.js"></script>
+    <script type="text/javascript" src="ui/radioSpec.js"></script>
     <script type="text/javascript" src="ui/selectmenuSpec.js"></script>
     <script type="text/javascript" src="ui/sliderSpec.js"></script>
+    <script type="text/javascript" src="ui/activePageSpec.js"></script>
+    <script type="text/javascript" src="ui/ngmClickSpec.js"></script>
+    <script type="text/javascript" src="ui/activatePassivateSpec.js"></script>
 <!-- ################################################################################################# -->
 
 </head>

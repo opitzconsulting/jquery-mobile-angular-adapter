@@ -1,25 +1,14 @@
 describe("ngmClick", function() {
-    var element, scope;
-
-    function compile(html) {
-        testframe().$("body").append(html);
-        element = testframe().$("#page1");
-        element.page();
-        scope = element.scope();
-    }
-
-    beforeEach(function() {
-        element = null;
-        scope = null;
-
-    });
-
     it('should eval the expression', function() {
-        loadHtml('/jqmng/test/ui/test-fixture.html');
-        runs(function() {
-            compile('<div id="page1" data-role="page">' +
+        loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
+            frame.$("#start").before('<div id="page1" data-role="page">' +
                     '<div data-role="content"><a href="#" ngm:click="clicked = true" id="mylink"></a></div>' +
                     '</div>');
+
+        });
+        runs(function() {
+            var element = testframe().$("#page1");
+            var scope = element.scope();
             var link = element.find("#mylink");
             expect(scope.clicked).toEqual(undefined);
             link.click();
@@ -27,53 +16,21 @@ describe("ngmClick", function() {
         });
     });
 
-    it('should allow the default jquery mobile navigation if not used', function() {
-        loadHtml('/jqmng/test/ui/test-fixture.html');
-        runs(function() {
-            compile('<div id="page1" data-role="page">' +
-                    '<div data-role="content"><a id="mylink" href="#start"' +
+    it('should react to normal clicks', function() {
+        loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
+            frame.$("#start").before('<div id="page1" data-role="page">' +
+                    '<div data-role="content"><a id="mylink" href="#start" ngm:click="clicked=true"' +
                     '</div>');
+        });
+        runs(function() {
+            var element = testframe().$("#page1");
             var link = element.find("#mylink");
             expect(testframe().document.location.hash).toEqual("");
-            link.trigger("vclick");
+            link.click();
         });
         waitsForAsync();
         runs(function() {
             expect(testframe().document.location.hash).toEqual("#start");
-        });
-    });
-
-    it('should stop the default jquery mobile navigation if used with click', function() {
-        loadHtml('/jqmng/test/ui/test-fixture.html');
-        runs(function() {
-            compile('<div id="page1" data-role="page">' +
-                    '<div data-role="content"><a id="mylink" href="#start" ngm:click="clicked=true"' +
-                    '</div>');
-            var link = element.find("#mylink");
-            expect(testframe().document.location.hash).toEqual("");
-            var evt = testframe().document.createEvent('MouseEvents');
-            evt.initMouseEvent('click', true, true, null, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
-            link[0].dispatchEvent(evt);
-        });
-        waitsForAsync();
-        runs(function() {
-            expect(testframe().document.location.hash).toEqual("");
-        });
-    });
-
-    it('should stop the default jquery mobile navigation if used with vclick', function() {
-        loadHtml('/jqmng/test/ui/test-fixture.html');
-        runs(function() {
-            compile('<div id="page1" data-role="page">' +
-                    '<div data-role="content"><a id="mylink" href="#start" ngm:click="clicked=true"' +
-                    '</div>');
-            var link = element.find("#mylink");
-            expect(testframe().document.location.hash).toEqual("");
-            link.trigger("vclick");
-        });
-        waitsForAsync();
-        runs(function() {
-            expect(testframe().document.location.hash).toEqual("");
         });
     });
 });

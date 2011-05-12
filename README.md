@@ -72,8 +72,7 @@ Tags, Directives and Services
 -----------
 
 ### Directive ngm:click(handler)
-Special click handler that integrates with jquery mobile: It stops
-all jquery mobile navigation actions.
+Special click handler that integrates with jquery mobile's vlick event.
 
 Usage: E.g. `<a href="#" ngm:click="myFn()">`
 

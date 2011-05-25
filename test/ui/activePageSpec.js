@@ -2,7 +2,7 @@ describe("activePage", function() {
     it('should return the current page', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html');
         runs(function() {
-            var scope = testframe().$.mobile.globalScope();
+            var scope = testframe().$("#start").scope();
             var activePage = scope.$service("$activePage");
             expect(activePage()).toEqual("start");
         });
@@ -13,7 +13,7 @@ describe("activePage", function() {
         var activePage;
         loadHtml('/jqmng/test/ui/test-fixture.html');
         runs(function() {
-            var scope = testframe().$.mobile.globalScope();
+            var scope = testframe().$("#start").scope();
             activePage = scope.$service("$activePage");
             expect(activePage()).toEqual("start");
             activePage("page2");

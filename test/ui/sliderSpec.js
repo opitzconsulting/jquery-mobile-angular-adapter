@@ -25,7 +25,6 @@ describe("slider", function() {
         });
 
     });
-
     it('should save the model value into the ui', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');

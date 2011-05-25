@@ -22,18 +22,6 @@
  * THE SOFTWARE.
  */
 
-var loadHtml = function(url, instrumentCallback) {
-    jasmine.getEnv().currentSpec.loadHtml.apply(jasmine.getEnv().currentSpec,
-            arguments);
-};
-
-
-var waitsForAsync = function(timeout) {
-    jasmine.getEnv().currentSpec.waitsForAsync.apply(jasmine.getEnv().currentSpec,
-            arguments);
-};
-
-
 jasmine.ui = {};
 
 
@@ -41,7 +29,7 @@ jasmine.ui = {};
  * The central logging function.
  */
 jasmine.ui.log = function(msg) {
-    //console.log(msg);
+    // console.log(msg);
 };
 
 
@@ -117,6 +105,11 @@ jasmine.ui.log = function(msg) {
         }
     }
 
+    window.waitsForAsync = function(timeout) {
+        jasmine.getEnv().currentSpec.waitsForAsync.apply(jasmine.getEnv().currentSpec,
+                arguments);
+    };
+
     jasmine.ui.isWaitForAsync = function() {
         var handlers = allFramesWaitHandlers;
         for (var name in handlers) {
@@ -141,19 +134,22 @@ jasmine.ui.log = function(msg) {
         if (!timeout) {
             timeout = 5000;
         }
-        jasmine.ui.log("begin waiting for async");
         // Wait at least 50 ms. Needed e.g.
         // for animations, as the animation start event is
         // not fired directly after the animation css is added.
         // There may also be a gap between changing the location hash
         // and the hashchange event (almost none however...).
-        // Also needed to wait for the beforeunload event when
-        // the page is changed.
         spec.waits(100);
+        spec.runs(function() {
+            jasmine.ui.log("begin async waiting");
+        });
         spec.waitsFor(
                 function() {
                     return !jasmine.ui.isWaitForAsync()
                 }, "end of async work", timeout);
+        spec.runs(function() {
+            jasmine.ui.log("end async waiting");
+        });
     };
 })(jasmine, window);
 
@@ -166,7 +162,7 @@ jasmine.ui.log = function(msg) {
 
     /**
      * Adds a listener to the instrumentation done by #loadHtml. All listeners
-     * will be called when the frame is loaded by loadHtml.
+     * will be called when a frame is loaded.
      * @param name
      * @param listener A function with the signature fn(window, callTime) where callTime is either
      * "beforeContent" or "afterContent".
@@ -174,6 +170,31 @@ jasmine.ui.log = function(msg) {
     jasmine.ui.addLoadHtmlListener = function(name, listener) {
         instrumentListeners[name] = listener;
     }
+
+    var customListenerId = 0;
+    /**
+     * Same as #addLoadHtmlListener, but removes the listener
+     * after the first execution.
+     * @param name
+     * @param listener
+     */
+    jasmine.ui.addLoadHtmlListenerForNextLoad = function(name, callTime, listener) {
+        name = name + (customListenerId++);
+        jasmine.ui.addLoadHtmlListener(name, function(window, pcallTime) {
+            if (callTime==pcallTime) {
+                window.setTimeout(function() {
+                    delete instrumentListeners[name];
+                },0);
+                listener(window);
+            }
+        });
+    }
+
+    window.loadHtml = function(url, instrumentCallback) {
+        jasmine.getEnv().currentSpec.loadHtml.apply(jasmine.getEnv().currentSpec,
+                arguments);
+    };
+
 
     /**
      * Loads the given url into the testframe and waits
@@ -184,121 +205,131 @@ jasmine.ui.log = function(msg) {
     jasmine.Spec.prototype.loadHtml = function(url, instrumentCallback) {
         var spec = this;
         spec.runs(function() {
-            jasmine.ui.internalLoadHtml(url, instrumentCallback);
+            if (instrumentCallback) {
+                jasmine.ui.addLoadHtmlListenerForNextLoad('loadHtmlCallback', 'afterContent', instrumentCallback);
+            }
+            testframe(true, url);
         });
         spec.waitsForAsync();
     }
 
-    jasmine.ui.internalLoadHtml = function(url, instrumentCallback) {
-        var error = null;
-        var ready = false;
+    function callInstrumentListeners(fr, callTime) {
+        jasmine.ui.log('instrumenting ' + fr.name + " " + callTime);
+        for (var name in instrumentListeners) {
+            var fn = instrumentListeners[name];
+            fn(testframe(), callTime);
+        }
+    }
 
-        function callInstrumentListeners(callTime) {
-            jasmine.ui.log('instrumenting ' + callTime);
-            for (var name in instrumentListeners) {
-                var fn = instrumentListeners[name];
-                fn(testframe(), callTime);
+    function addLoadEventListener(fr) {
+        var win = fr;
+        var doc = fr.document;
+
+        function callback() {
+            if (!win.ready) {
+                win.ready = true;
+                callInstrumentListeners(fr, "afterContent");
+                jasmine.ui.log("Successfully loaded frame " + fr.name + " with url " + fr.location.href);
             }
+
         }
 
-        function addLoadEventListener(fr) {
-            var win = fr;
-            var doc = fr.document;
+        // Mozilla, Opera and webkit nightlies currently support this event
+        if (doc.addEventListener) {
+            // Use the handy event callback
+            doc.addEventListener("DOMContentLoaded", callback, false);
 
-            function callback() {
-                if (!ready) {
-                    ready = true;
-                    callInstrumentListeners("afterContent");
-                    // if we have an instrument function, use it...
-                    if (instrumentCallback) {
-                        instrumentCallback(testframe());
-                    }
-                    jasmine.ui.log("Successfully loaded url " + url);
-                }
+            // A fallback to window.onload, that will always work
+            win.addEventListener("load", callback, false);
 
-            }
+            // If IE event model is used
+        } else if (doc.attachEvent) {
+            // ensure firing before onload,
+            // maybe late but safe also for iframes
+            doc.attachEvent("onreadystatechange", callback);
 
-            // Mozilla, Opera and webkit nightlies currently support this event
-            if (doc.addEventListener) {
-                // Use the handy event callback
-                doc.addEventListener("DOMContentLoaded", callback, false);
-
-                // A fallback to window.onload, that will always work
-                win.addEventListener("load", callback, false);
-
-                // If IE event model is used
-            } else if (doc.attachEvent) {
-                // ensure firing before onload,
-                // maybe late but safe also for iframes
-                doc.attachEvent("onreadystatechange", callback);
-
-                // A fallback to window.onload, that will always work
-                win.attachEvent("onload", callback);
-            }
+            // A fallback to window.onload, that will always work
+            win.attachEvent("onload", callback);
         }
+    }
 
-        window.instrument = function(fr) {
-            try {
-                if (fr!=testframe()) {
-                    // Prevent double instrumentation.
-                    // This is needed due to a strange behaviour of firefox:
-                    // When a frame is hidden, the scripts in the frame get
-                    // reexecuted, but with the same window object...
-                    return;
-                }
-                fr.instrumented = true;
-                addLoadEventListener(fr);
-                jasmine.ui.addAsyncWaitHandler(fr, 'loading', function() {
-                    if (error) {
-                        jasmine.ui.log("Error during loading url " + url + " " + error);
-                        throw error;
-                    }
-                    return !ready;
-                });
-
-                callInstrumentListeners("beforeContent");
-            } catch (ex) {
-                error = ex;
+    window.instrument = function(fr) {
+        try {
+            if (fr != testframe()) {
+                // Prevent double instrumentation.
+                // This is needed due to a strange behaviour of firefox:
+                // When a frame is hidden, the scripts in the frame get
+                // reexecuted, but with the same window object...
+                return;
             }
-        };
+            jasmine.ui.log("Beginn instrumenting frame " + fr.name + " with url " + fr.location.href);
+            fr.instrumented = true;
+            addLoadEventListener(fr);
+            fr.error = null;
+            fr.ready = false;
+            jasmine.ui.addAsyncWaitHandler(fr, 'loading', function() {
+                if (fr.error) {
+                    jasmine.ui.log("Error during instrumenting frame " + fr.name + ": " + fr.error);
+                    throw fr.error;
+                }
+                return !fr.ready;
+            });
 
-        testframe(true, url);
+            callInstrumentListeners(fr, "beforeContent");
+        } catch (ex) {
+            error = ex;
+        }
     };
 })(jasmine, window);
 
 
 /**
  * Jasmine UI Multi-Page Plugin.
- * Listens for unload events and waits until the new page is loaded.
- *
+ * Provides a function waitsForReload to wait until a new page was loaded.
+ * <p>
+ * Note: This could be implemented using the beforeunload and unload event.
+ * However, these events are not fired correctly in all browsers (e.g. safari),
+ * and they are fired some time after the unload was triggered.
+ * By these reasons the simpler solution was preferred.
  */
 (function(jasmine) {
-    var inUnload = false;
+    var inReload = false;
 
-    /**
-     * Use the asyncWait function to wait while in an unload cycle.
-     */
-    jasmine.ui.addAsyncWaitHandler(null, 'unload', function() {
-        return inUnload;
-    });
+    window.waitsForReload = function(timeout) {
+        jasmine.getEnv().currentSpec.waitsForReload.apply(jasmine.getEnv().currentSpec,
+                arguments);
+    };
 
-    // instrument the unload function of all testframes
-    jasmine.ui.addLoadHtmlListener('instrumentUnload', function(window, callTime) {
+
+    jasmine.Spec.prototype.waitsForReload = function(timeout) {
+        var spec = this;
+        if (!timeout) {
+            timeout = 5000;
+        }
+        spec.runs(
+                function() {
+                    jasmine.ui.log("begin wait for reload");
+                    inReload = true;
+                }
+                );
+        spec.waitsFor(
+                function() {
+                    return !inReload;
+                }, "reload of page", timeout);
+        spec.waitsForAsync();
+        spec.runs(
+                function() {
+                    jasmine.ui.log("end wait for reload");
+                }
+                );
+    };
+
+    jasmine.ui.addLoadHtmlListener('instrumentReload', function(window, callTime) {
         if (callTime != 'beforeContent') {
             return;
         }
-        // When a new document gets loaded, stop the unload waiting
-        inUnload = false;
-
-        function unloadCallback() {
-            inUnload = true;
-        }
-        if (window.addEventListener) {
-            window.addEventListener("unload", unloadCallback, false);
-        } else {
-            // IE support
-            window.attachEvent('onunload', unloadCallback);
-        }
+        // When a new document gets loaded, stop the realod waiting
+        inReload = false;
     });
 
 })(jasmine);
@@ -344,6 +375,14 @@ jasmine.ui.log = function(msg) {
         frame.history.forward = function() {
             this.go(1);
         };
+        function splitAtHash(href) {
+            var pos = href.indexOf('#');
+            if (pos!=-1) {
+                return [href.substring(0, pos), href.substring(pos+1)];
+            } else {
+                return [href, ''];
+            }
+        }
         frame.history.go = function(relPos) {
             if (relPos == 0) {
                 return;
@@ -356,8 +395,20 @@ jasmine.ui.log = function(msg) {
             }
             history.index += relPos;
             historyNavigation = true;
+            // only change the hash if that is the only different part.
+            // Important if we go back from a hash to an url with no hash,
+            // as this would reload the document if that url with no hash
+            // is assigned to the href.
+            var currHref = frame.location.href;
+            var currHrefHashSplit = splitAtHash(currHref);
             var targetHref = history.list[history.index];
-            frame.location.assign(targetHref);
+            var targetHrefHashSplit = splitAtHash(targetHref);
+            if (currHrefHashSplit[0] == targetHrefHashSplit[0]) {
+                frame.location.hash = targetHrefHashSplit[1];
+            } else {
+                frame.location.assign(targetHref);
+
+            }
         }
     });
 
@@ -533,117 +584,199 @@ jasmine.ui.log = function(msg) {
  * So be sure to always wait at least that time!
  */
 (function() {
-    var ignoredAnimations = {};
-    var animationCount = 0;
 
-    /*
-     * Defines that the animation with the given name should be ignored.
-     * Needed e.g. for infinite animations whose elements are
-     * only shown or hidden.
-     */
-    jasmine.ui.ignoreAnimation = function(animName) {
-        ignoredAnimations[animName] = true;
-    }
-
-    jasmine.ui.addLoadHtmlListener('instrumentWebkitAnimation', function(window, callTime) {
-        if (callTime != 'beforeContent') {
+    jasmine.ui.addLoadHtmlListener('instrumentAnimationEnd', function(window, callTime) {
+        if (callTime != 'afterContent') {
             return null;
         }
-        // Only support webkit animations for now...
-        if (!window.WebKitAnimationEvent) {
+        if (!(window.$ && window.$.fn.animationComplete)) {
             return;
         }
-        var animationElements = {};
-        // Note: the last argument needs to be set to true to always
-        // get informed about the event, even if the event stops bubbeling up
-        // the dom tree!
-        window.document.addEventListener('webkitAnimationStart', function(event) {
-            var animName = event.animationName;
-            if (!ignoredAnimations[animName]) {
-                animationCount++;
-            }
-            jasmine.ui.log("Started animation " + animName);
-        }, true);
-        window.document.addEventListener('webkitAnimationEnd', function(event) {
-            var animName = event.animationName;
-            if (!ignoredAnimations[animName]) {
-                animationCount--;
-            }
-            jasmine.ui.log("Stopped animation " + animName);
-        }, true);
+        var oldFn = window.$.fn.animationComplete;
+        window.animationCount = 0;
+        window.$.fn.animationComplete = function(callback) {
+            window.animationCount++;
+            return oldFn.call(this, function() {
+                window.animationCount--;
+                return callback.apply(this, arguments);
+            });
+        };
         jasmine.ui.addAsyncWaitHandler(window, 'WebkitAnimation',
                 function() {
-                    var elements = [];
-                    for (var el in animationElements) {
-                        elements.push(el);
-                    }
-                    return animationCount != 0;
+                    return window.animationCount != 0;
                 });
+    });
+})();
+
+/**
+ * Adds a loadHtmlListener that adds an async wait handler for the webkitTransitionStart and webkitTransitionEnd events.
+ * Note: The transitionStart event is usually fired some time
+ * after the animation was added to the css of an element (approx 50ms).
+ * So be sure to always wait at least that time!
+ */
+(function() {
+    jasmine.ui.addLoadHtmlListener('instrumentWebkitTransition', function(window, callTime) {
+        if (callTime != 'afterContent') {
+            return null;
+        }
+        if (!(window.$ && window.$.fn.animationComplete)) {
+            return;
+        }
+        window.transitionCount = 0;
+
+        var oldFn = window.$.fn.transitionComplete;
+        window.$.fn.transitionComplete = function(callback) {
+            window.transitionCount++;
+            return oldFn.call(this, function() {
+                window.transitionCount--;
+                return callback.apply(this, arguments);
+            });
+        };
+        jasmine.ui.addAsyncWaitHandler(window, 'WebkitTransition',
+                function() {
+                    return window.transitionCount != 0;
+                });
+
     });
 })();
 
 
 /**
  * Functions to simulate events.
- * Also cares for the correct handling of hash links together with the base tag.
- * See here for details about the problem: http://www.ilikespam.com/jsf/using-base-href-with-anchors
+ * Based upon https://github.com/jquery/jquery-ui/blob/master/tests/jquery.simulate.js
+ * Can also handle elements from different frames.
+ * <p>
+ * Provides:
+ * jasmine.ui.simulate(el, type, options)
  */
 (function(jasmine) {
-    function findAnchorInParents(element) {
-        if (element == null) {
-            return null;
-        } else if (element.nodeName.toUpperCase() == 'A') {
-            return element;
-        } else {
-            return findAnchorInParents(element.parentNode);
-        }
+    jasmine.ui.simulate = function(el, type, options) {
+        options = extend({}, jasmine.ui.simulate.defaults, options || {});
+        var document = el.ownerDocument;
+        simulateEvent(document, el, type, options);
     }
 
-    function stripHashPath(href) {
-        var hashPos = href.indexOf('#');
-        if (hashPos != -1) {
-            return href.substring(0, hashPos);
-        } else {
-            return href;
-        }
-    }
-
-    function baseHref(document) {
-        var baseTags = document.getElementsByTagName('base');
-        if (baseTags.length > 0) {
-            return baseTags[0].href;
-        } else {
-            return null;
-        }
-    }
-
-    function simulateAnchorClick(anchor) {
-        var doc = anchor.ownerDocument;
-        var href = anchor.href;
-        var hrefWithoutHash = stripHashPath(href);
-        var base = baseHref(doc);
-        if (base && base == hrefWithoutHash) {
-            doc.location.hash = anchor.hash;
-        } else {
-            doc.location.href = href;
-        }
-    }
-
-    window.trigger = function(element, eventType, options) {
-        var frame = testframe();
-        if (!frame.$) {
-            throw "jQuery is not included as library in the testframe!";
-        }
-        var event = frame.$.Event(eventType);
-        frame.$.extend(event, options);
-        try {
-            return frame.$(element).trigger(event);
-        } finally {
-            var anchor = findAnchorInParents(element);
-            if (anchor && !event.isDefaultPrevented()) {
-                simulateAnchorClick(anchor);
+    function extend(target) {
+        for (var i = 1; i < arguments.length; i++) {
+            var obj = arguments[i];
+            for (var key in obj) {
+                target[key] = obj[key];
             }
         }
+        return target;
     }
+
+    function simulateEvent(document, el, type, options) {
+        var evt = createEvent(document, type, options);
+        dispatchEvent(el, type, evt);
+        return evt;
+    }
+
+    function createEvent(document, type, options) {
+        if (/^mouse(over|out|down|up|move)|(dbl)?click$/.test(type)) {
+            return mouseEvent(document, type, options);
+        } else if (/^key(up|down|press)$/.test(type)) {
+            return keyboardEvent(document, type, options);
+        } else {
+            return otherEvent(document, type, options);
+        }
+    }
+
+    function mouseEvent(document, type, options) {
+        var evt;
+        var e = extend({
+            bubbles: true, cancelable: (type != "mousemove"), detail: 0,
+            screenX: 0, screenY: 0, clientX: 0, clientY: 0,
+            ctrlKey: false, altKey: false, shiftKey: false, metaKey: false,
+            button: 0, relatedTarget: undefined
+        }, options);
+
+        var relatedTarget = e.relatedTarget;
+
+        if (typeof document.createEvent == 'function') {
+            evt = document.createEvent("MouseEvents");
+            evt.initMouseEvent(type, e.bubbles, e.cancelable, e.view, e.detail,
+                    e.screenX, e.screenY, e.clientX, e.clientY,
+                    e.ctrlKey, e.altKey, e.shiftKey, e.metaKey,
+                    e.button, e.relatedTarget || document.body.parentNode);
+        } else if (document.createEventObject) {
+            evt = document.createEventObject();
+            extend(evt, e);
+            evt.button = { 0:1, 1:4, 2:2 }[evt.button] || evt.button;
+        }
+        return evt;
+    }
+
+    function keyboardEvent(document, type, options) {
+        var evt;
+
+        var e = extend({ bubbles: true, cancelable: true,
+            ctrlKey: false, altKey: false, shiftKey: false, metaKey: false,
+            keyCode: 0, charCode: 0
+        }, options);
+
+        if (typeof document.createEvent == 'function') {
+            try {
+                evt = document.createEvent("KeyEvents");
+                evt.initKeyEvent(type, e.bubbles, e.cancelable, e.view,
+                        e.ctrlKey, e.altKey, e.shiftKey, e.metaKey,
+                        e.keyCode, e.charCode);
+            } catch(err) {
+                evt = document.createEvent("Events");
+                evt.initEvent(type, e.bubbles, e.cancelable);
+                extend(evt, { view: e.view,
+                    ctrlKey: e.ctrlKey, altKey: e.altKey, shiftKey: e.shiftKey, metaKey: e.metaKey,
+                    keyCode: e.keyCode, charCode: e.charCode
+                });
+            }
+        } else if (document.createEventObject) {
+            evt = document.createEventObject();
+            extend(evt, e);
+        }
+        return evt;
+    }
+
+    function otherEvent(document, type, options) {
+        var evt;
+
+        var e = extend({ bubbles: true, cancelable: true
+        }, options);
+
+        if (typeof document.createEvent == 'function') {
+            evt = document.createEvent("Events");
+            evt.initEvent(type, e.bubbles, e.cancelable);
+        } else if (document.createEventObject) {
+            evt = document.createEventObject();
+            extend(evt, e);
+        }
+        return evt;
+    }
+
+    function dispatchEvent(el, type, evt) {
+        if (el.dispatchEvent) {
+            el.dispatchEvent(evt);
+        } else if (el.fireEvent) {
+            el.fireEvent('on' + type, evt);
+        }
+        return evt;
+    }
+
+    extend(jasmine.ui.simulate, {
+        defaults: {
+            speed: 'sync'
+        },
+        VK_TAB: 9,
+        VK_ENTER: 13,
+        VK_ESC: 27,
+        VK_PGUP: 33,
+        VK_PGDN: 34,
+        VK_END: 35,
+        VK_HOME: 36,
+        VK_LEFT: 37,
+        VK_UP: 38,
+        VK_RIGHT: 39,
+        VK_DOWN: 40
+    });
+
 })(jasmine);
 

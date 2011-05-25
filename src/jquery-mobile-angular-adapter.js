@@ -21,93 +21,67 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-/**
- * Integration between jQuery Mobile and angular.js. Needed as jQuery Mobile
- * enhances the pages with new elements and styles and so does angular.
- * <p>
- * Provides the variable $.mobile.inPagePreCompile to detect whether
- * the page is currently enhances by jquery mobile, but not by angular.
- */
 
 /*
  * Basic compile integration.
  */
 (function(angular, $) {
-    var globalScope = null;
-
-    /**
-     * Lazily initializes the global scope. If a controller named
-     * MainController exists, it will be used as the controller
-     * for the global scope.  The global scope can be used
-     * to communicate between the pages.
-     */
-    function getGlobalScope() {
-        if (globalScope) {
-            return globalScope;
+    function reentrantSwitch(fnNormal, fnReentrant) {
+        var reentrant = false;
+        return function() {
+            if (!reentrant) {
+                try {
+                    reentrant = true;
+                    return fnNormal.apply(this, arguments);
+                } finally {
+                    reentrant = false;
+                }
+            } else {
+                return fnReentrant.apply(this, arguments);
+            }
         }
-        // Always use a singleton controller for that main scope.
-        // create a global scope over all pages,
-        // so common data is possible.
-        globalScope = angular.scope();
-        if (window.MainController) {
-            globalScope.$become(MainController);
-        }
-        return globalScope;
     }
 
-    $.mobile.globalScope = function() {
-        if (arguments.length == 0) {
-            return getGlobalScope();
-        } else {
-            globalScope = arguments[0];
-        }
-    };
 
-    // saves the fact whether the original page()
-    // method is currently enhancing the page.
-    $.mobile.inPagePreCompile = false;
+    $.mobile.inJqmPageCompile = false;
+    $.mobile.inAngularPageCompile = false;
 
-    /*
-     * create an own scope for every page when the page is initialized.
-     */
-    var recursivePageCall = false;
     var oldPage = $.fn.page;
     $.mobile.afterPageCompileQueue = [];
-    $.fn.page = function() {
+    $.fn.page = reentrantSwitch(function() {
         var self = this;
 
-        function callOrigPage() {
-            var oldPageCompile = $.mobile.inPagePreCompile;
-            $.mobile.inPagePreCompile = true;
-            var res = oldPage.apply(self, arguments);
-            $.mobile.inPagePreCompile = oldPageCompile;
-            return res;
-        }
-
-        var oldRecursivePageCall = recursivePageCall;
-        recursivePageCall = true;
         var instanceExists = this.data() && this.data().page;
-        var res = callOrigPage();
-        if (!instanceExists && !oldRecursivePageCall) {
+        if (!instanceExists) {
+            $.mobile.inJqmPageCompile = true;
+            $.mobile.inAngularPageCompile = false;
+            var res = oldPage.apply(self, arguments);
+            $.mobile.inJqmPageCompile = false;
             // sometime widgets like the selectmenu create
             // dynamic pages (e.g. for selecting values, ...).
             // Those pages only contain generic markup,
             // nothing that angular needs to enhance!
-            var childScope = getGlobalScope().$new();
-            var queue = [];
-            $.mobile.afterPageCompileQueue = queue;
+            $.mobile.afterPageCompileQueue = [];
+            $.mobile.inAngularPageCompile = true;
+            // Create an own separate scope for every page,
+            // so the performance of one page does not depend
+            // on other pages.
+            var childScope = angular.scope();
             angular.compile(this)(childScope);
+            $.mobile.inAngularPageCompile = false;
             // evaluate the after compile queue
+            var queue = $.mobile.afterPageCompileQueue;
             queue.reverse();
-            while (queue.length>0) {
+            while (queue.length > 0) {
                 var entry = queue.pop();
                 entry();
             }
+        } else {
+            res = oldPage.apply(self, arguments);
         }
-        recursivePageCall = oldRecursivePageCall;
 
         return res;
-    };
+    }, oldPage);
 
 
     // listen to pageshow and update the angular $location-service.
@@ -143,186 +117,262 @@
         return linkFn;
     });
 
+    var jqmAngularWidgets = {};
+    var jqmWidgetProxies = {};
+    var angularWidgetProxies = {};
+
+
+    /**
+     * Synchronizes an angular and jquery mobile widget.
+     * @param tagname
+     * @param jqmWidget
+     * @param compileFn compile function(element, jqmWidget) just like the compile functions of angular.
+     */
+    function jqmAngularWidget(tagname, jqmWidget, compileFn) {
+        if (!jqmWidgetProxies[jqmWidget]) {
+            createJqmWidgetProxy(jqmWidget);
+            jqmWidgetProxies[jqmWidget] = true;
+        }
+
+        if (!angularWidgetProxies[tagname]) {
+            createAngularWidgetProxy(tagname, function(element) {
+                var jqmWidget = element.attr('jqmwidget');
+                if (!jqmWidget) {
+                    return function() { };
+                }
+                var jqmAngularCompileFn = jqmAngularWidgets[tagname+":"+jqmWidget];
+                return jqmAngularCompileFn.call(this, element);
+            });
+            angularWidgetProxies[tagname] = true;
+        }
+        jqmAngularWidgets[tagname+":"+jqmWidget] = compileFn;
+    }
+
     /*
-     * Integration of the slider and selectmenu widget of jquery mobile:
+     * Integration of the widgets of jquery mobile:
      * Prevent the normal create call for the widget, and let angular
      * do the initialization. This is important as angular
-     * might create new elements (e.g. in ng:repeat), and the widgets of jquery mobile
+     * might create multiple elements with the widget (e.g. in ng:repeat), and the widgets of jquery mobile
      * register listeners to elements.
      */
-    $.fn.origSlider = $.fn.slider;
-    $.fn.slider = function() {
-        var instanceExists = this.data() && this.data().slider;
-        if ($.mobile.inPagePreCompile && arguments.length == 0 && !instanceExists) {
-            // Prevent initialization during precompile,
-            // and mark the element so that the angular widget
-            // can create the widget!
-            this.attr('mwidget', 'slider');
-            return this;
-        } else {
-            return this.origSlider.apply(this, arguments);
-        }
-    }
-
-    $.fn.origSelectmenu = $.fn.selectmenu;
-    $.fn.selectmenu = function() {
-        var instanceExists = this.data() && this.data().selectmenu;
-        if ($.mobile.inPagePreCompile && arguments.length == 0 && !instanceExists) {
-            // Prevent initialization during precompile,
-            // and mark the element so that the angular widget
-            // can create the widget!
-            this.attr('mwidget', 'selectmenu');
-            return this;
-        } else {
-            return this.origSelectmenu.apply(this, arguments);
-        }
-    }
-
-
-
-    var oldSelect = angular.widget('select');
-    angular.widget('select', function(element) {
-        var name = element.attr('name');
-        var disabled = element.attr('disabled');
-        var oldRes = oldSelect.apply(this, arguments);
-        var mwidget = element.attr('mwidget');
-        if (!mwidget) {
-            return oldRes;
-        }
-        var myRes = function($updateView, $defer, element) {
-            var created = false;
-
-            function updateEnabled(element) {
-                var disabled = element.attr('disabled');
-                if (disabled) {
-                    element[mwidget]('disable');
-                } else {
-                    element[mwidget]('enable');
+    function createJqmWidgetProxy(jqmWidget) {
+        var oldWidget = $.fn[jqmWidget];
+        var functionCalls = [];
+        $.fn[jqmWidget] = function(options) {
+            if ($.mobile.inJqmPageCompile) {
+                // Prevent initialization during precompile,
+                // and mark the element so that the angular widget
+                // can create the widget!
+                for (var i=0; i<this.length; i++) {
+                    this[i].options = options;
                 }
+                this.attr('jqmwidget', jqmWidget);
+                return this;
+            } else if ($.mobile.inAngularPageCompile) {
+                this[0].functionCalls = this[0].functionCalls || [];
+                var functionCalls = this[0].functionCalls;
+                if (functionCalls.length == 0) {
+                    var self = this;
+
+                    $.mobile.afterPageCompileQueue.push(function() {
+                        for (var i = 0; i < functionCalls.length; i++) {
+                            var call = functionCalls[i];
+                            oldWidget.apply(self, call);
+                        }
+                    });
+                }
+                var call = Array.prototype.slice.call(arguments, 0);
+                functionCalls.push(call);
+                // record the function calls
+                // and do not execute them until the end of the compilation.
+                // Neded for e.g. selectmenu with ng:repeat:
+                // ng:repeat uses dom fragements, so the current element
+                // is not part of the complete dom yet. However, selectmenu
+                // requires access to the parent element, and inserts siblings to the element.
+                // Therefor the creation of the widget as well as all function calls
+                // is deferred, after the
+                // angular compilation.
+                return this;
+            } else {
+                return oldWidget.apply(this, arguments);
             }
-
-            // The current element may not be inserted into the dom correctly yet
-            // (e.g. due to ng:repeat). However, some jquery mobile
-            // widgets like selectmenu
-            // create siblings to the element in the dom, which is only working,
-            // if the element is part of the dom already.
-            // Therefor the creation of the widget is deferred, after the
-            // angular compilation.
-            $.mobile.afterPageCompileQueue.push(function() {
-                element[mwidget]();
-                element[mwidget]('refresh');
-                updateEnabled(element);
-                created = true;
-            });
-            var res = oldRes.apply(this, arguments);
-            var scope = this;
-            scope.$watch(name, function(value) {
-                if (created) {
-                    element[mwidget]('refresh');
-                }
-            });
-            var oldVal;
-            // Detect changes in the disabled attribute.
-            // Needs to be done last in the eval cycle,
-            // as angular sets this attribute.
-            scope.$onEval(Number.MAX_VALUE, function() {
-                var val = element.attr('disabled');
-                if (val != oldVal) {
-                    oldVal = val;
-                    if (created) {
-                        updateEnabled(element);
-                    }
-                }
-            });
-            return res;
+        };
+        for (var key in oldWidget) {
+            $.fn[jqmWidget][key] = oldWidget[key];
         }
-        myRes.$inject = oldRes.$inject;
-        return myRes;
+    }
+
+    /**
+     * Creates a proxy around an existing angular widget.
+     * Needed to use the angular functionalities like disabled handling,
+     * invalidWidgets marking, formatting and validation.
+     * @param tagname
+     * @param compileFn
+     */
+    function createAngularWidgetProxy(tagname, compileFn) {
+        var oldWidget = angular.widget(tagname);
+        angular.widget(tagname, function(element) {
+            var oldBinder = oldWidget && oldWidget.apply(this, arguments);
+            if (!oldWidget) {
+                this.descend(true);
+                this.directives(true);
+            }
+            var bindFn = compileFn.call(this, element);
+            var newBinder = function() {
+                var elementArgumentPos = (oldBinder && oldBinder.$inject && oldBinder.$inject.length) || 0;
+                var element = arguments[elementArgumentPos];
+                var res = oldBinder && oldBinder.apply(this, arguments);
+                bindFn.call(this, element);
+                return res;
+            }
+            newBinder.$inject = oldBinder && oldBinder.$inject;
+            return newBinder;
+        });
+    }
+
+    /**
+     * Creates a proxy around an existing angular directive.
+     * Needed e.g. to intercept the disabled handling, ...
+     * @param directiveName
+     * @param compileFn
+     */
+    function createAngularDirectiveProxy(directiveName, compileFn) {
+        var oldDirective = angular.directive(directiveName);
+        angular.directive(directiveName, function(expression) {
+            var oldBinder = oldDirective.apply(this, arguments);
+            var bindFn = compileFn(expression);
+            var newBinder = function() {
+                var elementArgumentPos = (oldBinder.$inject && oldBinder.$inject.length) || 0;
+                var element = arguments[elementArgumentPos];
+                var scope = this;
+                var res = oldBinder.apply(this, arguments);
+                bindFn.call(this, element);
+                return res;
+            }
+            newBinder.$inject = oldBinder.$inject;
+            return newBinder;
+        });
+    }
+
+
+    /**
+     * Binds the enabled/disabled handler of angular and jquery mobile together,
+     * for the jqm widgets that are in jqmWidgetDisabledHandling.
+     */
+    var jqmWidgetDisabledHandling = {};
+    createAngularDirectiveProxy('ng:bind-attr', function(expression) {
+        return function(element) {
+            var jqmWidget = element.attr('jqmwidget');
+            if (!jqmWidget || !jqmWidgetDisabledHandling[jqmWidget]) {
+                return;
+            }
+            var regex = /"([^"]*)"/;
+            var attr = regex.exec(expression)[1];
+            var scope = this;
+            if (attr=='disabled') {
+                var oldValue;
+                scope.$onEval(function() {
+                    var value = element.attr(attr);
+                    if (value!=oldValue) {
+                        oldValue = value;
+                        if (value) {
+                            element[jqmWidget]("disable");
+                        } else {
+                            element[jqmWidget]("enable");
+                        }
+                    }
+                });
+            }
+        }
+    });
+
+    /**
+     * Definition of the jquery mobile and angular widget interaction
+     */
+    jqmWidgetDisabledHandling.selectmenu = true;
+    jqmAngularWidget('select', 'selectmenu', function(element) {
+        var name = element.attr('name');
+        return function(element) {
+            var scope = this;
+            element.selectmenu();
+            scope.$watch(name, function(value) {
+                element.selectmenu('refresh');
+            });
+        }
+    });
+
+    jqmWidgetDisabledHandling.slider = true;
+    jqmAngularWidget('select', 'slider',
+            function(element) {
+                var name = element.attr('name');
+                return function(element) {
+                    element.slider();
+                    var scope = this;
+                    scope.$watch(name, function(value) {
+                        element.slider('refresh');
+                    });
+                };
+            });
+
+    jqmWidgetDisabledHandling.checkboxradio = true;
+    jqmAngularWidget('input', 'checkboxradio', function(element) {
+        var name = element.attr('name');
+        return function(element) {
+            var scope = this;
+            element.checkboxradio();
+            scope.$watch(name, function(value) {
+                element.checkboxradio('refresh');
+            });
+            var inChange = false;
+            // Angular only binds to the click event,
+            // but jquery mobile fires a change event when the checkbox
+            // is changed. So fire a click event when a change event occurs...
+            element.bind('change', function() {
+                if (!inChange) {
+                    inChange = true;
+                    element.trigger('click');
+                    inChange = false;
+                }
+            });
+        }
+    });
+
+    jqmAngularWidget('a', 'buttonMarkup', function(element) {
+        var options = element[0].options;
+        return function(element) {
+            var scope = this;
+            element.buttonMarkup(options);
+        }
     });
 
 
-    $.fn.origCheckboxradio = $.fn.checkboxradio;
-    $.fn.checkboxradio = function() {
-        var instanceExists = this.data() && this.data().checkboxradio;
-        if ($.mobile.inPagePreCompile && arguments.length == 0 && !instanceExists) {
-            // Prevent initialization during precompile,
-            // and mark the element so that the angular widget
-            // can create the widget!
-            this.attr('mwidget', 'checkboxradio');
-            return this;
-        } else {
-            var res = this.origCheckboxradio.apply(this, arguments);
-        }
-    }
-
-    var oldInput = angular.widget('input');
-    angular.widget('input', function(element) {
-        var name = element.attr('name');
-        var disabled = element.attr('disabled');
-        var mwidget = element.attr('mwidget');
-        var oldRes = oldInput.apply(this, arguments);
-        if (!mwidget) {
-            return oldRes;
-        }
-        var myRes = function($updateView, $defer, element) {
-            var created = false;
-            function updateEnabled(element) {
-                var disabled = element.attr('disabled');
-                if (disabled) {
-                    element[mwidget]('disable');
-                } else {
-                    element[mwidget]('enable');
-                }
-            }
-
-            // The current element may not be inserted into the dom correctly yet
-            // (e.g. due to ng:repeat). However, some jquery mobile
-            // widgets like chexkboxradio
-            // need the whole dom to work correctly.
-            // Therefor the creation of the widget is deferred, after the
-            // angular compilation.
-            $.mobile.afterPageCompileQueue.push(function() {
-                element[mwidget]();
-                element[mwidget]('refresh');
-                updateEnabled(element);
-                created = true;
-            });
-            // angular usually only binds to the click event.
-            // However, jquery mobile fires the change event
-            // when an entry is clicked.
-            var oldBind = element.bind;
-            element.bind = function() {
-                arguments[0] += " change";
-                return oldBind.apply(this, arguments);
-            }
-            var res = oldRes.apply(this, arguments);
+    jqmWidgetDisabledHandling.button = true;
+    jqmAngularWidget('button', 'button', function(element) {
+        var options = element[0].options;
+        return function(element) {
             var scope = this;
-            // Detect changes from angular
-            scope.$watch(name, function(value) {
-                if (created) {
-                    element[mwidget]('refresh');
-                }
-            });
-            var oldVal;
-            // Detect changes in the disabled attribute.
-            // Needs to be done last in the eval cycle,
-            // as angular sets this attribute, and
-            // we just want to use the result of angular and
-            // then update the ui.
-            scope.$onEval(Number.MAX_VALUE, function() {
-                var val = element.attr('disabled');
-                if (val != oldVal) {
-                    oldVal = val;
-                    if (created) {
-                        updateEnabled(element);
-                    }
-                }
-            });
-            return res;
+            element.button(options);
         }
-        myRes.$inject = oldRes.$inject;
-        return myRes;
     });
+
+    jqmAngularWidget('div', 'collapsible', function(element) {
+        var name = element.attr('name');
+        return function(element) {
+            var scope = this;
+            element.collapsible();
+        }
+    });
+
+
+    jqmWidgetDisabledHandling.textinput = true;
+    jqmAngularWidget('input', 'textinput', function(element) {
+        var name = element.attr('name');
+        return function(element) {
+            var scope = this;
+            element.textinput();
+        }
+    });
+
 
 })(angular);
 
@@ -347,6 +397,7 @@
         if (currPageScope.onActivate) {
             currPageScope.onActivate.call(currPageScope, prevPageScope);
         }
+        currPageScope.$service('$updateView')();
     });
 })(angular, $);
 

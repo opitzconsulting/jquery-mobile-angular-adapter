@@ -15,26 +15,13 @@ describe("compile integration", function() {
         scope = null;
     });
 
-    it('should access and change the global scope via $.mobile.globalScope', function() {
-        var globalScope = $.mobile.globalScope();
-        expect(globalScope).toBeDefined();
-        $.mobile.globalScope(null);
-        var globalScope2 = $.mobile.globalScope();
-        expect(globalScope2).not.toEqual(globalScope);
-        $.mobile.globalScope(globalScope);
-        var globalScope3 = $.mobile.globalScope();
-        expect(globalScope).toEqual(globalScope3);
-
-    });
-
-
     it('should create a scope for every page', function() {
         compile('<div id="page1" data-role="page">' +
                 '</div>');
         expect(element.scope()).toBeDefined();
     });
 
-    it('should use a common global scope as parent of all page scopes', function() {
+    it('should use a separate scope for every page whose eval does not trigger the eval of other pages', function() {
         compile('<div id="page1" data-role="page">' +
                 '</div>');
         var page1 = element.scope();
@@ -42,11 +29,24 @@ describe("compile integration", function() {
         compile('<div id="page2" data-role="page">' +
                 '</div>');
         var page2 = element.scope();
-        page1.id = "page1";
-        page2.id = "page2";
-        expect(page1.id).not.toEqual(page2.id);
-        expect(page2).toBeDefined();
-        expect(page1.$parent).toEqual(page2.$parent);
+        var page1evalCount = 0;
+        page1.$onEval(function() {
+            page1evalCount++;
+        });
+        var page2evalCount = 0;
+        page2.$onEval(function() {
+            page2evalCount++;
+        });
+        page1.$eval();
+        expect(page1evalCount).toEqual(1);
+        expect(page2evalCount).toEqual(0);
+        page2.$eval();
+        expect(page1evalCount).toEqual(1);
+        expect(page2evalCount).toEqual(1);
+
+        expect(page1.$parent===page1).toBeTruthy();
+        expect(page2.$parent===page2).toBeTruthy();
+
     });
 
     /*

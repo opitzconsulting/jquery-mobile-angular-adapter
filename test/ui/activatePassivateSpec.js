@@ -48,7 +48,6 @@ describe("activatePassivateSpec", function() {
         reset();
     });
 
-    /*
     it('should call onActivate when the page is initially shown', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', instrumentPage);
         runs(function() {
@@ -57,48 +56,55 @@ describe("activatePassivateSpec", function() {
             expect(activatePrevScope).toEqual(null);
         });
     });
+
     it('should not call onPassivate when the page is initially shown', function() {
-        loadHtml('/jqmng/test/ui/test-fixture.html',instrumentPage);
+        loadHtml('/jqmng/test/ui/test-fixture.html', instrumentPage);
         runs(function() {
             expect(passivateCallCount).toEqual(0);
         });
     });
-    */
 
-    it('should call onActivate when the page is changed', function() {
+    it('should call onActivate and onPassivate when the page is changed', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', instrumentPage);
         runs(function() {
             var startPageScope = testframe().$("#start").scope();
             var activePage = startPageScope.$service("$activePage");
             reset();
             expect(activateCallCount).toEqual(0);
+            expect(passivateCallCount).toEqual(0);
             activePage("page2");
             expect(activateCallCount).toEqual(1);
             expect(activateThis.name).toEqual("Page2Controller");
             expect(activatePrevScope.name).toEqual("StartController");
-        });
-        runs(function() {
-
-        });
-    });
-
-    it('should call onPassivate when the page is changed', function() {
-        loadHtml('/jqmng/test/ui/test-fixture.html',instrumentPage);
-        runs(function() {
-            var startPageScope = testframe().$("#start").scope();
-            var activePage = startPageScope.$service("$activePage");
-            reset();
-            expect(passivateCallCount).toEqual(0);
-            activePage("page2");
             expect(passivateCallCount).toEqual(1);
             expect(passivateThis.name).toEqual("StartController");
             expect(passivateNextScope.name).toEqual("Page2Controller");
         });
-        runs(function() {
+    });
 
+    it('should call onActivate and onPassivate when the page is changed via back', function() {
+        var startPageScope, activePage;
+        loadHtml('/jqmng/test/ui/test-fixture.html', instrumentPage);
+        runs(function() {
+            startPageScope = testframe().$("#start").scope();
+            activePage = startPageScope.$service("$activePage");
+            activePage("page2");
+            reset();
+        });
+        waitsForAsync();
+        runs(function() {
+            expect(activateCallCount).toEqual(0);
+            expect(passivateCallCount).toEqual(0);
+            activePage("back");
+        });
+        waitsForAsync();
+        runs(function() {
+            expect(activateCallCount).toEqual(1);
+            expect(activateThis.name).toEqual("StartController");
+            expect(activatePrevScope.name).toEqual("Page2Controller");
+            expect(passivateCallCount).toEqual(1);
+            expect(passivateThis.name).toEqual("Page2Controller");
+            expect(passivateNextScope.name).toEqual("StartController");
         });
     });
-    // TODO create a test for back navigation.
-    // However, this does not work well in iframe, see https://bugs.webkit.org/show_bug.cgi?id=40451
-
 });

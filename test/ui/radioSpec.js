@@ -66,7 +66,7 @@ describe("radio", function() {
             var page = testframe().$('#start');
             var input = page.find("#mysel");
             var parentDiv = input.parent();
-            var scope = input.scope();
+            var scope = parentDiv.scope();
             scope.$set('disabled', false);
             scope.$eval();
             expect(parentDiv.hasClass('ui-disabled')).toBeFalsy();

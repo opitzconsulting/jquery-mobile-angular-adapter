@@ -5,18 +5,15 @@ Description
 -------------
 
 Integration between jquery mobile and angular.js. Needed as jquery mobile
-enhances the pages with new elements and styles and so does angular.
+enhances the pages with new elements and styles and so does angular. Another reason is
+that jquery mobile only enhances pages when they are navigated to, and not
+all at once, as angular does in autoinit mode.
 
-Ensures that angular enhances a page right after jquery mobile has finished enhancing the page.
-By this, all elements have the correct styles, and angular can take them
-and modify them (e.g. copy rows for lists, ...). This ordering is also needed as
-jquery mobile only enhances pages when they are navigated to, and not
-all at once (as angular does in autoinit mode).
-
-Furthermore automatically refreshs the jquery mobile widgets when the corresponding
+Automatically refreshs the jquery mobile widgets when the corresponding
 values in angular change.
 E.g. the select tag is enhanced by jquery mobile,
 and if someone changes it's value programmatically, the refresh-function needs to be called.
+This also applies to the `disabled` attribute.
 The integration between jquery mobile and angular watches for such changes in the model
 and automatically calls the refresh function.
 
@@ -47,13 +44,8 @@ Include this adapter _after_ angular and jquery mobile, e.g.
 Scopes
 -----------
 The adapter creates a separate angular scope for every page of jquery mobile.
-Also creates a global scope to provide communication between the different page scopes.
-If a controller named `MainController` exists it will become the controller
-for the global scope.
-
-The global scope can be access via the function `$.mobile.globalScope`:
-If no parameter is supplied this returns the current global scope.
-If a parameter is supplied this will set the current global scope.
+There is no global scope by purpose, so the performance of evaluating one page does not depend
+on the expressions on other pages.
 
 Callbacks for page changes
 --------------

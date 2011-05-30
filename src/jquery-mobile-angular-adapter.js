@@ -42,48 +42,51 @@
         }
     }
 
-
     $.mobile.inJqmPageCompile = false;
-    $.mobile.inAngularPageCompile = false;
 
     var oldPage = $.fn.page;
-    $.mobile.afterPageCompileQueue = [];
+    $.mobile.afterUpdateViewQueue = [];
     $.fn.page = reentrantSwitch(function() {
         var self = this;
 
         var instanceExists = this.data() && this.data().page;
         if (!instanceExists) {
             $.mobile.inJqmPageCompile = true;
-            $.mobile.inAngularPageCompile = false;
             var res = oldPage.apply(self, arguments);
             $.mobile.inJqmPageCompile = false;
-            // sometime widgets like the selectmenu create
-            // dynamic pages (e.g. for selecting values, ...).
-            // Those pages only contain generic markup,
-            // nothing that angular needs to enhance!
-            $.mobile.afterPageCompileQueue = [];
-            $.mobile.inAngularPageCompile = true;
             // Create an own separate scope for every page,
             // so the performance of one page does not depend
             // on other pages.
             var childScope = angular.scope();
-            angular.compile(this)(childScope);
-            $.mobile.inAngularPageCompile = false;
-            // evaluate the after compile queue
-            var queue = $.mobile.afterPageCompileQueue;
-            queue.reverse();
-            while (queue.length > 0) {
-                var entry = queue.pop();
-                entry();
+            // Overwrite the onEval of the root scope,
+            // to be able to react to updateView calls.
+            var oldEval = childScope.$eval;
+            var evalCount = 0;
+            childScope.$eval = function() {
+                evalCount++;
+                try {
+                    return oldEval.apply(this, arguments);
+                } finally {
+                    evalCount--;
+                    if (evalCount==0) {
+                        // evaluate the after updateView queue
+                        var queue = $.mobile.afterUpdateViewQueue;
+                        while (queue.length > 0) {
+                            var entry = queue.shift();
+                            entry();
+                        }
+                    }
+                }
             }
+            angular.compile(this)(childScope);
         } else {
             res = oldPage.apply(self, arguments);
         }
-
         return res;
     }, oldPage);
 
 
+    // TODO create a reproduce case for this. Maybe this is no more needed??
     // listen to pageshow and update the angular $location-service.
     // Prevents an errornous back navigation when navigating to another page.
     // This occurs when angular does things by an xhr and it's eval
@@ -157,9 +160,11 @@
      */
     function createJqmWidgetProxy(jqmWidget) {
         var oldWidget = $.fn[jqmWidget];
-        var functionCalls = [];
         $.fn[jqmWidget] = function(options) {
-            if ($.mobile.inJqmPageCompile) {
+            var instanceExists = this.data() && this.data()[jqmWidget];
+            if (instanceExists || this.length==0) {
+                return oldWidget.apply(this, arguments);
+            } else if ($.mobile.inJqmPageCompile) {
                 // Prevent initialization during precompile,
                 // and mark the element so that the angular widget
                 // can create the widget!
@@ -168,21 +173,7 @@
                 }
                 this.attr('jqmwidget', jqmWidget);
                 return this;
-            } else if ($.mobile.inAngularPageCompile) {
-                this[0].functionCalls = this[0].functionCalls || [];
-                var functionCalls = this[0].functionCalls;
-                if (functionCalls.length == 0) {
-                    var self = this;
-
-                    $.mobile.afterPageCompileQueue.push(function() {
-                        for (var i = 0; i < functionCalls.length; i++) {
-                            var call = functionCalls[i];
-                            oldWidget.apply(self, call);
-                        }
-                    });
-                }
-                var call = Array.prototype.slice.call(arguments, 0);
-                functionCalls.push(call);
+            } else {
                 // record the function calls
                 // and do not execute them until the end of the compilation.
                 // Neded for e.g. selectmenu with ng:repeat:
@@ -192,9 +183,21 @@
                 // Therefor the creation of the widget as well as all function calls
                 // is deferred, after the
                 // angular compilation.
+                this[0].functionCalls = this[0].functionCalls || [];
+                var functionCalls = this[0].functionCalls;
+                if (functionCalls.length == 0) {
+                    var self = this;
+                    $.mobile.afterUpdateViewQueue.push(function() {
+                        self[0].functionCalls = [];
+                        for (var i = 0; i < functionCalls.length; i++) {
+                            var call = functionCalls[i];
+                            oldWidget.apply(self, call);
+                        }
+                    });
+                }
+                var call = Array.prototype.slice.call(arguments, 0);
+                functionCalls.push(call);
                 return this;
-            } else {
-                return oldWidget.apply(this, arguments);
             }
         };
         for (var key in oldWidget) {
@@ -211,13 +214,13 @@
      */
     function createAngularWidgetProxy(tagname, compileFn) {
         var oldWidget = angular.widget(tagname);
-        angular.widget(tagname, function(element) {
+        angular.widget(tagname, function() {
             var oldBinder = oldWidget && oldWidget.apply(this, arguments);
             if (!oldWidget) {
                 this.descend(true);
                 this.directives(true);
             }
-            var bindFn = compileFn.call(this, element);
+            var bindFn = compileFn.apply(this, arguments);
             var newBinder = function() {
                 var elementArgumentPos = (oldBinder && oldBinder.$inject && oldBinder.$inject.length) || 0;
                 var element = arguments[elementArgumentPos];
@@ -262,6 +265,7 @@
     var jqmWidgetDisabledHandling = {};
     createAngularDirectiveProxy('ng:bind-attr', function(expression) {
         return function(element) {
+
             var jqmWidget = element.attr('jqmwidget');
             if (!jqmWidget || !jqmWidgetDisabledHandling[jqmWidget]) {
                 return;
@@ -271,6 +275,9 @@
             var scope = this;
             if (attr=='disabled') {
                 var oldValue;
+                // Note: We cannot use scope.$watch here:
+                // We want to be called after the proxied angular implementation, and
+                // that uses $onEval. $watch always gets evaluated before $onEval.
                 scope.$onEval(function() {
                     var value = element.attr(attr);
                     if (value!=oldValue) {
@@ -285,6 +292,7 @@
             }
         }
     });
+
 
     /**
      * Definition of the jquery mobile and angular widget interaction
@@ -337,15 +345,6 @@
         }
     });
 
-    jqmAngularWidget('a', 'buttonMarkup', function(element) {
-        var options = element[0].options;
-        return function(element) {
-            var scope = this;
-            element.buttonMarkup(options);
-        }
-    });
-
-
     jqmWidgetDisabledHandling.button = true;
     jqmAngularWidget('button', 'button', function(element) {
         var options = element[0].options;
@@ -363,13 +362,52 @@
         }
     });
 
-
     jqmWidgetDisabledHandling.textinput = true;
     jqmAngularWidget('input', 'textinput', function(element) {
         var name = element.attr('name');
         return function(element) {
             var scope = this;
             element.textinput();
+        }
+    });
+
+    /**
+     * Integration of the listview widget.
+     * Special case as the the ng:repeat angular widget is added
+     * to the children of the ul element, to which the jquery mobile
+     * listview widget is added.
+     **/
+    jqmAngularWidget('ul', 'listview', function(element) {
+       element.find('li').attr('jqmwidget','listviewchild');
+       return function(element) {
+           element.listview();
+       }
+    });
+
+    createAngularWidgetProxy('@ng:repeat', function(expression, element) {
+        var isListView = false;
+        if (element.attr('jqmwidget')=='listviewchild') {
+            isListView = true;
+        }
+        if (!isListView) {
+            return function() { };
+        }
+        var match = expression.match(/^\s*(.+)\s+in\s+(.*)\s*$/);
+        var rhs = match[2];
+        return function(element) {
+            var scope = this;
+            // Note: We cannot use scope.$watch here:
+            // We want to be called after the proxied angular implementation, and
+            // that uses $onEval. $watch always gets evaluated before $onEval.
+            var oldSize;
+            scope.$onEval(function() {
+                var collection = scope.$tryEval(rhs, element);
+                var size = angular.Object.size(collection);
+                if (size!=oldSize) {
+                    oldSize = size;
+                    element.parent().listview('refresh');
+                }
+            });
         }
     });
 

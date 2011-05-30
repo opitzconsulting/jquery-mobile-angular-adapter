@@ -1,0 +1,36 @@
+<html xmlns:ng="http://angularjs.org" xmlns:ngm="http://jqm-angularjs.org">
+<!--
+Test page during development.
+-->
+<head>
+    <title>MobileToys</title>
+    <script>parent.instrument && parent.instrument(window);</script>
+    <link rel="stylesheet" href="../../lib/jquery.mobile-1.0a4.1.css"/>
+    <script src="../../lib/jquery-1.6.1.js"></script>
+    <script src="../../lib/jquery.mobile-1.0a4.1.js"></script>
+    <script src="../../lib/angular-0.9.15.js"></script>
+    <script src="../../src/jquery-mobile-angular-adapter.js"></script>
+</head>
+<body>
+
+<div id="start" data-role="page">
+    <div data-role="header">Start
+    </div>
+    <div data-role="content" ng:init="flag = false">
+        <ul data-role="listview">
+            <li ng:repeat="item in items">
+                <h1>Hallo</h1>
+                {{item}}
+                <ul>
+                    <li>Entry2</li>
+
+                </ul>
+            </li>
+        </ul>
+        <button ng:click="items = [1,2,3]">set it</button>
+        <input type="text" name="test">
+    </div>
+</div>
+
+</body>
+</html>

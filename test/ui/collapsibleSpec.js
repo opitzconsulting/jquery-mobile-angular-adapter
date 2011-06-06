@@ -17,7 +17,7 @@ describe("collapsible", function() {
             var header = input.find('h3');
             var content = input.find(".ui-collapsible-content");
             expect(content.hasClass('ui-collapsible-content-collapsed')).toBeFalsy();
-            header.trigger('vmouseup');
+            header.trigger('vclick');
             expect(content.hasClass('ui-collapsible-content-collapsed')).toBeTruthy();
         });
 

@@ -34,8 +34,8 @@ Include this adapter _after_ angular and jquery mobile, e.g.
     <head>
         <title>MobileToys</title>
         <link rel="stylesheet" href="lib/jquery.mobile-1.0a4.css"/>
-        <script src="lib/jquery-1.5.1.js"></script>
-        <script src="lib/jquery.mobile-1.0a4.js"></script>
+        <script src="lib/jquery-1.6.1.js"></script>
+        <script src="lib/jquery.mobile-1.0b1pre-oc1.js"></script>
         <script src="lib/angular-0.9.15.js"></script>
         <script src="lib/jquery-mobile-angular-adapter.js"></script>
     </head>

@@ -43,40 +43,5 @@ describe("compile integration", function() {
         page2.$eval();
         expect(page1evalCount).toEqual(1);
         expect(page2evalCount).toEqual(1);
-
-        expect(page1.$parent===page1).toBeTruthy();
-        expect(page2.$parent===page2).toBeTruthy();
-
     });
-
-    /*
-     it('should prevent race conditions due to hash changes', function() {
-     // TODO find a correct case to reproduce the problem!
-     var alocation = null;
-     var browser = null;
-     window.MainController = null;
-     window.MainController = function($browser,$location) {
-     browser = $browser;
-     alocation = $location;
-     };
-     MainController.$inject = ['$browser','$location'];
-     var root = $('<div><div id="page1" data-role="page">Hello</div><div id="page2" data-role="page">hello</div></div>');
-     $("body").append(root);
-     $.mobile.initializePage();
-     var page1 = $("#page1");
-     // compile only page1, not page 2
-     var page2 = $("#page2");
-     expect(page1.scope()).toBeDefined();
-     expect(page2.scope()).toBeUndefined();
-     // second page does not get initialized until we navigate to it...
-     alocation.hash = "test";
-     console.log("First: "+browser.getUrl());
-     $.mobile.changePage(page2);
-     //page1.scope().$root.$eval();
-     console.log("Second: "+browser.getUrl());
-     expect(page1.scope()).toBeDefined();
-     expect(page2.scope()).toBeDefined();
-     });
-     */
-
 });

@@ -23,7 +23,6 @@ describe("activePage", function() {
         runs(function() {
             expect(activePage()).toEqual("page2");
         });
-
     });
 
 });

@@ -22,10 +22,57 @@
  * THE SOFTWARE.
  */
 
+
+/**
+ * Global scope
+ */
+(function(angular, $) {
+	var globalScope = null;
+
+	/**
+	 * Lazily initializes the global scope. If a controller named
+	 * MainController exists, it will be used as the controller
+	 * for the global scope.  The global scope can be used
+	 * to communicate between the pages.
+	 */
+	function getGlobalScope() {
+		if (globalScope) {
+			return globalScope;
+		}
+		// Always use a singleton controller for that main scope.
+		// create a global scope over all pages,
+		// so common data is possible.
+		globalScope = angular.scope();
+		if (window.MainController) {
+			globalScope.$become(MainController);
+		}
+        // The eval function of the global scope should eval
+        // the active scope only.
+        globalScope.$onEval(function() {
+            var activePage = $.mobile.activePage;
+            var childScope = activePage.scope();
+            if (childScope) {
+                childScope.$eval();
+            }
+        });
+		return globalScope;
+	}
+
+    $.mobile.globalScope = function() {
+        if (arguments.length==0) {
+            return getGlobalScope();
+        } else {
+            globalScope = arguments[0];
+        }
+    };
+})(angular, $);
+
 /*
  * Basic compile integration.
  */
 (function(angular, $) {
+
+
     function reentrantSwitch(fnNormal, fnReentrant) {
         var reentrant = false;
         return function() {
@@ -56,7 +103,7 @@
             // Create an own separate scope for every page,
             // so the performance of one page does not depend
             // on other pages.
-            var childScope = angular.scope();
+            var childScope = angular.scope($.mobile.globalScope());
             angular.compile(this)(childScope);
         } else {
             res = oldPage.apply(self, arguments);
@@ -372,7 +419,7 @@
             // but jquery mobile fires a change event. So fire a click event when a change event occurs...
             var origBind = element.bind;
             element.bind = function(events, callback) {
-                if (events.indexOf('click')!=-1) {
+                if (events.indexOf('click') != -1) {
                     events += " change";
                 }
                 return origBind.call(this, events, callback);
@@ -626,6 +673,7 @@
 
         };
     });
+
 })(angular);
 
 

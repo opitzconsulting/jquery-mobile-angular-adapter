@@ -44,8 +44,15 @@ Include this adapter _after_ angular and jquery mobile, e.g.
 Scopes
 -----------
 The adapter creates a separate angular scope for every page of jquery mobile.
-There is no global scope by purpose, so the performance of evaluating one page does not depend
-on the expressions on other pages.
+It also creates a global scope to provide communication between the different page scopes.
+If a controller named `MainController` exists it will become the controller
+for the global scope. The `$eval` of the global scope only evaluates the currently active page,
+so there is no performance interaction between pages.
+
+The global scope can be access via the function `$.mobile.globalScope`:
+If no parameter is supplied this returns the current global scope.
+If a parameter is supplied this will set the current global scope.
+
 
 Callbacks for page changes
 --------------

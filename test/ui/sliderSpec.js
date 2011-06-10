@@ -26,6 +26,7 @@ describe("slider", function() {
         });
 
     });
+
     it('should save the model value into the ui', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');
@@ -76,5 +77,27 @@ describe("slider", function() {
         });
 
     });
+
+    it('should be removable when ng:repeat shrinks', function() {
+        loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
+            var page = frame.$('#start');
+            // Note: Be sure to use ng:repeat, as this is the most problematic case!
+            page.append(
+                    '<div data-role="content" ng:init="mylist = [1,2]">' +
+                            '<select ng:repeat="item in mylist" name="mysel" id="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                            '</div>');
+        });
+        runs(function() {
+            var page = testframe().$("#start");
+            var scope = page.scope();
+            // ui select creates a new parent for itself
+            var content = page.find(":jqmData(role='content')");
+            expect(content.children('.ng-widget').length).toEqual(2);
+            scope.mylist = [1];
+            scope.$eval();
+            expect(content.children('.ng-widget').length).toEqual(1);
+        });
+    });
+
 });
 

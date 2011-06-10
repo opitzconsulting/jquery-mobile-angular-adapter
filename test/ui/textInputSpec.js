@@ -8,8 +8,7 @@ describe("textInput", function() {
             var page = frame.$('#start');
             // Note: Be sure to use ng:repeat, as this is the most problematic case!
             page.append('<div data-role="content">' +
-                    '<div ng:repeat="item in [1]">' +
-                    '<input name="mysel" id="mysel" type="text"></div>' +
+                    '<input ng:repeat="item in [1]" name="mysel" id="mysel" type="text">' +
                     '</div>');
         });
         runs(function() {
@@ -29,8 +28,7 @@ describe("textInput", function() {
             var page = frame.$('#start');
             // Note: Be sure to use ng:repeat, as this is the most problematic case!
             page.append('<div data-role="content">' +
-                    '<div ng:repeat="item in [1]">' +
-                    '<input name="mysel" id="mysel" type="text"></div>' +
+                    '<input ng:repeat="item in [1]" name="mysel" id="mysel" type="text">' +
                     '</div>');
         });
         runs(function() {
@@ -49,8 +47,7 @@ describe("textInput", function() {
             var page = frame.$('#start');
             // Note: Be sure to use ng:repeat, as this is the most problematic case!
             page.append('<div data-role="content">' +
-                    '<div ng:repeat="item in [1]">' +
-                    '<input name="mysel" id="mysel" type="text" ng:bind-attr="{disabled: \'{{disabled}}\'}"></div>' +
+                    '<input ng:repeat="item in [1]" name="mysel" id="mysel" type="text" ng:bind-attr="{disabled: \'{{disabled}}\'}">' +
                     '</div>');
         });
         runs(function() {
@@ -65,5 +62,26 @@ describe("textInput", function() {
             expect(input.hasClass('ui-disabled')).toBeTruthy();
         });
     });
+
+    it('should be removable when ng:repeat shrinks', function() {
+        loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
+            var page = frame.$('#start');
+            // Note: Be sure to use ng:repeat, as this is the most problematic case!
+            page.append('<div data-role="content" ng:init="mylist = [1,2]">' +
+                    '<input ng:repeat="item in mylist" name="mysel" id="mysel" type="text">' +
+                    '</div>');
+        });
+        runs(function() {
+            var page = testframe().$("#start");
+            var scope = page.scope();
+            // ui select creates a new parent for itself
+            var content = page.find(":jqmData(role='content')");
+            expect(content.children('input').length).toEqual(2);
+            scope.mylist = [1];
+            scope.$eval();
+            expect(content.children('input').length).toEqual(1);
+        });
+    });
+
 });
 

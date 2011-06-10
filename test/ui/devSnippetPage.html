@@ -6,6 +6,7 @@ Test page during development.
 <head>
     <title>MobileToys</title>
     <script>parent.instrument && parent.instrument(window);</script>
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
     <link rel="stylesheet" href="../../lib/jquery.mobile-1.0b1pre-oc1.css"/>
     <!--
     <link rel="stylesheet" href="../../lib/jquery.mobile-1.0a4.1.css"/>
@@ -24,7 +25,18 @@ Test page during development.
     <div data-role="header">Start
     </div>
     <div data-role="content">
-        <input type="text" name="test" ng:bind-attr="{disabled: 'true'}" value="hallo">
+        <div data-role="fieldcontain" ng:repeat="item in [1,2]">
+            <label for="slider">Select slider:</label>
+            <select name="slider" id="slider" data-role="slider">
+                <option value="off">Off</option>
+                <option value="on">On</option>
+            </select>
+            {{slider}}
+        </div>
+        <div data-role="fieldcontain">
+            <label for="slider">Select slider2:</label>
+            <input type="text" id="input">
+        </div>
     </div>
 </div>
 

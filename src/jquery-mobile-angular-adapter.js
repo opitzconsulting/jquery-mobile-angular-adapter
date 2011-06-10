@@ -239,13 +239,28 @@
                 var element = arguments[elementArgumentPos];
                 var self = this;
                 var myargs = arguments;
-                var origCalled = false;
+                var oldBinderCalled = false;
+                var oldParent = element[0].parentNode;
                 var res = bindFn.call(this, element, function() {
-                    origCalled = true;
+                    oldBinderCalled = true;
                     return oldBinder && oldBinder.apply(self, myargs);
                 });
-                if (!origCalled) {
+                if (!oldBinderCalled) {
                     return oldBinder && oldBinder.apply(self, myargs);
+                }
+                // Some jquery mobile widgets add a new parent node above them
+                // (e.g. select). So be sure that those new elements
+                // also gets deleted when the child is deleted!
+                if (element.length>0 && element[0].parentNode!=oldParent) {
+                    var newNodeUnderParent = element[0];
+                    while (newNodeUnderParent.parentNode!=oldParent) {
+                        newNodeUnderParent = newNodeUnderParent.parentNode;
+                    }
+                    if (newNodeUnderParent!=element[0]) {
+                        element.remove = function() {
+                            $(newNodeUnderParent).remove();
+                        }
+                    }
                 }
                 return res;
             }
@@ -410,6 +425,10 @@
                 var name = element.attr('name');
                 return function(element, origBinder) {
                     var res = origBinder();
+                    // The slider widget creates an element
+                    // after the slider. So we wrap it into
+                    // a div. Needed for ng:repeat and others...
+                    element.wrap('<ngm:group class="ng-widget"></ngm:group>');
                     element.slider();
                     var scope = this;
                     scope.$watch(name, function(value) {
@@ -435,7 +454,6 @@
 
             var res = origBinder();
             var scope = this;
-            var parent = element.parent();
             // The checkboxradio widget looks for a label
             // within the page. So we need a virtual page.
             executeWithVirtualPage(element, function(element, pageElement) {
@@ -490,7 +508,11 @@
         element.find('li').attr('jqmwidget', 'listviewchild');
         return function(element, origBinder) {
             var res = origBinder();
-            element.listview();
+            // The listview widget looks for the persistent footer.
+            // However, this is not possible with ng:repeat.
+            executeWithVirtualPage(element, function(element, pageElement) {
+                element.listview();
+            });
             return res;
         }
     });
@@ -518,7 +540,13 @@
                 var size = angular.Object.size(collection);
                 if (size != oldSize) {
                     oldSize = size;
-                    element.parent().listview('refresh');
+                    // The listview widget looks for the persistent footer.
+                    // However, this is not possible if the list is contained within
+                    // an ng:repeat.
+                    var list = element.parent();
+                    executeWithVirtualPage(list, function(element, page) {
+                        element.listview('refresh');
+                    });
                 }
             });
             return res;

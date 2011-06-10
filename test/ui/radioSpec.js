@@ -76,5 +76,6 @@ describe("radio", function() {
             expect(parentDiv.hasClass('ui-disabled')).toBeTruthy();
         });
     });
+
 });
 

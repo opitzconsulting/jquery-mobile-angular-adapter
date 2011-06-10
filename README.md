@@ -110,8 +110,8 @@ To modularize an angular jquery mobile application, use the following schema:
 
 - For every jquery mobile page one JS-file with a controller for that page.
   To communicate with the controllers of other pages use the
-  `onActivate` and `onPassivate` functions (see above). Usually, the `GlobalController` should
-  not be needed.
+  `onActivate` and `onPassivate` functions (see above).
+  For fiels and functions on all pages use the `GlobalController`.
 - For every jquery mobile page one HTML-file that only contains
   the div with the jquery mobile page and the `ng:controller` attribute for the controller.
   However, due to the page loading in jquery mobile, this cannot contain any css nor JS links.

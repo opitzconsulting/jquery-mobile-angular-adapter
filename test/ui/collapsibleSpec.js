@@ -2,6 +2,7 @@
  * Tests for the collapsible widget integration.
  */
 describe("collapsible", function() {
+
     it('should collapse the content by a click', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');

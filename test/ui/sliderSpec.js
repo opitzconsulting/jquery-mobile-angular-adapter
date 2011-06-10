@@ -2,6 +2,7 @@
  * Tests for the slider widget integration.
  */
 describe("slider", function() {
+
     it('should save the ui value into the model', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');
@@ -57,7 +58,7 @@ describe("slider", function() {
             // Note: Be sure to use ng:repeat, as this is the most problematic case!
             page.append(
                     '<div data-role="content">' +
-                            '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-role="slider" disabled="{{disabled}}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                            '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-role="slider" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                             '</div>');
         });
         runs(function() {

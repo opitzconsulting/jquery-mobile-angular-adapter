@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html xmlns:ng="http://angularjs.org" xmlns:ngm="http://jqm-angularjs.org">
 <!--
 Test page during development.
@@ -22,19 +23,8 @@ Test page during development.
 <div id="start" data-role="page">
     <div data-role="header">Start
     </div>
-    <div data-role="content" ng:init="flag = false">
-        <ul data-role="listview">
-            <li ng:repeat="item in items">
-                <h1>Hallo</h1>
-                {{item}}
-                <ul>
-                    <li>Entry2</li>
-
-                </ul>
-            </li>
-        </ul>
-        <button ng:click="items = [1,2,3]">set it</button>
-        <input type="text" name="test">
+    <div data-role="content">
+        <input type="text" name="test" ng:bind-attr="{disabled: 'true'}" value="hallo">
     </div>
 </div>
 

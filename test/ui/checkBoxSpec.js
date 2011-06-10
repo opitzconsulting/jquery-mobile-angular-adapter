@@ -8,7 +8,7 @@ describe("checkbox", function() {
             // Note: Be sure to use ng:repeat, as this is the most problematic case!
             page.append('<div data-role="content">' +
                     '<div ng:repeat="item in [1]">' +
-                    '<input name="mysel" id="mysel" type="checkbox"><label for="mysel" id="mylab">Entry</label>' +
+                    '<input name="mysel" id="mysel" type="checkbox">{{mysel}}<label for="mysel" id="mylab">Entry</label>' +
                     '</div>' +
                     '</div>');
         });
@@ -20,7 +20,7 @@ describe("checkbox", function() {
             // jquery mobile reacts to clicks on the label
             var label = page.find('label');
             expect(label.length).toEqual(1);
-            label.trigger('click');
+            label.trigger('vclick');
             expect(scope.$get('mysel')).toBeTruthy();
         });
 
@@ -58,7 +58,7 @@ describe("checkbox", function() {
             // Note: Be sure to use ng:repeat, as this is the most problematic case!
             page.append('<div data-role="content">' +
                     '<div ng:repeat="item in [1]">' +
-                    '<input name="mysel" id="mysel" type="checkbox" value="false" disabled="{{disabled}}"><label for="mysel" id="mylab">Entry</label>' +
+                    '<input name="mysel" id="mysel" type="checkbox" value="false" ng:bind-attr="{disabled: \'{{disabled}}\'}"><label for="mysel" id="mylab">Entry</label>' +
                     '</div>' +
                     '</div>');
         });

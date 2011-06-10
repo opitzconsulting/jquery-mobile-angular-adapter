@@ -2,6 +2,7 @@
  * Tests for the radio widget integration.
  */
 describe("radio", function() {
+
     it('should save the ui value into the model', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');
@@ -52,13 +53,13 @@ describe("radio", function() {
         });
     });
 
-    it('should use the diabled attribute', function() {
+    it('should use the disabled attribute', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');
             // Note: Be sure to use ng:repeat, as this is the most problematic case!
             page.append('<div data-role="content">' +
                     '<div ng:repeat="item in [1]">' +
-                    '<input name="mysel" id="mysel" type="radio" value="v1" disabled="{{disabled}}"><label for="mysel" id="mylab">Entry</label>' +
+                    '<input name="mysel" id="mysel" type="radio" value="v1" ng:bind-attr="{disabled: \'{{disabled}}\'}"><label for="mysel" id="mylab">Entry</label>' +
                     '</div>' +
                     '</div>');
         });

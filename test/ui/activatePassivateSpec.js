@@ -1,4 +1,5 @@
 describe("activatePassivateSpec", function() {
+
     var activateCallCount = 0;
     var activateThis = null;
     var activatePrevScope = null;

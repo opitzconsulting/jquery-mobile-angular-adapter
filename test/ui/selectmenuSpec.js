@@ -2,6 +2,7 @@
  * Tests for the slider widget integration.
  */
 describe("selectmenu", function() {
+
     it('should save the ui value into the model when using non native menus', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');
@@ -17,11 +18,16 @@ describe("selectmenu", function() {
             expect(select[0].value).toEqual("v1");
             var scope = select.scope();
             expect(scope.$get('mysel')).toEqual("v1");
+            // the menu should only be in the dom when it is open
+            expect(page.find(".ui-selectmenu").length).toEqual(0);
+
             // find the menu and click on the second entry
+            select.selectmenu('open');
             var popup = page.find(".ui-selectmenu");
             var options = popup.find("li");
             var option = testframe().$(options[1]);
             option.trigger('vclick');
+            select.selectmenu('close');
             expect(scope.$get('mysel')).toEqual("v2");
         });
     });
@@ -57,7 +63,7 @@ describe("selectmenu", function() {
             // Note: Be sure to use ng:repeat, as this is the most problematic case!
             page.append(
                     '<div data-role="content">' +
-                            '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false" disabled="{{disabled}}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                            '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                             '</div>');
         });
         runs(function() {
@@ -74,6 +80,4 @@ describe("selectmenu", function() {
             expect(disabled).toEqual(true);
         });
     });
-
-
 });

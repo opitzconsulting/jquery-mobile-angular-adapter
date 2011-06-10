@@ -45,7 +45,6 @@
     $.mobile.inJqmPageCompile = false;
 
     var oldPage = $.fn.page;
-    $.mobile.afterUpdateViewQueue = [];
     $.fn.page = reentrantSwitch(function() {
         var self = this;
 
@@ -58,26 +57,6 @@
             // so the performance of one page does not depend
             // on other pages.
             var childScope = angular.scope();
-            // Overwrite the onEval of the root scope,
-            // to be able to react to updateView calls.
-            var oldEval = childScope.$eval;
-            var evalCount = 0;
-            childScope.$eval = function() {
-                evalCount++;
-                try {
-                    return oldEval.apply(this, arguments);
-                } finally {
-                    evalCount--;
-                    if (evalCount==0) {
-                        // evaluate the after updateView queue
-                        var queue = $.mobile.afterUpdateViewQueue;
-                        while (queue.length > 0) {
-                            var entry = queue.shift();
-                            entry();
-                        }
-                    }
-                }
-            }
             angular.compile(this)(childScope);
         } else {
             res = oldPage.apply(self, arguments);
@@ -129,7 +108,8 @@
      * Synchronizes an angular and jquery mobile widget.
      * @param tagname
      * @param jqmWidget
-     * @param compileFn compile function(element, jqmWidget) just like the compile functions of angular.
+     * @param compileFn compile function(element, jqmWidget, origBinder) just like the compile functions of angular.
+     *  If the origBinder was not called, it will get called automatically after the new binder.
      */
     function jqmAngularWidget(tagname, jqmWidget, compileFn) {
         if (!jqmWidgetProxies[jqmWidget]) {
@@ -141,14 +121,15 @@
             createAngularWidgetProxy(tagname, function(element) {
                 var jqmWidget = element.attr('jqmwidget');
                 if (!jqmWidget) {
-                    return function() { };
+                    return function() {
+                    };
                 }
-                var jqmAngularCompileFn = jqmAngularWidgets[tagname+":"+jqmWidget];
+                var jqmAngularCompileFn = jqmAngularWidgets[tagname + ":" + jqmWidget];
                 return jqmAngularCompileFn.call(this, element);
             });
             angularWidgetProxies[tagname] = true;
         }
-        jqmAngularWidgets[tagname+":"+jqmWidget] = compileFn;
+        jqmAngularWidgets[tagname + ":" + jqmWidget] = compileFn;
     }
 
     /*
@@ -162,42 +143,19 @@
         var oldWidget = $.fn[jqmWidget];
         $.fn[jqmWidget] = function(options) {
             var instanceExists = this.data() && this.data()[jqmWidget];
-            if (instanceExists || this.length==0) {
+            if (instanceExists || this.length == 0) {
                 return oldWidget.apply(this, arguments);
             } else if ($.mobile.inJqmPageCompile) {
                 // Prevent initialization during precompile,
                 // and mark the element so that the angular widget
                 // can create the widget!
-                for (var i=0; i<this.length; i++) {
-                    this[i].options = options;
+                for (var i = 0; i < this.length; i++) {
+                    this[i].jqmoptions = options;
                 }
                 this.attr('jqmwidget', jqmWidget);
                 return this;
             } else {
-                // record the function calls
-                // and do not execute them until the end of the compilation.
-                // Neded for e.g. selectmenu with ng:repeat:
-                // ng:repeat uses dom fragements, so the current element
-                // is not part of the complete dom yet. However, selectmenu
-                // requires access to the parent element, and inserts siblings to the element.
-                // Therefor the creation of the widget as well as all function calls
-                // is deferred, after the
-                // angular compilation.
-                this[0].functionCalls = this[0].functionCalls || [];
-                var functionCalls = this[0].functionCalls;
-                if (functionCalls.length == 0) {
-                    var self = this;
-                    $.mobile.afterUpdateViewQueue.push(function() {
-                        self[0].functionCalls = [];
-                        for (var i = 0; i < functionCalls.length; i++) {
-                            var call = functionCalls[i];
-                            oldWidget.apply(self, call);
-                        }
-                    });
-                }
-                var call = Array.prototype.slice.call(arguments, 0);
-                functionCalls.push(call);
-                return this;
+                return oldWidget.apply(this, arguments);
             }
         };
         for (var key in oldWidget) {
@@ -224,8 +182,16 @@
             var newBinder = function() {
                 var elementArgumentPos = (oldBinder && oldBinder.$inject && oldBinder.$inject.length) || 0;
                 var element = arguments[elementArgumentPos];
-                var res = oldBinder && oldBinder.apply(this, arguments);
-                bindFn.call(this, element);
+                var self = this;
+                var myargs = arguments;
+                var origCalled = false;
+                var res = bindFn.call(this, element, function() {
+                    origCalled = true;
+                    return oldBinder && oldBinder.apply(self, myargs);
+                });
+                if (!origCalled) {
+                    return oldBinder && oldBinder.apply(self, myargs);
+                }
                 return res;
             }
             newBinder.$inject = oldBinder && oldBinder.$inject;
@@ -270,17 +236,17 @@
             if (!jqmWidget || !jqmWidgetDisabledHandling[jqmWidget]) {
                 return;
             }
-            var regex = /"([^"]*)"/;
+            var regex = /([^:{'"]+)/;
             var attr = regex.exec(expression)[1];
             var scope = this;
-            if (attr=='disabled') {
+            if (attr == 'disabled') {
                 var oldValue;
                 // Note: We cannot use scope.$watch here:
                 // We want to be called after the proxied angular implementation, and
                 // that uses $onEval. $watch always gets evaluated before $onEval.
                 scope.$onEval(function() {
                     var value = element.attr(attr);
-                    if (value!=oldValue) {
+                    if (value != oldValue) {
                         oldValue = value;
                         if (value) {
                             element[jqmWidget]("disable");
@@ -293,19 +259,93 @@
         }
     });
 
-
     /**
-     * Definition of the jquery mobile and angular widget interaction
+     * Creates a virtual page for the given element all all of it's siblings and
+     * executes the callback with the element and the virtual page as arguments.
+     * Useful to create jquery mobile widget in an isolated environment.
+     * @param element
+     * @param callback
      */
+    function executeWithVirtualPage(element, callback) {
+        // Note: We cannot use jquery functions here,
+        // as they do not work correctly with document fragments
+        // as parent node!
+        var parent = element[0].parentNode;
+        var pageElement = $('<div data-role="page" class="ui-page"></div>');
+        // The parent of the virtual page is a document fragment.
+        // We need to add some functions so that jquery does
+        // create errors during some queries...
+        pageElement[0].parentNode.getAttribute = function() {
+            return null;
+        };
+        // Also create a fake page container.
+        // Some widgets like selectmenu use this variable directly!
+        var pageContainer = $('<div></div>');
+        var oldPageContainer = $.mobile.pageContainer;
+        $.mobile.pageContainer = pageContainer;
+        var children = parent.childNodes;
+        while (children.length > 0) {
+            pageElement[0].appendChild(children[0]);
+        }
+        try {
+            return callback(element, pageElement);
+        } finally {
+            $.mobile.pageContainer = oldPageContainer;
+            var children = pageElement[0].childNodes;
+            while (children.length > 0) {
+                parent.appendChild(children[0]);
+            }
+        }
+    }
+
     jqmWidgetDisabledHandling.selectmenu = true;
     jqmAngularWidget('select', 'selectmenu', function(element) {
         var name = element.attr('name');
-        return function(element) {
+        return function(element, origBinder) {
+            var res = origBinder();
             var scope = this;
-            element.selectmenu();
-            scope.$watch(name, function(value) {
-                element.selectmenu('refresh');
+            // The selectmenu widget from jquery mobile
+            // creates elements for the popup directly under the page,
+            // and also a dialog on the same level as the page.
+            // We grab these elements and insert them only when the dialog is open into the dom.
+            executeWithVirtualPage(element, function(element, pageElement) {
+                element.selectmenu();
+                // save the elements that were created directly under the page,
+                // and insert them into the dom when needed.
+                var pageElements = pageElement.children(".ui-selectmenu, .ui-selectmenu-screen");
+                pageElements.detach();
+                var instance = element.data().selectmenu;
+                var oldOpen = instance.open;
+                instance.open = function() {
+                    var page = element.closest('.ui-page');
+                    page.append(pageElements);
+                    return oldOpen.apply(this, arguments);
+                };
+                var oldClose = instance.close;
+                instance.close = function() {
+                    var res = oldClose.apply(this, arguments);
+                    pageElements.detach();
+                    return res;
+                };
+                var oldRefresh = instance.refresh;
+                instance.refresh = function() {
+                    var page = element.closest('.ui-page');
+                    page.append(pageElements);
+                    try {
+                        return oldRefresh.apply(this, arguments);
+                    } finally {
+                        pageElements.detach();
+                    }
+
+                };
             });
+            scope.$watch(name, function(value) {
+                var page = element.closest('.ui-page');
+                if (page.length > 0) {
+                    element.selectmenu('refresh', true);
+                }
+            });
+            return res;
         }
     });
 
@@ -313,61 +353,75 @@
     jqmAngularWidget('select', 'slider',
             function(element) {
                 var name = element.attr('name');
-                return function(element) {
+                return function(element, origBinder) {
+                    var res = origBinder();
                     element.slider();
                     var scope = this;
                     scope.$watch(name, function(value) {
                         element.slider('refresh');
                     });
+                    return res;
                 };
             });
 
     jqmWidgetDisabledHandling.checkboxradio = true;
     jqmAngularWidget('input', 'checkboxradio', function(element) {
         var name = element.attr('name');
-        return function(element) {
+        return function(element, origBinder) {
+            // Angular only binds to the click event for radio and check boxes,
+            // but jquery mobile fires a change event. So fire a click event when a change event occurs...
+            var origBind = element.bind;
+            element.bind = function(events, callback) {
+                if (events.indexOf('click')!=-1) {
+                    events += " change";
+                }
+                return origBind.call(this, events, callback);
+            };
+
+            var res = origBinder();
             var scope = this;
-            element.checkboxradio();
+            var parent = element.parent();
+            // The checkboxradio widget looks for a label
+            // within the page. So we need a virtual page.
+            executeWithVirtualPage(element, function(element, pageElement) {
+                element.checkboxradio();
+            });
             scope.$watch(name, function(value) {
                 element.checkboxradio('refresh');
             });
-            var inChange = false;
-            // Angular only binds to the click event,
-            // but jquery mobile fires a change event when the checkbox
-            // is changed. So fire a click event when a change event occurs...
-            element.bind('change', function() {
-                if (!inChange) {
-                    inChange = true;
-                    element.trigger('click');
-                    inChange = false;
-                }
-            });
+            return res;
         }
     });
 
     jqmWidgetDisabledHandling.button = true;
     jqmAngularWidget('button', 'button', function(element) {
-        var options = element[0].options;
-        return function(element) {
+        var options = element[0].jqmoptions;
+        return function(element, origBinder) {
+            var res = origBinder();
             var scope = this;
             element.button(options);
+            return res;
         }
     });
 
     jqmAngularWidget('div', 'collapsible', function(element) {
         var name = element.attr('name');
-        return function(element) {
+        return function(element, origBinder) {
+            var res = origBinder();
             var scope = this;
             element.collapsible();
+            return res;
         }
     });
 
     jqmWidgetDisabledHandling.textinput = true;
     jqmAngularWidget('input', 'textinput', function(element) {
         var name = element.attr('name');
-        return function(element) {
+        return function(element, origBinder) {
+            var res = origBinder();
             var scope = this;
             element.textinput();
+            return res;
         }
     });
 
@@ -378,23 +432,27 @@
      * listview widget is added.
      **/
     jqmAngularWidget('ul', 'listview', function(element) {
-       element.find('li').attr('jqmwidget','listviewchild');
-       return function(element) {
-           element.listview();
-       }
+        element.find('li').attr('jqmwidget', 'listviewchild');
+        return function(element, origBinder) {
+            var res = origBinder();
+            element.listview();
+            return res;
+        }
     });
 
     createAngularWidgetProxy('@ng:repeat', function(expression, element) {
         var isListView = false;
-        if (element.attr('jqmwidget')=='listviewchild') {
+        if (element.attr('jqmwidget') == 'listviewchild') {
             isListView = true;
         }
         if (!isListView) {
-            return function() { };
+            return function() {
+            };
         }
         var match = expression.match(/^\s*(.+)\s+in\s+(.*)\s*$/);
         var rhs = match[2];
-        return function(element) {
+        return function(element, origBinder) {
+            var res = origBinder();
             var scope = this;
             // Note: We cannot use scope.$watch here:
             // We want to be called after the proxied angular implementation, and
@@ -403,11 +461,12 @@
             scope.$onEval(function() {
                 var collection = scope.$tryEval(rhs, element);
                 var size = angular.Object.size(collection);
-                if (size!=oldSize) {
+                if (size != oldSize) {
                     oldSize = size;
                     element.parent().listview('refresh');
                 }
             });
+            return res;
         }
     });
 
@@ -545,7 +604,6 @@
                     element.hide();
                     return;
                 }
-                ;
                 var newElement = quickClone(templateEntry);
                 newElement.show();
                 // remove all children

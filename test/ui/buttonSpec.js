@@ -2,6 +2,7 @@
  * Tests for the button widget integration.
  */
 describe("button", function() {
+
     it('should allow clicks via ng:click', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');
@@ -30,7 +31,7 @@ describe("button", function() {
             // Note: Be sure to use ng:repeat, as this is the most problematic case!
             page.append('<div data-role="content">' +
                     '<div ng:repeat="item in [1]">' +
-                    '<button id="mysel" ng:click="flag = true" disabled="{{disabled}}">Test</button>' +
+                    '<button id="mysel" ng:click="flag = true" ng:bind-attr="{disabled: \'{{disabled}}\'}">Test</button>' +
                     '</div>' +
                     '</div>');
         });

@@ -2,6 +2,7 @@
  * Tests for the listview widget integration.
  */
 describe("listview", function() {
+
     it('should be usable without ng:repeat', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');
@@ -47,9 +48,7 @@ describe("listview", function() {
             var scope = page.scope();
             expect(li.length).toEqual(0);
             scope.$set('list', [1,2]);
-            console.log("-------- before eval");
             scope.$eval();
-            console.log("-------- after eval");
             li = page.find("li");
             expect(li.length).toEqual(2);
             for (var i=0; i<li.length; i++) {

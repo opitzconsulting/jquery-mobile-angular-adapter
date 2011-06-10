@@ -2,6 +2,7 @@
  * Tests for the textinput widget integration.
  */
 describe("textInput", function() {
+
     it('should save the ui value into the model', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');
@@ -49,7 +50,7 @@ describe("textInput", function() {
             // Note: Be sure to use ng:repeat, as this is the most problematic case!
             page.append('<div data-role="content">' +
                     '<div ng:repeat="item in [1]">' +
-                    '<input name="mysel" id="mysel" type="text" disabled="{{disabled}}"></div>' +
+                    '<input name="mysel" id="mysel" type="text" ng:bind-attr="{disabled: \'{{disabled}}\'}"></div>' +
                     '</div>');
         });
         runs(function() {

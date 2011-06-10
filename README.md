@@ -45,7 +45,7 @@ Scopes
 -----------
 The adapter creates a separate angular scope for every page of jquery mobile.
 It also creates a global scope to provide communication between the different page scopes.
-If a controller named `MainController` exists it will become the controller
+If a controller named `GlobalController` exists it will become the controller
 for the global scope. The `$eval` of the global scope only evaluates the currently active page,
 so there is no performance interaction between pages.
 
@@ -67,13 +67,27 @@ Note that for creating a function in a scope just assign a controller for that p
 e.g. `<div data-role="page" ng:controller="MyController">`.
 
 
-Tags, Directives and Services
+Widgets, Directives and Services
 -----------
 
 ### Directive ngm:click(handler)
-Special click handler that integrates with jquery mobile's vlick event.
+Special click handler that integrates with jquery mobile's `vclick` event and by this also reacts to touches.
 
 Usage: E.g. `<a href="#" ngm:click="myFn()">`
+
+### Attribute Widget @ng:if
+The attribute widget `@ng:if` allows to add/remove an element to/from the dom, depending on an expression.
+This is especially useful at places where we cannot insert an `ng:switch` into the dom. E.g. jquery mobile
+does not allow elements between an `ul` and an `li` element.
+
+Usage: E.g. `<div ng:if="myFlag">asdfasdf</div>`
+
+### Directive ng:fadein
+For smooth fadings between `ng:if` changes, there is also the directive `ngm:fadein`.
+This specifies that the display of the coresponding element
+should be shown via a transition lasting a defined amount of milliseconds (the value of the attribute).
+
+Usage: E.g. `<div ng:fadein="700">asdf</div>`
 
 
 ### Service $activePage
@@ -87,39 +101,6 @@ Parameters (see $.mobile.changePage)
 - reverse (optional): If the transition should be executed in reverse style
 
 Usage: E.g. `$activePage('page2')`
-
-
-Templating
------------
-Templates can be defined using the attribute `ngm:define` and referenced by the attribute
-`ngm:switch`. The value of the `ngm:define` defines the template name that should be defined.
-The value of the `ngm:switch` attribute defines an expression that returns the template name
-to be inserted. This expression is watched, so whenever the expression changes,
-the corresponding template is used.
-
-Example:
-The following example shows a list that displays the names of persons.
-It defines two templates: Ony for readonly view and one with a delete button.
-The template name is stored in the variable personTemplate. By changing this
-variable in the controller, is is possible to switch between the two layouts.
-
-
-    <ul data-role="listview" data-inset="true" data-theme="c">
-        <li ngm:define="personReadonly">
-		    <a href="#person">{{person.name}}</a>
-        </li>
-        <li ngm:define="personEdit">
-            <a href="#person">{{person.name}}</a>
-            <a href="" data-icon="delete" ng:mclick="deletePerson(person)" ngm:fadein="700"></a>
-        </li>
-        <li ng:repeat="person in personList" ngm:switch="personTemplate">
-        </li>
-    </ul>
-
-
-For smooth fadings between template changes, there is also the directive `ngm:fadein`.
-This specifies that the display of the coresponding element (the delete button in the example)
-should be done via a transition lasting a defined amount of milliseconds (the value of the attribute).
 
 
 

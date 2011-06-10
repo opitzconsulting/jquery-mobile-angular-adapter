@@ -27,25 +27,25 @@
  * Global scope
  */
 (function(angular, $) {
-	var globalScope = null;
+    var globalScope = null;
 
-	/**
-	 * Lazily initializes the global scope. If a controller named
-	 * MainController exists, it will be used as the controller
-	 * for the global scope.  The global scope can be used
-	 * to communicate between the pages.
-	 */
-	function getGlobalScope() {
-		if (globalScope) {
-			return globalScope;
-		}
-		// Always use a singleton controller for that main scope.
-		// create a global scope over all pages,
-		// so common data is possible.
-		globalScope = angular.scope();
-		if (window.MainController) {
-			globalScope.$become(MainController);
-		}
+    /**
+     * Lazily initializes the global scope. If a controller named
+     * GlobalController exists, it will be used as the controller
+     * for the global scope.  The global scope can be used
+     * to communicate between the pages.
+     */
+    function getGlobalScope() {
+        if (globalScope) {
+            return globalScope;
+        }
+        // Always use a singleton controller for that main scope.
+        // create a global scope over all pages,
+        // so common data is possible.
+        globalScope = angular.scope();
+        if (window.GlobalController) {
+            globalScope.$become(GlobalController);
+        }
         // The eval function of the global scope should eval
         // the active scope only.
         globalScope.$onEval(function() {
@@ -55,11 +55,11 @@
                 childScope.$eval();
             }
         });
-		return globalScope;
-	}
+        return globalScope;
+    }
 
     $.mobile.globalScope = function() {
-        if (arguments.length==0) {
+        if (arguments.length == 0) {
             return getGlobalScope();
         } else {
             globalScope = arguments[0];
@@ -68,7 +68,7 @@
 })(angular, $);
 
 /*
- * Basic compile integration.
+ * Compile integration.
  */
 (function(angular, $) {
 
@@ -111,7 +111,15 @@
         return res;
     }, oldPage);
 
+})(angular, jQuery);
 
+
+/**
+ * Be sure that the angular service $browser has the current browser location
+ * when page are transitioned.
+ * This prevents unneeded forward/backward jumps between pages.
+ */
+(function(angular, $) {
     // TODO create a reproduce case for this. Maybe this is no more needed??
     // listen to pageshow and update the angular $location-service.
     // Prevents an errornous back navigation when navigating to another page.
@@ -123,8 +131,8 @@
             $location.update($browser.getUrl());
         });
     }, {$inject: ['$browser','$location'], $eager:true});
-})(angular, jQuery);
 
+})(angular, jQuery);
 
 /*
  * Integration of jquery mobile and angular widgets.
@@ -546,7 +554,7 @@
 })(angular, $);
 
 /*
- * Special angular services for jquery mobile
+ * $activePage service.
  */
 (function(angular, window) {
     /*
@@ -580,97 +588,60 @@
 
 })(angular, window);
 
-
 /*
- * Defines templating mechanisms useful for jquery mobile
+ * Defines the ng:if tag. This is useful if jquery mobile does not allow
+ * an ng:switch element in the dom, e.g. between ul and li.
  */
 (function(angular) {
-    var templates = {};
+    angular.widget('@ng:if', function(expression, element) {
+        element.removeAttr('ng:if');
+        element.replaceWith(angular.element('<!-- ng:if: ' + expression + ' --!>'));
+        var linker = this.compile(element);
+        return function(element) {
+            var child = null, currentScope = this;
+            this.$onEval(function() {
+                var result = this.$tryEval(expression, element);
+                if (result) {
+                    if (!child) {
+                        // The element should be added to the dom
+                        // create the element
+                        var fragment = document.createDocumentFragment();
+                        // Attention: As we do not create a new scope
+                        // the linker changes the $element of the scope,
+                        // so we save it and restore it later.
+                        var oldScopeElement = currentScope.$element;
+                        linker(currentScope, function(clone) {
+                            child = clone;
+                            fragment.appendChild(clone[0]);
+                        });
+                        currentScope.$element = oldScopeElement;
+                        element.after(angular.element(fragment));
+                    }
+                } else if (child) {
+                    // remove the element from the dom
+                    child.remove();
+                    child = null;
+                }
+            }, element);
+        };
+    });
+})(angular);
 
-    function quickClone(element) {
-        return angular.element(element[0].cloneNode(true));
-    }
 
-    function eachAttribute(element, fn) {
-        var i, attrs = element[0].attributes || [], attr, name, value = {};
-        for (i = 0; i < attrs.length; i++) {
-            attr = attrs[i];
-            name = attr.name;
-            value = attr.value;
-            fn(name, value);
-        }
-    }
-
+/*
+ * The ng:fadein directive
+ */
+(function(angular) {
     /*
      * Directive that fades in an element when angular
      * uses it. Useful in templating when the underlying template changed.
      */
-    angular.directive("ngm:fadein", function(expression, element) {
+    angular.directive("ng:fadein", function(expression, element) {
         this.directives(true);
         this.descend(true);
         element.css({opacity:0.1});
         return function(element) {
             element.animate({opacity:1.0}, parseInt(expression));
-        };
-    });
-
-    /**
-     * Defines a template to be used later by {@ngm:switch}. The value of the
-     * attribute is the template id.
-     */
-    angular.widget("@ngm:define", function(expression, element) {
-        element.removeAttr('ngm:define');
-        templates[expression] = element;
-        // hide the element, but do not remove it from the dom,
-        // as otherwise the iteration in angular over the dom
-        // gets confused!
-        element.hide();
-        // do not allow child tags nor directives, as we want to capture them!
-        this.directives(false);
-        this.descend(false);
-        // and do nothing in the linkage-phase
-        return function() {
-
-        };
-    });
-
-    /**
-     * Applies a template. The value of this attribute needs to be an angular expression
-     * that evaluates to a template id defined by {@ngm:define}. When the expression
-     * changes, the template also changes.
-     */
-    angular.widget("@ngm:switch", function(expression, element) {
-        var compiler = this;
-        element.removeAttr('ngm:switch');
-        return function(element) {
-            var scope = this;
-
-            scope.$watch(expression, function(tplId) {
-                var templateEntry = templates[tplId];
-                if (!templateEntry) {
-                    element.hide();
-                    return;
-                }
-                var newElement = quickClone(templateEntry);
-                newElement.show();
-                // remove all children
-                element.html('');
-                eachAttribute(element, function(name, value) {
-                    element.removeAttr(name);
-                });
-                // add the attributes of the template
-                eachAttribute(newElement, function(name, value) {
-                    element.attr(name, value);
-                });
-                // and also all children of the template
-                element.append(newElement.contents());
-                // now reevaluate the element again.
-                // Attention: keep the old jquery element in the scope correct!
-                var oldScopeElement = scope.$element;
-                angular.compile(element)(scope);
-                scope.$element = oldScopeElement;
-            });
-
         };
     });
 

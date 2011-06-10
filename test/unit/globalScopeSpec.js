@@ -1,4 +1,4 @@
-describe("mainController", function() {
+describe("globalScope", function() {
     var element, scope;
 
     function compile(html) {
@@ -17,7 +17,7 @@ describe("mainController", function() {
 
     it('should use the global controller als global scope', function() {
         $.mobile.globalScope(null);
-        window.MainController = function() {
+        window.GlobalController = function() {
             this.test = 'hallo';
         };
         var result;
@@ -84,7 +84,7 @@ describe("mainController", function() {
 
     it('should work without global controller', function() {
         $.mobile.globalScope(null);
-        window.MainController = null;
+        window.GlobalController = null;
         window.TestController = function() {
             this.test = 'hallo';
         };

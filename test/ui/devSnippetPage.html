@@ -7,7 +7,7 @@ Test page during development.
     <title>MobileToys</title>
     <script>parent.instrument && parent.instrument(window);</script>
     <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
-    <link rel="stylesheet" href="../../lib/jquery.mobile-1.0b1pre-oc1.css"/>
+    <link rel="stylesheet" href="../../lib/jquery.mobile-1.0a4.1-oc2.css"/>
     <!--
     <link rel="stylesheet" href="../../lib/jquery.mobile-1.0a4.1.css"/>
     -->
@@ -15,7 +15,7 @@ Test page during development.
     <!--
     <script src="../../lib/jquery.mobile-1.0a4.1.js"></script>
     -->
-    <script src="../../lib/jquery.mobile-1.0b1pre-oc1.js"></script>
+    <script src="../../lib/jquery.mobile-1.0a4.1-oc2.js"></script>
     <script src="../../lib/angular-0.9.15.js"></script>
     <script src="../../src/jquery-mobile-angular-adapter.js"></script>
 </head>
@@ -25,17 +25,14 @@ Test page during development.
     <div data-role="header">Start
     </div>
     <div data-role="content">
-        <div data-role="fieldcontain" ng:repeat="item in [1,2]">
-            <label for="slider">Select slider:</label>
-            <select name="slider" id="slider" data-role="slider">
-                <option value="off">Off</option>
-                <option value="on">On</option>
-            </select>
-            {{slider}}
-        </div>
         <div data-role="fieldcontain">
-            <label for="slider">Select slider2:</label>
-            <input type="text" id="input">
+            <table>
+            <tr>
+            <td><label for="preis">Tagespreis bis:</label></td>
+            <td><input type="number" data-type="range" id="preis" name="preis" value="150" min="0" max="300" /></td>
+            </tr>
+                </table>
+            <input type="text" name="preis">
         </div>
     </div>
 </div>

@@ -228,11 +228,7 @@
     function createAngularWidgetProxy(tagname, compileFn) {
         var oldWidget = angular.widget(tagname);
         angular.widget(tagname, function() {
-            var oldBinder = oldWidget && oldWidget.apply(this, arguments);
-            if (!oldWidget) {
-                this.descend(true);
-                this.directives(true);
-            }
+            var oldBinder;
             var bindFn = compileFn.apply(this, arguments);
             var newBinder = function() {
                 var elementArgumentPos = (oldBinder && oldBinder.$inject && oldBinder.$inject.length) || 0;
@@ -264,6 +260,13 @@
                 }
                 return res;
             }
+            // execute the angular compiler after our compiler!
+            oldBinder = oldWidget && oldWidget.apply(this, arguments);
+            if (!oldWidget) {
+                this.descend(true);
+                this.directives(true);
+            }
+
             newBinder.$inject = oldBinder && oldBinder.$inject;
             return newBinder;
         });
@@ -430,6 +433,30 @@
                     // a div. Needed for ng:repeat and others...
                     element.wrap('<ngm:group class="ng-widget"></ngm:group>');
                     element.slider();
+                    var scope = this;
+                    scope.$watch(name, function(value) {
+                        element.slider('refresh');
+                    });
+                    return res;
+                };
+            });
+
+    jqmAngularWidget('input', 'slider',
+            function(element) {
+                var oldType = element[0].type;
+                element[0].type = 'text';
+                element[0]['data-type'] = 'range';
+                var name = element.attr('name');
+                return function(element, origBinder) {
+                    element[0].type = oldType;
+                    var res = origBinder();
+                    // The slider widget creates an element
+                    // after the slider. So we wrap it into
+                    // a div. Needed for ng:repeat and others...
+                    element.wrap('<ngm:group class="ng-widget"></ngm:group>');
+                    element.slider();
+                    // apply the textinput widget also
+                    element.textinput();
                     var scope = this;
                     scope.$watch(name, function(value) {
                         element.slider('refresh');

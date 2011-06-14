@@ -20,7 +20,8 @@ describe("collapsible", function() {
             var header = input.find('h3');
             var content = input.find(".ui-collapsible-content");
             expect(content.hasClass('ui-collapsible-content-collapsed')).toBeFalsy();
-            header.trigger('vclick');
+            header.trigger('vclick'); // for jqm 1 beta
+            header.trigger('vmouseup'); // for jqm 1 alpha
             expect(content.hasClass('ui-collapsible-content-collapsed')).toBeTruthy();
         });
 

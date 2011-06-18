@@ -49,6 +49,33 @@ describe("activatePassivateSpec", function() {
         reset();
     });
 
+    it('should eval the page after onActivate', function() {
+        var page2scope;
+        var evalCount;
+        loadHtml('/jqmng/test/ui/test-fixture.html', instrumentPage);
+        runs(function() {
+            var $ = testframe().$;
+            var startPageScope = $("#start").scope();
+            // be sure to create the page2
+            var page2 = $("#page2").page();
+            page2scope = page2.scope();
+            var activePage = startPageScope.$service("$activePage");
+        });
+        waitsForAsync();
+        runs(function() {
+            var $ = testframe().$;
+            page2scope.$onEval(function() {
+                evalCount++;
+            });
+            evalCount = 0;
+            $.mobile.globalScope().$service("$activePage")("page2");
+        });
+        waitsForAsync();
+        runs(function() {
+           expect(evalCount).not.toEqual(0);
+        });
+    });
+
     it('should call onActivate when the page is initially shown', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', instrumentPage);
         runs(function() {

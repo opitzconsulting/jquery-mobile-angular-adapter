@@ -46,15 +46,6 @@
         if (window.GlobalController) {
             globalScope.$become(GlobalController);
         }
-        // The eval function of the global scope should eval
-        // the active scope only.
-        globalScope.$onEval(function() {
-            var activePage = $.mobile.activePage;
-            var childScope = activePage.scope();
-            if (childScope) {
-                childScope.$eval();
-            }
-        });
         return globalScope;
     }
 
@@ -597,6 +588,17 @@
         }
     });
 
+    var currScope = null;
+    // The eval function of the global scope should eval
+    // the active scope only.
+    $.mobile.globalScope().$onEval(function() {
+        // Note that wen cannot use $.mobile.activePage here,
+        // as this has an old valud in the pagebeforeshow event!
+        if (currScope) {
+            currScope.$eval();
+        }
+    });
+
     $('div').live('pagebeforeshow', function(event, ui) {
         var currPageScope = $(event.target).scope();
         var prevPage = ui.prevPage;
@@ -604,7 +606,10 @@
         if (currPageScope.onActivate) {
             currPageScope.onActivate.call(currPageScope, prevPageScope);
         }
-        currPageScope.$service('$updateView')();
+        // Note that we cannot use
+        currScope = currPageScope;
+        // TODO $.mobile.globalScope().$eval();
+        $.mobile.globalScope().$service('$updateView')();
     });
 })(angular, $);
 

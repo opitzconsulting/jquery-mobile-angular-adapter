@@ -38,34 +38,6 @@ describe("globalScope", function() {
 
     });
 
-    it('should eval the current page when the global scope is evaluated', function() {
-        var globalScope = $.mobile.globalScope();
-        compile('<div id="page1" data-role="page">' +
-                '</div>');
-        var page1 = element;
-        var scope1 = element.scope();
-        compile('<div id="page2" data-role="page">' +
-                '</div>');
-        var page2 = element;
-        var scope2 = element.scope();
-        var scope1Count = 0;
-        scope1.$onEval(function() {
-            scope1Count++;
-        });
-        var scope2Count = 0;
-        scope2.$onEval(function() {
-            scope2Count++;
-        });
-        $.mobile.activePage = page1;
-        globalScope.$eval();
-        expect(scope1Count).toEqual(1);
-        expect(scope2Count).toEqual(0);
-        $.mobile.activePage = page2;
-        globalScope.$eval();
-        expect(scope1Count).toEqual(1);
-        expect(scope2Count).toEqual(1);
-    });
-
 
     it('should use a common global scope as parent of all page scopes', function() {
         compile('<div id="page1" data-role="page">' +

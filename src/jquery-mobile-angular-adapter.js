@@ -104,27 +104,6 @@
 
 })(angular, jQuery);
 
-
-/**
- * Be sure that the angular service $browser has the current browser location
- * when page are transitioned.
- * This prevents unneeded forward/backward jumps between pages.
- */
-(function(angular, $) {
-    // TODO create a reproduce case for this. Maybe this is no more needed??
-    // listen to pageshow and update the angular $location-service.
-    // Prevents an errornous back navigation when navigating to another page.
-    // This occurs when angular does things by an xhr and it's eval
-    // method takes some time to run (race condition...).
-    // See $location service, especially the sync and updateBrowser functions.
-    angular.service("createWatchPageShow", function($browser, $location) {
-        $('.ui-page').live('pageshow', function(event, ui) {
-            $location.update($browser.getUrl());
-        });
-    }, {$inject: ['$browser','$location'], $eager:true});
-
-})(angular, jQuery);
-
 /*
  * Integration of jquery mobile and angular widgets.
  */
@@ -238,12 +217,12 @@
                 // Some jquery mobile widgets add a new parent node above them
                 // (e.g. select). So be sure that those new elements
                 // also gets deleted when the child is deleted!
-                if (element.length>0 && element[0].parentNode!=oldParent) {
+                if (element.length > 0 && element[0].parentNode != oldParent) {
                     var newNodeUnderParent = element[0];
-                    while (newNodeUnderParent.parentNode!=oldParent) {
+                    while (newNodeUnderParent.parentNode != oldParent) {
                         newNodeUnderParent = newNodeUnderParent.parentNode;
                     }
-                    if (newNodeUnderParent!=element[0]) {
+                    if (newNodeUnderParent != element[0]) {
                         element.remove = function() {
                             $(newNodeUnderParent).remove();
                         }
@@ -606,9 +585,7 @@
         if (currPageScope.onActivate) {
             currPageScope.onActivate.call(currPageScope, prevPageScope);
         }
-        // Note that we cannot use
         currScope = currPageScope;
-        // TODO $.mobile.globalScope().$eval();
         $.mobile.globalScope().$service('$updateView')();
     });
 })(angular, $);
@@ -708,5 +685,29 @@
 })(angular);
 
 
+/**
+ * Deactivate the url chaning capabilities
+ * of angular, so we do not get into trouble with
+ * jquery mobile: angular saves the current url before a $eval
+ * and updates the url after the $eval.
+ * <p>
+ * This also replaces the hashListen implementation
+ * of angular by the jquery mobile impementation,
+ * so we do not have two polling functions, ...
+ * <p>
+ * Attention: By this, urls can no more be changed via angular's $location service!
+ */
+(function(angular) {
+    var oldBrowser = angular.service("$browser");
+    angular.service("$browser", function() {
+        var res = oldBrowser.apply(this, arguments);
+        res.onHashChange = function(handler) {
+            $(window).bind( 'hashchange', handler );
+            return handler;
+        };
+        res.setUrl = function() {};
+        return res;
+    }, {$inject:['$log']});
+})(angular);
 
 

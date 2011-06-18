@@ -24,6 +24,13 @@ into custom elements. E.g. if there should be two templates for an li element,
 jquery mobile requires them to be directly under an ul element, without any other elements in between.
 
 
+Limitations
+------------
+This deactivates angular's feature to change urls via the `$browser` or `$location` services.
+This was needed as angular's url handling is incompatibly with jquery mobile and leads to
+unwanted navigations.
+
+
 Usage
 ---------
 

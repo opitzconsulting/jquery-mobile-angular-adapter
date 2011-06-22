@@ -34,15 +34,17 @@ unwanted navigations.
 Usage
 ---------
 
-Include this adapter _after_ angular and jquery mobile, e.g.
+Include this adapter _after_ angular and jquery mobile (see below).
+
+ATTENTION: Do NOT use the `autobind` mode of angular!
 
 
     <html xmlns:ng="http://angularjs.org" xmlns:ngm="http://jqm-angularjs.org">
     <head>
         <title>MobileToys</title>
-        <link rel="stylesheet" href="lib/jquery.mobile-1.0a4.css"/>
+        <link rel="stylesheet" href="lib/jquery.mobile-1.0b1-oc1.css"/>
         <script src="lib/jquery-1.6.1.js"></script>
-        <script src="lib/jquery.mobile-1.0b1pre-oc1.js"></script>
+        <script src="lib/jquery.mobile-1.0b1-oc1.js"></script>
         <script src="lib/angular-0.9.15.js"></script>
         <script src="lib/jquery-mobile-angular-adapter.js"></script>
     </head>
@@ -60,6 +62,7 @@ The global scope can be access via the function `$.mobile.globalScope`:
 If no parameter is supplied this returns the current global scope.
 If a parameter is supplied this will set the current global scope.
 
+However, please use `this.$root` to access the global scope in your code. This simplifies testing!
 
 Callbacks for page changes
 --------------

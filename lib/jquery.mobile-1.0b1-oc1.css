@@ -1,5 +1,5 @@
 /*!
- * jQuery Mobile v Git Buildn * Git Info SHA1: 4430b13588411fba7710eaf750d2d1d9562a756a Date: Mon Jun 6 09:12:50 2011 +0200
+ * jQuery Mobile v Git Buildn * Git Info SHA1: ebbecb845b430167da1054c21e137ca6eb61f6e9 Date: Wed Jun 22 10:50:51 2011 +0200
  * http://jquerymobile.com/
  *
  * Copyright 2010, jQuery Project
@@ -701,7 +701,7 @@ a.ui-link-inherit {
 }
 .ui-disabled,
 .ui-disabled a {
-	cursor: default !important;
+	cursor: default;
 }
 
 /* Icons
@@ -1020,9 +1020,9 @@ a.ui-link-inherit {
 
 /*orientations from js are available */
 .portrait,
-.portrait .ui-page,
+.portrait .ui-page { min-height: 420px; }
 .landscape,
-.landscape .ui-page  { min-height: 100%; }
+.landscape .ui-page  { min-height: 300px; }
 
 /* loading screen */
 .ui-loading .ui-mobile-viewport { overflow: hidden !important; }
@@ -1044,7 +1044,7 @@ a.ui-link-inherit {
 .ui-page .ui-header, .ui-page .ui-footer { position: relative; }
 .ui-header .ui-btn-left { position: absolute; left: 10px; top: .4em;  }
 .ui-header .ui-btn-right { position: absolute; right: 10px; top: .4em; }
-.ui-header .ui-title, .ui-footer .ui-title { text-align: center; font-size: 16px; display: block; margin: .6em 90px .8em;  padding: 0;  text-overflow: ellipsis; overflow: hidden; white-space: nowrap; outline: 0 !important; }
+.ui-header .ui-title, .ui-footer .ui-title { min-height: 1.1em; text-align: center; font-size: 16px; display: block; margin: .6em 90px .8em;  padding: 0;  text-overflow: ellipsis; overflow: hidden; white-space: nowrap; outline: 0 !important; }
 
 /*content area*/
 .ui-content { border-width: 0; overflow: visible; overflow-x: hidden; padding: 15px; }
@@ -1438,7 +1438,7 @@ Built by David Kaneda and maintained by Jonathan Stark.
 .ui-btn:focus, .ui-btn:active { outline: none; }
 .ui-header .ui-btn, .ui-footer .ui-btn, .ui-bar .ui-btn { display: inline-block; font-size: 13px; margin: 0; }
 .ui-btn-inline { display: inline-block; }
-.ui-btn-inner { padding: .6em 25px; display: block; height: 100%; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; position: relative; }
+.ui-btn-inner { padding: .6em 25px; display: block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; position: relative; }
 .ui-header .ui-btn-inner, .ui-footer .ui-btn-inner, .ui-bar .ui-btn-inner { padding: .4em 8px .5em; }
 .ui-btn-icon-notext { display: inline-block; width: 20px; height: 20px; padding: 2px 1px 2px 3px; text-indent: -9999px; }
 .ui-btn-icon-notext .ui-btn-inner { padding: 0; }
@@ -1481,7 +1481,7 @@ Built by David Kaneda and maintained by Jonathan Stark.
 .ui-btn-icon-top .ui-icon { top: 5px; }
 .ui-btn-icon-bottom .ui-icon { bottom: 5px; }
 /*hiding native button,inputs */
-.ui-btn-hidden {  position: absolute; top: 0; left: 0; width: 100%; height: 100%; -webkit-appearance: button; opacity: 0; cursor: pointer; -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)"; filter: alpha(opacity=0); }
+.ui-btn-hidden {  position: absolute; top: 0; left: 0; width: 100%; height: 100%; -webkit-appearance: button; opacity: 0; cursor: pointer; -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)"; filter: alpha(opacity=0); background: transparent; }
 /*
 * jQuery Mobile Framework
 * Copyright (c) jQuery Project
@@ -1492,7 +1492,7 @@ Built by David Kaneda and maintained by Jonathan Stark.
 .ui-collapsible-heading a { text-align: left; margin: 0;  }
 .ui-collapsible-heading a .ui-btn-inner { padding-left: 40px; }
 .ui-collapsible-heading a span.ui-btn { position: absolute; left: 6px; top: 50%; margin: -12px 0 0 0; width: 20px; height: 20px; padding: 1px 0px 1px 2px; text-indent: -9999px; }
-.ui-collapsible-heading a span.ui-btn .ui-btn-inner { padding: 0; }
+.ui-collapsible-heading a span.ui-btn .ui-btn-inner { padding: 10px 0; }
 .ui-collapsible-heading a span.ui-btn .ui-icon { left: 0; margin-top: -10px; }
 .ui-collapsible-heading-status { position:absolute; left:-9999px; }
 .ui-collapsible-content {  display: block; padding: 10px 0 10px 8px; }
@@ -1568,7 +1568,8 @@ Built by David Kaneda and maintained by Jonathan Stark.
 .ui-select { display: block; position: relative; }
 .ui-select select { position: absolute; left: -9999px; top: -9999px; }
 .ui-select .ui-btn { overflow: hidden; }
-.ui-select .ui-btn select { cursor: pointer; -webkit-appearance: button; left: 0; top:0; width: 100%; height: 100%; text-indent: -999em; opacity: 0.0001; -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)"; filter: alpha(opacity=0); }
+.ui-select .ui-btn select { cursor: pointer; -webkit-appearance: button; left: 0; top:0; width: 100%; height: 100%; opacity: 0; -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)"; filter: alpha(opacity=0); }
+@-moz-document url-prefix() {.ui-select .ui-btn select { opacity: 0.0001; }}
 .ui-select .ui-btn select.ui-select-nativeonly { opacity: 1; text-indent: 0; }
 
 .ui-select .ui-btn-icon-right .ui-btn-inner { padding-right: 45px; } 

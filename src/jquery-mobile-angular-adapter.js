@@ -331,7 +331,7 @@
             pageElement[0].appendChild(children[0]);
         }
         try {
-            return callback(element, pageElement);
+            return callback(element, pageElement, pageContainer);
         } finally {
             $.mobile.pageContainer = oldPageContainer;
             var children = pageElement[0].childNodes;
@@ -351,10 +351,19 @@
             // creates elements for the popup directly under the page,
             // and also a dialog on the same level as the page.
             // We grab these elements and insert them only when the dialog is open into the dom.
-            executeWithVirtualPage(element, function(element, pageElement) {
+            executeWithVirtualPage(element, function(element, pageElement, pageContainer) {
                 element.selectmenu();
                 // save the elements that were created directly under the page,
                 // and insert them into the dom when needed.
+                var dialog = pageContainer.children();
+                dialog.detach();
+                dialog.bind("pagebeforeshow", function() {
+                    dialog.appendTo($.mobile.pageContainer);
+                });
+                dialog.bind("pagehide", function() {
+                    dialog.detach();
+                });
+
                 var pageElements = pageElement.children(".ui-selectmenu, .ui-selectmenu-screen");
                 pageElements.detach();
                 var instance = element.data().selectmenu;
@@ -560,6 +569,9 @@
 (function(angular, $) {
     $('div').live('pagebeforehide', function(event, ui) {
         var currPageScope = $(event.target).scope();
+        if (!currPageScope) {
+            return;
+        }
         var nextPage = ui.nextPage;
         var nextPageScope = nextPage && nextPage.scope();
         if (currPageScope.onPassivate) {
@@ -580,6 +592,9 @@
 
     $('div').live('pagebeforeshow', function(event, ui) {
         var currPageScope = $(event.target).scope();
+        if (!currPageScope) {
+            return;
+        }
         var prevPage = ui.prevPage;
         var prevPageScope = prevPage && prevPage.scope();
         if (currPageScope.onActivate) {

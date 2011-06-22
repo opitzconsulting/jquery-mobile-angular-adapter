@@ -137,5 +137,3 @@ To modularize an angular jquery mobile application, use the following schema:
 
 - One `index.html` that includes the libraries and all CSS files
 
-Note that the links between the pages should have the following form: `<a href="#mypage.html">`.
-

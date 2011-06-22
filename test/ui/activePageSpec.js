@@ -17,7 +17,7 @@ describe("activePage", function() {
             var scope = testframe().$("#start").scope();
             activePage = scope.$service("$activePage");
             expect(activePage()).toEqual("start");
-            activePage("page2");
+            activePage("#page2");
         });
         waitsForAsync();
         runs(function() {

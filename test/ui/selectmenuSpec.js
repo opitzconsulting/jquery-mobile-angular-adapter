@@ -2,6 +2,57 @@
  * Tests for the slider widget integration.
  */
 describe("selectmenu", function() {
+    it('should save the ui value into the model when using non native menus and popups', function() {
+        var scope, dialog, dialogOpen;
+        loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
+            var page = frame.$('#start');
+            // Note: Be sure to use ng:repeat, as this is the most problematic case!
+            page.append(
+                    '<div data-role="content">' +
+                            '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                            '</div>');
+        });
+        runs(function() {
+            var $ = testframe().$;
+            var page = $("#start");
+            var select = page.find("#mysel");
+            expect(select[0].value).toEqual("v1");
+            scope = select.scope();
+            expect(scope.$get('mysel')).toEqual("v1");
+
+            expect($(".ui-dialog").length).toEqual(0);
+
+            // find the menu and click on the second entry
+            testframe().innerHeight = 10;
+            select.selectmenu('open');
+            dialog = $(".ui-dialog");
+            dialogOpen = false;
+            expect(dialog.length).toEqual(1);
+            dialog.bind('pageshow', function() {
+                dialogOpen = true;
+            });
+            dialog.bind('pagehide', function() {
+                dialogOpen = false;
+            });
+        });
+        waitsFor(function() {
+            return dialogOpen;
+        });
+        runs(function() {
+            var $ = testframe().$;
+            $(dialog.find('li')[1]).trigger('vclick')
+            expect(scope.$get('mysel')).toEqual("v2");
+        });
+        waitsFor(function() {
+            return !dialogOpen;
+        });
+        runs(function() {
+            var $ = testframe().$;
+            dialog = $(".ui-dialog");
+            expect(dialog.length).toEqual(0);
+        });
+    });
+
     it('should save the ui value into the model when using non native menus', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');
@@ -56,7 +107,9 @@ describe("selectmenu", function() {
         });
     });
 
-    it('should use the diabled attribute', function() {
+
+
+    it('should use the disabled attribute', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');
             // Note: Be sure to use ng:repeat, as this is the most problematic case!
@@ -101,6 +154,5 @@ describe("selectmenu", function() {
             expect(content.children('div').length).toEqual(1);
         });
     });
-
 
 });

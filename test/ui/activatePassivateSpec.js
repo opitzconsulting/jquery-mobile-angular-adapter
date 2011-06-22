@@ -68,7 +68,7 @@ describe("activatePassivateSpec", function() {
                 evalCount++;
             });
             evalCount = 0;
-            $.mobile.globalScope().$service("$activePage")("page2");
+            $.mobile.globalScope().$service("$activePage")("#page2");
         });
         waitsForAsync();
         runs(function() {
@@ -100,7 +100,7 @@ describe("activatePassivateSpec", function() {
             reset();
             expect(activateCallCount).toEqual(0);
             expect(passivateCallCount).toEqual(0);
-            activePage("page2");
+            activePage("#page2");
             expect(activateCallCount).toEqual(1);
             expect(activateThis.name).toEqual("Page2Controller");
             expect(activatePrevScope.name).toEqual("StartController");
@@ -116,7 +116,7 @@ describe("activatePassivateSpec", function() {
         runs(function() {
             startPageScope = testframe().$("#start").scope();
             activePage = startPageScope.$service("$activePage");
-            activePage("page2");
+            activePage("#page2");
             reset();
         });
         waitsForAsync();

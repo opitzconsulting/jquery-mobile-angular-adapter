@@ -31,6 +31,13 @@ This was needed as angular's url handling is incompatibly with jquery mobile and
 unwanted navigations.
 
 
+Features
+-----------
+
+- selectmenu: Detects when options change and refreshes the menu transparently.
+
+
+
 Usage
 ---------
 
@@ -91,6 +98,13 @@ This is especially useful at places where we cannot insert an `ng:switch` into t
 does not allow elements between an `ul` and an `li` element.
 
 Usage: E.g. `<div ng:if="myFlag">asdfasdf</div>`
+
+
+### Directive ng:enterkey(handler)
+Special click handler that fires when the enter key is pressed.
+
+Usage: E.g. `<input type="submit" ng:enterkey="myFn()">`
+
 
 ### Directive ng:fadein
 For smooth fadings between `ng:if` changes, there is also the directive `ngm:fadein`.

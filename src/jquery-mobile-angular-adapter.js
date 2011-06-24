@@ -108,21 +108,6 @@
  * Integration of jquery mobile and angular widgets.
  */
 (function(angular) {
-    /* A widget for clicks.
-     * Just as ng:click, but reacts to the jquery mobile vclick event, which
-     * includes taps, mousedowns, ...
-     */
-    angular.directive("ngm:click", function(expression, element) {
-        var linkFn = function($updateView, element) {
-            var self = this;
-            element.bind('vclick', function(event) {
-                var res = self.$tryEval(expression, element);
-                $updateView();
-            });
-        };
-        linkFn.$inject = ['$updateView'];
-        return linkFn;
-    });
 
     var jqmAngularWidgets = {};
     var jqmWidgetProxies = {};
@@ -397,6 +382,24 @@
                     element.selectmenu('refresh', true);
                 }
             });
+            // Watch the options elements. If they change, refresh the component.
+            var oldIds;
+            scope.$onEval(99999, function() {
+                var page = element.closest('.ui-page');
+                if (page.length == 0) {
+                    return;
+                }
+                var options = element.children('option');
+                var newIds = '';
+                for (var i=0; i<options.length; i++) {
+                    var opt = $(options[i]);
+                    newIds += ':'+opt.prop('value');
+                }
+                if (oldIds!=newIds) {
+                    oldIds = newIds;
+                    element.selectmenu('refresh', true);
+                }
+            });
             return res;
         }
     });
@@ -474,6 +477,16 @@
 
     jqmWidgetDisabledHandling.button = true;
     jqmAngularWidget('button', 'button', function(element) {
+        var options = element[0].jqmoptions;
+        return function(element, origBinder) {
+            var res = origBinder();
+            var scope = this;
+            element.button(options);
+            return res;
+        }
+    });
+
+    jqmAngularWidget('input', 'button', function(element) {
         var options = element[0].jqmoptions;
         return function(element, origBinder) {
             var res = origBinder();
@@ -649,6 +662,10 @@
         element.removeAttr('ng:if');
         element.replaceWith(angular.element('<!-- ng:if: ' + expression + ' --!>'));
         var linker = this.compile(element);
+        // See ng:repeat: For options we cannot use
+        // fragments, as some parts of angular rely on the fact
+        // that options always have a parent.
+        var useFragment = (element[0].nodeName != 'OPTION');
         return function(element) {
             var child = null, currentScope = this;
             this.$onEval(function() {
@@ -657,17 +674,23 @@
                     if (!child) {
                         // The element should be added to the dom
                         // create the element
-                        var fragment = document.createDocumentFragment();
+                        var fragment = useFragment?document.createDocumentFragment():null;
                         // Attention: As we do not create a new scope
                         // the linker changes the $element of the scope,
                         // so we save it and restore it later.
                         var oldScopeElement = currentScope.$element;
                         linker(currentScope, function(clone) {
                             child = clone;
-                            fragment.appendChild(clone[0]);
+                            if (fragment) {
+                                fragment.appendChild(clone[0]);
+                            } else {
+                                element.after(clone);
+                            }
                         });
                         currentScope.$element = oldScopeElement;
-                        element.after(angular.element(fragment));
+                        if (fragment) {
+                            element.after(angular.element(fragment));
+                        }
                     }
                 } else if (child) {
                     // remove the element from the dom
@@ -725,4 +748,40 @@
     }, {$inject:['$log']});
 })(angular);
 
+(function(angular) {
+    /* A widget for clicks.
+     * Just as ng:click, but reacts to the jquery mobile vclick event, which
+     * includes taps, mousedowns, ...
+     */
+    angular.directive("ngm:click", function(expression, element) {
+        var linkFn = function($updateView, element) {
+            var self = this;
+            element.bind('vclick', function(event) {
+                var res = self.$tryEval(expression, element);
+                $updateView();
+            });
+        };
+        linkFn.$inject = ['$updateView'];
+        return linkFn;
+    });
+})(angular);
 
+
+(function(angular) {
+    /* A widget that reacts when the user presses the enter key.
+     */
+    angular.directive("ng:enterkey", function(expression, element) {
+        var linkFn = function($updateView, element) {
+            var self = this;
+            element.bind('keypress', function(e) {
+                var key=e.keyCode || e.which;
+                if (key==13){
+                    var res = self.$tryEval(expression, element);
+                    $updateView();
+                }
+            });
+        };
+        linkFn.$inject = ['$updateView'];
+        return linkFn;
+    });
+})(angular);

@@ -27,5 +27,16 @@ describe("ng:if", function() {
         expect(scope.test).toBeTruthy();
         expect(scope.$element).toEqual(element);
     });
+
+    it('should work with select options', function() {
+        compile('<div><select name="test"><option ng:if="test" value="v1">V1</option></select></div>');
+        var select = element.find('select');
+        var options = select.children('option');
+        expect(options.length).toEqual(0);
+        scope.test = true;
+        scope.$eval();
+        var options = select.children('option');
+        expect(options.length).toEqual(1);
+    });
 });
 

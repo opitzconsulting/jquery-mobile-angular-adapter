@@ -7,27 +7,20 @@ Test page during development.
     <title>MobileToys</title>
     <script>parent.instrument && parent.instrument(window);</script>
     <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
-    <link rel="stylesheet" href="../../lib/jquery.mobile-1.0b1-oc1.css"/>
     <script src="../../lib/jquery-1.6.1.js"></script>
     <script src="../../lib/jquery.mobile-1.0b1-oc1.js"></script>
+    <link rel="stylesheet" href="../../lib/jquery.mobile-1.0b1-oc1.css"/>
     <script src="../../lib/angular-0.9.15.js"></script>
     <script src="../../src/jquery-mobile-angular-adapter.js"></script>
 </head>
 <body>
 
-<div id="start" data-role="page">
-    <div data-role="header">Start
-    </div>
+<div data-role="page" id="start" data-theme="d">
     <div data-role="content">
-        <div data-role="fieldcontain">
-            <table>
-            <tr>
-            <td><label for="preis">Tagespreis bis:</label></td>
-            <td><input type="number" data-type="range" id="preis" name="preis" value="150" min="0" max="300" /></td>
-            </tr>
-                </table>
-            <input type="text" name="preis">
-        </div>
+        <input type="image" data-iconpos="notext" data-icon="star" ng:click="test='hallo'"/>
+        {{test}}
+
+
     </div>
 </div>
 

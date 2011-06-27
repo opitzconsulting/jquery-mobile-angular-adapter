@@ -527,11 +527,21 @@
         element.find('li').attr('jqmwidget', 'listviewchild');
         return function(element, origBinder) {
             var res = origBinder();
-            // The listview widget looks for the persistent footer.
-            // However, this is not possible with ng:repeat.
             executeWithVirtualPage(element, function(element, pageElement) {
                 element.listview();
+                var oldRefresh = element.data().listview.refresh;
+                // The listview widget looks for the persistent footer.
+                // However, this is not possible with ng:repeat. So use a fake
+                // refresh function...
+                element.data().listview.refresh = function() {
+                    var self = this;
+                    var args = arguments;
+                    return executeWithVirtualPage(element, function() {
+                        return oldRefresh.apply(self, args);
+                    });
+                }
             });
+
             return res;
         }
     });
@@ -559,13 +569,8 @@
                 var size = angular.Object.size(collection);
                 if (size != oldSize) {
                     oldSize = size;
-                    // The listview widget looks for the persistent footer.
-                    // However, this is not possible if the list is contained within
-                    // an ng:repeat.
                     var list = element.parent();
-                    executeWithVirtualPage(list, function(element, page) {
-                        element.listview('refresh');
-                    });
+                    list.listview('refresh');
                 }
             });
             return res;
@@ -659,6 +664,11 @@
  */
 (function(angular) {
     angular.widget('@ng:if', function(expression, element) {
+        var isListView = false;
+        if (element.attr('jqmwidget') == 'listviewchild') {
+            isListView = true;
+        }
+
         element.removeAttr('ng:if');
         element.replaceWith(angular.element('<!-- ng:if: ' + expression + ' --!>'));
         var linker = this.compile(element);
@@ -670,8 +680,10 @@
             var child = null, currentScope = this;
             this.$onEval(function() {
                 var result = this.$tryEval(expression, element);
+                var changed = false;
                 if (result) {
                     if (!child) {
+                        changed = true;
                         // The element should be added to the dom
                         // create the element
                         var fragment = useFragment?document.createDocumentFragment():null;
@@ -693,9 +705,16 @@
                         }
                     }
                 } else if (child) {
+                    changed = true;
                     // remove the element from the dom
                     child.remove();
                     child = null;
+                }
+                if (changed && isListView) {
+                    // If the ng:if is embedded in a listview,
+                    // refresh the listview if the element changes!
+                    var list = element.parent();
+                    list.listview('refresh');
                 }
             }, element);
         };
@@ -754,10 +773,26 @@
      * includes taps, mousedowns, ...
      */
     angular.directive("ngm:click", function(expression, element) {
+        return angular.directive('ng:event')('vclick:'+expression, element);
+    });
+})(angular);
+
+(function(angular) {
+    /* A widget to bind general events like touches, ....
+     */
+    angular.directive("ng:event", function(expression, element) {
+        var pattern = /(.*?):(.*)/;
+        var match = pattern.exec(expression);
+        if (!match) {
+            throw "Expression "+expression+" needs to have the syntax <event>:<handler>";
+        }
+        var event = match[1];
+        var handler = match[2];
+
         var linkFn = function($updateView, element) {
             var self = this;
-            element.bind('vclick', function(event) {
-                var res = self.$tryEval(expression, element);
+            element.bind(event, function(event) {
+                var res = self.$tryEval(handler, element);
                 $updateView();
             });
         };
@@ -765,7 +800,6 @@
         return linkFn;
     });
 })(angular);
-
 
 (function(angular) {
     /* A widget that reacts when the user presses the enter key.
@@ -784,4 +818,64 @@
         linkFn.$inject = ['$updateView'];
         return linkFn;
     });
+})(angular);
+
+/**
+ * Paging Support for lists:
+ * Usage:
+    <li ng:repeat="l in list.$loadedPages()">{{l}}</li>
+    <li ng:if="list.$hasMorePages()">
+        <a href="#" ngm:click="list.$loadNextPage()">Load more</a>
+    </li>
+ */
+(function(angular) {
+    /**
+     * The default page size for all lists.
+     * Can be overwritten using array.pageSize.
+     */
+    $.mobile.defaultListPageSize = 10;
+
+    function getPageSize(list) {
+        if (list.pageSize) {
+            return list.pageSize;
+        }
+        return $.mobile.defaultListPageSize;
+    }
+
+    function getLoadedEntryCount(list) {
+        if (!list.loadedCount) {
+            return getPageSize(list);
+        } else {
+            return list.loadedCount;
+        }
+    }
+
+    /**
+     * Resets the loaded pages for the current list.
+     */
+    angular.Array.resetPaging = function(list) {
+        delete list.loadedCount;
+    }
+
+    /**
+     * Returns the already loaded pages
+     */
+    angular.Array.loadedPages = function(list) {
+        return list.slice(0, getLoadedEntryCount(list));
+    }
+
+    /**
+     * Boolean indicating if there are more pages
+     */
+    angular.Array.hasMorePages = function(list) {
+        return getLoadedEntryCount(list) < list.length;
+    }
+
+    /**
+     * Loads the next page and appends it to the already loaded pages.
+     */
+    angular.Array.loadNextPage = function(list) {
+        list.loadedCount = Math.min(list.length, getLoadedEntryCount(list) + getPageSize(list));
+    }
+
 })(angular);

@@ -89,8 +89,16 @@ Widgets, Directives and Services
 
 ### Directive ngm:click(handler)
 Special click handler that integrates with jquery mobile's `vclick` event and by this also reacts to touches.
+Also see `ng:event` for the general case of binding a handler to events.
 
 Usage: E.g. `<a href="#" ngm:click="myFn()">`
+
+### Directive ng:event(event:handler)
+General event handler that integrates with jquery events, and also with jquery mobile events.
+The value of the attribute has the syntax `<events>:<function expression>`. The `events` part may contain one or
+more events (see jQuery bind function).
+
+Usage: E.g. `<a href="#" ng:event="swiperight:myFn()">`
 
 ### Attribute Widget @ng:if
 The attribute widget `@ng:if` allows to add/remove an element to/from the dom, depending on an expression.
@@ -125,6 +133,36 @@ Parameters (see $.mobile.changePage)
 - reverse (optional): If the transition should be executed in reverse style
 
 Usage: E.g. `$activePage('page2')`
+
+
+### Paging for lists
+Lists can be paged in the sense that more entries can be additionally loaded. By "loading" we mean the
+display of a sublist of a list that is already fully loaded in JavaScript. This is useful, as the main performance
+problems result from DOM operations, which can be reduced with this paging mechanism.
+
+To implement this paging mechaism, we extend the angular array type with the folling functions:
+
+- `angular.Array.loadedPages(array)`: Returns the subarray of the given array with the loaded pages.
+- `angular.Array.hasMorePages(array)`: Returns a boolean indicating if there are more pages that can be loaded.
+- `angular.Array.loadNextPage(array)`: Loads the next page from the given array.
+
+The default page size is defined by `$.mobile.defaultListPageSize`. It can be overwritten by the property `pageSize`
+on arrays.
+
+As angular instruments all lists in expressions automatically with the functions form the `angular.Array` namespace,
+these functions can directly be used in all angular expressions, with a `$` as prefix.
+The following example shows an example for a paged list for the data in the variable `myList`:
+
+
+    <ul data-role="listview">
+        <li ng:repeat="item in myList">
+          {{item}}
+        </li>
+        <li ng:if="mylist.$hasMorePages()">
+            <a href="#" ngm:click="myList.$loadNextPage()">Load next page</a>
+        </li>
+    </ul>
+
 
 
 

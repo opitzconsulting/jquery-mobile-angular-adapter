@@ -60,6 +60,29 @@ describe("listview", function() {
         });
     });
 
+    it('should refresh entries if used with ng:if', function() {
+        loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
+            var page = frame.$('#start');
+            page.append('<div data-role="content">' +
+                    '<ul data-role="listview" ng:repeat="item in [1]">' +
+                    '<li ng:if="test">Test</li>' +
+                    '</ul>'+
+                    '</div>');
+        });
+        runs(function() {
+            var $ = testframe().$;
+            var page = $('#start');
+            var li = page.find("li");
+            var scope = page.scope();
+            expect(li.length).toEqual(0);
+            scope.$set('test', true);
+            scope.$eval();
+            li = page.find("li");
+            expect(li.length).toEqual(1);
+            expect(li.hasClass('ui-li')).toBeTruthy();
+        });
+    });
+
     it('should be removable when ng:repeat shrinks', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');

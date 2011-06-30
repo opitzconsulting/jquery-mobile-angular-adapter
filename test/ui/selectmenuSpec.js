@@ -154,8 +154,7 @@ describe("selectmenu", function() {
             expect(content.children('div').length).toEqual(1);
         });
     });
-
-    it('should refresh when the options change via ng:if', function() {
+    it('should refresh the default value when the number of options changes', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');
             // Note: Be sure to use ng:repeat, as this is the most problematic case!
@@ -167,51 +166,34 @@ describe("selectmenu", function() {
         runs(function() {
             var page = testframe().$("#start");
             var select = page.find("#mysel");
-            var refreshSpy = spyOn(select.data().selectmenu, 'refresh').andCallThrough();
             expect(select.children('option').length).toEqual(0);
             var scope = select.scope();
-            scope.option1 = true;
-            scope.option2 = true;
-            expect(refreshSpy.callCount).toEqual(0);
-            scope.$eval();
-            expect(refreshSpy.callCount).toEqual(1);
-            expect(select.children('option').length).toEqual(2);
-            scope.$eval();
-            expect(refreshSpy.callCount).toEqual(1);
             scope.option1 = false;
+            scope.option2 = true;
+            expect(scope.mysel).toBeFalsy();
             scope.$eval();
-            expect(refreshSpy.callCount).toEqual(2);
-            expect(select.children('option').length).toEqual(1);
+            expect(scope.mysel).toEqual('v2');
         });
     });
 
-    it('should refresh when the options change via ng:repeat', function() {
+    it('should refresh when the dialog opens', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');
             // Note: Be sure to use ng:repeat, as this is the most problematic case!
             page.append(
                     '<div data-role="content">' +
-                            '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false"><option ng:repeat="o in opts" value="o">{{o}}</option></select>' +
+                            '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false"><option value="v1" ng:if="option1" default="true">v1</option><option value="v2" ng:if="option2">v2</option></select>' +
                             '</div>');
         });
         runs(function() {
             var page = testframe().$("#start");
             var select = page.find("#mysel");
-            var refreshSpy = spyOn(select.data().selectmenu, 'refresh').andCallThrough();
-            expect(select.children('option').length).toEqual(0);
             var scope = select.scope();
-            scope.opts = ['v1', 'v2'];
-            expect(refreshSpy.callCount).toEqual(0);
+            scope.option1 = false;
+            scope.option2 = true;
             scope.$eval();
-            expect(refreshSpy.callCount).toEqual(1);
-            expect(select.children('option').length).toEqual(2);
-            scope.$eval();
-            expect(refreshSpy.callCount).toEqual(1);
-            scope.opts = ['v2'];
-            scope.$eval();
-            expect(refreshSpy.callCount).toEqual(2);
-            expect(select.children('option').length).toEqual(1);
+            select.selectmenu('open');
+            expect(page.find(".ui-selectmenu li").length).toEqual(1);
         });
     });
-
 });

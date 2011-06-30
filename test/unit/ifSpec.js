@@ -22,10 +22,10 @@ describe("ng:if", function() {
         expect(element.children('span').length).toEqual(0);
     });
 
-    it('should use the same scope', function() {
+    it('should use an own scope', function() {
         compile('<div><span ng:if="true"><span ng:init="test = true"></span></span></div>');
-        expect(scope.test).toBeTruthy();
-        expect(scope.$element).toEqual(element);
+        expect(scope.test).toBeFalsy();
+        expect(element.children('span').scope().test).toBeTruthy();
     });
 
     it('should work with select options', function() {

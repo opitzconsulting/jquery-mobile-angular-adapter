@@ -135,6 +135,11 @@ Parameters (see $.mobile.changePage)
 Usage: E.g. `$activePage('page2')`
 
 
+### Function angular.Object.iff / $iff
+Every expression can now use the function `$iff` as a ternary operator:
+`$iff(test, trueCase, falseCase)` will return the `trueCase` if the `test` is truthy and the `falseCase` otherwise.
+
+
 ### Paging for lists
 Lists can be paged in the sense that more entries can be additionally loaded. By "loading" we mean the
 display of a sublist of a list that is already fully loaded in JavaScript. This is useful, as the main performance
@@ -142,7 +147,7 @@ problems result from DOM operations, which can be reduced with this paging mecha
 
 To implement this paging mechaism, we extend the angular array type with the folling functions:
 
-- `angular.Array.loadedPages(array)`: Returns the subarray of the given array with the loaded pages.
+- `angular.Array.paged(array)`: Returns the subarray of the given array with the loaded pages.
 - `angular.Array.hasMorePages(array)`: Returns a boolean indicating if there are more pages that can be loaded.
 - `angular.Array.loadNextPage(array)`: Loads the next page from the given array.
 
@@ -155,7 +160,7 @@ The following example shows an example for a paged list for the data in the vari
 
 
     <ul data-role="listview">
-        <li ng:repeat="item in myList">
+        <li ng:repeat="item in myList.$paged()">
           {{item}}
         </li>
         <li ng:if="mylist.$hasMorePages()">

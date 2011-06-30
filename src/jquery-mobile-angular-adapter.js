@@ -23,6 +23,8 @@
  */
 
 
+
+
 /**
  * Global scope
  */
@@ -353,9 +355,30 @@
                 pageElements.detach();
                 var instance = element.data().selectmenu;
                 var oldOpen = instance.open;
+                var oldRefresh = instance.refresh;
+                instance.refresh = function() {
+                    var page = element.closest('.ui-page');
+                    if (page.length>0) {
+                        var needsAttach = pageElements.parent().length==0;
+                        if (needsAttach) {
+                            page.append(pageElements);
+                        }
+                        try {
+                            return oldRefresh.apply(this, arguments);
+                        } finally {
+                            if (needsAttach) {
+                                pageElements.detach();
+                            }
+                        }
+                    }
+
+                };
                 instance.open = function() {
                     var page = element.closest('.ui-page');
                     page.append(pageElements);
+                    // always refresh the menu when opening.
+                    // By this we do not have to watch for changes to the options.
+                    oldRefresh.call(instance, true);
                     return oldOpen.apply(this, arguments);
                 };
                 var oldClose = instance.close;
@@ -364,42 +387,21 @@
                     pageElements.detach();
                     return res;
                 };
-                var oldRefresh = instance.refresh;
-                instance.refresh = function() {
-                    var page = element.closest('.ui-page');
-                    page.append(pageElements);
-                    try {
-                        return oldRefresh.apply(this, arguments);
-                    } finally {
-                        pageElements.detach();
-                    }
-
-                };
             });
             scope.$watch(name, function(value) {
-                var page = element.closest('.ui-page');
-                if (page.length > 0) {
-                    element.selectmenu('refresh', true);
+                element.selectmenu('refresh', true);
+            });
+            // update the value when the number of options change.
+            // needed if the default values changes.
+            var oldCount;
+            scope.$onEval(999999, function() {
+                var newCount = element[0].childNodes.length;
+                if (oldCount!==newCount) {
+                    oldCount = newCount;
+                    element.trigger('change');
                 }
             });
-            // Watch the options elements. If they change, refresh the component.
-            var oldIds;
-            scope.$onEval(99999, function() {
-                var page = element.closest('.ui-page');
-                if (page.length == 0) {
-                    return;
-                }
-                var options = element.children('option');
-                var newIds = '';
-                for (var i=0; i<options.length; i++) {
-                    var opt = $(options[i]);
-                    newIds += ':'+opt.prop('value');
-                }
-                if (oldIds!=newIds) {
-                    oldIds = newIds;
-                    element.selectmenu('refresh', true);
-                }
-            });
+
             return res;
         }
     });
@@ -566,6 +568,10 @@
             var oldSize;
             scope.$onEval(function() {
                 var collection = scope.$tryEval(rhs, element);
+                // for the listview widget, we only need to
+                // check for changes to the list size, as ng:repeat
+                // reuses the same dom element for an index position,
+                // even if the object at that index changes.
                 var size = angular.Object.size(collection);
                 if (size != oldSize) {
                     oldSize = size;
@@ -661,63 +667,21 @@
 /*
  * Defines the ng:if tag. This is useful if jquery mobile does not allow
  * an ng:switch element in the dom, e.g. between ul and li.
+ * Uses ng:repeat and angular.Object.iff under the hood.
  */
 (function(angular) {
-    angular.widget('@ng:if', function(expression, element) {
-        var isListView = false;
-        if (element.attr('jqmwidget') == 'listviewchild') {
-            isListView = true;
+    angular.Object.iff = function(self, test, trueCase, falseCase) {
+        if (test) {
+            return trueCase;
+        } else {
+            return falseCase;
         }
+    }
 
+    angular.widget('@ng:if', function(expression, element) {
+        var newExpr = 'ngif in $iff(' + expression + ",[1],[])";
         element.removeAttr('ng:if');
-        element.replaceWith(angular.element('<!-- ng:if: ' + expression + ' --!>'));
-        var linker = this.compile(element);
-        // See ng:repeat: For options we cannot use
-        // fragments, as some parts of angular rely on the fact
-        // that options always have a parent.
-        var useFragment = (element[0].nodeName != 'OPTION');
-        return function(element) {
-            var child = null, currentScope = this;
-            this.$onEval(function() {
-                var result = this.$tryEval(expression, element);
-                var changed = false;
-                if (result) {
-                    if (!child) {
-                        changed = true;
-                        // The element should be added to the dom
-                        // create the element
-                        var fragment = useFragment?document.createDocumentFragment():null;
-                        // Attention: As we do not create a new scope
-                        // the linker changes the $element of the scope,
-                        // so we save it and restore it later.
-                        var oldScopeElement = currentScope.$element;
-                        linker(currentScope, function(clone) {
-                            child = clone;
-                            if (fragment) {
-                                fragment.appendChild(clone[0]);
-                            } else {
-                                element.after(clone);
-                            }
-                        });
-                        currentScope.$element = oldScopeElement;
-                        if (fragment) {
-                            element.after(angular.element(fragment));
-                        }
-                    }
-                } else if (child) {
-                    changed = true;
-                    // remove the element from the dom
-                    child.remove();
-                    child = null;
-                }
-                if (changed && isListView) {
-                    // If the ng:if is embedded in a listview,
-                    // refresh the listview if the element changes!
-                    var list = element.parent();
-                    list.listview('refresh');
-                }
-            }, element);
-        };
+        return angular.widget('@ng:repeat').call(this, newExpr, element);
     });
 })(angular);
 
@@ -759,10 +723,11 @@
     angular.service("$browser", function() {
         var res = oldBrowser.apply(this, arguments);
         res.onHashChange = function(handler) {
-            $(window).bind( 'hashchange', handler );
+            $(window).bind('hashchange', handler);
             return handler;
         };
-        res.setUrl = function() {};
+        res.setUrl = function() {
+        };
         return res;
     }, {$inject:['$log']});
 })(angular);
@@ -773,7 +738,7 @@
      * includes taps, mousedowns, ...
      */
     angular.directive("ngm:click", function(expression, element) {
-        return angular.directive('ng:event')('vclick:'+expression, element);
+        return angular.directive('ng:event')('vclick:' + expression, element);
     });
 })(angular);
 
@@ -784,7 +749,7 @@
         var pattern = /(.*?):(.*)/;
         var match = pattern.exec(expression);
         if (!match) {
-            throw "Expression "+expression+" needs to have the syntax <event>:<handler>";
+            throw "Expression " + expression + " needs to have the syntax <event>:<handler>";
         }
         var event = match[1];
         var handler = match[2];
@@ -808,8 +773,8 @@
         var linkFn = function($updateView, element) {
             var self = this;
             element.bind('keypress', function(e) {
-                var key=e.keyCode || e.which;
-                if (key==13){
+                var key = e.keyCode || e.which;
+                if (key == 13) {
                     var res = self.$tryEval(expression, element);
                     $updateView();
                 }
@@ -823,17 +788,19 @@
 /**
  * Paging Support for lists:
  * Usage:
-    <li ng:repeat="l in list.$loadedPages()">{{l}}</li>
-    <li ng:if="list.$hasMorePages()">
-        <a href="#" ngm:click="list.$loadNextPage()">Load more</a>
-    </li>
+ <li ng:repeat="l in list.$loadedPages()">{{l}}</li>
+ <li ng:if="list.$hasMorePages()">
+ <a href="#" ngm:click="list.$loadNextPage()">Load more</a>
+ </li>
  */
 (function(angular) {
     /**
      * The default page size for all lists.
      * Can be overwritten using array.pageSize.
      */
-    $.mobile.defaultListPageSize = 10;
+    if (!$.mobile.defaultListPageSize) {
+        $.mobile.defaultListPageSize = 10;
+    }
 
     function getPageSize(list) {
         if (list.pageSize) {
@@ -843,10 +810,21 @@
     }
 
     function getLoadedEntryCount(list) {
+        var res;
         if (!list.loadedCount) {
-            return getPageSize(list);
+            res = getPageSize(list);
         } else {
-            return list.loadedCount;
+            res = list.loadedCount;
+        }
+        return Math.min(list.length, res);
+    }
+
+    function shrinkLoadedEntryCountIfNeeded(list) {
+        if (list.loadedCount && list.loadedCount > list.length) {
+            list.loadedCount = list.length;
+            if (list.loadedCount < getPageSize(list)) {
+                delete list.loadedCount;
+            }
         }
     }
 
@@ -858,10 +836,24 @@
     }
 
     /**
-     * Returns the already loaded pages
+     * Returns the already loaded pages.
+     * Also includes filtering (second argument) and ordering (third argument),
+     * as the standard angular way does not work with paging.
      */
-    angular.Array.loadedPages = function(list) {
-        return list.slice(0, getLoadedEntryCount(list));
+    angular.Array.paged = function(list, filterExpr, orderExpr) {
+        var origList = list;
+        if (filterExpr) {
+            list = angular.Array.filter(list, filterExpr);
+        }
+        if (orderExpr) {
+            list = angular.Array.orderBy(list, orderExpr);
+        }
+        shrinkLoadedEntryCountIfNeeded(origList);
+
+        // Use the loaded count of the unchanged list.
+        // This is the only place where we can store
+        // the paging state!
+        return list.slice(0, getLoadedEntryCount(origList));
     }
 
     /**

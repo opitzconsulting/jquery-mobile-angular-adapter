@@ -83,5 +83,46 @@ describe("textInput", function() {
         });
     });
 
+    it('should work with type="tel"', function() {
+        loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
+            var page = frame.$('#start');
+            // Note: Be sure to use ng:repeat, as this is the most problematic case!
+            page.append('<div data-role="content">' +
+                    '<input ng:repeat="item in [1]" name="mysel" id="mysel" type="tel">' +
+                    '</div>');
+        });
+        runs(function() {
+            var page = testframe().$('#start');
+            var input = page.find("#mysel");
+            expect(input.prop('type')).toEqual('tel');
+            var scope = input.scope();
+            expect(scope.$get('mysel')).toBeFalsy();
+            input[0].value = '123';
+            input.trigger('change');
+            expect(scope.$get('mysel')).toEqual('123');
+        });
+
+    });
+
+    it('should work with type="number"', function() {
+        loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
+            var page = frame.$('#start');
+            // Note: Be sure to use ng:repeat, as this is the most problematic case!
+            page.append('<div data-role="content">' +
+                    '<input ng:repeat="item in [1]" name="mysel" id="mysel" type="number">' +
+                    '</div>');
+        });
+        runs(function() {
+            var page = testframe().$('#start');
+            var input = page.find("#mysel");
+            expect(input.prop('type')).toEqual('number');
+            var scope = input.scope();
+            expect(scope.$get('mysel')).toBeFalsy();
+            input[0].value = '123';
+            input.trigger('change');
+            expect(scope.$get('mysel')).toEqual('123');
+        });
+
+    });
 });
 

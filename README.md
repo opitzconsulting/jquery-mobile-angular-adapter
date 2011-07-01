@@ -134,6 +134,21 @@ Parameters (see $.mobile.changePage)
 
 Usage: E.g. `$activePage('page2')`
 
+### Service waitdialog
+The service `waitdialog` allows the access to the jquery mobile wait dialog. It provides the following functions:
+- `show(msg, callback)`: Opens the wait dialog and shows the given message (if existing).
+    If the user clicks on the wait dialog the given callback is called.
+    This can be called even if the dialog is currently showing. It will the change the message
+    and revert back to the last message when the hide function is called.
+- `hide()`: Restores the dialog state before the show function was called.
+- `waitFor(promise, msg)`: Shows the dialog as long as the given promise runs. Shows the given message if defined.
+- `waitForWithCancel(promise, cancelData, msg)`: Same as above, but rejects the promise with the given cancelData
+   when the user clicks on the wait dialog.
+
+Default messages are:
+- `$.mobile.loadingMessageWithCancel`: for waitForWithCancel
+- `$.mobile.loadingMessage`: for all other cases
+
 
 ### Function angular.Object.iff / $iff
 Every expression can now use the function `$iff` as a ternary operator:

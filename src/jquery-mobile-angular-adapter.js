@@ -110,40 +110,6 @@
  * Integration of jquery mobile and angular widgets.
  */
 (function(angular) {
-
-    var jqmAngularWidgets = {};
-    var jqmWidgetProxies = {};
-    var angularWidgetProxies = {};
-
-
-    /**
-     * Synchronizes an angular and jquery mobile widget.
-     * @param tagname
-     * @param jqmWidget
-     * @param compileFn compile function(element, jqmWidget, origBinder) just like the compile functions of angular.
-     *  If the origBinder was not called, it will get called automatically after the new binder.
-     */
-    function jqmAngularWidget(tagname, jqmWidget, compileFn) {
-        if (!jqmWidgetProxies[jqmWidget]) {
-            createJqmWidgetProxy(jqmWidget);
-            jqmWidgetProxies[jqmWidget] = true;
-        }
-
-        if (!angularWidgetProxies[tagname]) {
-            createAngularWidgetProxy(tagname, function(element) {
-                var jqmWidget = element.attr('jqmwidget');
-                if (!jqmWidget) {
-                    return function() {
-                    };
-                }
-                var jqmAngularCompileFn = jqmAngularWidgets[tagname + ":" + jqmWidget];
-                return jqmAngularCompileFn.call(this, element);
-            });
-            angularWidgetProxies[tagname] = true;
-        }
-        jqmAngularWidgets[tagname + ":" + jqmWidget] = compileFn;
-    }
-
     /*
      * Integration of the widgets of jquery mobile:
      * Prevent the normal create call for the widget, and let angular
@@ -175,6 +141,7 @@
         }
     }
 
+
     /**
      * Creates a proxy around an existing angular widget.
      * Needed to use the angular functionalities like disabled handling,
@@ -183,6 +150,7 @@
      * @param compileFn
      */
     function createAngularWidgetProxy(tagname, compileFn) {
+
         var oldWidget = angular.widget(tagname);
         angular.widget(tagname, function() {
             var oldBinder;
@@ -194,10 +162,13 @@
                 var myargs = arguments;
                 var oldBinderCalled = false;
                 var oldParent = element[0].parentNode;
-                var res = bindFn.call(this, element, function() {
-                    oldBinderCalled = true;
-                    return oldBinder && oldBinder.apply(self, myargs);
-                });
+                var res;
+                if (bindFn) {
+                    res = bindFn.call(this, element, function() {
+                        oldBinderCalled = true;
+                        return oldBinder && oldBinder.apply(self, myargs);
+                    });
+                }
                 if (!oldBinderCalled) {
                     return oldBinder && oldBinder.apply(self, myargs);
                 }
@@ -259,6 +230,12 @@
      * for the jqm widgets that are in jqmWidgetDisabledHandling.
      */
     var jqmWidgetDisabledHandling = {};
+    jqmWidgetDisabledHandling.selectmenu = true;
+    jqmWidgetDisabledHandling.slider = true;
+    jqmWidgetDisabledHandling.checkboxradio = true;
+    jqmWidgetDisabledHandling.textinput = true;
+    jqmWidgetDisabledHandling.button = true;
+
     createAngularDirectiveProxy('ng:bind-attr', function(expression) {
         return function(element) {
 
@@ -328,8 +305,18 @@
         }
     }
 
-    jqmWidgetDisabledHandling.selectmenu = true;
-    jqmAngularWidget('select', 'selectmenu', function(element) {
+    createAngularWidgetProxy('select', function(element) {
+        var jqmWidget = element.attr('jqmwidget');
+        if (jqmWidget == 'selectmenu') {
+            return compileSelectMenu.apply(this, arguments);
+        } else if (jqmWidget == 'slider') {
+            return compileSelectSlider.apply(this, arguments);
+        }
+
+    });
+
+    createJqmWidgetProxy('selectmenu');
+    function compileSelectMenu(element) {
         var name = element.attr('name');
         return function(element, origBinder) {
             var res = origBinder();
@@ -358,8 +345,8 @@
                 var oldRefresh = instance.refresh;
                 instance.refresh = function() {
                     var page = element.closest('.ui-page');
-                    if (page.length>0) {
-                        var needsAttach = pageElements.parent().length==0;
+                    if (page.length > 0) {
+                        var needsAttach = pageElements.parent().length == 0;
                         if (needsAttach) {
                             page.append(pageElements);
                         }
@@ -396,7 +383,7 @@
             var oldCount;
             scope.$onEval(999999, function() {
                 var newCount = element[0].childNodes.length;
-                if (oldCount!==newCount) {
+                if (oldCount !== newCount) {
                     oldCount = newCount;
                     element.trigger('change');
                 }
@@ -404,53 +391,64 @@
 
             return res;
         }
+    }
+
+    createJqmWidgetProxy('slider');
+    function compileSelectSlider(element) {
+        var name = element.attr('name');
+        return function(element, origBinder) {
+            var res = origBinder();
+            // The slider widget creates an element
+            // after the slider. So we wrap it into
+            // a div. Needed for ng:repeat and others...
+            element.wrap('<ngm:group class="ng-widget"></ngm:group>');
+            element.slider();
+            var scope = this;
+            scope.$watch(name, function(value) {
+                element.slider('refresh');
+            });
+            return res;
+        };
+    }
+
+    createAngularWidgetProxy('input', function(element) {
+        var jqmWidget = element.attr('jqmwidget');
+        if (jqmWidget == 'slider') {
+            return compileInputSlider.apply(this, arguments);
+        } else if (jqmWidget == 'checkboxradio') {
+            return compileCheckboxradio.apply(this, arguments);
+        } else if (jqmWidget == 'button') {
+            return compileInputButton.apply(this, arguments);
+        } else if (jqmWidget == 'textinput') {
+            return compileTextinput.apply(this, arguments);
+        }
     });
 
-    jqmWidgetDisabledHandling.slider = true;
-    jqmAngularWidget('select', 'slider',
-            function(element) {
-                var name = element.attr('name');
-                return function(element, origBinder) {
-                    var res = origBinder();
-                    // The slider widget creates an element
-                    // after the slider. So we wrap it into
-                    // a div. Needed for ng:repeat and others...
-                    element.wrap('<ngm:group class="ng-widget"></ngm:group>');
-                    element.slider();
-                    var scope = this;
-                    scope.$watch(name, function(value) {
-                        element.slider('refresh');
-                    });
-                    return res;
-                };
+    function compileInputSlider(element) {
+        var oldType = element[0].type;
+        element[0].type = 'text';
+        element[0]['data-type'] = 'range';
+        var name = element.attr('name');
+        return function(element, origBinder) {
+            element[0].type = oldType;
+            var res = origBinder();
+            // The slider widget creates an element
+            // after the slider. So we wrap it into
+            // a div. Needed for ng:repeat and others...
+            element.wrap('<ngm:group class="ng-widget"></ngm:group>');
+            element.slider();
+            // apply the textinput widget also
+            element.textinput();
+            var scope = this;
+            scope.$watch(name, function(value) {
+                element.slider('refresh');
             });
+            return res;
+        };
+    }
 
-    jqmAngularWidget('input', 'slider',
-            function(element) {
-                var oldType = element[0].type;
-                element[0].type = 'text';
-                element[0]['data-type'] = 'range';
-                var name = element.attr('name');
-                return function(element, origBinder) {
-                    element[0].type = oldType;
-                    var res = origBinder();
-                    // The slider widget creates an element
-                    // after the slider. So we wrap it into
-                    // a div. Needed for ng:repeat and others...
-                    element.wrap('<ngm:group class="ng-widget"></ngm:group>');
-                    element.slider();
-                    // apply the textinput widget also
-                    element.textinput();
-                    var scope = this;
-                    scope.$watch(name, function(value) {
-                        element.slider('refresh');
-                    });
-                    return res;
-                };
-            });
-
-    jqmWidgetDisabledHandling.checkboxradio = true;
-    jqmAngularWidget('input', 'checkboxradio', function(element) {
+    createJqmWidgetProxy('checkboxradio');
+    function compileCheckboxradio(element) {
         var name = element.attr('name');
         return function(element, origBinder) {
             // Angular only binds to the click event for radio and check boxes,
@@ -475,10 +473,25 @@
             });
             return res;
         }
-    });
+    }
 
-    jqmWidgetDisabledHandling.button = true;
-    jqmAngularWidget('button', 'button', function(element) {
+    createJqmWidgetProxy('textinput');
+    function compileTextinput(element) {
+        var name = element.attr('name');
+        var oldType = element[0].type;
+        // Need to switch to type text so that angular registers it's listeners...
+        element[0].type = 'text';
+        return function(element, origBinder) {
+            var res = origBinder();
+            element[0].type = oldType;
+            var scope = this;
+            element.textinput();
+            return res;
+        }
+    }
+
+    createJqmWidgetProxy('button');
+    function compileInputButton(element) {
         var options = element[0].jqmoptions;
         return function(element, origBinder) {
             var res = origBinder();
@@ -486,9 +499,16 @@
             element.button(options);
             return res;
         }
+    }
+
+    createAngularWidgetProxy('button', function(element) {
+        var jqmWidget = element.attr('jqmwidget');
+        if (jqmWidget == 'button') {
+            return compileButton.apply(this, arguments);
+        }
     });
 
-    jqmAngularWidget('input', 'button', function(element) {
+    function compileButton(element) {
         var options = element[0].jqmoptions;
         return function(element, origBinder) {
             var res = origBinder();
@@ -496,9 +516,17 @@
             element.button(options);
             return res;
         }
+    }
+
+    createAngularWidgetProxy('div', function(element) {
+        var jqmWidget = element.attr('jqmwidget');
+        if (jqmWidget == 'collapsible') {
+            return compileCollapsible.apply(this, arguments);
+        }
     });
 
-    jqmAngularWidget('div', 'collapsible', function(element) {
+    createJqmWidgetProxy('collapsible');
+    function compileCollapsible(element) {
         var name = element.attr('name');
         return function(element, origBinder) {
             var res = origBinder();
@@ -506,29 +534,23 @@
             element.collapsible();
             return res;
         }
-    });
+    }
 
-    jqmWidgetDisabledHandling.textinput = true;
-    jqmAngularWidget('input', 'textinput', function(element) {
-        var name = element.attr('name');
-        return function(element, origBinder) {
-            var res = origBinder();
-            var scope = this;
-            element.textinput();
-            return res;
+    createAngularWidgetProxy('ul', function(element) {
+        var jqmWidget = element.attr('jqmwidget');
+        if (jqmWidget == 'listview') {
+            return compileListview.apply(this, arguments);
         }
     });
 
     /**
      * Integration of the listview widget.
-     * Special case as the the ng:repeat angular widget is added
-     * to the children of the ul element, to which the jquery mobile
-     * listview widget is added.
      **/
-    jqmAngularWidget('ul', 'listview', function(element) {
-        element.find('li').attr('jqmwidget', 'listviewchild');
+    createJqmWidgetProxy('listview');
+    function compileListview(element) {
         return function(element, origBinder) {
             var res = origBinder();
+            var scope = this;
             executeWithVirtualPage(element, function(element, pageElement) {
                 element.listview();
                 var oldRefresh = element.data().listview.refresh;
@@ -543,47 +565,26 @@
                     });
                 }
             });
-
-            return res;
-        }
-    });
-
-    createAngularWidgetProxy('@ng:repeat', function(expression, element) {
-        var isListView = false;
-        if (element.attr('jqmwidget') == 'listviewchild') {
-            isListView = true;
-        }
-        if (!isListView) {
-            return function() {
-            };
-        }
-        var match = expression.match(/^\s*(.+)\s+in\s+(.*)\s*$/);
-        var rhs = match[2];
-        return function(element, origBinder) {
-            var res = origBinder();
-            var scope = this;
-            // Note: We cannot use scope.$watch here:
-            // We want to be called after the proxied angular implementation, and
-            // that uses $onEval. $watch always gets evaluated before $onEval.
-            var oldSize;
-            scope.$onEval(function() {
-                var collection = scope.$tryEval(rhs, element);
-                // for the listview widget, we only need to
-                // check for changes to the list size, as ng:repeat
-                // reuses the same dom element for an index position,
-                // even if the object at that index changes.
-                var size = angular.Object.size(collection);
-                if (size != oldSize) {
-                    oldSize = size;
-                    var list = element.parent();
-                    list.listview('refresh');
+            // refresh the listview when the number of children changes.
+            // This does not need to check for changes to the
+            // ordering of children, for the following reason:
+            // The only changes to elements is done by ng:repeat.
+            // And ng:repeat reuses the same element for the same index position,
+            // independent of the value of that index position.
+            var oldCount;
+            scope.$onEval(999999, function() {
+                var newCount = element[0].childNodes.length;
+                if (oldCount !== newCount) {
+                    oldCount = newCount;
+                    element.listview("refresh");
                 }
             });
+
             return res;
         }
-    });
+    }
 
-
+    ;
 })(angular);
 
 
@@ -623,11 +624,134 @@
         var prevPageScope = prevPage && prevPage.scope();
         if (currPageScope.onActivate) {
             currPageScope.onActivate.call(currPageScope, prevPageScope);
+
         }
         currScope = currPageScope;
         $.mobile.globalScope().$service('$updateView')();
     });
 })(angular, $);
+
+
+/*
+ * waitdialog service.
+ */
+(function(angular) {
+    var showCalls = [];
+
+    function onClick() {
+        var lastCall = showCalls[showCalls.length - 1];
+        if (lastCall.callback) {
+            lastCall.callback.apply(this, arguments);
+        }
+    }
+
+    var loadDialog, message;
+
+    function initIfNeeded() {
+        if (!loadDialog || loadDialog.length == 0) {
+            loadDialog = $(".ui-loader");
+            loadDialog.bind('vclick', onClick);
+            message = loadDialog.find("h1");
+        }
+    }
+
+    if (!$.mobile.loadingMessageWithCancel) {
+        $.mobile.loadingMessageWithCancel = 'Loading. Click to cancel.';
+    }
+
+    function updateUi() {
+        initIfNeeded();
+        if (showCalls.length > 0) {
+            var lastCall = showCalls[showCalls.length - 1];
+            var msg = lastCall.msg;
+            message.text(msg);
+            $.mobile.showPageLoadingMsg();
+        } else {
+            $.mobile.hidePageLoadingMsg();
+        }
+    }
+
+    /**
+     * jquery mobile hides the wait dialog when pages are transitioned.
+     * This immediately closes wait dialogs that are opened in the onActivate
+     * function of controllers.
+     */
+    $('div').live('pageshow', function(event, ui) {
+        updateUi();
+    });
+
+    /*
+     * Service for page navigation.
+     * A call without parameters returns the current page id.
+     * Parameters (see $.mobile.changePage)
+     * - pageId: Id of page to navigate to. The special page id "back" navigates back.
+     * - transition (optional): Transition to be used.
+     * - reverse (optional): If the transition should be executed in reverse style
+     */
+    angular.service('waitdialog', function($updateView) {
+        /**
+         *
+         * @param msg (optional)
+         * @param tapCallback (optional)
+         */
+        function show() {
+            var msg, tapCallback;
+            if (typeof arguments[0] == 'string') {
+                msg = arguments[0];
+            }
+            if (typeof arguments[0] == 'function') {
+                tapCallback = arguments[0];
+            }
+            if (typeof arguments[1] == 'function') {
+                tapCallback = arguments[1];
+            }
+            if (!msg) {
+                msg = $.mobile.loadingMessage;
+            }
+
+            showCalls.push({msg: msg, callback: tapCallback});
+            updateUi();
+        }
+
+        function hide() {
+            showCalls.pop();
+            updateUi();
+        }
+
+        /**
+         *
+         * @param promise
+         * @param msg (optional)
+         */
+        function waitFor(promise, msg) {
+            promise.always(function() {
+                hide();
+            });
+            show();
+        }
+
+        /**
+         *
+         * @param promise
+         * @param cancelData
+         * @param msg (optional)
+         */
+        function waitForWithCancel(promise, cancelData, msg) {
+            promise.always(function() {
+                hide();
+            });
+            if (!msg) {
+                msg = $.mobile.loadingMessageWithCancel;
+            }
+            show(msg, function() {
+                promise.reject(cancelData);
+                $updateView();
+            });
+        }
+
+        return {show: show, hide: hide, waitFor: waitFor, waitForWithCancel:waitForWithCancel}
+    }, {$inject: ['$updateView']});
+})(angular);
 
 /*
  * $activePage service.

@@ -724,10 +724,10 @@
          * @param msg (optional)
          */
         function waitFor(promise, msg) {
+            show();
             promise.always(function() {
                 hide();
             });
-            show();
         }
 
         /**
@@ -737,15 +737,15 @@
          * @param msg (optional)
          */
         function waitForWithCancel(promise, cancelData, msg) {
-            promise.always(function() {
-                hide();
-            });
             if (!msg) {
                 msg = $.mobile.loadingMessageWithCancel;
             }
             show(msg, function() {
                 promise.reject(cancelData);
                 $updateView();
+            });
+            promise.always(function() {
+                hide();
             });
         }
 
@@ -910,11 +910,18 @@
 })(angular);
 
 /**
- * Paging Support for lists:
+ * Paging Support for lists.
+ * Note that this will cache the result of two calls until the next eval cycle
+ * or a change to the filter or orderBy arguments.
+ * <p>
+ * Operations on the result:
+ * - hasMorePages: returns whether there are more pages that can be loaded via loadNextPage
+ * - loadNextPage: Loads the next page of the list
+ *
  * Usage:
- <li ng:repeat="l in list.$loadedPages()">{{l}}</li>
- <li ng:if="list.$hasMorePages()">
- <a href="#" ngm:click="list.$loadNextPage()">Load more</a>
+ <li ng:repeat="l in list.$paged()">{{l}}</li>
+ <li ng:if="list.$paged().hasMorePages()">
+ <a href="#" ngm:click="list.$paged().loadNextPage()">Load more</a>
  </li>
  */
 (function(angular) {
@@ -926,72 +933,131 @@
         $.mobile.defaultListPageSize = 10;
     }
 
-    function getPageSize(list) {
-        if (list.pageSize) {
-            return list.pageSize;
-        }
-        return $.mobile.defaultListPageSize;
-    }
+    var globalEvalId = 0;
+    $.mobile.globalScope().$onEval(-99999, function() {
+        globalEvalId++;
+    });
 
-    function getLoadedEntryCount(list) {
-        var res;
-        if (!list.loadedCount) {
-            res = getPageSize(list);
-        } else {
-            res = list.loadedCount;
-        }
-        return Math.min(list.length, res);
-    }
+    var enhanceFunctions = {
+        init : init,
+        refresh : refresh,
+        refreshIfNeeded : refreshIfNeeded,
+        setFilter : setFilter,
+        setOrderBy : setOrderBy,
+        loadNextPage : loadNextPage,
+        hasMorePages : hasMorePages,
+        reset : reset
+    };
 
-    function shrinkLoadedEntryCountIfNeeded(list) {
-        if (list.loadedCount && list.loadedCount > list.length) {
-            list.loadedCount = list.length;
-            if (list.loadedCount < getPageSize(list)) {
-                delete list.loadedCount;
+
+    function createPagedList(list) {
+        var res = [];
+        for (var fnName in enhanceFunctions) {
+            res[fnName] = enhanceFunctions[fnName];
+        }
+        res.init(list);
+        var oldHasOwnProperty = res.hasOwnProperty;
+        res.hasOwnProperty = function(propName) {
+            if (propName in enhanceFunctions) {
+                return false;
             }
+            return oldHasOwnProperty.apply(this, arguments);
+        }
+        return res;
+    }
+
+    function init(list) {
+        if (list.pageSize) {
+            this.pageSize = list.pageSize;
+        } else {
+            this.pageSize = $.mobile.defaultListPageSize;
+        }
+        this.originalList = list;
+        this.refreshNeeded = true;
+        this.reset();
+    }
+
+    function refresh() {
+        var list = this.originalList;
+        if (this.filter) {
+            list = angular.Array.filter(list, this.filter);
+        }
+        if (this.orderBy) {
+            list = angular.Array.orderBy(list, this.orderBy);
+        }
+        var loadedCount = this.loadedCount;
+        if (loadedCount<this.pageSize) {
+            loadedCount = this.pageSize;
+        }
+        if (loadedCount>list.length) {
+            loadedCount = list.length;
+        }
+        this.loadedCount = loadedCount;
+        this.availableCount = list.length;
+        var newData = list.slice(0, loadedCount);
+        var spliceArgs = [0, this.length].concat(newData);
+        this.splice.apply(this, spliceArgs);
+    }
+
+    function refreshIfNeeded() {
+        if (this.evalId != globalEvalId) {
+            this.refreshNeeded = true;
+            this.evalId = globalEvalId;
+        }
+        if (this.refreshNeeded) {
+            this.refresh();
+            this.refreshNeeded = false;
+        }
+        return this;
+    }
+
+    function setFilter(filterExpr) {
+        if (!angular.Object.equals(this.filter, filterExpr)) {
+            this.filter = filterExpr;
+            this.refreshNeeded = true;
         }
     }
 
-    /**
-     * Resets the loaded pages for the current list.
-     */
-    angular.Array.resetPaging = function(list) {
-        delete list.loadedCount;
+    function setOrderBy(orderBy) {
+        if (!angular.Object.equals(this.orderBy, orderBy)) {
+            this.orderBy = orderBy;
+            this.refreshNeeded = true;
+        }
+    }
+
+    function loadNextPage() {
+        this.loadedCount = this.loadedCount + this.pageSize;
+        this.refreshNeeded = true;
+    }
+
+    function hasMorePages() {
+        this.refreshIfNeeded();
+        return this.loadedCount < this.availableCount;
+    }
+
+    function reset() {
+        this.loadedCount = 0;
+        this.refreshNeeded = true;
     }
 
     /**
      * Returns the already loaded pages.
      * Also includes filtering (second argument) and ordering (third argument),
      * as the standard angular way does not work with paging.
+     *
+     * Does caching: Evaluates the filter and order expression only once in an eval cycle.
+     * ATTENTION: There can only be one paged list per original list.
      */
-    angular.Array.paged = function(list, filterExpr, orderExpr) {
-        var origList = list;
-        if (filterExpr) {
-            list = angular.Array.filter(list, filterExpr);
+    angular.Array.paged = function(list, filter, orderBy) {
+        var pagedList = list.pagedList;
+        if (!pagedList) {
+            pagedList = createPagedList(list);
+            list.pagedList = pagedList;
         }
-        if (orderExpr) {
-            list = angular.Array.orderBy(list, orderExpr);
-        }
-        shrinkLoadedEntryCountIfNeeded(origList);
+        pagedList.setFilter(filter);
+        pagedList.setOrderBy(orderBy);
+        pagedList.refreshIfNeeded();
+        return pagedList;
 
-        // Use the loaded count of the unchanged list.
-        // This is the only place where we can store
-        // the paging state!
-        return list.slice(0, getLoadedEntryCount(origList));
-    }
-
-    /**
-     * Boolean indicating if there are more pages
-     */
-    angular.Array.hasMorePages = function(list) {
-        return getLoadedEntryCount(list) < list.length;
-    }
-
-    /**
-     * Loads the next page and appends it to the already loaded pages.
-     */
-    angular.Array.loadNextPage = function(list) {
-        list.loadedCount = Math.min(list.length, getLoadedEntryCount(list) + getPageSize(list));
-    }
-
+    };
 })(angular);

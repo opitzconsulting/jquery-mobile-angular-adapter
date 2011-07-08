@@ -82,8 +82,6 @@ describe("waitdialogService", function() {
     });
 
     it('should waitFor the end of promises', function() {
-        var callback1 = jasmine.createSpy();
-        var callback2 = jasmine.createSpy();
         var p = $.Deferred();
         service.waitFor(p);
         expect($.mobile.showPageLoadingMsg).toHaveBeenCalled();
@@ -91,9 +89,18 @@ describe("waitdialogService", function() {
         expect($.mobile.hidePageLoadingMsg).toHaveBeenCalled();
     });
 
+    it('should waitFor the end of already finished promises and call show before hide', function() {
+        var hideCalledAfterShow = false;
+        $.mobile.hidePageLoadingMsg.andCallFake(function() {
+            hideCalledAfterShow = $.mobile.showPageLoadingMsg.callCount >0;
+        });
+        var p = $.Deferred();
+        p.resolve();
+        service.waitFor(p);
+        expect(hideCalledAfterShow).toBeTruthy();
+    });
+
     it('should waitFor the end of promises and cancel promises when clicked', function() {
-        var callback1 = jasmine.createSpy();
-        var callback2 = jasmine.createSpy();
         var p = $.Deferred();
         var callback = jasmine.createSpy();
         p.fail(callback);

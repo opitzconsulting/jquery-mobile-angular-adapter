@@ -160,29 +160,30 @@ Lists can be paged in the sense that more entries can be additionally loaded. By
 display of a sublist of a list that is already fully loaded in JavaScript. This is useful, as the main performance
 problems result from DOM operations, which can be reduced with this paging mechanism.
 
-To implement this paging mechaism, we extend the angular array type with the folling functions:
+To implement this paging mechaism, we extend the angular array type with the folling function:
+`angular.Array.paged(array[,filterExpr[,orderByExpr]])`:
 
-- `angular.Array.paged(array)`: Returns the subarray of the given array with the loaded pages.
-- `angular.Array.hasMorePages(array)`: Returns a boolean indicating if there are more pages that can be loaded.
-- `angular.Array.loadNextPage(array)`: Loads the next page from the given array.
-
+This returns the subarray of the given filtered and ordered array with the currently loaded pages.
 The default page size is defined by `$.mobile.defaultListPageSize`. It can be overwritten by the property `pageSize`
-on arrays.
+on arrays. For the filtering and sorting see the `angular.Array.filter` and `angular.Array.orderBy`.
+
+The resulting list provides the following functions:
+- `hasMorePages()`: Returns a boolean indicating if there are more pages that can be loaded.
+- `loadNextPage()`: Loads the next page from the list that was given to `angular.Array.paged`.
+
+Note that this will cache the result of two calls until the next eval cycle or a change to the filter or orderBy arguments.
 
 As angular instruments all lists in expressions automatically with the functions form the `angular.Array` namespace,
-these functions can directly be used in all angular expressions, with a `$` as prefix.
+the function `paged` can directly be used in all angular expressions, with a `$` as prefix.
 The following example shows an example for a paged list for the data in the variable `myList`:
 
 
     <ul data-role="listview">
-        <li ng:repeat="item in myList.$paged()">
-          {{item}}
-        </li>
-        <li ng:if="mylist.$hasMorePages()">
-            <a href="#" ngm:click="myList.$loadNextPage()">Load next page</a>
-        </li>
+        <li ng:repeat="item in list.$paged()">{{item}}</li>
+        <li ng:if="list.$paged().hasMorePages()">
+            <a href="#" ngm:click="list.$paged().loadNextPage()">Load more</a>
+         </li>
     </ul>
-
 
 
 

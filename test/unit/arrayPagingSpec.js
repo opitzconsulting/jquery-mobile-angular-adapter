@@ -169,5 +169,16 @@ describe("arrayPaging", function() {
         angular.Array.paged(l, filterFn, orderByFn).loadNextPage(l);
         expect(normalize(angular.Array.paged(l, filterFn, orderByFn))).toEqual([4,3,2,1]);
     });
+
+    it('should only have numbers as own attributes', function() {
+        var l = [1];
+        l.pageSize = 2;
+        var pagedList = angular.Array.paged(l, 'true', 'true');
+        for (var x in pagedList) {
+            if (pagedList.hasOwnProperty(x)) {
+                expect(x).toEqual("0");
+            }
+        }
+    });
 });
 

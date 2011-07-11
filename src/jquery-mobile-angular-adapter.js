@@ -961,6 +961,17 @@
         reset : reset
     };
 
+    var usedProps = {
+        pageSize: true,
+        originalList: true,
+        refreshNeeded: true,
+        filter: true,
+        orderBy: true,
+        loadedCount: true,
+        availableCount: true,
+        evalId: true
+    }
+
 
     function createPagedList(list) {
         var res = [];
@@ -970,7 +981,7 @@
         res.init(list);
         var oldHasOwnProperty = res.hasOwnProperty;
         res.hasOwnProperty = function(propName) {
-            if (propName in enhanceFunctions) {
+            if (propName in enhanceFunctions || propName in usedProps) {
                 return false;
             }
             return oldHasOwnProperty.apply(this, arguments);

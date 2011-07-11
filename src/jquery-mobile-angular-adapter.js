@@ -866,24 +866,36 @@
     });
 })(angular);
 
+
 (function(angular) {
     /* A widget to bind general events like touches, ....
      */
     angular.directive("ng:event", function(expression, element) {
-        var pattern = /(.*?):(.*)/;
-        var match = pattern.exec(expression);
-        if (!match) {
-            throw "Expression " + expression + " needs to have the syntax <event>:<handler>";
+        var eventHandlers = {};
+        var pattern = /(.*?):(.*?)($|,)/g;
+        var match;
+        var hasData = false;
+        while (match = pattern.exec(expression)) {
+            hasData = true;
+            var event = match[1];
+            var handler = match[2];
+            eventHandlers[event] = handler;
         }
-        var event = match[1];
-        var handler = match[2];
+        if (!hasData) {
+            throw "Expression " + expression + " needs to have the syntax <event>:<handler>,...";
+        }
 
         var linkFn = function($updateView, element) {
             var self = this;
-            element.bind(event, function(event) {
-                var res = self.$tryEval(handler, element);
-                $updateView();
-            });
+            for (var event in eventHandlers) {
+                (function(event) {
+                    var handler = eventHandlers[event];
+                    element.bind(event, function(event) {
+                        var res = self.$tryEval(handler, element);
+                        $updateView();
+                    });
+                })(event);
+            }
         };
         linkFn.$inject = ['$updateView'];
         return linkFn;

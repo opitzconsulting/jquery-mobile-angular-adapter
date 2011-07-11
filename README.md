@@ -93,10 +93,10 @@ Also see `ng:event` for the general case of binding a handler to events.
 
 Usage: E.g. `<a href="#" ngm:click="myFn()">`
 
-### Directive ng:event(event:handler)
+### Directive ng:event(event1:handler1,event2:handler2,...)
 General event handler that integrates with jquery events, and also with jquery mobile events.
-The value of the attribute has the syntax `<events>:<function expression>`. The `events` part may contain one or
-more events (see jQuery bind function).
+The value of the attribute has the syntax `<events>:<function expression>,...`. The `events` part may contain one or
+more events (see jQuery bind function). There may be more than one events/function pair in the expression, separated by a komma.
 
 Usage: E.g. `<a href="#" ng:event="swiperight:myFn()">`
 

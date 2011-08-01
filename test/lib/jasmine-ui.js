@@ -29,7 +29,7 @@ jasmine.ui = {};
  * The central logging function.
  */
 jasmine.ui.log = function(msg) {
-    //console.log(msg);
+    // console.log(msg);
 };
 
 
@@ -37,13 +37,35 @@ jasmine.ui.log = function(msg) {
  * Jasmine UI Plugin that cares for creating a testframe.
  */
 (function(window) {
+    function splitAtHash(url) {
+        var hashPos = url.indexOf('#');
+        if (hashPos!=-1) {
+            return [url.substring(0, hashPos), url.substring(hashPos+1)];
+        } else {
+            return [url,''];
+        }
+    }
+
     var testwindow;
     window.testframe = function(url) {
-        if (arguments.length>0) {
+        if (arguments.length > 0) {
+            if (!url.charAt(0)=='/') {
+                throw new Error("the url for the testframe needs to be absolute!");
+            }
             if (!testwindow) {
                 testwindow = window.open(url, 'jasmineui');
+            }
+            var oldPath = testwindow.location.pathname;
+            // if only the hash changes, the
+            // page will not reload by assigning the href but only
+            // change the hashpath.
+            // So detect this and do a manual reload.
+            var urlSplitAtHash = splitAtHash(url);
+            if (oldPath===urlSplitAtHash[0]) {
+                testwindow.location.hash = urlSplitAtHash[1];
+                testwindow.location.reload();
             } else {
-                testwindow.location.replace(url);
+                testwindow.location.href = url;
             }
         }
         return testwindow;
@@ -78,7 +100,7 @@ jasmine.ui.log = function(msg) {
 
     window.waitsForAsync = function(timeout) {
         jasmine.getEnv().currentSpec.waitsForAsync.apply(jasmine.getEnv().currentSpec,
-                arguments);
+            arguments);
     };
 
     jasmine.ui.isWaitForAsync = function() {
@@ -89,10 +111,17 @@ jasmine.ui.log = function(msg) {
                 return true;
             }
         }
-        var handlers = testframe().asyncWaitHandlers || {};
+        var fr = testframe();
+        var handlers = fr.asyncWaitHandlers || {};
         for (var name in handlers) {
             if (handlers[name]()) {
                 jasmine.ui.log("async waiting for " + name);
+                return true;
+            }
+        }
+        if (fr.jQuery) {
+            if (!fr.jQuery.isReady) {
+                jasmine.ui.log("async waiting for jquery ready");
                 return true;
             }
         }
@@ -115,9 +144,9 @@ jasmine.ui.log = function(msg) {
             jasmine.ui.log("begin async waiting");
         });
         spec.waitsFor(
-                function() {
-                    return !jasmine.ui.isWaitForAsync()
-                }, "end of async work", timeout);
+            function() {
+                return !jasmine.ui.isWaitForAsync()
+            }, "end of async work", timeout);
         spec.runs(function() {
             jasmine.ui.log("end async waiting");
         });
@@ -152,10 +181,10 @@ jasmine.ui.log = function(msg) {
     jasmine.ui.addLoadHtmlListenerForNextLoad = function(name, callTime, listener) {
         name = name + (customListenerId++);
         jasmine.ui.addLoadHtmlListener(name, function(window, pcallTime) {
-            if (callTime==pcallTime) {
+            if (callTime == pcallTime) {
                 window.setTimeout(function() {
                     delete instrumentListeners[name];
-                },0);
+                }, 0);
                 listener(window);
             }
         });
@@ -163,7 +192,7 @@ jasmine.ui.log = function(msg) {
 
     window.loadHtml = function(url, instrumentCallback) {
         jasmine.getEnv().currentSpec.loadHtml.apply(jasmine.getEnv().currentSpec,
-                arguments);
+            arguments);
     };
 
 
@@ -181,7 +210,14 @@ jasmine.ui.log = function(msg) {
             }
             testframe(url);
         });
-        spec.waitsForAsync();
+        // Be sure to wait until the new page is loaded.
+        // waitsForAsync would not be enough here,
+        // as it would proceed directly if there already was
+        // a frame loaded.
+        waitsForReload();
+        spec.runs(function() {
+            jasmine.ui.log("Successfully loaded url " + url);
+        });
     }
 
     function callInstrumentListeners(fr, callTime) {
@@ -193,7 +229,7 @@ jasmine.ui.log = function(msg) {
     }
 
     function proxyAddEventFunction(baseObject, fnname, eventProxyMap) {
-        var oldFnname = 'old'+fnname;
+        var oldFnname = 'old' + fnname;
         baseObject[oldFnname] = baseObject[fnname];
         baseObject[fnname] = function() {
             var event = arguments[0];
@@ -210,12 +246,12 @@ jasmine.ui.log = function(msg) {
             arguments[1] = newCallback;
             // Note: We cannot use apply here as this is not possible for the attachEvent
             // function in IE!
-            if (arguments.length==2) {
+            if (arguments.length == 2) {
                 return baseObject[oldFnname](arguments[0], arguments[1]);
-            } else if (arguments.length==3) {
+            } else if (arguments.length == 3) {
                 return baseObject[oldFnname](arguments[0], arguments[1], arguments[2]);
             } else {
-                throw "proxyAddEventFunction does not support argument calls with "+arguments.length+" arguments";
+                throw "proxyAddEventFunction does not support argument calls with " + arguments.length + " arguments";
             }
         }
     }
@@ -224,59 +260,73 @@ jasmine.ui.log = function(msg) {
         var win = fr;
         var doc = fr.document;
 
-        function callback() {
-            if (!win.ready) {
-                win.ready = true;
-                callInstrumentListeners(fr, "afterContent");
-                jasmine.ui.log("Successfully loaded frame " + fr.name + " with url " + fr.location.href);
+        function callListeners() {
+            // Only use the load events when require-js is not used.
+            // Otherwise we use the ready-callback from require-js.
+            if (!fr.define) {
+                callInstrumentListeners(fr, 'afterContent');
             }
+        }
 
+        function loadCallback() {
+            if (!win.loadHtmlReady) {
+                win.loadHtmlReady = true;
+                callListeners();
+            }
         }
 
         // Mozilla, Opera and webkit nightlies currently support this event
         if (doc.addEventListener) {
             // Be sure that our handler gets called before any
             // other handler of the instrumented page!
-            proxyAddEventFunction(doc, 'addEventListener', {'DOMContentLoaded': callback});
-            proxyAddEventFunction(win, 'addEventListener', {'load': callback});
+            proxyAddEventFunction(doc, 'addEventListener', {'DOMContentLoaded': loadCallback});
+            proxyAddEventFunction(win, 'addEventListener', {'load': loadCallback});
 
             // A fallback to window.onload, that will always work
-            win.addEventListener("load", callback, false);
+            win.addEventListener("load", loadCallback, false);
 
             // If IE event model is used
         } else if (doc.attachEvent) {
             // Be sure that our handler gets called before any
             // other handler of the instrumented page!
-            proxyAddEventFunction(doc, 'attachEvent', {'onreadystatechange': callback});
-            proxyAddEventFunction(win, 'attachEvent', {'load': callback});
+            proxyAddEventFunction(doc, 'attachEvent', {'onreadystatechange': loadCallback});
+            proxyAddEventFunction(win, 'attachEvent', {'load': loadCallback});
 
             // A fallback to window.onload, that will always work
-            win.attachEvent("onload", callback);
+            win.attachEvent("onload", loadCallback);
         }
+    }
+    /*
+     * When using require.js, and all libs are in one file,
+     * we might not be able to intercept the point in time
+     * when everything is loaded, but the ready signal was not yet sent.
+     */
+    function addRequireJsSupport(fr) {
+        fr.require = {
+          ready: function() {
+              callInstrumentListeners(fr, 'afterContent');
+          }
+        };
     }
 
     window.instrument = function(fr) {
         try {
             jasmine.ui.log("Beginn instrumenting frame " + fr.name + " with url " + fr.location.href);
-            fr.instrumented = true;
-            /*
-            var scriptElement = fr.createElement('script');
-            scriptElement.innerHTML = '';
-            */
-            addLoadEventListener(fr);
-            fr.error = null;
-            fr.ready = false;
+            fr.loadHtmlError = null;
+            fr.loadHtmlReady = false;
             jasmine.ui.addAsyncWaitHandler(fr, 'loading', function() {
-                if (fr.error) {
-                    jasmine.ui.log("Error during instrumenting frame " + fr.name + ": " + fr.error);
-                    throw fr.error;
+                if (fr.loadHtmlError) {
+                    jasmine.ui.log("Error during loading page: " + fr.loadHtmlError);
+                    throw fr.loadHtmlError;
                 }
-                return !fr.ready;
+                return !fr.loadHtmlReady;
             });
+            callInstrumentListeners(fr, 'beforeContent');
+            addLoadEventListener(fr);
+            addRequireJsSupport(fr);
 
-            callInstrumentListeners(fr, "beforeContent");
         } catch (ex) {
-            error = ex;
+            fr.loadHtmlError = ex;
         }
     };
 })(jasmine, window);
@@ -291,7 +341,7 @@ jasmine.ui.log = function(msg) {
 (function() {
     var inReload = false;
 
-   /**
+    /**
      * Waits for the new page to be loaded.
 
      * @param timeout
@@ -300,8 +350,12 @@ jasmine.ui.log = function(msg) {
         window.runs(function() {
             inReload = true;
         });
-        return window.waitsForAsync();
+        return window.waitsForAsync(10000);
     };
+
+    jasmine.ui.addAsyncWaitHandler(null, 'unload', function() {
+        return inReload;
+    });
 
     jasmine.ui.addLoadHtmlListener('instrumentBeforeUnload', function(window, callTime) {
         if (callTime != 'beforeContent') {
@@ -317,10 +371,130 @@ jasmine.ui.log = function(msg) {
                 inReload = true;
             });
         }
-        jasmine.ui.addAsyncWaitHandler(null, 'unload', function() {
-            return inReload;
-        });
     });
+})();
+
+/**
+ * Adds some helper functions into the created frame and the current window.
+ */
+(function() {
+    var addHelperFunctions = function(window) {
+        /**
+         * Instantiates the given function with the given arguments.
+         * Needed because IE throws an error if an object is instantiated
+         * from another iframe or window.
+         * @param fn
+         * @param args
+         */
+        function instantiateHelper(fn, args) {
+            if (!args || args.length == 0) {
+                return new fn();
+            } else if (args.length == 1) {
+                return new fn(args[0]);
+            } else if (args.length == 2) {
+                return new fn(args[0], args[1]);
+            } else if (args.length == 3) {
+                return new fn(args[0], args[1], args[2]);
+            } else {
+                throw "instantiateHelper does only support 3 arguments";
+            }
+        }
+
+        window.instantiateHelper = instantiateHelper;
+
+        /**
+         * Creates a wrapper function for the given function from the given window.
+         * Needed for IE to install proxy functions into other windows
+         * than the current one, so that they an be called with the new operator.
+         * @param fn
+         * @param dispatchWindow
+         */
+        function proxyConstructor(fn, dispatchWindow) {
+            return function() {
+                var newargs = dispatchWindow.instantiateHelper(dispatchWindow.Array);
+                for (var i=0; i<arguments.length; i++) {
+                    newargs.push(arguments[i]);
+                }
+                return fn.apply(this, newargs);
+            };
+        }
+
+        window.proxyConstructor = proxyConstructor;
+    }
+
+    jasmine.ui.addLoadHtmlListener('addHelperFunctions', function(window, callTime) {
+        if (callTime != 'beforeContent') {
+            return;
+        }
+        window.document.write("<script>(" + addHelperFunctions.toString() + ")(window);</script>");
+    });
+
+    addHelperFunctions(window);
+
+    /**
+     * Clones the given array with the right prototype of the given window.
+     * @param arr
+     * @param win
+     */
+    function normalizeExternalArray(arr,win) {
+        var res = win.instantiateHelper(win.Array);
+        for (var i = 0; i < arr.length; i++) {
+            res.push(arr[i]);
+        }
+        return res;
+    }
+
+    function isNumber(obj) {
+        return obj.toFixed !== undefined;
+    }
+
+    function isString(obj) {
+        return obj.charAt !== undefined;
+    }
+
+    function isArray(obj) {
+        return !isString(obj) && obj.slice !== undefined;
+    }
+
+    /**
+     * Normalizes the given object if it originates from another window
+     * or iframe. Traverses through the object graph
+     * and calls normalizeExternalArray where needed.
+     * <p>
+     * Note that this changes the object itself if it is no array.
+     * If it is an array, a new instance will be created.
+     * <p>
+     * Attention: This does not work on cyclic graphs!
+     * @param obj
+     */
+    function normalizeExternalObject(obj,win) {
+        if (!win) {
+            win = window;
+        }
+        if (obj === null || obj === undefined) {
+            return obj;
+        }
+        if (isArray(obj)) {
+            obj = normalizeExternalArray(obj,win);
+        }
+        if (!isNumber(obj) && !isString(obj)) {
+            for (var prop in obj) {
+                if (obj.hasOwnProperty(prop)) {
+                    var value = obj[prop];
+
+                    var newValue = normalizeExternalObject(value, win);
+                    if (value!==newValue) {
+                        obj[prop] = newValue;
+                    }
+                }
+            }
+        }
+        return obj;
+    }
+
+    jasmine.ui.normalizeExternalArray = normalizeExternalArray;
+    jasmine.ui.normalizeExternalObject = normalizeExternalObject;
+
 })();
 
 /**
@@ -426,68 +600,63 @@ jasmine.ui.log = function(msg) {
  * Adds a loadHtmlListener that adds an async wait handler for the window.XMLHttpRequest.
  */
 (function(jasmine) {
+    var jasmineWindow = window;
+    var copyStateFields = ['readyState', 'responseText', 'responseXML', 'status', 'statusText'];
+    var proxyMethods = ['abort','getAllResponseHeaders', 'getResponseHader', 'open', 'send', 'setRequestHeader'];
+
     jasmine.ui.addLoadHtmlListener('instrumentXhr', function(window, callTime) {
         if (callTime != 'beforeContent') {
             return null;
         }
 
-        // Note: We need to instrument the XHR from inside the new window,
-        // as otherwise some calls are not allowed, especially instantiating
-        // the old XHR (only IE).
-        // Reason (IE): Functions declared in one window are objects in the other window.
-        function installXhrProxy(window) {
-            var copyStateFields = ['readyState', 'responseText', 'responseXML', 'status', 'statusText'];
-            var proxyMethods = ['abort','getAllResponseHeaders', 'getResponseHader', 'open', 'send', 'setRequestHeader'];
-            var oldXHR = window.XMLHttpRequest;
-            window.openCallCount = 0;
-            var DONE = 4;
-            window.XMLHttpRequest = function() {
-                var self = this;
-                this.origin = new oldXHR();
+        var oldXHR = window.XMLHttpRequest;
+        window.openCallCount = 0;
+        var DONE = 4;
+        var newXhr = function() {
+            var self = this;
+            this.origin = window.instantiateHelper(oldXHR, []);
 
-                function copyState() {
-                    for (var i = 0; i < copyStateFields.length; i++) {
-                        var field = copyStateFields[i];
-                        try {
-                            self[field] = self.origin[field];
-                        } catch (_) {
-                        }
+            function copyState() {
+                for (var i = 0; i < copyStateFields.length; i++) {
+                    var field = copyStateFields[i];
+                    try {
+                        self[field] = self.origin[field];
+                    } catch (_) {
                     }
                 }
+            }
 
-                function proxyMethod(name) {
-                    self[name] = function() {
-                        if (name == 'send') {
-                            window.openCallCount++;
-                        }
-                        var res = self.origin[name].apply(self.origin, arguments);
-                        copyState();
-                        return res;
+            function proxyMethod(name) {
+                self[name] = function() {
+                    if (name == 'send') {
+                        window.openCallCount++;
                     }
-                }
-
-                for (var i = 0; i < proxyMethods.length; i++) {
-                    proxyMethod(proxyMethods[i]);
-                }
-                this.origin.onreadystatechange = function() {
-                    if (self.origin.readyState == DONE) {
-                        window.openCallCount--;
-                    }
+                    var res = self.origin[name].apply(self.origin, jasmine.ui.normalizeExternalArray(arguments,window));
                     copyState();
-                    if (self.onreadystatechange) {
-                        self.onreadystatechange.apply(self, arguments);
-                    }
-                };
-                copyState();
-            };
-        };
+                    return res;
+                }
+            }
 
-        window.document.write('<script>'+installXhrProxy.toString()+';installXhrProxy(window);</script>');
+            for (var i = 0; i < proxyMethods.length; i++) {
+                proxyMethod(proxyMethods[i]);
+            }
+            this.origin.onreadystatechange = function() {
+                if (self.origin.readyState == DONE) {
+                    window.openCallCount--;
+                }
+                copyState();
+                if (self.onreadystatechange) {
+                    self.onreadystatechange.apply(self.origin, jasmine.ui.normalizeExternalArray(arguments,window));
+                }
+            };
+            copyState();
+        };
+        window.XMLHttpRequest = window.proxyConstructor(newXhr, jasmineWindow);
 
         jasmine.ui.addAsyncWaitHandler(window, 'xhr',
-                function() {
-                    return window.openCallCount != 0;
-                });
+            function() {
+                return window.openCallCount != 0;
+            });
 
     });
 
@@ -519,9 +688,9 @@ jasmine.ui.log = function(msg) {
             });
         };
         jasmine.ui.addAsyncWaitHandler(window, 'WebkitAnimation',
-                function() {
-                    return window.animationCount != 0;
-                });
+            function() {
+                return window.animationCount != 0;
+            });
     });
 })();
 
@@ -550,9 +719,9 @@ jasmine.ui.log = function(msg) {
             });
         };
         jasmine.ui.addAsyncWaitHandler(window, 'WebkitTransition',
-                function() {
-                    return window.transitionCount != 0;
-                });
+            function() {
+                return window.transitionCount != 0;
+            });
 
     });
 })();
@@ -613,9 +782,9 @@ jasmine.ui.log = function(msg) {
         if (typeof document.createEvent == 'function') {
             evt = document.createEvent("MouseEvents");
             evt.initMouseEvent(type, e.bubbles, e.cancelable, e.view, e.detail,
-                    e.screenX, e.screenY, e.clientX, e.clientY,
-                    e.ctrlKey, e.altKey, e.shiftKey, e.metaKey,
-                    e.button, e.relatedTarget || document.body.parentNode);
+                e.screenX, e.screenY, e.clientX, e.clientY,
+                e.ctrlKey, e.altKey, e.shiftKey, e.metaKey,
+                e.button, e.relatedTarget || document.body.parentNode);
         } else if (document.createEventObject) {
             evt = document.createEventObject();
             extend(evt, e);
@@ -636,8 +805,8 @@ jasmine.ui.log = function(msg) {
             try {
                 evt = document.createEvent("KeyEvents");
                 evt.initKeyEvent(type, e.bubbles, e.cancelable, e.view,
-                        e.ctrlKey, e.altKey, e.shiftKey, e.metaKey,
-                        e.keyCode, e.charCode);
+                    e.ctrlKey, e.altKey, e.shiftKey, e.metaKey,
+                    e.keyCode, e.charCode);
             } catch(err) {
                 evt = document.createEvent("Events");
                 evt.initEvent(type, e.bubbles, e.cancelable);

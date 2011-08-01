@@ -40,7 +40,7 @@ describe("selectmenu", function() {
         });
         runs(function() {
             var $ = testframe().$;
-            $(dialog.find('li')[1]).trigger('vclick')
+            $(dialog.find('li a')[1]).trigger('vclick')
             expect(scope.$get('mysel')).toEqual("v2");
         });
         waitsFor(function() {

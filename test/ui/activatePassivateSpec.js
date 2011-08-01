@@ -34,6 +34,7 @@ describe("activatePassivateSpec", function() {
 
         frame.$("#start").attr("ng:controller", "StartController");
         frame.$("#page2").attr("ng:controller", "Page2Controller");
+        reset();
     }
 
     function reset() {
@@ -44,10 +45,6 @@ describe("activatePassivateSpec", function() {
         passivateThis = null;
         passivateNextScope = null;
     }
-
-    beforeEach(function() {
-        reset();
-    });
 
     it('should eval the page after onActivate', function() {
         var page2scope;

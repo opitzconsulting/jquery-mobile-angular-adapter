@@ -2,7 +2,6 @@
  * Tests for the slider widget integration.
  */
 describe("selectSlider", function() {
-
     it('should save the ui value into the model', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');
@@ -92,10 +91,10 @@ describe("selectSlider", function() {
             var scope = page.scope();
             // ui select creates a new parent for itself
             var content = page.find(":jqmData(role='content')");
-            expect(content.children('.ng-widget').length).toEqual(2);
+            expect(content.children('.ui-slider').length).toEqual(2);
             scope.mylist = [1];
-            scope.$eval();
-            expect(content.children('.ng-widget').length).toEqual(1);
+            scope.$root.$eval();
+            expect(content.children('.ui-slider').length).toEqual(1);
         });
     });
 

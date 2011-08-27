@@ -86,7 +86,7 @@
         // create a global scope over all pages,
         // so common data is possible.
         globalScope = angular.scope();
-        globalScope.$onEval(99999, function() {
+        globalScope.onEval(99999, function() {
             executeAfterEvalQueue();
             removeSlaveElements();
         });
@@ -297,33 +297,42 @@
     });
 
     /**
-     * Removes all elements from list1 that are contained in list2
-     * and returns a new list.
-     * @param list1
-     * @param list2
+     * Creates a virtual page for the given element all all of it's siblings and
+     * executes the callback with the element and the virtual page as arguments.
+     * Useful to create jquery mobile widget in an isolated environment.
+     * @param element
+     * @param callback
      */
-    function minusArray(list1, list2) {
-        var res = [];
-        // temporarily add marker...
-        for (var i=0; i<list2.length; i++) {
-            list2[i].diffMarker = true;
+    function executeWithVirtualPage(element, callback) {
+        // Note: We cannot use jquery functions here,
+        // as they do not work correctly with document fragments
+        // as parent node!
+        var parent = element[0].parentNode;
+        var pageElement = $('<div data-role="page" class="ui-page"></div>');
+        // The parent of the virtual page is a document fragment.
+        // We need to add some functions so that jquery does
+        // create errors during some queries...
+        pageElement[0].parentNode.getAttribute = function() {
+            return null;
+        };
+        // Also create a fake page container.
+        // Some widgets like selectmenu use this variable directly!
+        var pageContainer = $('<div></div>');
+        var oldPageContainer = $.mobile.pageContainer;
+        $.mobile.pageContainer = pageContainer;
+        var children = parent.childNodes;
+        while (children.length > 0) {
+            pageElement[0].appendChild(children[0]);
         }
-        for (var i=0; i<list1.length; i++) {
-            if (!list1[i].diffMarker) {
-                res.push(list1[i]);
+        try {
+            return callback(element, pageElement, pageContainer);
+        } finally {
+            $.mobile.pageContainer = oldPageContainer;
+            var children = pageElement[0].childNodes;
+            while (children.length > 0) {
+                parent.appendChild(children[0]);
             }
         }
-        for (var i=0; i<list2.length; i++) {
-            delete list2[i].diffMarker;
-        }
-        return res;
-    }
-
-    function recordDomAdditions(selector, callback) {
-        var oldState = $(selector);
-        callback();
-        var newState = $(selector);
-        return minusArray(newState, oldState);
     }
 
     createAngularWidgetProxy('select', function(element) {
@@ -342,33 +351,77 @@
         return function(element, origBinder) {
             var res = origBinder();
             var scope = this;
-            // The selectmenu needs access to the page,
-            // so we can not create it until after the eval cycle!
+            // Defer the creation of the selectmenu widget,
+            // as it accesses the
             $.mobile.afterEvalCallback(function() {
-                // The selectmenu widget creates a parent tag. This needs
-                // to be deleted when the select tag is deleted from the dom.
-                // Furthermore, it creates ui-selectmenu and ui-selectmenu-screen divs, as well as new dialogs
-                var removeSlaves;
-                var newElements = recordDomAdditions(".ui-selectmenu,.ui-selectmenu-screen,:jqmData(role='dialog')", function() {
-                    element.selectmenu();
-                    removeSlaves = element.parent();
+                element.selectmenu();
+            });
+            // The selectmenu widget from jquery mobile
+            // creates elements for the popup directly under the page,
+            // and also a dialog on the same level as the page.
+            // We grab these elements and insert them only when the dialog is open into the dom.
+            executeWithVirtualPage(element, function(element, pageElement, pageContainer) {
+                element.selectmenu();
+                // save the elements that were created directly under the page,
+                // and insert them into the dom when needed.
+                var dialog = pageContainer.children();
+                dialog.detach();
+                dialog.bind("pagebeforeshow", function() {
+                    dialog.appendTo($.mobile.pageContainer);
                 });
-                removeSlaves = removeSlaves.add(newElements);
-                $.mobile.removeSlavesWhenMasterIsRemoved(element, removeSlaves);
+                dialog.bind("pagehide", function() {
+                    dialog.detach();
+                });
 
-                scope.$watch(name, function(value) {
-                    element.selectmenu('refresh', true);
-                });
-                // update the value when the number of options change.
-                // needed if the default values changes.
-                var oldCount;
-                scope.$onEval(999999, function() {
-                    var newCount = element[0].childNodes.length;
-                    if (oldCount !== newCount) {
-                        oldCount = newCount;
-                        element.trigger('change');
+                var pageElements = pageElement.children(".ui-selectmenu, .ui-selectmenu-screen");
+                pageElements.detach();
+                var instance = element.data().selectmenu;
+                var oldOpen = instance.open;
+                var oldRefresh = instance.refresh;
+                instance.refresh = function() {
+                    var page = element.closest('.ui-page');
+                    if (page.length > 0) {
+                        var needsAttach = pageElements.parent().length == 0;
+                        if (needsAttach) {
+                            page.append(pageElements);
+                        }
+                        try {
+                            return oldRefresh.apply(this, arguments);
+                        } finally {
+                            if (needsAttach) {
+                                pageElements.detach();
+                            }
+                        }
                     }
-                });
+
+                };
+                instance.open = function() {
+                    var page = element.closest('.ui-page');
+                    page.append(pageElements);
+                    // always refresh the menu when opening.
+                    // By this we do not have to watch for changes to the options.
+                    oldRefresh.call(instance, true);
+                    return oldOpen.apply(this, arguments);
+                };
+                var oldClose = instance.close;
+                instance.close = function() {
+                    var res = oldClose.apply(this, arguments);
+                    pageElements.detach();
+                    return res;
+                };
+            });
+            scope.$watch(name, function(value) {
+                element.selectmenu('refresh', true);
+            });
+            // update the value when the number of options change.
+            // needed if the default values changes.
+            var oldCount;
+            scope.$onEval(999999, function() {
+                var newCount = element[0].childNodes.length;
+                if (oldCount !== newCount) {
+                    oldCount = newCount;
+                    element.trigger('change');
+                }
             });
 
             return res;
@@ -380,18 +433,14 @@
         var name = element.attr('name');
         return function(element, origBinder) {
             var res = origBinder();
+            // The slider widget creates an element
+            // after the slider. So we wrap it into
+            // a div. Needed for ng:repeat and others...
+            element.wrap('<ngm:group class="ng-widget"></ngm:group>');
+            element.slider();
             var scope = this;
-            $.mobile.afterEvalCallback(function() {
-                // The slider widget creates an element of class ui-slider
-                // after the slider.
-                var newElements = recordDomAdditions(".ui-slider", function() {
-                    element.slider();
-                });
-                $.mobile.removeSlavesWhenMasterIsRemoved(element, $(newElements));
-
-                scope.$watch(name, function(value) {
-                    element.slider('refresh');
-                });
+            scope.$watch(name, function(value) {
+                element.slider('refresh');
             });
             return res;
         };
@@ -418,20 +467,16 @@
         return function(element, origBinder) {
             element[0].type = oldType;
             var res = origBinder();
+            // The slider widget creates an element
+            // after the slider. So we wrap it into
+            // a div. Needed for ng:repeat and others...
+            element.wrap('<ngm:group class="ng-widget"></ngm:group>');
+            element.slider();
+            // apply the textinput widget also
+            element.textinput();
             var scope = this;
-            $.mobile.afterEvalCallback(function() {
-                // The slider widget creates an element of class ui-slider
-                // after the slider.
-                var newElements = recordDomAdditions(".ui-slider", function() {
-                    element.slider();
-                    // apply the textinput widget also
-                    element.textinput();
-                });
-                $.mobile.removeSlavesWhenMasterIsRemoved(element, $(newElements));
-
-                scope.$watch(name, function(value) {
-                    element.slider('refresh');
-                });
+            scope.$watch(name, function(value) {
+                element.slider('refresh');
             });
             return res;
         };
@@ -454,12 +499,12 @@
             var res = origBinder();
             var scope = this;
             // The checkboxradio widget looks for a label
-            // within the page. So we need to defer the creation.
-            $.mobile.afterEvalCallback(function() {
+            // within the page. So we need a virtual page.
+            executeWithVirtualPage(element, function(element, pageElement) {
                 element.checkboxradio();
-                scope.$watch(name, function(value) {
-                    element.checkboxradio('refresh');
-                });
+            });
+            scope.$watch(name, function(value) {
+                element.checkboxradio('refresh');
             });
             return res;
         }
@@ -487,9 +532,6 @@
             var res = origBinder();
             var scope = this;
             element.button(options);
-            // the input button widget creates a new parent element.
-            // remove that element when the input element is removed
-            $.mobile.removeSlavesWhenMasterIsRemoved(element, element.parent());
             return res;
         }
     }
@@ -507,9 +549,6 @@
             var res = origBinder();
             var scope = this;
             element.button(options);
-            // the input button widget creates a new parent element.
-            // remove that element when the input element is removed
-            $.mobile.removeSlavesWhenMasterIsRemoved(element, element.parent());
             return res;
         }
     }
@@ -547,35 +586,40 @@
         return function(element, origBinder) {
             var res = origBinder();
             var scope = this;
-            // TODO which elements are created by a listview? extra dialogs?
-            // The listview widget looks for the persistent footer,
-            // so we need to defer the creation.
-            $.mobile.afterEvalCallback(function() {
-                // listviews may create subpages for nested lists.
-                // Be sure that they get removed from the dom when the list is removed.
-                var newElemens = recordDomAdditions(":jqmData(role='page')", function() {
-                    element.listview();
-                });
-                $.mobile.removeSlavesWhenMasterIsRemoved(element, $(newElemens));
-                // refresh the listview when the number of children changes.
-                // This does not need to check for changes to the
-                // ordering of children, for the following reason:
-                // The only changes to elements is done by ng:repeat.
-                // And ng:repeat reuses the same element for the same index position,
-                // independent of the value of that index position.
-                var oldCount;
-                scope.$onEval(999999, function() {
-                    var newCount = element[0].childNodes.length;
-                    if (oldCount !== newCount) {
-                        oldCount = newCount;
-                        element.listview("refresh");
-                    }
-                });
+            executeWithVirtualPage(element, function(element, pageElement) {
+                element.listview();
+                var oldRefresh = element.data().listview.refresh;
+                // The listview widget looks for the persistent footer.
+                // However, this is not possible with ng:repeat. So use a fake
+                // refresh function...
+                element.data().listview.refresh = function() {
+                    var self = this;
+                    var args = arguments;
+                    return executeWithVirtualPage(element, function() {
+                        return oldRefresh.apply(self, args);
+                    });
+                }
+            });
+            // refresh the listview when the number of children changes.
+            // This does not need to check for changes to the
+            // ordering of children, for the following reason:
+            // The only changes to elements is done by ng:repeat.
+            // And ng:repeat reuses the same element for the same index position,
+            // independent of the value of that index position.
+            var oldCount;
+            scope.$onEval(999999, function() {
+                var newCount = element[0].childNodes.length;
+                if (oldCount !== newCount) {
+                    oldCount = newCount;
+                    element.listview("refresh");
+                }
             });
 
             return res;
         }
     }
+
+    ;
 })(angular);
 
 

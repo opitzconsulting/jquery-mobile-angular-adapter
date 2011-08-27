@@ -36,13 +36,6 @@ This was needed as angular's url handling is incompatibly with jquery mobile and
 unwanted navigations.
 
 
-Features
------------
-
-- selectmenu: Detects when options change and refreshes the menu transparently.
-
-
-
 Usage
 ---------
 

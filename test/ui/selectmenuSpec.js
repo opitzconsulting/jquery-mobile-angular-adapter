@@ -20,8 +20,6 @@ describe("selectmenu", function() {
             scope = select.scope();
             expect(scope.$get('mysel')).toEqual("v1");
 
-            expect($(".ui-dialog").length).toEqual(0);
-
             // find the menu and click on the second entry
             testframe().innerHeight = 10;
             select.selectmenu('open');
@@ -46,11 +44,6 @@ describe("selectmenu", function() {
         waitsFor(function() {
             return !dialogOpen;
         });
-        runs(function() {
-            var $ = testframe().$;
-            dialog = $(".ui-dialog");
-            expect(dialog.length).toEqual(0);
-        });
     });
 
     it('should save the ui value into the model when using non native menus', function() {
@@ -68,8 +61,6 @@ describe("selectmenu", function() {
             expect(select[0].value).toEqual("v1");
             var scope = select.scope();
             expect(scope.$get('mysel')).toEqual("v1");
-            // the menu should only be in the dom when it is open
-            expect(page.find(".ui-selectmenu").length).toEqual(0);
 
             // find the menu and click on the second entry
             select.selectmenu('open');
@@ -133,7 +124,6 @@ describe("selectmenu", function() {
         });
     });
 
-
     it('should be removable when ng:repeat shrinks', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');
@@ -150,10 +140,11 @@ describe("selectmenu", function() {
             var content = page.find(":jqmData(role='content')");
             expect(content.children('div').length).toEqual(2);
             scope.mylist = [1];
-            scope.$eval();
+            scope.$root.$eval();
             expect(content.children('div').length).toEqual(1);
         });
     });
+
     it('should refresh the default value when the number of options changes', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');

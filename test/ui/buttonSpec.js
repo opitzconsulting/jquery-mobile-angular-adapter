@@ -60,7 +60,7 @@ describe("button", function() {
             var content = page.find(":jqmData(role='content')");
             expect(content.children('div').length).toEqual(2);
             scope.mylist = [1];
-            scope.$eval();
+            scope.$root.$eval();
             expect(content.children('div').length).toEqual(1);
         });
     });

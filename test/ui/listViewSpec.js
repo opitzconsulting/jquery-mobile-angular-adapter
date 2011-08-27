@@ -2,7 +2,6 @@
  * Tests for the listview widget integration.
  */
 describe("listview", function() {
-    /*
     it('should be usable without ng:repeat', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');
@@ -18,7 +17,6 @@ describe("listview", function() {
             expect(li.hasClass('ui-li')).toBeTruthy();
         });
     });
-    */
 
     it('should be usable with ng:repeat', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
@@ -101,6 +99,31 @@ describe("listview", function() {
             scope.mylist = [1];
             scope.$eval();
             expect(content.children('ul').length).toEqual(1);
+        });
+    });
+
+    it('should be removable when ng:repeat shrinks and subpages are used', function() {
+        loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
+            var page = frame.$('#start');
+            page.append('<div data-role="content" ng:init="mylist = [1,2]">' +
+                    '<ul data-role="listview" ng:repeat="item in mylist">' +
+                    '<li>Test' +
+                    '<ul><li>Item 2.1</li><li>Item 2.2</li></ul>' +
+                    '</li></ul>'+
+                    '</div>');
+        });
+        runs(function() {
+            var $ = testframe().$;
+            var page = $("#start");
+            var scope = page.scope();
+            // ui select creates a new parent for itself
+            var content = page.find(":jqmData(role='content')");
+            expect(content.children('ul').length).toEqual(2);
+            // ui select creates sub pages.
+            expect($(":jqmData(role='page')").length).toEqual(4);
+            scope.mylist = [1];
+            scope.$root.$eval();
+            expect($(":jqmData(role='page')").length).toEqual(3);
         });
     });
 });

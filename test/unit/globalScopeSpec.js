@@ -1,18 +1,24 @@
 describe("globalScope", function() {
-    var element, scope;
+    var element, scope, container;
 
-    function compile(html) {
-        // create a jquery mobile page widget. This should
-        // initialize jquery mobile and also angular js!
-        element = $(html);
+    function compile(id, html) {
+        // Note: The html needs to be added to the dom,
+        // as otherwise we get errors due to using a DocumentFragment...
+        $("#jqmtest").append(html);
+        element = $("#"+id);
         element.page();
         // get the angularJs scope from the jquery element.
         scope = element.scope();
     }
 
     beforeEach(function() {
+        $("body").append('<div id="jqmtest"></div>');
         element = null;
         scope = null;
+    });
+
+    afterEach(function() {
+        $("#jqmtest").remove();
     });
 
     it('should use the global controller als global scope', function() {
@@ -21,7 +27,7 @@ describe("globalScope", function() {
             this.test = 'hallo';
         };
         var result;
-        compile('<div id="page1" data-role="page"></div>');
+        compile('page1', '<div id="page1" data-role="page"></div>');
         expect(scope.$get('test')).toEqual('hallo');
 
     });
@@ -40,11 +46,11 @@ describe("globalScope", function() {
 
 
     it('should use a common global scope as parent of all page scopes', function() {
-        compile('<div id="page1" data-role="page">' +
+        compile('page1', '<div id="page1" data-role="page">' +
                 '</div>');
         var page1 = element.scope();
         expect(page1).toBeDefined();
-        compile('<div id="page2" data-role="page">' +
+        compile('page2', '<div id="page2" data-role="page">' +
                 '</div>');
         var page2 = element.scope();
         page1.id = "page1";
@@ -60,7 +66,7 @@ describe("globalScope", function() {
         window.TestController = function() {
             this.test = 'hallo';
         };
-        compile('<div id="page1" data-role="page"  ng:controller="TestController"></div>');
+        compile('page1', '<div id="page1" data-role="page"  ng:controller="TestController"></div>');
         expect(scope.$get('test')).toEqual('hallo');
     });
 

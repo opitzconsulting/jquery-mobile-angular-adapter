@@ -1,32 +1,38 @@
 describe("compile integration", function() {
-    var element, scope;
+    var element, scope, container;
 
-    function compile(html) {
-        // create a jquery mobile page widget. This should
-        // initialize jquery mobile and also angular js!
-        element = $(html);
+    function compile(id, html) {
+        // Note: The html needs to be added to the dom,
+        // as otherwise we get errors due to using a DocumentFragment...
+        $("#jqmtest").append(html);
+        element = $("#"+id);
         element.page();
         // get the angularJs scope from the jquery element.
         scope = element.scope();
     }
 
     beforeEach(function() {
+        $("body").append('<div id="jqmtest"></div>');
         element = null;
         scope = null;
     });
 
+    afterEach(function() {
+        $("#jqmtest").remove();
+    });
+
     it('should create a scope for every page', function() {
-        compile('<div id="page1" data-role="page">' +
+        compile('page1', '<div id="page1" data-role="page">' +
                 '</div>');
         expect(element.scope()).toBeDefined();
     });
 
     it('should use a separate scope for every page whose eval does not trigger the eval of other pages', function() {
-        compile('<div id="page1" data-role="page">' +
+        compile('page1', '<div id="page1" data-role="page">' +
                 '</div>');
         var page1 = element.scope();
         expect(page1).toBeDefined();
-        compile('<div id="page2" data-role="page">' +
+        compile('page2', '<div id="page2" data-role="page">' +
                 '</div>');
         var page2 = element.scope();
         var page1evalCount = 0;

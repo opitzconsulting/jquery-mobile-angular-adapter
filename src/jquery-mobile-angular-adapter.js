@@ -174,8 +174,21 @@
                 // can create the widget!
                 for (var i = 0; i < this.length; i++) {
                     this[i].jqmoptions = options;
+                    // Note that there may be more than 1 jqm widgets per
+                    // element in the dom. E.g. <input type="range"> creates
+                    // a textinput and a slider widget for the same element!
+                    var jqmwidgets = this[i].jqmwidgets || {};
+                    jqmwidgets[jqmWidget] = true;
+                    this[i].jqmwidgets = jqmwidgets;
                 }
-                this.attr('jqmwidget', jqmWidget);
+                // Also save the jqmwidgets in the attributes.
+                // By this, they are also available if the element was cloned.
+                // Needed by the disabled flag handling!
+                var jqmwidgetsList = [];
+                for (var widget in jqmwidgets) {
+                    jqmwidgetsList.push(widget);
+                }
+                this.attr('jqmwidgets', jqmwidgetsList.join(','));
                 return this;
             } else {
                 return oldWidget.apply(this, arguments);
@@ -267,16 +280,23 @@
     jqmWidgetDisabledHandling.button = true;
 
     createAngularDirectiveProxy('ng:bind-attr', function(expression) {
-        return function(element) {
+        var regex = /([^:{'"]+)/;
+        var attr = regex.exec(expression)[1];
+        if (attr !== 'disabled') {
+            return function() {
 
-            var jqmWidget = element.attr('jqmwidget');
-            if (!jqmWidget || !jqmWidgetDisabledHandling[jqmWidget]) {
-                return;
-            }
-            var regex = /([^:{'"]+)/;
-            var attr = regex.exec(expression)[1];
-            var scope = this;
-            if (attr == 'disabled') {
+            };
+        } else {
+            return function(element) {
+                // We have to use the element attribute here, instead of the object property.
+                // Reason: The element may have been already been cloned by ng:repeat
+                // and after the cloning, the object properties are lost.
+                var jqmWidgetsAttr = element.attr('jqmwidgets') || '';
+                var jqmWidgets = jqmWidgetsAttr.split(',');
+                if (jqmWidgets.length==0) {
+                    return;
+                }
+                var scope = this;
                 var oldValue;
                 // Note: We cannot use scope.$watch here:
                 // We want to be called after the proxied angular implementation, and
@@ -285,10 +305,9 @@
                     var value = element.attr(attr);
                     if (value != oldValue) {
                         oldValue = value;
-                        if (value) {
-                            element[jqmWidget]("disable");
-                        } else {
-                            element[jqmWidget]("enable");
+                        var jqmOperation = value?"disable":"enable";
+                        for (var i=0; i<jqmWidgets.length; i++) {
+                            element[jqmWidgets[i]](jqmOperation);
                         }
                     }
                 });
@@ -327,216 +346,205 @@
     }
 
     createAngularWidgetProxy('select', function(element) {
-        var jqmWidget = element.attr('jqmwidget');
-        if (jqmWidget == 'selectmenu') {
-            return compileSelectMenu.apply(this, arguments);
-        } else if (jqmWidget == 'slider') {
-            return compileSelectSlider.apply(this, arguments);
+        var jqmWidgets = element[0].jqmwidgets || {};
+        var name = element.attr('name');
+        return function(element, origBinder) {
+            var res = origBinder();
+            if (jqmWidgets.selectmenu) {
+                compileSelectMenu.call(this, element, name);
+            }
+            if (jqmWidgets.slider) {
+                compileSelectSlider.call(this, element, name);
+            }
+            return res;
         }
-
     });
 
     createJqmWidgetProxy('selectmenu');
-    function compileSelectMenu(element) {
-        var name = element.attr('name');
-        return function(element, origBinder) {
-            var res = origBinder();
-            var scope = this;
-            // The selectmenu needs access to the page,
-            // so we can not create it until after the eval cycle!
-            $.mobile.afterEvalCallback(function() {
-                // The selectmenu widget creates a parent tag. This needs
-                // to be deleted when the select tag is deleted from the dom.
-                // Furthermore, it creates ui-selectmenu and ui-selectmenu-screen divs, as well as new dialogs
-                var removeSlaves;
-                var newElements = recordDomAdditions(".ui-selectmenu,.ui-selectmenu-screen,:jqmData(role='dialog')", function() {
-                    element.selectmenu();
-                    removeSlaves = element.parent();
-                });
-                removeSlaves = removeSlaves.add(newElements);
-                $.mobile.removeSlavesWhenMasterIsRemoved(element, removeSlaves);
-
-                scope.$watch(name, function(value) {
-                    element.selectmenu('refresh', true);
-                });
-                // update the value when the number of options change.
-                // needed if the default values changes.
-                var oldCount;
-                scope.$onEval(999999, function() {
-                    var newCount = element[0].childNodes.length;
-                    if (oldCount !== newCount) {
-                        oldCount = newCount;
-                        element.trigger('change');
-                    }
-                });
+    function compileSelectMenu(element, name) {
+        var scope = this;
+        // The selectmenu needs access to the page,
+        // so we can not create it until after the eval cycle!
+        $.mobile.afterEvalCallback(function() {
+            // The selectmenu widget creates a parent tag. This needs
+            // to be deleted when the select tag is deleted from the dom.
+            // Furthermore, it creates ui-selectmenu and ui-selectmenu-screen divs, as well as new dialogs
+            var removeSlaves;
+            var newElements = recordDomAdditions(".ui-selectmenu,.ui-selectmenu-screen,:jqmData(role='dialog')", function() {
+                element.selectmenu();
+                removeSlaves = element.parent();
             });
+            removeSlaves = removeSlaves.add(newElements);
+            $.mobile.removeSlavesWhenMasterIsRemoved(element, removeSlaves);
 
-            return res;
-        }
+            scope.$watch(name, function(value) {
+                element.selectmenu('refresh', true);
+            });
+            // update the value when the number of options change.
+            // needed if the default values changes.
+            var oldCount;
+            scope.$onEval(999999, function() {
+                var newCount = element[0].childNodes.length;
+                if (oldCount !== newCount) {
+                    oldCount = newCount;
+                    element.trigger('change');
+                }
+            });
+        });
     }
 
     createJqmWidgetProxy('slider');
-    function compileSelectSlider(element) {
-        var name = element.attr('name');
-        return function(element, origBinder) {
-            var res = origBinder();
-            var scope = this;
-            $.mobile.afterEvalCallback(function() {
-                // The slider widget creates an element of class ui-slider
-                // after the slider.
-                var newElements = recordDomAdditions(".ui-slider", function() {
-                    element.slider();
-                });
-                $.mobile.removeSlavesWhenMasterIsRemoved(element, $(newElements));
-
-                scope.$watch(name, function(value) {
-                    element.slider('refresh');
-                });
+    function compileSelectSlider(element, name) {
+        var scope = this;
+        $.mobile.afterEvalCallback(function() {
+            // The slider widget creates an element of class ui-slider
+            // after the slider.
+            var newElements = recordDomAdditions(".ui-slider", function() {
+                element.slider();
             });
-            return res;
-        };
+            $.mobile.removeSlavesWhenMasterIsRemoved(element, $(newElements));
+
+            scope.$watch(name, function(value) {
+                element.slider('refresh');
+            });
+        });
     }
 
     createAngularWidgetProxy('input', function(element) {
-        var jqmWidget = element.attr('jqmwidget');
-        if (jqmWidget == 'slider') {
-            return compileInputSlider.apply(this, arguments);
-        } else if (jqmWidget == 'checkboxradio') {
-            return compileCheckboxradio.apply(this, arguments);
-        } else if (jqmWidget == 'button') {
-            return compileInputButton.apply(this, arguments);
-        } else if (jqmWidget == 'textinput') {
-            return compileTextinput.apply(this, arguments);
-        }
-    });
-
-    function compileInputSlider(element) {
-        var oldType = element[0].type;
-        element[0].type = 'text';
-        element[0]['data-type'] = 'range';
+        var jqmWidgets = element[0].jqmwidgets || {};
         var name = element.attr('name');
+        var options = element[0].jqmoptions;
+        var oldType = element[0].type;
+        // Need to set the type temporarily always to 'text' so that
+        // the original angular widget is used.
+        if (jqmWidgets.textinput) {
+            element[0].type = 'text';
+            element[0]['data-type'] = oldType;
+        }
         return function(element, origBinder) {
             element[0].type = oldType;
+            if (jqmWidgets.checkboxradio) {
+                // Angular only binds to the click event for radio and check boxes,
+                // but jquery mobile fires a change event. So be sure that angular also listens to the change event.
+                var origBind = element.bind;
+                element.bind = function(events, callback) {
+                    if (events.indexOf('click') != -1) {
+                        events += " change";
+                    }
+                    return origBind.call(this, events, callback);
+                };
+            }
             var res = origBinder();
-            var scope = this;
-            $.mobile.afterEvalCallback(function() {
-                // The slider widget creates an element of class ui-slider
-                // after the slider.
-                var newElements = recordDomAdditions(".ui-slider", function() {
-                    element.slider();
-                    // apply the textinput widget also
-                    element.textinput();
-                });
-                $.mobile.removeSlavesWhenMasterIsRemoved(element, $(newElements));
-
-                scope.$watch(name, function(value) {
-                    element.slider('refresh');
-                });
-            });
+            if (jqmWidgets.slider) {
+                compileInputSlider.call(this, element, name, options);
+            }
+            if (jqmWidgets.checkboxradio) {
+                compileCheckboxradio.call(this, element, name, options);
+            }
+            if (jqmWidgets.button) {
+                compileInputButton.call(this, element, name, options);
+            }
+            if (jqmWidgets.textinput) {
+                compileTextinput.call(this, element, name, options);
+            }
             return res;
         };
+    });
+
+    function compileInputSlider(element, name, jqmoptions) {
+        var scope = this;
+        $.mobile.afterEvalCallback(function() {
+            // The slider widget creates an element of class ui-slider
+            // after the slider.
+            var newElements = recordDomAdditions(".ui-slider", function() {
+                element.slider();
+            });
+            $.mobile.removeSlavesWhenMasterIsRemoved(element, $(newElements));
+
+            scope.$watch(name, function(value) {
+                element.slider('refresh');
+            });
+        });
     }
 
     createJqmWidgetProxy('checkboxradio');
-    function compileCheckboxradio(element) {
-        var name = element.attr('name');
-        return function(element, origBinder) {
-            // Angular only binds to the click event for radio and check boxes,
-            // but jquery mobile fires a change event. So fire a click event when a change event occurs...
-            var origBind = element.bind;
-            element.bind = function(events, callback) {
-                if (events.indexOf('click') != -1) {
-                    events += " change";
-                }
-                return origBind.call(this, events, callback);
-            };
-
-            var res = origBinder();
-            var scope = this;
-            // The checkboxradio widget looks for a label
-            // within the page. So we need to defer the creation.
-            $.mobile.afterEvalCallback(function() {
-                element.checkboxradio();
-                scope.$watch(name, function(value) {
-                    element.checkboxradio('refresh');
-                });
+    function compileCheckboxradio(element, name, jqmoptions) {
+        var scope = this;
+        // The checkboxradio widget looks for a label
+        // within the page. So we need to defer the creation.
+        $.mobile.afterEvalCallback(function() {
+            element.checkboxradio();
+            scope.$watch(name, function(value) {
+                element.checkboxradio('refresh');
             });
-            return res;
-        }
+        });
     }
 
     createJqmWidgetProxy('textinput');
-    function compileTextinput(element) {
-        var name = element.attr('name');
-        var oldType = element[0].type;
-        // Need to switch to type text so that angular registers it's listeners...
-        element[0].type = 'text';
-        return function(element, origBinder) {
-            var res = origBinder();
-            element[0].type = oldType;
-            var scope = this;
-            element.textinput();
-            return res;
-        }
+    function compileTextinput(element, name, jqmoptions) {
+        var scope = this;
+        element.textinput();
     }
 
     createJqmWidgetProxy('button');
-    function compileInputButton(element) {
-        var options = element[0].jqmoptions;
-        return function(element, origBinder) {
-            var res = origBinder();
-            var scope = this;
-            element.button(options);
-            // the input button widget creates a new parent element.
-            // remove that element when the input element is removed
-            $.mobile.removeSlavesWhenMasterIsRemoved(element, element.parent());
-            return res;
-        }
+    function compileInputButton(element, name, jqmoptions) {
+        var scope = this;
+        element.button(jqmoptions);
+        // the input button widget creates a new parent element.
+        // remove that element when the input element is removed
+        $.mobile.removeSlavesWhenMasterIsRemoved(element, element.parent());
     }
 
     createAngularWidgetProxy('button', function(element) {
-        var jqmWidget = element.attr('jqmwidget');
-        if (jqmWidget == 'button') {
-            return compileButton.apply(this, arguments);
+        var jqmWidgets = element[0].jqmwidgets || {};
+        var name = element.attr('name');
+        var jqmoptions = element[0].jqmoptions;
+        return function(element, origBinder) {
+            var res = origBinder();
+            if (jqmWidgets.button) {
+                compileButton.call(this, element, name, jqmoptions);
+            }
+            return res;
         }
     });
 
-    function compileButton(element) {
-        var options = element[0].jqmoptions;
-        return function(element, origBinder) {
-            var res = origBinder();
-            var scope = this;
-            element.button(options);
-            // the input button widget creates a new parent element.
-            // remove that element when the input element is removed
-            $.mobile.removeSlavesWhenMasterIsRemoved(element, element.parent());
-            return res;
-        }
+    function compileButton(element, name, jqmoptions) {
+        var scope = this;
+        element.button(jqmoptions);
+        // the input button widget creates a new parent element.
+        // remove that element when the input element is removed
+        $.mobile.removeSlavesWhenMasterIsRemoved(element, element.parent());
     }
 
     createAngularWidgetProxy('div', function(element) {
-        var jqmWidget = element.attr('jqmwidget');
-        if (jqmWidget == 'collapsible') {
-            return compileCollapsible.apply(this, arguments);
-        }
+        var jqmWidgets = element[0].jqmwidgets || {};
+        var name = element.attr('name');
+        var jqmoptions = element[0].jqmoptions;
+        return function(element, origBinder) {
+            var res = origBinder();
+            if (jqmWidgets.collapsible) {
+                compileCollapsible.call(this, element, name);
+            }
+            return res;
+        };
     });
 
     createJqmWidgetProxy('collapsible');
-    function compileCollapsible(element) {
-        var name = element.attr('name');
-        return function(element, origBinder) {
-            var res = origBinder();
-            var scope = this;
-            element.collapsible();
-            return res;
-        }
+    function compileCollapsible(element, name) {
+        var scope = this;
+        element.collapsible();
     }
 
     createAngularWidgetProxy('ul', function(element) {
-        var jqmWidget = element.attr('jqmwidget');
-        if (jqmWidget == 'listview') {
-            return compileListview.apply(this, arguments);
-        }
+        var jqmWidgets = element[0].jqmwidgets || {};
+        var jqmoptions = element[0].jqmoptions;
+        return function(element, origBinder) {
+            var res = origBinder();
+            if (jqmWidgets.listview) {
+                compileListview.call(this, element);
+            }
+            return res;
+        };
     });
 
     /**
@@ -544,37 +552,31 @@
      **/
     createJqmWidgetProxy('listview');
     function compileListview(element) {
-        return function(element, origBinder) {
-            var res = origBinder();
-            var scope = this;
-            // TODO which elements are created by a listview? extra dialogs?
-            // The listview widget looks for the persistent footer,
-            // so we need to defer the creation.
-            $.mobile.afterEvalCallback(function() {
-                // listviews may create subpages for nested lists.
-                // Be sure that they get removed from the dom when the list is removed.
-                var newElemens = recordDomAdditions(":jqmData(role='page')", function() {
-                    element.listview();
-                });
-                $.mobile.removeSlavesWhenMasterIsRemoved(element, $(newElemens));
-                // refresh the listview when the number of children changes.
-                // This does not need to check for changes to the
-                // ordering of children, for the following reason:
-                // The only changes to elements is done by ng:repeat.
-                // And ng:repeat reuses the same element for the same index position,
-                // independent of the value of that index position.
-                var oldCount;
-                scope.$onEval(999999, function() {
-                    var newCount = element[0].childNodes.length;
-                    if (oldCount !== newCount) {
-                        oldCount = newCount;
-                        element.listview("refresh");
-                    }
-                });
+        var scope = this;
+        // The listview widget looks for the persistent footer,
+        // so we need to defer the creation.
+        $.mobile.afterEvalCallback(function() {
+            // listviews may create subpages for nested lists.
+            // Be sure that they get removed from the dom when the list is removed.
+            var newElemens = recordDomAdditions(":jqmData(role='page')", function() {
+                element.listview();
             });
-
-            return res;
-        }
+            $.mobile.removeSlavesWhenMasterIsRemoved(element, $(newElemens));
+            // refresh the listview when the number of children changes.
+            // This does not need to check for changes to the
+            // ordering of children, for the following reason:
+            // The only changes to elements is done by ng:repeat.
+            // And ng:repeat reuses the same element for the same index position,
+            // independent of the value of that index position.
+            var oldCount;
+            scope.$onEval(999999, function() {
+                var newCount = element[0].childNodes.length;
+                if (oldCount !== newCount) {
+                    oldCount = newCount;
+                    element.listview("refresh");
+                }
+            });
+        });
     }
 })(angular);
 

@@ -638,13 +638,12 @@
         }
     }
 
-    var loadDialog, message;
+    var loadDialog;
 
     function initIfNeeded() {
         if (!loadDialog || loadDialog.length == 0) {
             loadDialog = $(".ui-loader");
             loadDialog.bind('vclick', onClick);
-            message = loadDialog.find("h1");
         }
     }
 
@@ -657,7 +656,7 @@
         if (showCalls.length > 0) {
             var lastCall = showCalls[showCalls.length - 1];
             var msg = lastCall.msg;
-            message.text(msg);
+            $.mobile.loadingMessage = msg;
             $.mobile.showPageLoadingMsg();
         } else {
             $.mobile.hidePageLoadingMsg();

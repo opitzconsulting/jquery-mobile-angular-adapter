@@ -307,7 +307,11 @@
                         oldValue = value;
                         var jqmOperation = value?"disable":"enable";
                         for (var i=0; i<jqmWidgets.length; i++) {
-                            element[jqmWidgets[i]](jqmOperation);
+                            var widgetName = jqmWidgets[i];
+                            var widgetExists = element.data()[jqmWidgets[i]];
+                            if (widgetExists) {
+                                element[widgetName](jqmOperation);
+                            }
                         }
                     }
                 });
@@ -631,11 +635,15 @@
 (function(angular) {
     var showCalls = [];
 
-    function onClick() {
+    function onClick(event) {
         var lastCall = showCalls[showCalls.length - 1];
         if (lastCall.callback) {
             lastCall.callback.apply(this, arguments);
         }
+        // This is required to prevent a second
+        // click event, see
+        // https://github.com/jquery/jquery-mobile/issues/1787
+        event.preventDefault();
     }
 
     var loadDialog;
@@ -877,16 +885,24 @@
             throw "Expression " + expression + " needs to have the syntax <event>:<handler>,...";
         }
 
+
+
         var linkFn = function($updateView, element) {
             var self = this;
-            for (var event in eventHandlers) {
-                (function(event) {
-                    var handler = eventHandlers[event];
-                    element.bind(event, function(event) {
-                        var res = self.$tryEval(handler, element);
-                        $updateView();
-                    });
-                })(event);
+            for (var eventType in eventHandlers) {
+                    (function(eventType) {
+                        var handler = eventHandlers[eventType];
+                        element.bind(eventType, function(event) {
+                            var res = self.$tryEval(handler, element);
+                            $updateView();
+                            if (eventType.charAt(0)=='v') {
+                                // This is required to prevent a second
+                                // click event, see
+                                // https://github.com/jquery/jquery-mobile/issues/1787
+                                event.preventDefault();
+                            }
+                        });
+                    })(eventType);
             }
         };
         linkFn.$inject = ['$updateView'];

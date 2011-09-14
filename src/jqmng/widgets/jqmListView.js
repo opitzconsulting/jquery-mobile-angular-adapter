@@ -3,7 +3,7 @@ define([
     'jqmng/widgets/disabledHandling',
     'jqmng/jquery'
 ], function(proxyUtil, disabledHandling, $) {
-    proxyUtil.createJqmWidgetProxy('listview');
+
     function compileListView(element) {
         var scope = this;
         // The listview widget looks for the persistent footer,
@@ -32,7 +32,12 @@ define([
         });
     }
 
+    function isListView(element) {
+        return element.filter($.mobile.listview.prototype.options.initSelector).length > 0;
+    }
+
     return {
-        compileListView: compileListView
+        compileListView: compileListView,
+        isListView: isListView
     }
 });

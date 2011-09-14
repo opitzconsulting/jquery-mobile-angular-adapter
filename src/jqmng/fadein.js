@@ -1,7 +1,7 @@
 /*
  * The ng:fadein directive
  */
-define(['angular'], function(angular) {
+define(['jqmng/angular'], function(angular) {
     /*
      * Directive that fades in an element when angular
      * uses it. Useful in templating when the underlying template changed.

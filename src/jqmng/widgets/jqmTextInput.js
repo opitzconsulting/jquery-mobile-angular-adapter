@@ -4,14 +4,19 @@ define([
 ], function(proxyUtil, disabledHandling) {
     disabledHandling.textinput = true;
 
-    proxyUtil.createJqmWidgetProxy('textinput');
-    function compileTextInput(element, name, jqmoptions) {
+    function compileTextInput(element, name) {
         var scope = this;
         element.textinput();
     }
 
+    function isTextInput(element) {
+        return element.filter($.mobile.textinput.prototype.options.initSelector)
+            .not(":jqmData(role='none'), :jqmData(role='nojs')").length > 0;
+    }
+
     return {
-        compileTextInput: compileTextInput
+        compileTextInput: compileTextInput,
+        isTextInput: isTextInput
     }
 
 

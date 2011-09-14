@@ -3,11 +3,10 @@ define([
     'jqmng/widgets/jqmListView'
 ], function(proxyUtil, jqmListView) {
     proxyUtil.createAngularWidgetProxy('ul', function(element) {
-        var jqmWidgets = element[0].jqmwidgets || {};
-        var jqmoptions = element[0].jqmoptions;
+        var isListView = jqmListView.isListView(element);
         return function(element, origBinder) {
             var res = origBinder();
-            if (jqmWidgets.listview) {
+            if (isListView) {
                 jqmListView.compileListview.call(this, element);
             }
             return res;

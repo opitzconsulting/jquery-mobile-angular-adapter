@@ -9,7 +9,7 @@ define([
     'jqmng/fadein',
     'jqmng/if',
     'jqmng/paging',
-    'jqmng/widgets/jqmPage',
+    'jqmng/widgets/pageCompile',
     'jqmng/widgets/angularButton',
     'jqmng/widgets/angularDiv',
     'jqmng/widgets/angularInput',

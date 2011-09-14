@@ -3,7 +3,7 @@ define([
     'jqmng/widgets/disabledHandling'
 ], function(proxyUtil, disabledHandling) {
     disabledHandling.slider = true;
-    proxyUtil.createJqmWidgetProxy('slider');
+
     function compileSlider(element, name) {
         var scope = this;
         proxyUtil.afterEvalCallback(function() {
@@ -20,8 +20,15 @@ define([
         });
     }
 
+    function isSlider(element) {
+        return element.filter($.mobile.slider.prototype.options.initSelector)
+            .not(":jqmData(role='none'), :jqmData(role='nojs')").length > 0;
+
+    }
+
     return {
-        compileSlider: compileSlider
+        compileSlider: compileSlider,
+        isSlider: isSlider
     }
 
 });

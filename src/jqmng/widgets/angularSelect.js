@@ -4,14 +4,15 @@ define([
     'jqmng/widgets/jqmSlider'
 ], function(proxyUtil, jqmSelectMenu, jqmSlider) {
     proxyUtil.createAngularWidgetProxy('select', function(element) {
-        var jqmWidgets = element[0].jqmwidgets || {};
+        var isSelectMenu = jqmSelectMenu.isSelectMenu(element);
+        var isSlider = jqmSlider.isSlider(element);
         var name = element.attr('name');
         return function(element, origBinder) {
             var res = origBinder();
-            if (jqmWidgets.selectmenu) {
+            if (isSelectMenu) {
                 jqmSelectMenu.compileSelectMenu.call(this, element, name);
             }
-            if (jqmWidgets.slider) {
+            if (isSlider) {
                 jqmSlider.compileSlider.call(this, element, name);
             }
             return res;

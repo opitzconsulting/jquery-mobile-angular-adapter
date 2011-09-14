@@ -102,7 +102,6 @@ define(['jqmng/jquery'], function($) {
         }
         show(msg, function() {
             promise.reject(cancelData);
-            globalScope.updateView();
         });
         promise.always(function() {
             hide();

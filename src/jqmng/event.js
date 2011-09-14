@@ -1,4 +1,4 @@
-define(['angular'], function(angular) {
+define(['jqmng/angular'], function(angular) {
     /* A widget for clicks.
      * Just as ng:click, but reacts to the jquery mobile vclick event, which
      * includes taps, mousedowns, ...

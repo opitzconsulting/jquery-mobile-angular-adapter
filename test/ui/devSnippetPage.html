@@ -12,16 +12,18 @@ Test page during development.
     <script src="../../lib/jquery.mobile-1.0b2-oc1.js"></script>
     <script src="../../lib/angular-0.9.19.js"></script>
     -->
-    <link rel="stylesheet" href="../../lib/jquery.mobile-1.0b2-oc1.css"/>
+    <link rel="stylesheet" href="../../src/lib/jquery.mobile-1.0b2-oc1.css"/>
 
-    <script src="../../lib/require.js" data-main="../../src/jqm-angular.js"></script>
+    <script src="../../src/lib/require.js" data-main="../../src/jqm-angular.js"></script>
 </head>
 <body>
 
 <div data-role="page" id="start" data-theme="d">
     <div data-role="content">
-        <input type="number" name="telephone"/>
+        <input type="number" name="telephone" disabled="{{disabled}}">
         {{telephone}}
+
+        <input type="text" name="disabled">
 
 
     </div>

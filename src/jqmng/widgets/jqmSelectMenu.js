@@ -3,7 +3,6 @@ define([
     'jqmng/widgets/disabledHandling'
 ], function(proxyUtil, disabledHandling) {
     disabledHandling.selectmenu = true;
-    proxyUtil.createJqmWidgetProxy('selectmenu');
 
     function compileSelectMenu(element, name) {
         var scope = this;
@@ -37,7 +36,13 @@ define([
         });
     }
 
+    function isSelectMenu(element) {
+        return element.filter($.mobile.selectmenu.prototype.options.initSelector)
+            .not(":jqmData(role='none'), :jqmData(role='nojs')").length > 0;
+    }
+
     return {
-        compileSelectMenu: compileSelectMenu
+        compileSelectMenu: compileSelectMenu,
+        isSelectMenu: isSelectMenu
     }
 });

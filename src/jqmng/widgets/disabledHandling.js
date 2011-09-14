@@ -16,14 +16,6 @@ define([
             };
         } else {
             return function(element) {
-                // We have to use the element attribute here, instead of the object property.
-                // Reason: The element may have been already been cloned by ng:repeat
-                // and after the cloning, the object properties are lost.
-                var jqmWidgetsAttr = element.attr('jqmwidgets') || '';
-                var jqmWidgets = jqmWidgetsAttr.split(',');
-                if (jqmWidgets.length==0) {
-                    return;
-                }
                 var scope = this;
                 var oldValue;
                 // Note: We cannot use scope.$watch here:
@@ -34,11 +26,10 @@ define([
                     if (value != oldValue) {
                         oldValue = value;
                         var jqmOperation = value?"disable":"enable";
-                        for (var i=0; i<jqmWidgets.length; i++) {
-                            var widgetName = jqmWidgets[i];
-                            var widgetExists = element.data()[jqmWidgets[i]];
-                            if (widgetExists) {
-                                element[widgetName](jqmOperation);
+                        var data = element.data();
+                        for (var key in data) {
+                            if (typeof key === 'string' && jqmWidgetDisabledHandling[key]) {
+                                element[key](jqmOperation);
                             }
                         }
                     }

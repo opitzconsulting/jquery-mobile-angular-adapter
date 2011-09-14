@@ -1,52 +1,7 @@
 /**
  * Helper functions for proxying jquery widgets and angular widgets.
  */
-define(['jqmng/jquery', 'angular', 'jqmng/globalScope', 'jqmng/widgets/jqmPage'], function($, angular, globalScope, page) {
-    /*
-     * Integration of the widgets of jquery mobile:
-     * Prevent the normal create call for the widget, and let angular
-     * do the initialization. This is important as angular
-     * might create multiple elements with the widget (e.g. in ng:repeat), and the widgets of jquery mobile
-     * register listeners to elements.
-     */
-    function createJqmWidgetProxy(jqmWidget) {
-        var oldWidget = $.fn[jqmWidget];
-        $.fn[jqmWidget] = function(options) {
-            var instanceExists = this.data() && this.data()[jqmWidget];
-            if (instanceExists || this.length == 0) {
-                return oldWidget.apply(this, arguments);
-            } else if (page.inJqmPageCompile()) {
-                // Prevent initialization during precompile,
-                // and mark the element so that the angular widget
-                // can create the widget!
-                for (var i = 0; i < this.length; i++) {
-                    this[i].jqmoptions = options;
-                    // Note that there may be more than 1 jqm widgets per
-                    // element in the dom. E.g. <input type="range"> creates
-                    // a textinput and a slider widget for the same element!
-                    var jqmwidgets = this[i].jqmwidgets || {};
-                    jqmwidgets[jqmWidget] = true;
-                    this[i].jqmwidgets = jqmwidgets;
-                }
-                // Also save the jqmwidgets in the attributes.
-                // By this, they are also available if the element was cloned.
-                // Needed by the disabled flag handling!
-                var jqmwidgetsList = [];
-                for (var widget in jqmwidgets) {
-                    jqmwidgetsList.push(widget);
-                }
-                this.attr('jqmwidgets', jqmwidgetsList.join(','));
-                return this;
-            } else {
-                return oldWidget.apply(this, arguments);
-            }
-        };
-        for (var key in oldWidget) {
-            $.fn[jqmWidget][key] = oldWidget[key];
-        }
-    }
-
-
+define(['jqmng/jquery', 'jqmng/angular', 'jqmng/globalScope'], function($, angular, globalScope) {
     /**
      * Creates a proxy around an existing angular widget.
      * Needed to use the angular functionalities like disabled handling,
@@ -194,7 +149,6 @@ define(['jqmng/jquery', 'angular', 'jqmng/globalScope', 'jqmng/widgets/jqmPage']
         recordDomAdditions: recordDomAdditions,
         createAngularDirectiveProxy: createAngularDirectiveProxy,
         createAngularWidgetProxy: createAngularWidgetProxy,
-        createJqmWidgetProxy: createJqmWidgetProxy,
         afterEvalCallback: afterEvalCallback,
         removeSlavesWhenMasterIsRemoved: removeSlavesWhenMasterIsRemoved
     }

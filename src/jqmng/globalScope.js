@@ -1,7 +1,7 @@
 /**
  * Global scope
  */
-define(['jqmng/jquery', 'angular'], function($, angular) {
+define(['jqmng/jquery', 'jqmng/angular'], function($, angular) {
     var onCreateListeners = [];
 
     /**
@@ -34,13 +34,8 @@ define(['jqmng/jquery', 'angular'], function($, angular) {
         onCreateListeners.push(listener);
     }
 
-    function updateView() {
-        getGlobalScope().$service('$updateView')();
-    }
-
     return {
         globalScope: getGlobalScope,
-        onCreate: onCreate,
-        updateView: updateView
+        onCreate: onCreate
     }
 });

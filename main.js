@@ -1,0 +1,3 @@
+define(['jqm-angular'], function() {
+
+});

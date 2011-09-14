@@ -1,0 +1,19 @@
+define([
+    'ui/activatePassivateSpec',
+    'ui/activePageSpec',
+    'ui/angularUrlIntegrationSpec',
+    'ui/buttonSpec',
+    'ui/checkBoxSpec',
+    'ui/collapsibleSpec',
+    'ui/enterkeySpec',
+    'ui/eventSpec',
+    'ui/inputButtonSpec',
+    'ui/inputSliderSpec',
+    'ui/listViewSpec',
+    'ui/ngmClickSpec',
+    'ui/radioSpec',
+    'ui/selectmenuSpec',
+    'ui/selectSliderSpec',
+    'ui/textInputSpec',
+    'ui/waitDialogServiceSpec'
+]);

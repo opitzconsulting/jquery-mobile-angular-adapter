@@ -71,17 +71,9 @@
         //of its dependencies includes i18n bundles, they may not be included in the
         //built file unless the locale: section is set above.
         {
-            name: "jqm-angular-global",
-            include: ["lib/require.js"]
+            name: "jqm-angular"
         }
-    ],
-
-    //Wrap any build layer in a start and end text specified by wrap.
-    //Use this to encapsulate the module code so that define/require are
-    //not globals. The end text can expose some globals from your file,
-    //making it easy to create stand-alone libraries that do not mandate
-    //the end user use requirejs.
-    wrap: true
+    ]
     /*
     wrap: {
         start: "(function() {",

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<!--
+  This file contains all needed code to run jasmine and jasmine ui tests.
+  Add your test files at the end -->
+<head>
+    <title>Jasmine Test Runner</title>
+    <link rel="stylesheet" href="lib/jasmine.css">
+    <script type="text/javascript" src="lib/jasmine.js"></script>
+    <script type="text/javascript" src="lib/jasmine-html.js"></script>
+
+    <!-- Script for detecting javascript urls in directory listings and including them in the current page -->
+    <script type="text/javascript">
+        function getUrlContent(url) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url, false);
+            xhr.send();
+            return xhr.responseText;
+        }
+
+        function findJsUrls(text) {
+            var regex = /href\s*=\s*"([^"]+.js)"/ig;
+            var match;
+            var res = [];
+            while (match = regex.exec(text) ) {
+                res.push(match[1]);
+            }
+            return res;
+        }
+
+        function writeJsLinksToDocument(links) {
+            var lessThan = String.fromCharCode(60);
+            for (var i=0; i<links.length; i++) {
+                document.write(lessThan+'script type="text/javascript" src="'+links[i]+'">'+lessThan+"/script>");
+            }
+        }
+        function loadDir(dir) {
+            var content = getUrlContent(dir);
+            var jsUrls = findJsUrls(content);
+            writeJsLinksToDocument(jsUrls);
+        }
+    </script>
+
+<!-- #################################################################################################
+     #### ADD YOUR LIBS AND SPECS HERE ###############################################################
+     ################################################################################################# -->
+    <script src="../src/main/webapp/lib/jquery-1.6.2.js"></script>
+    <script src="../src/main/webapp/lib/angular-0.9.19.js"></script>
+    <script src="lib/jquery.mobile.noinit.js"></script>
+    <script src="../src/main/webapp/lib/jquery.mobile-1.0b2-oc1.js"></script>
+
+    <script src="../src/jquery-mobile-angular-adapter.js"></script>
+
+    <!-- include spec files here... -->
+    <script type="text/javascript">
+        loadDir('unit/');
+    </script>
+    <!--
+    <script src="unit/compileIntegrationSpec.js"></script>
+    -->
+
+<!-- ################################################################################################# -->
+
+</head>
+<body>
+<!-- execute jasmine tests -->
+<script type="text/javascript">
+    jasmine.getEnv().addReporter(new jasmine.TrivialReporter());
+    jasmine.getEnv().execute();
+</script>
+
+</body>
+</html>

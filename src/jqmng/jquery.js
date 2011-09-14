@@ -1,3 +1,0 @@
-define(['externals'], function() {
-    return $;
-});

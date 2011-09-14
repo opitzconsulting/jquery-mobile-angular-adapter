@@ -51,14 +51,17 @@
             <plugin>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>
-                <version>8.0.0.M2</version>
+                <version>7.4.4.v20110707</version>
                 <configuration>
                     <scanIntervalSeconds>5</scanIntervalSeconds>
                     <stopKey>STOPJETTY</stopKey>
                     <stopPort>9999</stopPort>
-                    <webAppSourceDirectory>${basedir}</webAppSourceDirectory>
                     <webAppConfig>
-                      <contextPath>/jqmng</contextPath>
+                        <contextPath>/jqmng</contextPath>
+                        <resourceBases>
+                            <resourceBase>src/main/webapp</resourceBase>
+                            <resourceBase>src/test/webapp</resourceBase>
+                        </resourceBases>
                     </webAppConfig>
                 </configuration>
                 <executions>

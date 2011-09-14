@@ -1,14 +1,15 @@
 define([
     'jqmng/widgets/widgetProxyUtil',
-    'jqmng/widgets/disabledHandling'
-], function(proxyUtil, disabledHandling) {
+    'jqmng/widgets/disabledHandling',
+    'jqmng/widgets/pageCompile'
+], function(proxyUtil, disabledHandling, pageCompile) {
     disabledHandling.checkboxradio = true;
 
     function compileCheckboxRadio(element, name) {
         var scope = this;
         // The checkboxradio widget looks for a label
         // within the page. So we need to defer the creation.
-        proxyUtil.afterEvalCallback(function() {
+        pageCompile.afterCompile(function() {
             element.checkboxradio();
             scope.$watch(name, function(value) {
                 element.checkboxradio('refresh');

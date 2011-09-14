@@ -2,7 +2,6 @@
  * Tests for the slider widget integration.
  */
 describe("inputSlider", function() {
-
     it('should save the ui value into the model', function() {
         loadHtml('/jqmng/test/ui/test-fixture.html', function(frame) {
             var page = frame.$('#start');

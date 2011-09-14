@@ -1,19 +1,20 @@
 define([
     'jqmng/widgets/widgetProxyUtil',
-    'jqmng/widgets/disabledHandling'
-], function(proxyUtil, disabledHandling) {
+    'jqmng/widgets/disabledHandling',
+    'jqmng/widgets/pageCompile'
+], function(proxyUtil, disabledHandling, pageCompile) {
     disabledHandling.selectmenu = true;
 
     function compileSelectMenu(element, name) {
         var scope = this;
         // The selectmenu needs access to the page,
         // so we can not create it until after the eval cycle!
-        proxyUtil.afterEvalCallback(function() {
+        pageCompile.afterCompile(function() {
             // The selectmenu widget creates a parent tag. This needs
             // to be deleted when the select tag is deleted from the dom.
             // Furthermore, it creates ui-selectmenu and ui-selectmenu-screen divs, as well as new dialogs
             var removeSlaves;
-            var newElements = recordDomAdditions(".ui-selectmenu,.ui-selectmenu-screen,:jqmData(role='dialog')", function() {
+            var newElements = proxyUtil.recordDomAdditions(".ui-selectmenu,.ui-selectmenu-screen,:jqmData(role='dialog')", function() {
                 element.selectmenu();
                 removeSlaves = element.parent();
             });

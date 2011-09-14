@@ -6,11 +6,27 @@ define(['jqmng/jquery', 'jqmng/angular', 'jqmng/globalScope'], function($, angul
     // so we can intercept them.
     $.mobile.page.prototype.widgetEventPrefix = 'jqmngpage';
 
+    var afterCompileQueue = [];
+
+    function executeAfterCompileQueue() {
+        while (afterCompileQueue.length>0) {
+            var callback = afterCompileQueue.shift();
+            callback();
+        }
+    }
+
+    function addAfterCompileCallback(callback) {
+        afterCompileQueue.push(callback);
+    }
+
+
+
     $('div').live('jqmngpagecreate', function(event) {
         var page = $(event.target);
         var globalScope = $("body").scope();
         var childScope = angular.scope(globalScope);
         angular.compile(page)(childScope);
+        executeAfterCompileQueue();
         // The second pagecreate does only initialize
         // the widgets that we did not already create by angular.
         page.trigger("pagecreate");
@@ -82,5 +98,6 @@ define(['jqmng/jquery', 'jqmng/angular', 'jqmng/globalScope'], function($, angul
     })(angular);
 
     return {
+        afterCompile: addAfterCompileCallback
     }
 });

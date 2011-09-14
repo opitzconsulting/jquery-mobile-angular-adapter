@@ -9,7 +9,7 @@ define([
         return function(element, origBinder) {
             var res = origBinder();
             if (isButton) {
-                jqmButton.compileButton.call(this, element, name, jqmoptions);
+                jqmButton.compileButton.call(this, element, name);
             }
             return res;
         }

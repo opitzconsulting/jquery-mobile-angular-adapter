@@ -100,7 +100,6 @@ define(['jqmng/jquery', 'jqmng/angular', 'jqmng/globalScope'], function($, angul
     }
 
     var garbageCollector = [];
-    var afterEvalQueue = [];
 
     function isConnectedToDocument(element) {
         var rootElement = document.documentElement;
@@ -126,20 +125,8 @@ define(['jqmng/jquery', 'jqmng/angular', 'jqmng/globalScope'], function($, angul
         garbageCollector.push({master: master, slaves:slaves});
     }
 
-    function executeAfterEvalQueue() {
-        while (afterEvalQueue.length>0) {
-            var callback = afterEvalQueue.shift();
-            callback();
-        }
-    }
-
-    function afterEvalCallback(callback) {
-        afterEvalQueue.push(callback);
-    }
-
     globalScope.onCreate(function(scope) {
         scope.$onEval(99999, function() {
-            executeAfterEvalQueue();
             removeSlaveElements();
         });
     });
@@ -149,7 +136,6 @@ define(['jqmng/jquery', 'jqmng/angular', 'jqmng/globalScope'], function($, angul
         recordDomAdditions: recordDomAdditions,
         createAngularDirectiveProxy: createAngularDirectiveProxy,
         createAngularWidgetProxy: createAngularWidgetProxy,
-        afterEvalCallback: afterEvalCallback,
         removeSlavesWhenMasterIsRemoved: removeSlavesWhenMasterIsRemoved
     }
 });

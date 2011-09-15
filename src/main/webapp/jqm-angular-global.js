@@ -2,7 +2,9 @@
  * Module that exposes the services so they can be used without
  * requirejs.
  */
-define(['jqm-angular'], function(jqmng) {
+define([
+    'jqm-angular'
+], function(jqmng) {
     // create global variables
     $.mobile.globalScope = jqmng.globalScope;
 

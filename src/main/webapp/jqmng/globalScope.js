@@ -9,6 +9,7 @@ define(['jquery', 'angular'], function($, angular) {
      */
     angular.widget("body", function(element) {
         this.descend(false);
+        this.directives(true);
         return function(element) {
             var scope = this;
             for (var i=0; i<onCreateListeners.length; i++) {

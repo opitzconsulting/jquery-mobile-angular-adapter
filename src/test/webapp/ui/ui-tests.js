@@ -1,4 +1,5 @@
 define([
+    'ui/compileIntegrationSpec',
     'ui/activatePassivateSpec',
     'ui/activePageSpec',
     'ui/angularUrlIntegrationSpec',

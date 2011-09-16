@@ -74,6 +74,30 @@ define(function() {
                 expect(parentDiv.hasClass('ui-disabled')).toBeTruthy();
             });
         });
+
+        it('should enhance checkboxes when ng:repeat is used (not only during page compile)', function() {
+            loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
+                var page = frame.$('#start');
+                page.append('<div data-role="content">' +
+                    '<div ng:repeat="item in items" id="mydiv">' +
+                    '<input name="mysel" id="mysel{{$index}}" type="checkbox" value="false"><label for="mysel{{$index}}" id="mylab{{$index}}">Entry</label>' +
+                    '</div>' +
+                    '</div>');
+            });
+            runs(function() {
+                var page = testframe().$('#start');
+                var parentDiv = page.find("#mydiv");
+                expect(parentDiv.find('.ui-checkbox').length).toBe(0);
+                page.scope().$set('items', [1,2]);
+                page.scope().$eval();
+            });
+            waitsForAsync();
+            runs(function() {
+                var page = testframe().$('#start');
+                var parentDiv = page.find("#mydiv");
+                expect(parentDiv.find('.ui-checkbox').length).toBe(2);
+            });
+        });
     });
 
 });

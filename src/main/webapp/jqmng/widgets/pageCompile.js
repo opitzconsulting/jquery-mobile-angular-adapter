@@ -16,20 +16,23 @@ define(['jquery', 'angular', 'jqmng/globalScope'], function($, angular, globalSc
     }
 
     function addAfterCompileCallback(callback) {
+        if (afterCompileQueue.length==0) {
+            setTimeout(executeAfterCompileQueue, 0);
+        }
         afterCompileQueue.push(callback);
     }
-
-
 
     $('div').live('jqmngpagecreate', function(event) {
         var page = $(event.target);
         var parentScope = globalScope.globalScope();
         var childScope = angular.scope(parentScope);
         angular.compile(page)(childScope);
+        addAfterCompileCallback(function() {
+            // The second pagecreate does only initialize
+            // the widgets that we did not already create by angular.
+            page.trigger("pagecreate");
+        });
         executeAfterCompileQueue();
-        // The second pagecreate does only initialize
-        // the widgets that we did not already create by angular.
-        page.trigger("pagecreate");
     });
 
     $('div').live('jqmngpagebeforeshow', function(event, data) {

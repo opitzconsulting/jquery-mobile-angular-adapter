@@ -19,13 +19,28 @@ Test page during development.
     </script>
 </head>
 <body>
+    <script>
+        function MyController($xhr) {
+            this.list = [];
+            this.add = function(value) {
+                $xhr('JSON', 'https://secure.openkeyval.org/JQueryMobileAngularTodoapp?callback=JSON_CALLBACK', function(status, data) {
+                    alert(data);
+                });
+                //this.list.push(value);
+            }
+        }
+        MyController.$inject = ['$xhr'];
+
+    </script>
+
 
 <div data-role="page" id="start" data-theme="d">
-    <div data-role="content">
-        <input type="number" name="telephone" disabled="{{disabled}}">
-        {{telephone}}
+    <div data-role="content" ng:controller="MyController">
+        <ul ng:repeat="v in list" data-role="listview">
+            <li>{{v}}</li>
+        </ul>
 
-        <input type="text" name="disabled">
+        <button ng:click="add('hallo')">Add</button>
 
 
     </div>

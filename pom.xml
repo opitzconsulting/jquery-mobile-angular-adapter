@@ -2,15 +2,17 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.opitzconsulting.html5</groupId>
   <artifactId>jquery-mobile-angular-adapter</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0</version>
   <name>JQuery Mobile Angular Adapter</name>
   <packaging>war</packaging>
   <description>Adapter for using jquery mobile with angular</description>
   
     <properties>
         <browser>/Applications/Google Chrome.app/Contents/MacOS/Google Chrome</browser>
-        <!-- Values: uglify, closure, none -->
+        <!-- Settings for the default profile with no minification. For minification there is
+             a separate profile -->
         <jsOptimizer>none</jsOptimizer>
+        <jsSuffix>-${version}</jsSuffix>
     </properties>
 
     <build>
@@ -22,8 +24,8 @@
                 <version>0.2.3-SNAPSHOT</version>
                 <configuration>
                     <optimizeBuildDir>${basedir}/target/requirejs/build</optimizeBuildDir>
-                    <optimizeOutputDir>${basedir}/target/requirejs/optimized</optimizeOutputDir>
-                    <optimizedFileNameSuffix></optimizedFileNameSuffix>
+                    <optimizeOutputDir>${basedir}/compiled</optimizeOutputDir>
+                    <optimizedFileNameSuffix>${jsSuffix}</optimizedFileNameSuffix>
                     <providePlugins>false</providePlugins>
                 </configuration>
                 <executions>
@@ -45,8 +47,8 @@
                                 </module>
                             </modules>
                             <wrap>
-                                <start>(function() {</start>
-                                <end>})();</end>
+                                <startFile>${basedir}/src/main/webapp/header.js</startFile>
+                                <endFile>${basedir}/src/main/webapp/footer.js</endFile>
                             </wrap>
                         </configuration>
                     </execution>
@@ -123,8 +125,18 @@
 
     <profiles>
         <profile>
-            <!-- Profile for executing the integration tests, e.g. jstestdriver, ... -->
-            <id>integration</id>
+            <!-- Profile for using the minimizer -->
+            <id>min</id>
+            <properties>
+                <!-- Values: uglify, closure, none -->
+                <jsOptimizer>uglify</jsOptimizer>
+                <jsSuffix>-${version}.min</jsSuffix>
+            </properties>
+        </profile>
+
+        <profile>
+            <!-- Profile for executing the tests with jstestdriver -->
+            <id>tests</id>
             <build>
                 <plugins>
                     <plugin>

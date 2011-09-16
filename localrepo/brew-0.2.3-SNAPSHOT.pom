@@ -1,0 +1,278 @@
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>5</version>
+	</parent>
+
+	<groupId>com.voltvoodoo</groupId>
+	<artifactId>brew</artifactId>
+	<name>Brew</name>
+	<version>0.2.3-SNAPSHOT</version>
+	<packaging>maven-plugin</packaging>
+
+	<url>http://github.com/jakewins/brew</url>
+	<inceptionYear>2011</inceptionYear>
+
+	<description>
+    A collection of tools to brew client side coffee apps. Includes coffeescript builder, requirejs builder and HAML compiler.
+	</description>
+
+	<properties>
+		<maven.version>2.0.9</maven.version>
+		<maven.compiler.source>1.5</maven.compiler.source>
+		<maven.compiler.target>1.5</maven.compiler.target>
+		<short-name>brew</short-name>
+
+		<git.repo>git@github.com:jakewins/brew.git</git.repo>
+		<git.url>github.com/jakewins/brew</git.url>
+		<git.url.http>http://${git.url}</git.url.http>
+		<git.url.git>git://${git.url}</git.url.git>
+
+	</properties>
+
+	<scm>
+		<connection>scm:git:${git.url.git}</connection>
+		<developerConnection>scm:git:${git.url.git}</developerConnection>
+		<url>${git.repo}</url>
+	</scm>
+
+	<issueManagement>
+		<system>GitHub</system>
+		<url>${git.url}/issues</url>
+	</issueManagement>
+
+	<licenses>
+		<license>
+			<name>Creative Commons GNU LGPL, Version 2.1</name>
+			<url>http://creativecommons.org/licenses/LGPL/2.1/</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<organization>
+		<name>Voltvoodoo</name>
+		<url>http://voltvoodoo.com/</url>
+	</organization>
+	<developers>
+		<developer>
+			<id>jakewins</id>
+			<name>Jacob Hansson</name>
+			<timezone>GMT+1</timezone>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+	</developers>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-plugin-api</artifactId>
+			<version>2.0.9</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-project</artifactId>
+			<version>2.0.9</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>rhino</groupId>
+			<artifactId>js</artifactId>
+			<version>1.7R2</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-mapper-asl</artifactId>
+			<version>1.7.2</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.google.javascript</groupId>
+			<artifactId>closure-compiler</artifactId>
+			<version>r706</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+				<version>2.2</version>
+				<configuration>
+					<templateFile>${basedir}/src/site/template-site.vm</templateFile>
+					<reportPlugins>
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-plugin-plugin</artifactId>
+							<version>2.5.1</version>
+						</plugin>
+						<plugin>
+							<artifactId>maven-project-info-reports-plugin</artifactId>
+							<version>2.2</version>
+						</plugin>
+						<plugin>
+							<artifactId>maven-javadoc-plugin</artifactId>
+							<version>2.6.1</version>
+							<configuration>
+								<minmemory>128m</minmemory>
+								<maxmemory>512m</maxmemory>
+								<encoding>UTF-8</encoding>
+								<docencoding>UTF-8</docencoding>
+								<charset>UTF-8</charset>
+								<docfilessubdirs>true</docfilessubdirs>
+								<useStandardDocletOptions>true</useStandardDocletOptions>
+								<doclet>org.jboss.apiviz.APIviz</doclet>
+								<docletArtifact>
+									<groupId>org.jboss.apiviz</groupId>
+									<artifactId>apiviz</artifactId>
+									<version>1.3.0.GA</version>
+								</docletArtifact>
+								<breakiterator>true</breakiterator>
+								<version>true</version>
+								<author>true</author>
+								<keywords>true</keywords>
+								<attach>false</attach>
+								<!-- <doctitle>${project.name} API Reference (${project.version}, 
+									r${buildNumber})</doctitle> <windowtitle>${project.name} API Reference (${project.version}, 
+									r${buildNumber})</windowtitle> -->
+								<!--links> <link>http://java.sun.com/j2se/${java.src.version}/docs/api/</link> 
+									<link>http://www.slf4j.org/apidocs/</link> <link>http://jakarta.apache.org/commons/logging/apidocs/</link> 
+									<link>http://logging.apache.org/log4j/docs/api/</link> <link>http://people.apache.org/~tobrien/wicket/apidocs/</link> 
+									<link>http://commons.apache.org/lang/api-release/</link> <link>http://commons.apache.org/io/api-release/</link> 
+									<link>http://testng.org/javadocs/</link> <link>http://junit.sourceforge.net/javadoc/</link> 
+									</links -->
+								<additionalparam>-nopackagediagram</additionalparam>
+								<!-- -sourceclasspath ${project.build.outputDirectory} -->
+								<excludePackageNames>${project.groupId}.example*:${project.groupId}.util.internal*</excludePackageNames>
+							</configuration>
+						</plugin>
+						<!-- <plugin> <groupId>com.dzone.jdocs</groupId> <artifactId>javadoc</artifactId> 
+							<version>1.0</version> <configuration> <aggregate>true</aggregate> <source>${java.src.version}</source> 
+							<overview>${basedir}/src/main/java/overview.html</overview> </configuration> 
+							</plugin> -->
+						<plugin>
+							<artifactId>maven-jxr-plugin</artifactId>
+							<version>2.1</version>
+						</plugin>
+						<!-- <plugin> <groupId>org.codehaus.mojo</groupId> <artifactId>taglist-maven-plugin</artifactId> 
+							<version>2.4</version> <configuration> <tags> <tag>TODO</tag> <tag>FIXME</tag> 
+							<tag>@todo</tag> <tag>@deprecated</tag> </tags> </configuration> </plugin> 
+							<plugin> <artifactId>maven-checkstyle-plugin</artifactId> <version>2.5</version> 
+							</plugin> <plugin> <artifactId>maven-surefire-report-plugin</artifactId> 
+							<version>2.5</version> <configuration> <showSuccess>false</showSuccess> </configuration> 
+							<reportSets> <reportSet> <reports> <report>report-only</report> </reports> 
+							</reportSet> </reportSets> </plugin> -->
+						<plugin>
+							<artifactId>maven-pmd-plugin</artifactId>
+							<version>2.4</version>
+							<configuration>
+								<linkXRef>true</linkXRef>
+								<sourceEncoding>utf-8</sourceEncoding>
+								<minimumTokens>100</minimumTokens>
+								<targetJdk>${java.src.version}</targetJdk>
+							</configuration>
+							<reportSets>
+								<reportSet>
+									<reports>
+										<report>pmd</report>
+										<report>cpd</report>
+									</reports>
+								</reportSet>
+							</reportSets>
+						</plugin>
+						<plugin>
+							<artifactId>maven-changes-plugin</artifactId>
+							<!--version>2.3</version -->
+							<version>2.1</version>
+							<reportSets>
+								<reportSet>
+									<reports>
+										<report>changes-report</report>
+									</reports>
+								</reportSet>
+							</reportSets>
+						</plugin>
+					</reportPlugins>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.0-beta-9</version>
+			</plugin>
+
+		</plugins>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>integration-tests</id>
+			<activation>
+				<property>
+					<name>maven.test.skip</name>
+					<value>!true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-invoker-plugin</artifactId>
+						<version>1.3</version>
+						<configuration>
+							<debug>false</debug>
+							<streamLogs>true</streamLogs>
+							<projectsDirectory>src/functionaltest/testprojects</projectsDirectory>
+							<pomIncludes>
+								<pomInclude>**/pom.xml</pomInclude>
+							</pomIncludes>
+							<preBuildHookScript>setup.groovy</preBuildHookScript>
+							<postBuildHookScript>validate.groovy</postBuildHookScript>
+						</configuration>
+						<executions>
+							<execution>
+								<id>integration-test</id>
+								<goals>
+									<goal>install</goal>
+									<goal>run</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+	<distributionManagement>
+		<repository>
+			<uniqueVersion>false</uniqueVersion>
+			<id>sonatype-repo</id>
+			<name>Sonatype Repository</name>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+		</repository>
+		<snapshotRepository>
+			<uniqueVersion>true</uniqueVersion>
+			<id>sonatype-snapshot-repo</id>
+			<name>Sonatype Snapshots Repository</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+</project>

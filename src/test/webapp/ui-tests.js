@@ -1,3 +1,6 @@
+/**
+ * Contains all the ui tests.
+ */
 define([
     'ui/compileIntegrationSpec',
     'ui/activatePassivateSpec',

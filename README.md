@@ -17,11 +17,7 @@ This also applies to the `disabled` attribute.
 The integration between jquery mobile and angular watches for such changes in the model
 and automatically calls the refresh function.
 
-Finally provides a templating mechanism, so that jquery mobile can style elements in advance,
-that may be used later by angular for dynamic component changes. This is similar to the switch
-statement in angular. However, jquery mobile does not always allow an extra nesting of elements
-into custom elements. E.g. if there should be two templates for an li element,
-jquery mobile requires them to be directly under an ul element, without any other elements in between.
+Finally provides special enhancements useful for mobile applications.
 
 
 Sample
@@ -55,18 +51,45 @@ ATTENTION: Do NOT use the `autobind` mode of angular!
     </head>
 
 
+Build
+--------------------------
+The build is done using maven and requirejs.
+
+- `mvn clean package`: This will create a new version of the adapter and put it into `/compiled`.
+- `mvn clean package -Pmin`: This will create a minified version of the adapter and put it into `/compiled`.
+
+Please install the latest version of the maven plugin `bew`. This project provides a
+snapshot release in `/localrepo`.
+
+Running the tests
+-------------------
+
+- `mvn clean integration-test -Ptests`: This will do a build and execute the tests using js-test-driver.
+  The browser that is used can be specified in the pom.xml.
+- `mvn clean package jetty:run`: This will start a webserver under `localhost:8080/jqmng`.
+  The unit-tests can be run via the url `localhost:8080/jqmng/UnitSpecRunner.html`
+  The ui-tests can be run via the url `localhost:8080/jqmng/UiSpecRunner.html`
+
+Directory layout
+-------------------
+This follows the usual maven directory layout:
+
+- src/main/webapp: The production code
+- src/test/webapp: The test code
+- compiled: The result of the javascript compilation
+
+
 Scopes
 -----------
-The adapter creates a separate angular scope for every page of jquery mobile.
-It also creates a global scope to provide communication between the different page scopes.
-If a controller named `GlobalController` exists it will become the controller
-for the global scope. The `$eval` of the global scope only evaluates the currently active page,
+The adapter creates a global scope by compiling just down until the `body` tag and then stopping there.
+Any controller associated to the `body` tag will be part of the global scope.
+
+Every page of jquery mobile gets a separate scope. The `$eval` of the global scope only evaluates the currently active page,
 so there is no performance interaction between pages.
 
-The global scope can be access via the function `$.mobile.globalScope`:
-If no parameter is supplied this returns the current global scope.
-If a parameter is supplied this will set the current global scope.
+For communicating between the pages,the global scope or the `onActivate` callbacks below may be used.
 
+The global scope can be access via the function `$.mobile.globalScope` or via `$("body").scope()`.
 However, please use `this.$root` to access the global scope in your code. This simplifies testing!
 
 Callbacks for page changes
@@ -185,29 +208,4 @@ The following example shows an example for a paged list for the data in the vari
 
 
 
-Modularization
----------------
-To modularize an angular jquery mobile application, use the following schema:
-
-- For every jquery mobile page one JS-file with a controller for that page.
-  To communicate with the controllers of other pages use the
-  `onActivate` and `onPassivate` functions (see above).
-  For fiels and functions on all pages use the `GlobalController`.
-- For every jquery mobile page one HTML-file that only contains
-  the div with the jquery mobile page and the `ng:controller` attribute for the controller.
-  However, due to the page loading in jquery mobile, this cannot contain any css nor JS links.
-  See the jquery mobile documentation for further details about loading external pages.
-  E.g.
-
-
-    <html>
-        <body>
-            <div id="mypage" data-role="page" ng:controller="MyPageController">
-            ...
-            </div>
-        </body>
-    </html>
-
-
-- One `index.html` that includes the libraries and all CSS files
 

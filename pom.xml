@@ -4,46 +4,84 @@
   <artifactId>jquery-mobile-angular-adapter</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>JQuery Mobile Angular Adapter</name>
-  <packaging>jar</packaging>
+  <packaging>war</packaging>
   <description>Adapter for using jquery mobile with angular</description>
   
-  <properties>
-      <browser>/Applications/Google Chrome.app/Contents/MacOS/Google Chrome</browser>
-  </properties>
+    <properties>
+        <browser>/Applications/Google Chrome.app/Contents/MacOS/Google Chrome</browser>
+        <!-- Values: uglify, closure, none -->
+        <jsOptimizer>none</jsOptimizer>
+    </properties>
 
-  <build>
-      <plugins>
-               <plugin>
-                <groupId>com.google.jstestdriver</groupId>
-                <artifactId>maven-jstestdriver-plugin</artifactId>
-                <version>1.3.2.1</version>
+    <build>
+        <finalName>${project.artifactId}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>com.voltvoodoo</groupId>
+                <artifactId>brew</artifactId>
+                <version>0.2.3-SNAPSHOT</version>
                 <configuration>
-                    <port>42442</port>
-                    <runnerMode>INFO</runnerMode>
-                    <reset>true</reset>
-                    <browser>${browser}</browser>
-                    <testOutput>${project.build.directory}/jstd-reports</testOutput>
-                    <tests>all</tests>
+                    <optimizeBuildDir>${basedir}/target/requirejs/build</optimizeBuildDir>
+                    <optimizeOutputDir>${basedir}/target/requirejs/optimized</optimizeOutputDir>
+                    <optimizedFileNameSuffix></optimizedFileNameSuffix>
+                    <providePlugins>false</providePlugins>
                 </configuration>
                 <executions>
                     <execution>
-                        <id>run-unit-tests</id>
-                        <phase>test</phase>
+                        <id>optimize-main</id>
+                        <phase>prepare-package</phase>
                         <goals>
-                            <goal>test</goal>
+                            <goal>optimize</goal>
                         </goals>
                         <configuration>
-                            <config>jstd-unit.conf</config>
+                            <optimizeSourceDir>${basedir}/src/main/webapp</optimizeSourceDir>
+                            <jsOptimizer>${jsOptimizer}</jsOptimizer>
+                            <modules>
+                                <module>
+                                    <name>jquery-mobile-angular-adapter</name>
+                                    <include>
+                                        <entry>lib/simple-require.js</entry>
+                                    </include>
+                                </module>
+                            </modules>
+                            <wrap>
+                                <start>(function() {</start>
+                                <end>})();</end>
+                            </wrap>
                         </configuration>
                     </execution>
+
+                    <!-- This second execution relies on the fact that the first execution
+                         left the modules of src/main/webapp in the build directory -->
                     <execution>
-                        <id>run-integration-tests</id>
-                        <phase>integration-test</phase>
+                        <id>optimize-test</id>
+                        <phase>prepare-package</phase>
                         <goals>
-                            <goal>test</goal>
+                            <goal>optimize</goal>
                         </goals>
                         <configuration>
-                            <config>jstd-ui.conf</config>
+                            <optimizeSourceDir>${basedir}/src/test/webapp</optimizeSourceDir>
+                             <!--Tests don't need optimization. Furthermore, optimization here would
+                                 optimize the files from src/main/webapp a second time.-->
+                            <jsOptimizer>none</jsOptimizer>
+                            <modules>
+                                <module>
+                                    <name>unit-tests</name>
+                                    <include>
+                                        <entry>lib/simple-require.js</entry>
+                                    </include>
+                                </module>
+                                <module>
+                                    <name>ui-tests</name>
+                                    <include>
+                                        <entry>lib/simple-require.js</entry>
+                                    </include>
+                                </module>
+                            </modules>
+                            <wrap>
+                                <start>window.simplerequire = true;</start>
+                                <end>;</end>
+                            </wrap>
                         </configuration>
                     </execution>
                 </executions>
@@ -64,30 +102,104 @@
                         </resourceBases>
                     </webAppConfig>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>start-jetty</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <scanIntervalSeconds>0</scanIntervalSeconds>
-                            <daemon>true</daemon>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>stop-jetty</id>
-                        <phase>post-integration-test</phase>
-                        <goals>
-                            <goal>stop</goal>
-                        </goals>
-                    </execution>
-                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.1.1</version>
+                <configuration>
+                    <warSourceExcludes>**/*.js,**/*.css
+                    </warSourceExcludes>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                    <webResources>
+                        <resource>
+                            <directory>target/requirejs/build</directory>
+                        </resource>
+                    </webResources>
+                </configuration>
             </plugin>
         </plugins>
-
     </build>
+
+    <profiles>
+        <profile>
+            <!-- Profile for executing the integration tests, e.g. jstestdriver, ... -->
+            <id>integration</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.google.jstestdriver</groupId>
+                        <artifactId>maven-jstestdriver-plugin</artifactId>
+                        <version>1.3.2.2</version>
+                        <configuration>
+                            <browser>${browser}</browser>
+                            <port>9876</port>
+                            <reset>true</reset>
+                            <runnerMode>INFO</runnerMode>
+                            <testOutput>${project.build.directory}/jstd-reports</testOutput>
+                            <tests>all</tests>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>run-unit-tests</id>
+                                <phase>integration-test</phase>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <config>jstd-unit.conf</config>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>run-integration-tests</id>
+                                <phase>integration-test</phase>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <config>jstd-ui.conf</config>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.mortbay.jetty</groupId>
+                        <artifactId>jetty-maven-plugin</artifactId>
+                        <configuration>
+                            <webAppConfig>
+                                <resourceBases>
+                                    <resourceBase>${basedir}/target/${project.artifactId}</resourceBase>
+                                </resourceBases>
+                            </webAppConfig>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>start-jetty</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <scanIntervalSeconds>0</scanIntervalSeconds>
+                                    <daemon>true</daemon>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>stop-jetty</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>stop</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                </plugins>
+            </build>
+
+        </profile>
+    </profiles>
+
 
     <dependencies>
         <dependency>
@@ -111,5 +223,5 @@
             <name>JsTestDriver Maven Plugin Repository</name>
             <url>http://jstd-maven-plugin.googlecode.com/svn/maven2</url>
         </pluginRepository>
-    </pluginRepositories>  
+    </pluginRepositories>
 </project>

@@ -61,32 +61,16 @@
             <properties>
                 <!-- Values: uglify, closure, none -->
                 <jsOptimizer>uglify</jsOptimizer>
-                <jsSuffix>-${version}.min</jsSuffix>
             </properties>
             <build>
                 <plugins>
                     <plugin>
                         <groupId>com.voltvoodoo</groupId>
                         <artifactId>brew</artifactId>
-                        <configuration>
-                            <optimizeSourceDir>${basedir}/src/main/webapp</optimizeSourceDir>
-                            <optimizeOutputDir>${basedir}/compiled</optimizeOutputDir>
-                            <modules>
-                                <module>
-                                    <name>jquery-mobile-angular-adapter</name>
-                                    <include>
-                                        <entry>lib/simple-require.js</entry>
-                                    </include>
-                                </module>
-                            </modules>
-                            <wrap>
-                                <startFile>${basedir}/src/main/build/header.js</startFile>
-                                <endFile>${basedir}/src/main/build/footer.js</endFile>
-                            </wrap>
-                        </configuration>
+
                         <executions>
                             <execution>
-                                <id>combine-main</id>
+                                <id>build-main</id>
                                 <phase>prepare-package</phase>
                                 <goals>
                                     <goal>optimize</goal>
@@ -94,17 +78,72 @@
                                 <configuration>
                                     <jsOptimizer>none</jsOptimizer>
                                     <optimizedFileNameSuffix>-${version}</optimizedFileNameSuffix>
+                                    <optimizeSourceDir>${basedir}/src/main/webapp</optimizeSourceDir>
+                                    <optimizeBuildDir>${basedir}/target/requirejs/build</optimizeBuildDir>
+                                    <optimizeOutputDir>${basedir}/compiled</optimizeOutputDir>
+                                    <skipModuleInsertion>true</skipModuleInsertion>
+                                    <modules>
+                                        <module>
+                                            <name>jquery-mobile-angular-adapter</name>
+                                            <include>
+                                                <entry>lib/simple-require</entry>
+                                                <entry>jqm-angular</entry>
+                                            </include>
+                                        </module>
+                                    </modules>
+                                    <wrap>
+                                        <startFile>${basedir}/src/main/build/header.js</startFile>
+                                        <endFile>${basedir}/src/main/build/footer.js</endFile>
+                                    </wrap>
                                 </configuration>
                             </execution>
                             <execution>
-                                <id>optimize-main</id>
+                                <id>build-standalone</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>optimize</goal>
+                                </goals>
+                                <configuration>
+                                    <jsOptimizer>none</jsOptimizer>
+                                    <optimizedFileNameSuffix>-${version}</optimizedFileNameSuffix>
+                                    <optimizeSourceDir>${basedir}/target/requirejs/build</optimizeSourceDir>
+                                    <optimizeBuildDir>${basedir}/target/requirejs/build</optimizeBuildDir>
+                                    <optimizeOutputDir>${basedir}/compiled</optimizeOutputDir>
+                                    <skipModuleInsertion>true</skipModuleInsertion>
+                                    <modules>
+                                        <module>
+                                            <name>jquery-mobile-angular-adapter-standalone</name>
+                                            <include>
+                                                <entry>lib/jquery-1.6.2</entry>
+                                                <entry>lib/angular-0.9.19</entry>
+                                                <entry>lib/jquery.mobile-1.0b2-oc1</entry>
+                                                <entry>../../../compiled/jquery-mobile-angular-adapter-${version}</entry>
+                                            </include>
+                                        </module>
+                                    </modules>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>minify</id>
                                 <phase>prepare-package</phase>
                                 <goals>
                                     <goal>optimize</goal>
                                 </goals>
                                 <configuration>
                                     <jsOptimizer>${jsOptimizer}</jsOptimizer>
-                                    <optimizedFileNameSuffix>-${version}.min</optimizedFileNameSuffix>
+                                    <optimizedFileNameSuffix>.min</optimizedFileNameSuffix>
+                                    <optimizeSourceDir>${basedir}/compiled</optimizeSourceDir>
+                                    <optimizeBuildDir>${basedir}/target/requirejs/optimize</optimizeBuildDir>
+                                    <optimizeOutputDir>${basedir}/compiled</optimizeOutputDir>
+                                    <skipModuleInsertion>true</skipModuleInsertion>
+                                    <modules>
+                                        <module>
+                                            <name>jquery-mobile-angular-adapter-standalone-${version}</name>
+                                        </module>
+                                        <module>
+                                            <name>jquery-mobile-angular-adapter-${version}</name>
+                                        </module>
+                                    </modules>
                                 </configuration>
                             </execution>
                         </executions>
@@ -138,7 +177,7 @@
                                     <optimizeSourceDir>${basedir}/src/main/webapp</optimizeSourceDir>
                                     <modules>
                                         <module>
-                                            <name>jquery-mobile-angular-adapter</name>
+                                            <name>jqm-angular</name>
                                         </module>
                                     </modules>
                                 </configuration>

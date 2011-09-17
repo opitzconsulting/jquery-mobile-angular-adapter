@@ -1,3 +1,5 @@
-define(function() {
-    return $;
+define('jquery', function() {
+    if (typeof $ !== "undefined") {
+        return $;
+    }
 });

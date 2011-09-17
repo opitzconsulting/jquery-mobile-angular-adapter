@@ -23,6 +23,8 @@
  */
 (function() {
 
+// Placeholder for the build process
+
 /**
  * Simple implementation of require/define assuming all
  * modules are named, in one file and in the correct order.
@@ -75,30 +77,23 @@ var requirejs, require, define;
         }
 
     }
-    // This assignments marks an implementation of require.js.
-    // Needed for r.js to put this first in the optimization process.
-    // We put it into a "with" statement, so that
-    // it does not get renamed by uglify, and can stil be recognized
-    // after the optimization process.
-    // This is important for using the generated file in the unit tests.
-    with(define) {
-        define.amd = {};
-    }
 
     require.ready = $;
 })(window);
 
-define("lib/simple-require.js", function(){});
-
 /**
  * Wrapper around window.angular.
  */
-define('angular',[],function() {
-    return window.angular;
+define('angular', function() {
+    if (typeof angular !== "undefined") {
+        return angular;
+    }
 });
 
-define('jquery',[],function() {
-    return $;
+define('jquery', function() {
+    if (typeof $ !== "undefined") {
+        return $;
+    }
 });
 
 /**
@@ -1255,7 +1250,7 @@ define('jqmng/widgets/angularUl',[
 });
 
 // Wrapper module as facade for the internal modules.
-define('jquery-mobile-angular-adapter',[
+define('jqm-angular',[
     'angular',
     'jquery',
     'jqmng/globalScope',

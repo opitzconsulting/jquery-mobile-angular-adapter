@@ -50,15 +50,6 @@ var requirejs, require, define;
         }
 
     }
-    // This assignments marks an implementation of require.js.
-    // Needed for r.js to put this first in the optimization process.
-    // We put it into a "with" statement, so that
-    // it does not get renamed by uglify, and can stil be recognized
-    // after the optimization process.
-    // This is important for using the generated file in the unit tests.
-    with(define) {
-        define.amd = {};
-    }
 
     require.ready = $;
 })(window);

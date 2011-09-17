@@ -2,7 +2,7 @@
  * Contains all the unit-tests.
  */
 define([
-    'jquery-mobile-angular-adapter',
+    'jqm-angular',
     'unit/arrayPagingSpec',
     'unit/iffSpec',
     'unit/ifSpec'

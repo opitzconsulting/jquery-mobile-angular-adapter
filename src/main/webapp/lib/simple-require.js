@@ -5,7 +5,8 @@
  * This implementation is used for creating standalone bundles
  * that do no more require require.js
  */
-var require, define;
+// This syntax is needed for the namespace function of r.js to work.
+var requirejs, require, define;
 (function (window) {
 
     if (typeof define !== "undefined") {
@@ -60,15 +61,4 @@ var require, define;
     }
 
     require.ready = $;
-
-    /**
-     * If the flag simplerequire is set in the window,
-     * make the require and define functions global.
-     * This is needed for the unit-tests, so that the unit-tests
-     * can directly interact with the modules of the adapter.
-     */
-    if (window.simplerequire) {
-        window.require = require;
-        window.define = def;
-    }
 })(window);

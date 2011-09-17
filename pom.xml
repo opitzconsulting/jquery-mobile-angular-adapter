@@ -80,8 +80,8 @@
                                 </module>
                             </modules>
                             <wrap>
-                                <startFile>${basedir}/src/main/webapp/header.js</startFile>
-                                <endFile>${basedir}/src/main/webapp/footer.js</endFile>
+                                <startFile>${basedir}/src/main/build/header.js</startFile>
+                                <endFile>${basedir}/src/main/build/footer.js</endFile>
                             </wrap>
                         </configuration>
                         <executions>

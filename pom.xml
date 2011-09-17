@@ -1,17 +1,17 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>com.opitzconsulting.html5</groupId>
-  <artifactId>jquery-mobile-angular-adapter</artifactId>
-  <version>1.0</version>
-  <name>JQuery Mobile Angular Adapter</name>
-  <packaging>war</packaging>
-  <description>Adapter for using jquery mobile with angular</description>
-  
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.opitzconsulting.html5</groupId>
+    <artifactId>jquery-mobile-angular-adapter</artifactId>
+    <version>1.0</version>
+    <name>JQuery Mobile Angular Adapter</name>
+    <packaging>war</packaging>
+    <description>Adapter for using jquery mobile with angular</description>
+
     <properties>
         <browser>/Applications/Google Chrome.app/Contents/MacOS/Google Chrome</browser>
-        <!-- Settings for the default profile with no minification. For minification there is
-             a separate profile -->
-        <jsOptimizer>none</jsOptimizer>
+        <!-- optimizer for minification: uglify or closure -->
+        <jsOptimizer>uglify</jsOptimizer>
         <jsSuffix>-${version}</jsSuffix>
     </properties>
 
@@ -24,69 +24,7 @@
                 <version>0.2.3-SNAPSHOT</version>
                 <configuration>
                     <optimizeBuildDir>${basedir}/target/requirejs/build</optimizeBuildDir>
-                    <optimizeOutputDir>${basedir}/compiled</optimizeOutputDir>
-                    <optimizedFileNameSuffix>${jsSuffix}</optimizedFileNameSuffix>
-                    <providePlugins>false</providePlugins>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>optimize-main</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>optimize</goal>
-                        </goals>
-                        <configuration>
-                            <optimizeSourceDir>${basedir}/src/main/webapp</optimizeSourceDir>
-                            <jsOptimizer>${jsOptimizer}</jsOptimizer>
-                            <modules>
-                                <module>
-                                    <name>jquery-mobile-angular-adapter</name>
-                                    <include>
-                                        <entry>lib/simple-require.js</entry>
-                                    </include>
-                                </module>
-                            </modules>
-                            <wrap>
-                                <startFile>${basedir}/src/main/webapp/header.js</startFile>
-                                <endFile>${basedir}/src/main/webapp/footer.js</endFile>
-                            </wrap>
-                        </configuration>
-                    </execution>
-
-                    <!-- This second execution relies on the fact that the first execution
-                         left the modules of src/main/webapp in the build directory -->
-                    <execution>
-                        <id>optimize-test</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>optimize</goal>
-                        </goals>
-                        <configuration>
-                            <optimizeSourceDir>${basedir}/src/test/webapp</optimizeSourceDir>
-                             <!--Tests don't need optimization. Furthermore, optimization here would
-                                 optimize the files from src/main/webapp a second time.-->
-                            <jsOptimizer>none</jsOptimizer>
-                            <modules>
-                                <module>
-                                    <name>unit-tests</name>
-                                    <include>
-                                        <entry>lib/simple-require.js</entry>
-                                    </include>
-                                </module>
-                                <module>
-                                    <name>ui-tests</name>
-                                    <include>
-                                        <entry>lib/simple-require.js</entry>
-                                    </include>
-                                </module>
-                            </modules>
-                            <wrap>
-                                <start>window.simplerequire = true;</start>
-                                <end>;</end>
-                            </wrap>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.mortbay.jetty</groupId>
@@ -110,14 +48,7 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.1.1</version>
                 <configuration>
-                    <warSourceExcludes>**/*.js,**/*.css
-                    </warSourceExcludes>
                     <failOnMissingWebXml>false</failOnMissingWebXml>
-                    <webResources>
-                        <resource>
-                            <directory>target/requirejs/build</directory>
-                        </resource>
-                    </webResources>
                 </configuration>
             </plugin>
         </plugins>
@@ -125,20 +56,116 @@
 
     <profiles>
         <profile>
-            <!-- Profile for using the minimizer -->
-            <id>min</id>
+            <!-- Profile for building -->
+            <id>build</id>
             <properties>
                 <!-- Values: uglify, closure, none -->
                 <jsOptimizer>uglify</jsOptimizer>
                 <jsSuffix>-${version}.min</jsSuffix>
             </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.voltvoodoo</groupId>
+                        <artifactId>brew</artifactId>
+                        <configuration>
+                            <optimizeSourceDir>${basedir}/src/main/webapp</optimizeSourceDir>
+                            <optimizeOutputDir>${basedir}/compiled</optimizeOutputDir>
+                            <modules>
+                                <module>
+                                    <name>jquery-mobile-angular-adapter</name>
+                                    <include>
+                                        <entry>lib/simple-require.js</entry>
+                                    </include>
+                                </module>
+                            </modules>
+                            <wrap>
+                                <startFile>${basedir}/src/main/webapp/header.js</startFile>
+                                <endFile>${basedir}/src/main/webapp/footer.js</endFile>
+                            </wrap>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>combine-main</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>optimize</goal>
+                                </goals>
+                                <configuration>
+                                    <jsOptimizer>none</jsOptimizer>
+                                    <optimizedFileNameSuffix>-${version}</optimizedFileNameSuffix>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>optimize-main</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>optimize</goal>
+                                </goals>
+                                <configuration>
+                                    <jsOptimizer>${jsOptimizer}</jsOptimizer>
+                                    <optimizedFileNameSuffix>-${version}.min</optimizedFileNameSuffix>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+
         </profile>
 
         <profile>
             <!-- Profile for executing the tests with jstestdriver -->
-            <id>tests</id>
+            <id>test</id>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>com.voltvoodoo</groupId>
+                        <artifactId>brew</artifactId>
+                        <configuration>
+                            <optimizeOutputDir>${basedir}/target/requirejs/garbage</optimizeOutputDir>
+                            <!-- no optimizer nor wrapping for tests -->
+                            <jsOptimizer>none</jsOptimizer>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>optimize-main</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>optimize</goal>
+                                </goals>
+                                <configuration>
+                                    <optimizeSourceDir>${basedir}/src/main/webapp</optimizeSourceDir>
+                                    <modules>
+                                        <module>
+                                            <name>jquery-mobile-angular-adapter</name>
+                                        </module>
+                                    </modules>
+                                </configuration>
+                            </execution>
+
+                            <!-- This second execution relies on the fact that the first execution
+                   left the modules of src/main/webapp in the build directory -->
+                            <execution>
+                                <id>optimize-test</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>optimize</goal>
+                                </goals>
+                                <configuration>
+                                    <optimizeSourceDir>${basedir}/src/test/webapp</optimizeSourceDir>
+                                    <modules>
+                                        <module>
+                                            <name>unit-tests</name>
+                                        </module>
+                                        <module>
+                                            <name>ui-tests</name>
+                                        </module>
+                                    </modules>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <groupId>com.google.jstestdriver</groupId>
                         <artifactId>maven-jstestdriver-plugin</artifactId>
@@ -173,6 +200,19 @@
                                 </configuration>
                             </execution>
                         </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-war-plugin</artifactId>
+                        <configuration>
+                            <warSourceExcludes>**/*.js,**/*.css
+                            </warSourceExcludes>
+                            <webResources>
+                                <resource>
+                                    <directory>target/requirejs/build</directory>
+                                </resource>
+                            </webResources>
+                        </configuration>
                     </plugin>
                     <plugin>
                         <groupId>org.mortbay.jetty</groupId>

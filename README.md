@@ -55,16 +55,15 @@ Build
 --------------------------
 The build is done using maven and requirejs.
 
-- `mvn clean package`: This will create a new version of the adapter and put it into `/compiled`.
-- `mvn clean package -Pmin`: This will create a minified version of the adapter and put it into `/compiled`.
+- `mvn clean package -Pbuild`: This will create a new version of the adapter and put it into `/compiled`.
 
-Please install the latest version of the maven plugin `bew`. This project provides a
+Please install the latest version of the maven plugin `brew`. This project provides a
 snapshot release in `/localrepo`.
 
 Running the tests
 -------------------
 
-- `mvn clean integration-test -Ptests`: This will do a build and execute the tests using js-test-driver.
+- `mvn clean integration-test -Ptest`: This will do a build and execute the tests using js-test-driver.
   The browser that is used can be specified in the pom.xml.
 - `mvn clean package jetty:run`: This will start a webserver under `localhost:8080/jqmng`.
   The unit-tests can be run via the url `localhost:8080/jqmng/UnitSpecRunner.html`

@@ -21,7 +21,7 @@ Finally provides special enhancements useful for mobile applications.
 
 Changelog
 ----------
-See project [Changelog.md](Changelog.md).
+See project [Changelog.md](jquery-mobile-angular-adapter/Changelog.md).
 
 
 Sample

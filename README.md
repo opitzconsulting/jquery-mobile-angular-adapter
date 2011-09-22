@@ -19,6 +19,10 @@ and automatically calls the refresh function.
 
 Finally provides special enhancements useful for mobile applications.
 
+Changelog
+----------
+See project [Changelog.md](Changelog.md).
+
 
 Sample
 ------------
@@ -56,6 +60,10 @@ Build
 The build is done using maven and requirejs.
 
 - `mvn clean package -Pbuild`: This will create a new version of the adapter and put it into `/compiled`.
+
+The build also creates a standalone library including jquery, jquery-mobile and angular.
+If you want to do something during the initialization of jquery-mobile, use the following callback:
+`window.mobileinit = function() { ... }`
 
 Please install the latest version of the maven plugin `brew`. This project provides a
 snapshot release in `/localrepo`.

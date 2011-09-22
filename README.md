@@ -19,11 +19,6 @@ and automatically calls the refresh function.
 
 Finally provides special enhancements useful for mobile applications.
 
-Changelog
-----------
-See project [Changelog.md](jquery-mobile-angular-adapter/Changelog.md).
-
-
 Sample
 ------------
 See project [phonecat-mobile](https://github.com/tigbro/phonecat-mobile).

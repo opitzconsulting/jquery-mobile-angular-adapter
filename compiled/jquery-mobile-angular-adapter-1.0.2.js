@@ -1,30 +1,4 @@
-/**
- * The MIT License
- *
- * Copyright (c) 2011 Tobias Bosch (OPITZ CONSULTING GmbH, www.opitz-consulting.com)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-(function() {
-
 // Placeholder for the build process
-
 /**
  * Simple implementation of require/define assuming all
  * modules are named, in one file and in the correct order.
@@ -80,7 +54,6 @@ var requirejs, require, define;
 
     require.ready = $;
 })(window);
-
 /**
  * Wrapper around window.angular.
  */
@@ -89,13 +62,11 @@ define('angular', function() {
         return angular;
     }
 });
-
 define('jquery', function() {
     if (typeof $ !== "undefined") {
         return $;
     }
 });
-
 /**
  * Global scope
  */
@@ -142,7 +113,6 @@ define('jqmng/globalScope',['jquery', 'angular'], function($, angular) {
         onCreate: onCreate
     }
 });
-
 define('jqmng/activePage',['jquery', 'jqmng/globalScope'], function($, globalScope) {
     /*
      * Service for page navigation.
@@ -200,7 +170,6 @@ define('jqmng/activePage',['jquery', 'jqmng/globalScope'], function($, globalSco
     }
 
 });
-
 /*
  * waitdialog service.
  */
@@ -318,7 +287,6 @@ define('jqmng/waitDialog',['jquery'], function($) {
         waitForWithCancel:waitForWithCancel
     };
 });
-
 define('jqmng/event',['angular'], function(angular) {
     /* A widget for clicks.
      * Just as ng:click, but reacts to the jquery mobile vclick event, which
@@ -384,7 +352,6 @@ define('jqmng/event',['angular'], function(angular) {
         return linkFn;
     });
 });
-
 /*
  * The ng:fadein directive
  */
@@ -403,7 +370,6 @@ define('jqmng/fadein',['angular'], function(angular) {
     });
 
 });
-
 /*
  * Defines the ng:if tag. This is useful if jquery mobile does not allow
  * an ng:switch element in the dom, e.g. between ul and li.
@@ -424,7 +390,6 @@ define('jqmng/if',['angular'], function(angular) {
         return angular.widget('@ng:repeat').call(this, newExpr, element);
     });
 });
-
 /**
  * Paging Support for lists.
  * Note that this will cache the result of two calls until the next eval cycle
@@ -590,7 +555,6 @@ define('jqmng/paging',['jquery', 'angular', 'jqmng/globalScope'], function($, an
 
     };
 });
-
 /**
  * Integration of the page widget.
  */
@@ -697,7 +661,6 @@ define('jqmng/widgets/pageCompile',['jquery', 'angular', 'jqmng/globalScope'], f
         afterCompile: addAfterCompileCallback
     }
 });
-
 /**
  * Helper functions for proxying jquery widgets and angular widgets.
  */
@@ -839,7 +802,6 @@ define('jqmng/widgets/widgetProxyUtil',['jquery', 'angular', 'jqmng/globalScope'
         removeSlavesWhenMasterIsRemoved: removeSlavesWhenMasterIsRemoved
     }
 });
-
 define('jqmng/widgets/disabledHandling',[
     'jqmng/widgets/widgetProxyUtil'
 ], function(widgetProxyUtil) {
@@ -882,7 +844,6 @@ define('jqmng/widgets/disabledHandling',[
 
     return jqmWidgetDisabledHandling;
 });
-
 define('jqmng/widgets/jqmButton',[
     'jqmng/widgets/widgetProxyUtil',
     'jqmng/widgets/disabledHandling'
@@ -909,7 +870,6 @@ define('jqmng/widgets/jqmButton',[
     }
 
 });
-
 define('jqmng/widgets/angularButton',[
     'jqmng/widgets/widgetProxyUtil',
     'jqmng/widgets/jqmButton'
@@ -927,7 +887,6 @@ define('jqmng/widgets/angularButton',[
         }
     });
 });
-
 define('jqmng/widgets/jqmCollapsible',[
     'jqmng/widgets/widgetProxyUtil',
     'jqmng/widgets/disabledHandling'
@@ -947,7 +906,6 @@ define('jqmng/widgets/jqmCollapsible',[
         isCollapsible: isCollapsible
     }
 });
-
 define('jqmng/widgets/angularDiv',[
     'jqmng/widgets/widgetProxyUtil',
     'jqmng/widgets/jqmCollapsible'
@@ -966,7 +924,6 @@ define('jqmng/widgets/angularDiv',[
 
 
 });
-
 define('jqmng/widgets/jqmSelectMenu',[
     'jqmng/widgets/widgetProxyUtil',
     'jqmng/widgets/disabledHandling',
@@ -1016,7 +973,6 @@ define('jqmng/widgets/jqmSelectMenu',[
         isSelectMenu: isSelectMenu
     }
 });
-
 define('jqmng/widgets/jqmSlider',[
     'jqmng/widgets/widgetProxyUtil',
     'jqmng/widgets/disabledHandling',
@@ -1052,7 +1008,6 @@ define('jqmng/widgets/jqmSlider',[
     }
 
 });
-
 define('jqmng/widgets/jqmCheckboxRadio',[
     'jqmng/widgets/widgetProxyUtil',
     'jqmng/widgets/disabledHandling',
@@ -1085,7 +1040,6 @@ define('jqmng/widgets/jqmCheckboxRadio',[
 
 
 });
-
 define('jqmng/widgets/jqmTextInput',[
     'jqmng/widgets/widgetProxyUtil',
     'jqmng/widgets/disabledHandling'
@@ -1109,7 +1063,6 @@ define('jqmng/widgets/jqmTextInput',[
 
 
 });
-
 define('jqmng/widgets/angularInput',[
     'jqmng/widgets/widgetProxyUtil',
     'jqmng/widgets/jqmSelectMenu',
@@ -1136,12 +1089,14 @@ define('jqmng/widgets/angularInput',[
             return function(element, origBinder) {
                 element[0].type = oldType;
                 if (isCheckboxRadio) {
-                    // Angular only binds to the click event for radio and check boxes,
-                    // but jquery mobile fires a change event. So be sure that angular also listens to the change event.
+                    // Angular binds to the click event for radio and check boxes,
+                    // but jquery mobile fires a change event. So be sure that angular only listens to the change event,
+                    // and no more to the click event, as the click event is too early / jqm has not updated
+                    // the checked status.
                     var origBind = element.bind;
                     element.bind = function(events, callback) {
                         if (events.indexOf('click') != -1) {
-                            events += " change";
+                            events = "change";
                         }
                         return origBind.call(this, events, callback);
                     };
@@ -1164,7 +1119,6 @@ define('jqmng/widgets/angularInput',[
         });
 
     });
-
 define('jqmng/widgets/angularSelect',[
     'jqmng/widgets/widgetProxyUtil',
     'jqmng/widgets/jqmSelectMenu',
@@ -1187,7 +1141,6 @@ define('jqmng/widgets/angularSelect',[
     });
 
 });
-
 define('jqmng/widgets/jqmListView',[
     'jqmng/widgets/widgetProxyUtil',
     'jqmng/widgets/disabledHandling',
@@ -1232,7 +1185,6 @@ define('jqmng/widgets/jqmListView',[
         isListView: isListView
     }
 });
-
 define('jqmng/widgets/angularUl',[
     'jqmng/widgets/widgetProxyUtil',
     'jqmng/widgets/jqmListView'
@@ -1248,7 +1200,6 @@ define('jqmng/widgets/angularUl',[
         };
     });
 });
-
 // Wrapper module as facade for the internal modules.
 define('jqm-angular',[
     'angular',
@@ -1283,4 +1234,3 @@ define('jqm-angular',[
         waitDialog: waitDialog
     }
 });
-})();

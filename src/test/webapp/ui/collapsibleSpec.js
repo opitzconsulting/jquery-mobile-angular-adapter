@@ -18,10 +18,9 @@ define(function() {
                 var input = page.find("#el");
                 var header = input.find('h3');
                 var content = input.find(".ui-collapsible-content");
-                expect(content.hasClass('ui-collapsible-content-collapsed')).toBeFalsy();
-                header.trigger('vclick'); // for jqm 1 beta
-                header.trigger('vmouseup'); // for jqm 1 alpha
                 expect(content.hasClass('ui-collapsible-content-collapsed')).toBeTruthy();
+                header.trigger('vclick'); // for jqm 1 beta
+                expect(content.hasClass('ui-collapsible-content-collapsed')).toBeFalsy();
             });
 
         });

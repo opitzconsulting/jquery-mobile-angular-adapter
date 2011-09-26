@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.opitzconsulting.html5</groupId>
     <artifactId>jquery-mobile-angular-adapter</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <name>JQuery Mobile Angular Adapter</name>
     <packaging>war</packaging>
     <description>Adapter for using jquery mobile with angular</description>
@@ -117,7 +117,7 @@
                                                 <entry>lib/jquery-1.6.2</entry>
                                                 <entry>lib/mobileinit</entry>
                                                 <entry>lib/angular-0.9.19</entry>
-                                                <entry>lib/jquery.mobile-1.0b2-oc1</entry>
+                                                <entry>lib/jquery.mobile-1.0b3-oc1</entry>
                                                 <entry>../../../compiled/jquery-mobile-angular-adapter-${version}</entry>
                                             </include>
                                         </module>

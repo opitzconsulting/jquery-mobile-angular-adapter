@@ -37,14 +37,13 @@ define(function() {
             });
             runs(function() {
                 var $ = testframe().$;
-                $(dialog.find('li a')[1]).trigger('vclick')
+                $(dialog.find('li a')[1]).trigger('click')
                 expect(scope.$get('mysel')).toEqual("v2");
             });
             waitsFor(function() {
                 return !dialogOpen;
             });
         });
-
         it('should save the ui value into the model when using non native menus', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
@@ -66,7 +65,7 @@ define(function() {
                 var popup = page.find(".ui-selectmenu");
                 var options = popup.find("li");
                 var option = testframe().$(options[1]);
-                option.trigger('vclick');
+                option.trigger('click');
                 select.selectmenu('close');
                 expect(scope.$get('mysel')).toEqual("v2");
             });

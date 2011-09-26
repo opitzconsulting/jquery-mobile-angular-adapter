@@ -24,12 +24,14 @@ define([
             return function(element, origBinder) {
                 element[0].type = oldType;
                 if (isCheckboxRadio) {
-                    // Angular only binds to the click event for radio and check boxes,
-                    // but jquery mobile fires a change event. So be sure that angular also listens to the change event.
+                    // Angular binds to the click event for radio and check boxes,
+                    // but jquery mobile fires a change event. So be sure that angular only listens to the change event,
+                    // and no more to the click event, as the click event is too early / jqm has not updated
+                    // the checked status.
                     var origBind = element.bind;
                     element.bind = function(events, callback) {
                         if (events.indexOf('click') != -1) {
-                            events += " change";
+                            events = "change";
                         }
                         return origBind.call(this, events, callback);
                     };

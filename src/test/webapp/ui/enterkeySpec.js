@@ -1,10 +1,10 @@
 define(function() {
 
-    describe("ng:enterKey", function() {
+    describe("ngm:enterKey", function() {
         it('should eval the expression when the event is fired', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 frame.$("#start").before('<div id="page1" data-role="page">' +
-                    '<div data-role="content"><input type="text" ng:enterkey="res = true" id="input"></a></div>' +
+                    '<div data-role="content"><input type="text" ngm:enterkey="res = true" id="input"></a></div>' +
                     '</div>');
 
             });

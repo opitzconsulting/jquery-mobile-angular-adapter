@@ -57,12 +57,12 @@ define(function() {
             });
         });
 
-        it('should refresh entries if used with ng:if', function() {
+        it('should refresh entries if used with ngm:if', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 page.append('<div data-role="content">' +
                     '<ul data-role="listview" ng:repeat="item in [1]">' +
-                    '<li ng:if="test">Test</li>' +
+                    '<li ngm:if="test">Test</li>' +
                     '</ul>' +
                     '</div>');
             });

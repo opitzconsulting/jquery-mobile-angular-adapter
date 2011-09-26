@@ -1,11 +1,11 @@
 define(function() {
 
-    describe("ng:event", function() {
+    describe("ngm:event", function() {
 
         it('should eval the expression when the event is fired', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 frame.$("#start").before('<div id="page1" data-role="page">' +
-                    '<div data-role="content"><a href="#" ng:event="click:clicked = true" id="mylink"></a></div>' +
+                    '<div data-role="content"><a href="#" ngm:event="click:clicked = true" id="mylink"></a></div>' +
                     '</div>');
 
             });
@@ -22,7 +22,7 @@ define(function() {
         it('should work with multiple events', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 frame.$("#start").before('<div id="page1" data-role="page">' +
-                    '<div data-role="content"><a href="#" ng:event="mousedown click:clicked = true" id="mylink"></a></div>' +
+                    '<div data-role="content"><a href="#" ngm:event="mousedown click:clicked = true" id="mylink"></a></div>' +
                     '</div>');
 
             });
@@ -43,7 +43,7 @@ define(function() {
         it('should work with multiple event/function pairs', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 frame.$("#start").before('<div id="page1" data-role="page">' +
-                    '<div data-role="content"><a href="#" ng:event="mousedown:m = true,click:c = true" id="mylink"></a></div>' +
+                    '<div data-role="content"><a href="#" ngm:event="mousedown:m = true,click:c = true" id="mylink"></a></div>' +
                     '</div>');
 
             });

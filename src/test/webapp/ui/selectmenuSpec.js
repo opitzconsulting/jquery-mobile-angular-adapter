@@ -148,7 +148,7 @@ define(function() {
                 // Note: Be sure to use ng:repeat, as this is the most problematic case!
                 page.append(
                     '<div data-role="content">' +
-                        '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false"><option value="v1" ng:if="option1" default="true">v1</option><option value="v2" ng:if="option2">v2</option></select>' +
+                        '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false"><option value="v1" ngm:if="option1" default="true">v1</option><option value="v2" ngm:if="option2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {
@@ -170,7 +170,7 @@ define(function() {
                 // Note: Be sure to use ng:repeat, as this is the most problematic case!
                 page.append(
                     '<div data-role="content">' +
-                        '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false"><option value="v1" ng:if="option1" default="true">v1</option><option value="v2" ng:if="option2">v2</option></select>' +
+                        '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false"><option value="v1" ngm:if="option1" default="true">v1</option><option value="v2" ngm:if="option2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {

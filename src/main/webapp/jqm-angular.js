@@ -20,7 +20,7 @@ define([
     $.mobile.globalScope = globalScope.globalScope;
 
     // export waitDialog as angular Service
-    angular.service('waitdialog', function() {
+    angular.service('$waitDialog', function() {
         return waitDialog;
     });
     angular.service('$activePage', function() {

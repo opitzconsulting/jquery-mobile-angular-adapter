@@ -12,7 +12,7 @@ define(function() {
                 spyOn($.mobile, 'showPageLoadingMsg').andCallThrough();
                 spyOn($.mobile, 'hidePageLoadingMsg').andCallThrough();
                 updateViewSpy = jasmine.createSpy();
-                service = win.angular.service('waitdialog')(updateViewSpy);
+                service = win.angular.service('$waitDialog')(updateViewSpy);
             });
         });
 

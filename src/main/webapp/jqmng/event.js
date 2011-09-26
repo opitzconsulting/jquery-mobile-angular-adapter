@@ -4,12 +4,12 @@ define(['angular'], function(angular) {
      * includes taps, mousedowns, ...
      */
     angular.directive("ngm:click", function(expression, element) {
-        return angular.directive('ng:event')('vclick:' + expression, element);
+        return angular.directive('ngm:event')('vclick:' + expression, element);
     });
 
     /* A widget to bind general events like touches, ....
      */
-    angular.directive("ng:event", function(expression, element) {
+    angular.directive("ngm:event", function(expression, element) {
         var eventHandlers = {};
         var pattern = /(.*?):(.*?)($|,)/g;
         var match;
@@ -48,7 +48,7 @@ define(['angular'], function(angular) {
 
     /* A widget that reacts when the user presses the enter key.
      */
-    angular.directive("ng:enterkey", function(expression, element) {
+    angular.directive("ngm:enterkey", function(expression, element) {
         var linkFn = function($updateView, element) {
             var self = this;
             element.bind('keypress', function(e) {

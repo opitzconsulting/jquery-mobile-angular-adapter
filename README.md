@@ -112,37 +112,37 @@ Widgets, Directives and Services
 
 ### Directive ngm:click(handler)
 Special click handler that integrates with jquery mobile's `vclick` event and by this also reacts to touches.
-Also see `ng:event` for the general case of binding a handler to events.
+Also see `ngm:event` for the general case of binding a handler to events.
 
 Usage: E.g. `<a href="#" ngm:click="myFn()">`
 
-### Directive ng:event(event1:handler1,event2:handler2,...)
+### Directive ngm:event(event1:handler1,event2:handler2,...)
 General event handler that integrates with jquery events, and also with jquery mobile events.
 The value of the attribute has the syntax `<events>:<function expression>,...`. The `events` part may contain one or
 more events (see jQuery bind function). There may be more than one events/function pair in the expression, separated by a komma.
 
-Usage: E.g. `<a href="#" ng:event="swiperight:myFn()">`
+Usage: E.g. `<a href="#" ngm:event="swiperight:myFn()">`
 
-### Attribute Widget @ng:if
-The attribute widget `@ng:if` allows to add/remove an element to/from the dom, depending on an expression.
+### Attribute Widget @ngm:if
+The attribute widget `@ngm:if` allows to add/remove an element to/from the dom, depending on an expression.
 This is especially useful at places where we cannot insert an `ng:switch` into the dom. E.g. jquery mobile
 does not allow elements between an `ul` and an `li` element.
 
-Usage: E.g. `<div ng:if="myFlag">asdfasdf</div>`
+Usage: E.g. `<div ngm:if="myFlag">asdfasdf</div>`
 
 
-### Directive ng:enterkey(handler)
+### Directive ngm:enterkey(handler)
 Special click handler that fires when the enter key is pressed.
 
-Usage: E.g. `<input type="submit" ng:enterkey="myFn()">`
+Usage: E.g. `<input type="submit" ngm:enterkey="myFn()">`
 
 
-### Directive ng:fadein
-For smooth fadings between `ng:if` changes, there is also the directive `ngm:fadein`.
+### Directive ngm:fadein
+For smooth fadings between `ngm:if` changes, there is also the directive `ngm:fadein`.
 This specifies that the display of the coresponding element
 should be shown via a transition lasting a defined amount of milliseconds (the value of the attribute).
 
-Usage: E.g. `<div ng:fadein="700">asdf</div>`
+Usage: E.g. `<div ngm:fadein="700">asdf</div>`
 
 
 ### Service $activePage
@@ -157,8 +157,8 @@ Parameters (see $.mobile.changePage)
 
 Usage: E.g. `$activePage('page2')`
 
-### Service waitdialog
-The service `waitdialog` allows the access to the jquery mobile wait dialog. It provides the following functions:
+### Service $waitdialog
+The service `$waitdialog` allows the access to the jquery mobile wait dialog. It provides the following functions:
 - `show(msg, callback)`: Opens the wait dialog and shows the given message (if existing).
     If the user clicks on the wait dialog the given callback is called.
     This can be called even if the dialog is currently showing. It will the change the message
@@ -203,7 +203,7 @@ The following example shows an example for a paged list for the data in the vari
 
     <ul data-role="listview">
         <li ng:repeat="item in list.$paged()">{{item}}</li>
-        <li ng:if="list.$paged().hasMorePages()">
+        <li ngm:if="list.$paged().hasMorePages()">
             <a href="#" ngm:click="list.$paged().loadNextPage()">Load more</a>
          </li>
     </ul>

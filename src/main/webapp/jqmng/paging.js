@@ -9,7 +9,7 @@
  *
  * Usage:
  <li ng:repeat="l in list.$paged()">{{l}}</li>
- <li ng:if="list.$paged().hasMorePages()">
+ <li ngm:if="list.$paged().hasMorePages()">
  <a href="#" ngm:click="list.$paged().loadNextPage()">Load more</a>
  </li>
  */

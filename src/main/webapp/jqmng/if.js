@@ -12,9 +12,9 @@ define(['angular'], function(angular) {
         }
     }
 
-    angular.widget('@ng:if', function(expression, element) {
-        var newExpr = 'ngif in $iff(' + expression + ",[1],[])";
-        element.removeAttr('ng:if');
+    angular.widget('@ngm:if', function(expression, element) {
+        var newExpr = 'ngmif in $iff(' + expression + ",[1],[])";
+        element.removeAttr('ngm:if');
         return angular.widget('@ng:repeat').call(this, newExpr, element);
     });
 });

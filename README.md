@@ -21,7 +21,8 @@ Finally provides special enhancements useful for mobile applications.
 
 Sample
 ------------
-See project [phonecat-mobile](https://github.com/tigbro/phonecat-mobile).
+- Sample Github project [phonecat-mobile](https://github.com/tigbro/phonecat-mobile).
+- Js fiddle [Todo mobile](http://jsfiddle.net/Du2DY/3/).
 
 
 Limitations

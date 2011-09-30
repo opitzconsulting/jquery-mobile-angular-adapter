@@ -10,6 +10,7 @@ define([
     'jqmng/if',
     'jqmng/paging',
     'jqmng/widgets/pageCompile',
+    'jqmng/widgets/angularRepeat',
     'jqmng/widgets/angularButton',
     'jqmng/widgets/angularDiv',
     'jqmng/widgets/angularInput',

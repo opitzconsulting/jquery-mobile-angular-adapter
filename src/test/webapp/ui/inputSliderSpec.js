@@ -66,7 +66,6 @@ define(function() {
             });
 
         });
-
         it('should be removable when ng:repeat shrinks', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
@@ -81,7 +80,6 @@ define(function() {
                 var scope = page.scope();
                 // ui select creates a new parent for itself
                 var content = page.find(":jqmData(role='content')");
-                console.log(page.html());
                 expect(content.children('.ui-slider').length).toEqual(2);
                 scope.mylist = [1];
                 scope.$root.$eval();

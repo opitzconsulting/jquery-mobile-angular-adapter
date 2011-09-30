@@ -65,5 +65,26 @@ define([], function() {
             });
         });
 
+        it('should style all non widgets when using ngm:if', function() {
+            loadHtml('/jqmng/ui/test-fixture.html', function(win) {
+                var $ = win.$;
+                var page1 = $("#start");
+                page1.append('<a data-role="button" ngm:if="test" id="myAnchor"></a>');
+            });
+            runs(function() {
+                var win = testframe();
+                var $ = win.$;
+                var page1 = $("#start");
+                var anchors = page1.find("#myAnchor");
+                expect(anchors.length).toBe(0);
+                var scope = page1.scope();
+                scope.test = true;
+                scope.$root.$eval();
+                var anchors = page1.find("#myAnchor");
+                expect(anchors.length).toBe(1);
+                expect(anchors.hasClass('ui-btn')).toBeTruthy();
+            })
+        });
+
     });
 });

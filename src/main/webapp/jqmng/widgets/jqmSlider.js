@@ -1,13 +1,12 @@
 define([
     'jqmng/widgets/widgetProxyUtil',
-    'jqmng/widgets/disabledHandling',
-    'jqmng/widgets/pageCompile'
-], function(proxyUtil, disabledHandling, pageCompile) {
+    'jqmng/widgets/disabledHandling'
+], function(proxyUtil, disabledHandling) {
     disabledHandling.slider = true;
 
     function compileSlider(element, name) {
         var scope = this;
-        pageCompile.afterCompile(function() {
+        proxyUtil.afterCompile(function() {
             // The slider widget creates an element of class ui-slider
             // after the slider.
             var newElements = proxyUtil.recordDomAdditions(".ui-slider", function() {

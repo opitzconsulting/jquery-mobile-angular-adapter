@@ -89,7 +89,7 @@ define(function() {
                 var parentDiv = page.find("#mydiv");
                 expect(parentDiv.find('.ui-checkbox').length).toBe(0);
                 page.scope().$set('items', [1,2]);
-                page.scope().$eval();
+                page.scope().$root.$eval();
             });
             waitsForAsync();
             runs(function() {

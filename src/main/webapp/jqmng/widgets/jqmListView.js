@@ -1,15 +1,14 @@
 define([
     'jqmng/widgets/widgetProxyUtil',
     'jqmng/widgets/disabledHandling',
-    'jquery',
-    'jqmng/widgets/pageCompile'
-], function(proxyUtil, disabledHandling, $, pageCompile) {
+    'jquery'
+], function(proxyUtil, disabledHandling, $) {
 
     function compileListView(element) {
         var scope = this;
         // The listview widget looks for the persistent footer,
         // so we need to defer the creation.
-        pageCompile.afterCompile(function() {
+        proxyUtil.afterCompile(function() {
             // listviews may create subpages for nested lists.
             // Be sure that they get removed from the dom when the list is removed.
             var newElemens = proxyUtil.recordDomAdditions(":jqmData(role='page')", function() {

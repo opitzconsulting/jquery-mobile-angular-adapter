@@ -1,6 +1,11 @@
 Changelog
 =====================
 
+1.0.3
+-------------
+- Bugfix to styling of elements like <a>, ... when used with ng:if (see issue #10).
+
+
 1.0.2
 -------------
 - Updated to jqm 1.0b3

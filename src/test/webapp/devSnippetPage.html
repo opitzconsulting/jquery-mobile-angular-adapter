@@ -19,29 +19,27 @@ Test page during development.
     </script>
 </head>
 <body>
-    <script>
-        function MyController($xhr) {
-            this.list = [];
-            this.add = function(value) {
-                $xhr('JSON', 'https://secure.openkeyval.org/JQueryMobileAngularTodoapp?callback=JSON_CALLBACK', function(status, data) {
-                    alert(data);
-                });
-                //this.list.push(value);
-            }
+
+<script>
+    function TestCtrl() {
+        this.button1 = function() {
+            this.options = [{id:1},{id:2},{id:3}];
         }
-        MyController.$inject = ['$xhr'];
+        this.button2 = function() {
+            this.options = [{id:'a'},{id:'b'},{id:'c'},{id:'d'}];
+        }
+    }
 
-    </script>
+</script>
 
-
-<div data-role="page" id="start" data-theme="d">
-    <div data-role="content" ng:controller="MyController">
-        <ul ng:repeat="v in list" data-role="listview">
-            <li>{{v}}</li>
-        </ul>
-
-        <button ng:click="add('hallo')">Add</button>
-
+<div data-role="page" id="start">
+    <div data-role="content" ng:controller="TestCtrl">
+        <select name="carType" data-native-menu="true" id="mo">
+            <option ng:repeat="t in options" value="{{t.id}}">{{t.id}}</option>
+        </select>
+        {{carType}}
+        <a href="" ngm:click="button1()">Button1</a>
+        <a href="" ngm:click="button2()">Button2</a>
 
     </div>
 </div>

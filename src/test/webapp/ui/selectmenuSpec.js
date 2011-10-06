@@ -184,6 +184,32 @@ define(function() {
                 expect(page.find(".ui-selectmenu li").length).toEqual(1);
             });
         });
+
+        it('should be able to display the label of a new entry when the options grow', function() {
+            loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
+                var page = frame.$('#start');
+                // Note: Be sure to use ng:repeat, as this is the most problematic case!
+                page.append(
+                    '<div data-role="content">' +
+                        '<select data-native-menu="true" name="myval" id="mysel"><option ng:repeat="e in list" value="{{e.key}}">{{e.value}}</option></select>' +
+                        '</div>');
+            });
+            runs(function() {
+                var page = testframe().$("#start");
+                var select = page.find("#mysel");
+                var scope = select.scope();
+                expect(scope.myval).toBeFalsy();
+                scope.list = [{key: 'key1', value:'value1'}];
+                scope.$root.$eval();
+                expect(scope.myval).toBe("key1");
+            });
+            waitsForAsync();
+            runs(function() {
+                var page = testframe().$("#start");
+                expect(page.find(".ui-select .ui-btn-text").text()).toEqual("value1");
+            });
+        });
+
     });
 
 });

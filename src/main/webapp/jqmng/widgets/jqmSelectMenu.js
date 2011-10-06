@@ -21,6 +21,9 @@ define([
             proxyUtil.removeSlavesWhenMasterIsRemoved(element, removeSlaves);
 
             scope.$watch(name, function(value) {
+                // The refresh is not enough: also
+                // update the internal widget data to adjust to the new number of options.
+                element.data('selectmenu').selectOptions = element.find( "option" );
                 element.selectmenu('refresh', true);
             });
             // update the value when the number of options change.
@@ -31,6 +34,7 @@ define([
                 if (oldCount !== newCount) {
                     oldCount = newCount;
                     element.trigger('change');
+
                 }
             });
         });

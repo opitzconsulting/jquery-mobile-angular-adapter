@@ -4,6 +4,8 @@ Changelog
 1.0.3
 -------------
 - Bugfix to styling of elements like <a>, ... when used with ng:if (see issue #10).
+- Bugfix for selects with options using `ng:repeat`: If the number of options changed
+  new values were not displayed be jquery mobile. Was broken by 1.0.2.
 
 
 1.0.2

@@ -146,17 +146,15 @@ should be shown via a transition lasting a defined amount of milliseconds (the v
 Usage: E.g. `<div ngm:fadein="700">asdf</div>`
 
 
-### Service $activePage
-Service to access and change the current page.
-A call without parameters returns the current page id, a call with parameters
-changes the current page.
+### Service $activate(pageId, transition, reverse)
+Service to change the current page.
 
 Parameters (see $.mobile.changePage)
 - pageId: Id of page to navigate to. The special page id "back" navigates back.
 - transition (optional): Transition to be used.
 - reverse (optional): If the transition should be executed in reverse style
 
-Usage: E.g. `$activePage('page2')`
+Usage: E.g. `$activate('page2')`
 
 ### Service $waitdialog
 The service `$waitdialog` allows the access to the jquery mobile wait dialog. It provides the following functions:

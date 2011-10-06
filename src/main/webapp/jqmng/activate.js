@@ -1,28 +1,20 @@
 define(['jquery', 'jqmng/globalScope'], function($, globalScope) {
     /*
      * Service for page navigation.
-     * A call without parameters returns the current page id.
      * Parameters (see $.mobile.changePage)
      * - pageId: Id of page to navigate to. The special page id "back" navigates back.
      * - transition (optional): Transition to be used.
      * - reverse (optional): If the transition should be executed in reverse style
      */
-    function activePage() {
-        if (arguments.length == 0) {
-            var currPage = $.mobile.activePage;
-            if (currPage) {
-                return currPage.attr('id');
-            } else {
-                return null;
-            }
+    function activate(pageId, transition, reverse) {
+        // set the page...
+        if (pageId == 'back') {
+            window.history.back();
         } else {
-            // set the page...
-            var pageId = arguments[0];
-            if (pageId == 'back') {
-                window.history.back();
-            } else {
-                $.mobile.changePage.apply($.mobile.changePage, arguments);
+            if (pageId.charAt(0)!=='#') {
+                pageId = '#'+pageId;
             }
+            $.mobile.changePage.call($.mobile, pageId, transition, reverse);
         }
     }
 
@@ -51,7 +43,7 @@ define(['jquery', 'jqmng/globalScope'], function($, globalScope) {
     });
 
     return {
-        activePage: activePage
+        activate: activate
     }
 
 });

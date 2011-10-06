@@ -57,7 +57,6 @@ define(function() {
                 // be sure to create the page2
                 var page2 = $("#page2").page();
                 page2scope = page2.scope();
-                var activePage = startPageScope.$service("$activePage");
             });
             waitsForAsync();
             runs(function() {
@@ -66,7 +65,7 @@ define(function() {
                     evalCount++;
                 });
                 evalCount = 0;
-                $.mobile.globalScope().$service("$activePage")("#page2");
+                $.mobile.globalScope().$service("$activate")("page2");
             });
             waitsForAsync();
             runs(function() {
@@ -94,11 +93,11 @@ define(function() {
             loadHtml('/jqmng/ui/test-fixture.html', instrumentPage);
             runs(function() {
                 var startPageScope = testframe().$("#start").scope();
-                var activePage = startPageScope.$service("$activePage");
+                var activate = startPageScope.$service("$activate");
                 reset();
                 expect(activateCallCount).toEqual(0);
                 expect(passivateCallCount).toEqual(0);
-                activePage("#page2");
+                activate("page2");
                 expect(activateCallCount).toEqual(1);
                 expect(activateThis.name).toEqual("Page2Controller");
                 expect(activatePrevScope.name).toEqual("StartController");
@@ -109,19 +108,19 @@ define(function() {
         });
 
         it('should call onActivate and onPassivate when the page is changed via back', function() {
-            var startPageScope, activePage;
+            var startPageScope, $activate;
             loadHtml('/jqmng/ui/test-fixture.html', instrumentPage);
             runs(function() {
                 startPageScope = testframe().$("#start").scope();
-                activePage = startPageScope.$service("$activePage");
-                activePage("#page2");
+                $activate = startPageScope.$service("$activate");
+                $activate("page2");
                 reset();
             });
             waitsForAsync();
             runs(function() {
                 expect(activateCallCount).toEqual(0);
                 expect(passivateCallCount).toEqual(0);
-                activePage("back");
+                $activate("back");
             });
             waitsForAsync();
             runs(function() {

@@ -60,7 +60,9 @@ define(function() {
                 window.$("head").append('<link rel="stylesheet" href="' + name + '.css"/>');
                 load('');
             } else {
-                var url = req.toUrl(name)+".css";
+                // remove the .js and add .css
+                var jsUrl = req.toUrl(name);
+                var url = jsUrl.substring(0, jsUrl.length-3)+".css";
                 get(url, function(content) {
                     data[name] = content;
                     load('');
@@ -71,7 +73,8 @@ define(function() {
         function write(pluginName, moduleName, write) {
             var text = data[moduleName];
             text = escapeCss(text);
-            write("$('head').append('<style type=\"text/css\">"+text+"</style>');\n");
+            text = "define('"+pluginName+"!"+moduleName+"',function() {$('head').append('<style type=\"text/css\">"+text+"</style>');});\n";
+            write(text);
         }
 
         return {

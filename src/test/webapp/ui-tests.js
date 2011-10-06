@@ -4,7 +4,7 @@
 define([
     'ui/compileIntegrationSpec',
     'ui/activatePassivateSpec',
-    'ui/activePageSpec',
+    'ui/activateSpec',
     'ui/angularUrlIntegrationSpec',
     'ui/buttonSpec',
     'ui/checkBoxSpec',

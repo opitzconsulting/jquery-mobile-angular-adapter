@@ -3,7 +3,7 @@ define([
     'angular',
     'jquery',
     'jqmng/globalScope',
-    'jqmng/activePage',
+    'jqmng/activate',
     'jqmng/waitDialog',
     'jqmng/event',
     'jqmng/fadein',
@@ -16,8 +16,8 @@ define([
     'jqmng/widgets/angularInput',
     'jqmng/widgets/angularSelect',
     'jqmng/widgets/angularUl',
-    'lib/css!jqmng/jqmng'
-], function(angular, $, globalScope, activePage, waitDialog) {
+    'jqmng/jqmngStyle'
+], function(angular, $, globalScope, activate, waitDialog) {
     // create global variables
     $.mobile.globalScope = globalScope.globalScope;
 
@@ -25,12 +25,12 @@ define([
     angular.service('$waitDialog', function() {
         return waitDialog;
     });
-    angular.service('$activePage', function() {
-        return activePage.activePage;
+    angular.service('$activate', function() {
+        return activate.activate;
     });
     return {
         globalScope: globalScope.globalScope,
-        activePage: activePage.activePage,
+        activate: activate.activate,
         waitDialog: waitDialog
     }
 });

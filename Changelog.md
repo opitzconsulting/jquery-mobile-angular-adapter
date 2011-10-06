@@ -8,7 +8,10 @@ Changelog
   new values were not displayed be jquery mobile. Was broken by 1.0.2.
 - Added a custom style to hide the angular validation popup (the red line around
   elements with validation errors still appears).
--
+- `$activePage` was renamed to `$activate` and does not return the current page any more when
+  called with no arguments. Furthermore, it does not more require the pageId to start with a `#`.
+  There changes were made to keep the API similar to the sencha-touch-angular-adapter.
+  If you have to access the current page, use `$.mobile.activePage`.
 
 1.0.2
 -------------

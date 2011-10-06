@@ -33,13 +33,8 @@ Test page during development.
 </script>
 
 <div data-role="page" id="start">
-    <div data-role="content" ng:controller="TestCtrl">
-        <select name="carType" data-native-menu="true" id="mo">
-            <option ng:repeat="t in options" value="{{t.id}}">{{t.id}}</option>
-        </select>
-        {{carType}}
-        <a href="" ngm:click="button1()">Button1</a>
-        <a href="" ngm:click="button2()">Button2</a>
+    <div data-role="content" >
+        <input type="text" name="test" ng:validate="number">
 
     </div>
 </div>

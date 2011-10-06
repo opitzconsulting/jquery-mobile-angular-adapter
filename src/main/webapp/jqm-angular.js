@@ -16,6 +16,7 @@ define([
     'jqmng/widgets/angularInput',
     'jqmng/widgets/angularSelect',
     'jqmng/widgets/angularUl',
+    'lib/css!jqmng/jqmng'
 ], function(angular, $, globalScope, activePage, waitDialog) {
     // create global variables
     $.mobile.globalScope = globalScope.globalScope;

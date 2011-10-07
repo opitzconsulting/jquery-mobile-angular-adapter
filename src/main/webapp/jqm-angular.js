@@ -9,6 +9,7 @@ define([
     'jqmng/fadein',
     'jqmng/if',
     'jqmng/paging',
+    'jqmng/sharedController',
     'jqmng/widgets/pageCompile',
     'jqmng/widgets/angularRepeat',
     'jqmng/widgets/angularButton',

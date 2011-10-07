@@ -5,5 +5,6 @@ define([
     'jqm-angular',
     'unit/arrayPagingSpec',
     'unit/iffSpec',
-    'unit/ifSpec'
+    'unit/ifSpec',
+    'unit/sharedControllerSpec'
 ]);

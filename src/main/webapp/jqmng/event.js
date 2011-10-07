@@ -45,21 +45,4 @@ define(['angular'], function(angular) {
         linkFn.$inject = ['$updateView'];
         return linkFn;
     });
-
-    /* A widget that reacts when the user presses the enter key.
-     */
-    angular.directive("ngm:enterkey", function(expression, element) {
-        var linkFn = function($updateView, element) {
-            var self = this;
-            element.bind('keypress', function(e) {
-                var key = e.keyCode || e.which;
-                if (key == 13) {
-                    var res = self.$tryEval(expression, element);
-                    $updateView();
-                }
-            });
-        };
-        linkFn.$inject = ['$updateView'];
-        return linkFn;
-    });
 });

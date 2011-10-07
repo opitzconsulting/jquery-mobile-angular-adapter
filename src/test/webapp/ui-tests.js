@@ -3,13 +3,11 @@
  */
 define([
     'ui/compileIntegrationSpec',
-    'ui/activatePassivateSpec',
     'ui/activateSpec',
     'ui/angularUrlIntegrationSpec',
     'ui/buttonSpec',
     'ui/checkBoxSpec',
     'ui/collapsibleSpec',
-    'ui/enterkeySpec',
     'ui/eventSpec',
     'ui/inputButtonSpec',
     'ui/inputSliderSpec',

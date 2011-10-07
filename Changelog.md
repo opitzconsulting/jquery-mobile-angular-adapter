@@ -10,8 +10,16 @@ Changelog
   elements with validation errors still appears).
 - `$activePage` was renamed to `$activate` and does not return the current page any more when
   called with no arguments. Furthermore, it does not more require the pageId to start with a `#`.
-  There changes were made to keep the API similar to the sencha-touch-angular-adapter.
   If you have to access the current page, use `$.mobile.activePage`.
+- `ngm:shared-controller` was added to share state between spearate pages
+- `onActivate` and `onPassivate` callbacks were removed. Use
+  `ngm:event="pagebeforeshow:myCallback()"` instead, and `ngm:shared-controller` for sharing sate between pages.
+- `ngm:enterKey` was removed. Please use a form with `ng:submit` (and `data-ajax=false`) for this.
+
+The changes to the `$activePage`, `onActivate` and `ngm:shared-controller` was made to have a more general
+solution that is also possible for sencha touch applications. By this, applications can easily switch between
+jquery mobile and sencha touch without changing the controller code.
+
 
 1.0.2
 -------------

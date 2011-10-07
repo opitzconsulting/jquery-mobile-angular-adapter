@@ -13,9 +13,6 @@ Automatically refreshs the jquery mobile widgets when the corresponding
 values in angular change.
 E.g. the select tag is enhanced by jquery mobile,
 and if someone changes it's value programmatically, the refresh-function needs to be called.
-This also applies to the `disabled` attribute.
-The integration between jquery mobile and angular watches for such changes in the model
-and automatically calls the refresh function.
 
 Finally provides special enhancements useful for mobile applications.
 
@@ -90,32 +87,26 @@ Any controller associated to the `body` tag will be part of the global scope.
 Every page of jquery mobile gets a separate scope. The `$eval` of the global scope only evaluates the currently active page,
 so there is no performance interaction between pages.
 
-For communicating between the pages,the global scope or the `onActivate` callbacks below may be used.
+For communicating between the pages use the `ngm:shared-controller` directive (see below).
 
 The global scope can be access via the function `$.mobile.globalScope` or via `$("body").scope()`.
 However, please use `this.$root` to access the global scope in your code. This simplifies testing!
 
-Callbacks for page changes
---------------
-On page change, the integration looks for a method named `onPassivate` in the
-current page scope. If the function exists it will
-be called with the scope of the new page as parameter.
-Afterwards, the function `onActivate` is searched for on the new scope
-and called with the old scope as parameter. By this, pages can commuicate with each other
-very easily.
-
-Note that for creating a function in a scope just assign a controller for that page,
-e.g. `<div data-role="page" ng:controller="MyController">`.
 
 
 Widgets, Directives and Services
 -----------
 
-### Directive ngm:click(handler)
-Special click handler that integrates with jquery mobile's `vclick` event and by this also reacts to touches.
-Also see `ngm:event` for the general case of binding a handler to events.
+### Directive ngm:shared-controller(name1:Controller1, name2:Controller2, ...)
+Mobile pages are small, so often a usecase is split up into multiple pages.
+To share common behaviour and state between those pages, this directive allows shared controllers.
 
-Usage: E.g. `<a href="#" ngm:click="myFn()">`
+The directive will create an own scope for every given controllers and store it
+in the variables as `name1`, `name2`, ....
+If the controller is used on more than one page, the instance of the controller is shared.
+
+Note that the shared controller have the full scope functionality, e.g. for dependecy injection
+or using `$watch`.
 
 ### Directive ngm:event(event1:handler1,event2:handler2,...)
 General event handler that integrates with jquery events, and also with jquery mobile events.
@@ -124,19 +115,18 @@ more events (see jQuery bind function). There may be more than one events/functi
 
 Usage: E.g. `<a href="#" ngm:event="swiperight:myFn()">`
 
+### Directive ngm:click(handler)
+Special click handler that integrates with jquery mobile's `vclick` event and by this also reacts to touches.
+Also see `ngm:event` for the general case of binding a handler to events.
+
+Usage: E.g. `<a href="#" ngm:click="myFn()">`
+
 ### Attribute Widget @ngm:if
 The attribute widget `@ngm:if` allows to add/remove an element to/from the dom, depending on an expression.
 This is especially useful at places where we cannot insert an `ng:switch` into the dom. E.g. jquery mobile
 does not allow elements between an `ul` and an `li` element.
 
 Usage: E.g. `<div ngm:if="myFlag">asdfasdf</div>`
-
-
-### Directive ngm:enterkey(handler)
-Special click handler that fires when the enter key is pressed.
-
-Usage: E.g. `<input type="submit" ngm:enterkey="myFn()">`
-
 
 ### Directive ngm:fadein
 For smooth fadings between `ngm:if` changes, there is also the directive `ngm:fadein`.
@@ -146,13 +136,12 @@ should be shown via a transition lasting a defined amount of milliseconds (the v
 Usage: E.g. `<div ngm:fadein="700">asdf</div>`
 
 
-### Service $activate(pageId, transition, reverse)
+### Service $activate(pageId, transition)
 Service to change the current page.
 
 Parameters (see $.mobile.changePage)
 - pageId: Id of page to navigate to. The special page id "back" navigates back.
 - transition (optional): Transition to be used.
-- reverse (optional): If the transition should be executed in reverse style
 
 Usage: E.g. `$activate('page2')`
 

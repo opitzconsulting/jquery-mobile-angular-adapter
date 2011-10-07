@@ -27061,9 +27061,8 @@ define('jqmng/activate',['jquery', 'jqmng/globalScope'], function($, globalScope
      * Parameters (see $.mobile.changePage)
      * - pageId: Id of page to navigate to. The special page id "back" navigates back.
      * - transition (optional): Transition to be used.
-     * - reverse (optional): If the transition should be executed in reverse style
      */
-    function activate(pageId, transition, reverse) {
+    function activate(pageId, transition) {
         // set the page...
         if (pageId == 'back') {
             window.history.back();
@@ -27071,33 +27070,9 @@ define('jqmng/activate',['jquery', 'jqmng/globalScope'], function($, globalScope
             if (pageId.charAt(0)!=='#') {
                 pageId = '#'+pageId;
             }
-            $.mobile.changePage.call($.mobile, pageId, transition, reverse);
+            $.mobile.changePage.call($.mobile, pageId, transition);
         }
     }
-
-    $('div').live('pagebeforehide', function(event, ui) {
-        var currPageScope = $(event.target).scope();
-        if (!currPageScope) {
-            return;
-        }
-        var nextPage = ui.nextPage;
-        var nextPageScope = nextPage && nextPage.scope();
-        if (currPageScope.onPassivate) {
-            currPageScope.onPassivate.call(currPageScope, nextPageScope);
-        }
-    });
-
-    $('div').live('pagebeforeshow', function(event, ui) {
-        var currPageScope = $(event.target).scope();
-        if (!currPageScope) {
-            return;
-        }
-        var prevPage = ui.prevPage;
-        var prevPageScope = prevPage && prevPage.scope();
-        if (currPageScope.onActivate) {
-            currPageScope.onActivate.call(currPageScope, prevPageScope);
-        }
-    });
 
     return {
         activate: activate
@@ -27266,23 +27241,6 @@ define('jqmng/event',['angular'], function(angular) {
                         });
                     })(eventType);
             }
-        };
-        linkFn.$inject = ['$updateView'];
-        return linkFn;
-    });
-
-    /* A widget that reacts when the user presses the enter key.
-     */
-    angular.directive("ngm:enterkey", function(expression, element) {
-        var linkFn = function($updateView, element) {
-            var self = this;
-            element.bind('keypress', function(e) {
-                var key = e.keyCode || e.which;
-                if (key == 13) {
-                    var res = self.$tryEval(expression, element);
-                    $updateView();
-                }
-            });
         };
         linkFn.$inject = ['$updateView'];
         return linkFn;
@@ -27490,6 +27448,56 @@ define('jqmng/paging',['jquery', 'angular', 'jqmng/globalScope'], function($, an
         return pagedList;
 
     };
+});
+
+define('jqmng/sharedController',['angular'], function(angular) {
+    function findCtrlFunction(name) {
+        var parts = name.split('.');
+        var base = window;
+        var part;
+        for (var i = 0; i < parts.length; i++) {
+            part = parts[i];
+            base = base[part];
+        }
+        return base;
+    }
+
+    function sharedCtrl(rootScope, name) {
+        var ctrl = findCtrlFunction(name);
+        var instance = rootScope[name];
+        if (!instance) {
+            instance = rootScope.$new(ctrl);
+            rootScope[name] = instance;
+        }
+        return instance;
+    }
+
+    function parseSharedControllersExpression(expression) {
+        var pattern = /(.*?):(.*?)($|,)/g;
+        var match;
+        var hasData = false;
+        var controllers = {}
+        while (match = pattern.exec(expression)) {
+            hasData = true;
+            controllers[match[1]] = match[2];
+        }
+        if (!hasData) {
+            throw "Expression " + expression + " needs to have the syntax <name>:<controller>,...";
+        }
+        return controllers;
+    }
+
+    angular.directive('ngm:shared-controller', function(expression) {
+        this.scope(true);
+        var controllers = parseSharedControllersExpression(expression);
+        return function(element) {
+            var scope = this;
+            for (var name in controllers) {
+                scope[name] = sharedCtrl(scope.$root, controllers[name]);
+            }
+        }
+
+    });
 });
 
 /**
@@ -28221,6 +28229,7 @@ define('jqm-angular',[
     'jqmng/fadein',
     'jqmng/if',
     'jqmng/paging',
+    'jqmng/sharedController',
     'jqmng/widgets/pageCompile',
     'jqmng/widgets/angularRepeat',
     'jqmng/widgets/angularButton',

@@ -37,7 +37,7 @@ Test page during development.
 
 <div data-role="page" id="start" ng:controller="TestController">
     <div data-role="content">
-        <select data-native-menu="false" name="hallo">
+        <select data-native-menu="false" name="hallo" ng:repeat="l in list">
             <option ng:repeat="l in list">{{l}}</option>
         </select>
         <a href="" data-role="button" ngm:click="change()">Change</a>

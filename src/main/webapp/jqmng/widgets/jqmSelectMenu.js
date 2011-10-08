@@ -1,4 +1,4 @@
-define([], function() {
+define(['jquery'], function($) {
 
     // selectmenu may create:
     // - parent element

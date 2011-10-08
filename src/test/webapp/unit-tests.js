@@ -6,5 +6,6 @@ define([
     'unit/arrayPagingSpec',
     'unit/iffSpec',
     'unit/ifSpec',
-    'unit/sharedControllerSpec'
+    'unit/sharedControllerSpec',
+    'unit/repeatSpec'
 ]);

@@ -2,8 +2,12 @@ define(['jqmng/widgets/widgetProxyUtil'], function(proxyUtil) {
     /**
      * Modify original ng:repeat so that all created items directly have a parent
      * (old style repeat). This is slower, however simplifies the integration with jquery mobile a lot!
-     * This will furthermore create the events "elementsCreated" and "elementsDeleted" if
+     * <p>
+     * This will furthermore create the events "elementsAdded" and "elementsRemoved" if
      * elements were added or deleted (only once per eval).
+     * <p>
+     * This also takes care for jquery widgets wrapping themselves into other elements
+     * (e.g. setting a div as new parent).
      */
     angular.widget('@ng:repeat', function(expression, element) {
         element.removeAttr('ng:repeat');
@@ -26,6 +30,7 @@ define(['jqmng/widgets/widgetProxyUtil'], function(proxyUtil) {
             valueIdent = match[3] || match[1];
             keyIdent = match[2];
             var children = [], currentScope = this;
+            var parent = iterStartElement.parent();
             this.$onEval(function() {
                 var index = 0,
                     childCount = children.length,
@@ -62,8 +67,15 @@ define(['jqmng/widgets/widgetProxyUtil'], function(proxyUtil) {
                             linker(childScope, function(clone) {
                                 clone.attr('ng:repeat-index', index);
 
-                                //temporarily preserve old way for option element
-                                lastIterElement.after(clone);
+                                // Always use old way for jquery mobile, so
+                                // that new elements instantly have a connection to the document root.
+                                // Some jquery mobile widgets add new parents.
+                                // Compensate this for adding.
+                                var appendPosition = lastIterElement;
+                                while (appendPosition.length>0 && appendPosition.parent()[0]!==parent[0]) {
+                                    appendPosition = appendPosition.parent();
+                                }
+                                appendPosition.after(clone);
                                 lastIterElement = clone;
                             });
                             addedElements.push(lastIterElement);
@@ -81,17 +93,14 @@ define(['jqmng/widgets/widgetProxyUtil'], function(proxyUtil) {
                     childElement.remove();
                 }
 
-                var parent = angular.element(iterStartElement.parent());
                 if (addedElements.length>0) {
                     parent.trigger('elementsAdded', addedElements);
-                    parent.trigger('create');
                 } else if (removedElements.length>0) {
                     parent.trigger('elementsRemoved', removedElements);
                 }
             }, iterStartElement);
         };
     });
-
 
 
 });

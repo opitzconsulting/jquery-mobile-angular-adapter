@@ -69,6 +69,13 @@ define(['jquery', 'angular', 'jqmng/globalScope'], function($, angular, globalSc
         page.trigger("pageshow", data);
     });
 
+    /**
+     * Create jquery elements when elements were added to the dom.
+     */
+    $(document).bind('elementsAdded', function(event) {
+        $(event.target).trigger('create');
+    });
+
     var currScope = null;
     // The eval function of the global scope should eval
     // the active scope only.

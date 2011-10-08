@@ -30,8 +30,13 @@ Test page during development.
         this.list = [1,2];
 
         this.change = function() {
-            this.list = [3];
+            this.list.push(this.list.length);
         }
+
+        this.remove = function() {
+            this.list.pop();
+        }
+
     }
 </script>
 
@@ -41,6 +46,7 @@ Test page during development.
             <option ng:repeat="l in list">{{l}}</option>
         </select>
         <a href="" data-role="button" ngm:click="change()">Change</a>
+        <a href="" data-role="button" ngm:click="remove()">Remove</a>
         <p>
             {{hallo}}
         </p>

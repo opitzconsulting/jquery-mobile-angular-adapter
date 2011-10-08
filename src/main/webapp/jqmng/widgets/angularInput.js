@@ -42,15 +42,17 @@ define([
                 }
                 var res = origBinder();
                 // Watch the name and refresh the widget if needed
-                scope.$watch(name, function(value) {
-                    var data = element.data();
-                    for (var key in data) {
-                        var widget = data[key];
-                        if (widget.refresh) {
-                            element[key]("refresh");
+                if (name) {
+                    scope.$watch(name, function(value) {
+                        var data = element.data();
+                        for (var key in data) {
+                            var widget = data[key];
+                            if (widget.refresh) {
+                                element[key]("refresh");
+                            }
                         }
-                    }
-                });
+                    });
+                }
                 return res;
             };
         });

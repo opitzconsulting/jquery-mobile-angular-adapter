@@ -1,7 +1,6 @@
 define(function() {
 
     describe("button", function() {
-
         it('should allow clicks via ng:click', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
@@ -20,7 +19,6 @@ define(function() {
             });
 
         });
-
 
         it('should use the disabled attribute', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
@@ -63,7 +61,6 @@ define(function() {
                 expect(content.children('div').length).toEqual(1);
             });
         });
-
     });
 
 });

@@ -79,7 +79,6 @@ define(function() {
                 expect(li.hasClass('ui-li')).toBeTruthy();
             });
         });
-
         it('should be removable when ng:repeat shrinks', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');

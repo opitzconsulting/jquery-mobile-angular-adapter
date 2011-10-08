@@ -14,7 +14,7 @@ define([
     'jqmng/widgets/angularRepeat',
     'jqmng/widgets/angularInput',
     'jqmng/widgets/angularSelect',
-    'jqmng/widgets/angularUl',
+    'jqmng/widgets/disabledHandling',
     'jqmng/widgets/jqmButton',
     'jqmng/widgets/jqmListView',
     'jqmng/widgets/jqmSelectMenu',

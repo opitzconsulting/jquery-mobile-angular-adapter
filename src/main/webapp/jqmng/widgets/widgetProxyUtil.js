@@ -69,58 +69,8 @@ define(['jquery', 'angular', 'jqmng/globalScope'], function($, angular, globalSc
         });
     }
 
-    var afterCompileQueue = [];
-
-    function executeAfterCompileQueue() {
-        while (afterCompileQueue.length>0) {
-            var callback = afterCompileQueue.shift();
-            callback();
-        }
-    }
-
-    function afterCompile(callback) {
-        afterCompileQueue.push(callback);
-    }
-
-    var fireJqmCreateEventList = [];
-
-    function fireJqmCreateEvents() {
-        // Fire the event for the parents. Needed by jquery mobile to work.
-        // Fire the event for every parent only once...
-        var parents = [], element, parent;
-        for (var i=0; i<fireJqmCreateEventList.length; i++) {
-            element = fireJqmCreateEventList[i];
-            parent = element.parent();
-            if (!parent.fireJqmCreateEvents) {
-                parents.push(parent);
-                parent.fireJqmCreateEvents = true;
-            }
-        }
-        for (var i=0; i<parents.length; i++) {
-            parent = parents[i];
-            delete parent.fireJqmCreateEvents;
-            $(parent).trigger('create');
-        }
-
-        fireJqmCreateEventList = [];
-    }
-
-    function fireJqmCreateEvent(element) {
-        fireJqmCreateEventList.push(element);
-    }
-
-    globalScope.onCreate(function(scope) {
-        scope.$onEval(99999, function() {
-            executeAfterCompileQueue();
-            fireJqmCreateEvents();
-        });
-    });
-
-
     return {
         createAngularDirectiveProxy: createAngularDirectiveProxy,
-        createAngularWidgetProxy: createAngularWidgetProxy,
-        afterCompile: afterCompile,
-        fireJqmCreateEvent: fireJqmCreateEvent
+        createAngularWidgetProxy: createAngularWidgetProxy
     }
 });

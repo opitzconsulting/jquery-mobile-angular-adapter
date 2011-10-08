@@ -24,13 +24,26 @@ Test page during development.
 </head>
 <body>
 
+<script>
 
+    function TestController() {
+        this.list = [1,2];
 
-<div data-role="page" id="start">
-    <div data-role="content" ng:init="list = [1,2]">
-        <div ng:repeat="item in [1]">
-        <input name="mysel" id="mysel" type="checkbox">{{mysel}}<label for="mysel" id="mylab">Entry</label>
-        </div>
+        this.change = function() {
+            this.list = [3];
+        }
+    }
+</script>
+
+<div data-role="page" id="start" ng:controller="TestController">
+    <div data-role="content">
+        <select data-native-menu="false" name="hallo">
+            <option ng:repeat="l in list">{{l}}</option>
+        </select>
+        <a href="" data-role="button" ngm:click="change()">Change</a>
+        <p>
+            {{hallo}}
+        </p>
     </div>
 </div>
 

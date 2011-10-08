@@ -1,34 +1,4 @@
-define([
-    'jqmng/widgets/widgetProxyUtil',
-    'jqmng/widgets/disabledHandling'
-], function(proxyUtil) {
-
-    function compileSelectMenu(element, name) {
-        var scope = this;
-        // The selectmenu needs access to the page,
-        // so we can not create it until after the eval cycle!
-        proxyUtil.afterCompile(function() {
-            element.selectmenu();
-
-            // update the value when the number of options change.
-            // needed if the default values changes.
-            var oldCount;
-            scope.$onEval(999999, function() {
-                var newCount = element[0].childNodes.length;
-                if (oldCount !== newCount) {
-                    oldCount = newCount;
-                    element.trigger('change');
-
-                }
-            });
-        });
-    }
-
-    function isSelectMenu(element) {
-        return element.filter($.mobile.selectmenu.prototype.options.initSelector)
-            .not(":jqmData(role='none'), :jqmData(role='nojs')").length > 0;
-    }
-
+define([], function() {
 
     // selectmenu may create:
     // - parent element
@@ -47,9 +17,23 @@ define([
         screen && screen.remove();
         listbox && listbox.remove();
     };
-
-    return {
-        compileSelectMenu: compileSelectMenu,
-        isSelectMenu: isSelectMenu
+    var oldCreate = fn._create;
+    fn._create = function() {
+        var res = oldCreate.apply(this, arguments);
+        var self = this;
+        this.element.bind('elementsAdded elementsRemoved', function(event) {
+            event.stopPropagation();
+            // refresh when the number of options change.
+            self.refresh();
+            // The default element may have changed, save it into the model
+            self.element.trigger('change');
+        });
+    };
+    var oldRefresh = fn.refresh;
+    fn.refresh = function() {
+        // The refresh is not enough: also
+        // update the internal widget data to adjust to the new number of options.
+        this.selectOptions = this.element.find( "option" );
+        return oldRefresh.apply(this, arguments);
     }
 });

@@ -1,31 +1,15 @@
 define([
     'jqmng/widgets/widgetProxyUtil',
     'jqmng/widgets/disabledHandling'
-], function(proxyUtil, disabledHandling) {
-    disabledHandling.selectmenu = true;
+], function(proxyUtil) {
 
     function compileSelectMenu(element, name) {
         var scope = this;
         // The selectmenu needs access to the page,
         // so we can not create it until after the eval cycle!
         proxyUtil.afterCompile(function() {
-            // The selectmenu widget creates a parent tag. This needs
-            // to be deleted when the select tag is deleted from the dom.
-            // Furthermore, it creates ui-selectmenu and ui-selectmenu-screen divs, as well as new dialogs
-            var removeSlaves;
-            var newElements = proxyUtil.recordDomAdditions(".ui-selectmenu,.ui-selectmenu-screen,:jqmData(role='dialog')", function() {
-                element.selectmenu();
-                removeSlaves = element.parent();
-            });
-            removeSlaves = removeSlaves.add(newElements);
-            proxyUtil.removeSlavesWhenMasterIsRemoved(element, removeSlaves);
+            element.selectmenu();
 
-            scope.$watch(name, function(value) {
-                // The refresh is not enough: also
-                // update the internal widget data to adjust to the new number of options.
-                element.data('selectmenu').selectOptions = element.find( "option" );
-                element.selectmenu('refresh', true);
-            });
             // update the value when the number of options change.
             // needed if the default values changes.
             var oldCount;
@@ -44,6 +28,25 @@ define([
         return element.filter($.mobile.selectmenu.prototype.options.initSelector)
             .not(":jqmData(role='none'), :jqmData(role='nojs')").length > 0;
     }
+
+
+    // selectmenu may create:
+    // - parent element
+    var fn = $.mobile.selectmenu.prototype;
+    var oldDestroy = fn.destroy;
+    fn.destroy = function() {
+        // Destroy the widget instance first to prevent
+        // a stack overflow.
+        var parent = this.element.closest(".ui-select");
+        var menuPage = this.menuPage;
+        var screen = this.screen;
+        var listbox = this.listbox;
+        oldDestroy.apply(this, arguments);
+        parent && parent.remove();
+        menuPage && menuPage.remove();
+        screen && screen.remove();
+        listbox && listbox.remove();
+    };
 
     return {
         compileSelectMenu: compileSelectMenu,

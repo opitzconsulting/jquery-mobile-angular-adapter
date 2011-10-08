@@ -10,8 +10,12 @@ Test page during development.
 
     <link rel="stylesheet" href="lib/jquery.mobile-1.0b3-oc1.css"/>
 
+
     <script src="lib/jquery-1.6.2.js"></script>
     <script src="lib/angular-0.9.19.js"></script>
+    <!--
+    <script src="lib/jquery.mobile.noinit.js"></script>
+    -->
     <script src="lib/jquery.mobile-1.0b3-oc1.js"></script>
     <script src="lib/require.js" data-main="jqm-angular"></script>
     <script>
@@ -20,22 +24,13 @@ Test page during development.
 </head>
 <body>
 
-<script>
-    function TestCtrl() {
-        this.button1 = function() {
-            this.options = [{id:1},{id:2},{id:3}];
-        }
-        this.button2 = function() {
-            this.options = [{id:'a'},{id:'b'},{id:'c'},{id:'d'}];
-        }
-    }
 
-</script>
 
 <div data-role="page" id="start">
-    <div data-role="content" >
-        <input type="text" name="test" ng:validate="number">
-
+    <div data-role="content" ng:init="list = [1,2]">
+        <div ng:repeat="item in [1]">
+        <input name="mysel" id="mysel" type="checkbox">{{mysel}}<label for="mysel" id="mylab">Entry</label>
+        </div>
     </div>
 </div>
 

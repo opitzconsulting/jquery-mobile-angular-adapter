@@ -70,6 +70,7 @@ jasmine.ui.log = function(msg) {
         }
         return testwindow;
     };
+    window.testwindow = window.testframe;
 
 })(window);
 
@@ -675,7 +676,7 @@ jasmine.ui.log = function(msg) {
         if (callTime != 'afterContent') {
             return null;
         }
-        if (!(window.$ && window.$.fn.animationComplete)) {
+        if (!(window.$ && window.$.fn && window.$.fn.animationComplete)) {
             return;
         }
         var oldFn = window.$.fn.animationComplete;
@@ -705,7 +706,7 @@ jasmine.ui.log = function(msg) {
         if (callTime != 'afterContent') {
             return null;
         }
-        if (!(window.$ && window.$.fn.animationComplete)) {
+        if (!(window.$ && window.$.fn && window.$.fn.animationComplete)) {
             return;
         }
         window.transitionCount = 0;

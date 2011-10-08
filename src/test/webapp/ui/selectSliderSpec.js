@@ -96,7 +96,6 @@ define(function() {
                 expect(content.children('.ui-slider').length).toEqual(1);
             });
         });
-
     });
 
 });

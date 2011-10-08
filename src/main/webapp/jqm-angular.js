@@ -12,11 +12,13 @@ define([
     'jqmng/sharedController',
     'jqmng/widgets/pageCompile',
     'jqmng/widgets/angularRepeat',
-    'jqmng/widgets/angularButton',
-    'jqmng/widgets/angularDiv',
     'jqmng/widgets/angularInput',
     'jqmng/widgets/angularSelect',
     'jqmng/widgets/angularUl',
+    'jqmng/widgets/jqmButton',
+    'jqmng/widgets/jqmListView',
+    'jqmng/widgets/jqmSelectMenu',
+    'jqmng/widgets/jqmSlider',
     'jqmng/jqmngStyle'
 ], function(angular, $, globalScope, activate, waitDialog) {
     // create global variables

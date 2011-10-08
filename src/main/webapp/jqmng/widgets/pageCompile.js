@@ -6,10 +6,37 @@ define(['jquery', 'angular', 'jqmng/globalScope'], function($, angular, globalSc
     // so we can intercept them.
     $.mobile.page.prototype.widgetEventPrefix = 'jqmngpage';
 
+    /**
+     * This is a copy of the degrade inputs plugin of jquery
+     * mobile. We need it here to execute this replacement
+     * at the right time, i.e. before we do the page compile with
+     * angular.
+     * @param targetPage
+     */
+    function degradeInputs(targetPage) {
+        var page = targetPage.data( "page" ),
+            o = page.options;
+
+        // degrade inputs to avoid poorly implemented native functionality
+        targetPage.find( "input" ).not( o.keepNative ).each(function() {
+            var $this = $( this ),
+                type = this.getAttribute( "type" ),
+                optType = o.degradeInputs[ type ] || "text";
+
+            if ( o.degradeInputs[ type ] ) {
+                $this.replaceWith(
+                    $( "<div>" ).html( $this.clone() ).html()
+                        .replace( /\s+type=["']?\w+['"]?/, " type=\"" + optType + "\" data-" + $.mobile.ns + "type=\"" + type + "\" " )
+                );
+            }
+        });
+    }
+
     $('div').live('jqmngpagecreate', function(event) {
         var page = $(event.target);
         var parentScope = globalScope.globalScope();
         var childScope = angular.scope(parentScope);
+        degradeInputs(page);
         angular.compile(page)(childScope);
         parentScope.$eval();
         // The second pagecreate does only initialize

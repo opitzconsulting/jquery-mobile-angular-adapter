@@ -69,62 +69,6 @@ define(['jquery', 'angular', 'jqmng/globalScope'], function($, angular, globalSc
         });
     }
 
-    /**
-     * Removes all elements from list1 that are contained in list2
-     * and returns a new list.
-     * @param list1
-     * @param list2
-     */
-    function minusArray(list1, list2) {
-        var res = [];
-        // temporarily add marker...
-        for (var i=0; i<list2.length; i++) {
-            list2[i].diffMarker = true;
-        }
-        for (var i=0; i<list1.length; i++) {
-            if (!list1[i].diffMarker) {
-                res.push(list1[i]);
-            }
-        }
-        for (var i=0; i<list2.length; i++) {
-            delete list2[i].diffMarker;
-        }
-        return res;
-    }
-
-    function recordDomAdditions(selector, callback) {
-        var oldState = $(selector);
-        callback();
-        var newState = $(selector);
-        return minusArray(newState, oldState);
-    }
-
-    var garbageCollector = [];
-
-    function isConnectedToDocument(element) {
-        var rootElement = document.documentElement;
-        while (element!==null && element!==rootElement) {
-            element = element.parentNode;
-        }
-        return element===rootElement;
-    }
-
-    function removeSlaveElements() {
-        var rootElement = document.documentElement;
-        for (var i=0; i<garbageCollector.length; i++) {
-            var entry = garbageCollector[i];
-            if (!isConnectedToDocument(entry.master[0])) {
-                entry.slaves.remove();
-                garbageCollector.splice(i, 1);
-                i--;
-            }
-        }
-    }
-
-    function removeSlavesWhenMasterIsRemoved(master, slaves) {
-        garbageCollector.push({master: master, slaves:slaves});
-    }
-
     var afterCompileQueue = [];
 
     function executeAfterCompileQueue() {
@@ -167,7 +111,6 @@ define(['jquery', 'angular', 'jqmng/globalScope'], function($, angular, globalSc
 
     globalScope.onCreate(function(scope) {
         scope.$onEval(99999, function() {
-            removeSlaveElements();
             executeAfterCompileQueue();
             fireJqmCreateEvents();
         });
@@ -175,10 +118,8 @@ define(['jquery', 'angular', 'jqmng/globalScope'], function($, angular, globalSc
 
 
     return {
-        recordDomAdditions: recordDomAdditions,
         createAngularDirectiveProxy: createAngularDirectiveProxy,
         createAngularWidgetProxy: createAngularWidgetProxy,
-        removeSlavesWhenMasterIsRemoved: removeSlavesWhenMasterIsRemoved,
         afterCompile: afterCompile,
         fireJqmCreateEvent: fireJqmCreateEvent
     }

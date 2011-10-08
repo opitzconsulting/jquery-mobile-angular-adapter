@@ -1,12 +1,6 @@
 define([
     'jqmng/widgets/widgetProxyUtil'
 ], function(widgetProxyUtil) {
-    /**
-     * Binds the enabled/disabled handler of angular and jquery mobile together,
-     * for the jqm widgets that are in jqmWidgetDisabledHandling.
-     */
-    var jqmWidgetDisabledHandling = {};
-
     widgetProxyUtil.createAngularDirectiveProxy('ng:bind-attr', function(expression) {
         var regex = /([^:{'"]+)/;
         var attr = regex.exec(expression)[1];
@@ -28,7 +22,8 @@ define([
                         var jqmOperation = value?"disable":"enable";
                         var data = element.data();
                         for (var key in data) {
-                            if (typeof key === 'string' && jqmWidgetDisabledHandling[key]) {
+                            var widget = data[key];
+                            if (widget[jqmOperation]) {
                                 element[key](jqmOperation);
                             }
                         }
@@ -37,6 +32,4 @@ define([
             }
         }
     });
-
-    return jqmWidgetDisabledHandling;
 });

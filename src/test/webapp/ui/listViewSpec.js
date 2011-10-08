@@ -105,7 +105,7 @@ define(function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 page.append('<div data-role="content" ng:init="mylist = [1,2]">' +
-                    '<ul data-role="listview" ng:repeat="item in mylist">' +
+                    '<ul data-role="listview" ng:repeat="item in mylist" id="list{{$index}}">' +
                     '<li>Test' +
                     '<ul><li>Item 2.1</li><li>Item 2.2</li></ul>' +
                     '</li></ul>' +

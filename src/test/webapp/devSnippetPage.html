@@ -27,29 +27,19 @@ Test page during development.
 <script>
 
     function TestController() {
-        this.list = [1,2];
-
-        this.change = function() {
-            this.list.push(this.list.length);
-        }
-
-        this.remove = function() {
-            this.list.pop();
-        }
+        this.list = [1,2,3,4,5,6,7,8,9,10,11];
 
     }
 </script>
 
 <div data-role="page" id="start" ng:controller="TestController">
     <div data-role="content">
-        <select data-native-menu="false" name="hallo" ng:repeat="l in list">
-            <option ng:repeat="l in list">{{l}}</option>
-        </select>
-        <a href="" data-role="button" ngm:click="change()">Change</a>
-        <a href="" data-role="button" ngm:click="remove()">Remove</a>
-        <p>
-            {{hallo}}
-        </p>
+        <ul data-role="listview">
+            <li ng:repeat="l in list.$paged()">{{l}}</li>
+            <li ngm:if="list.$paged().hasMorePages()">
+                <a href="" ngm:click="list.$paged().loadNextPage()">...</a>
+            </li>
+        </ul>
     </div>
 </div>
 

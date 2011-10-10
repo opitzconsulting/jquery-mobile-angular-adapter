@@ -13,7 +13,7 @@
     <script src="lib/require.js" data-main="unit-tests"></script>
     <script>
         require.s.contexts._.jQueryCheck();
-        require.ready(function() {
+        require(['lib/domReady!'], function(doc) {
             jasmine.getEnv().addReporter(new jasmine.TrivialReporter());
             jasmine.getEnv().execute();
         });

@@ -264,7 +264,7 @@ jasmine.ui.log = function(msg) {
         function callListeners() {
             // Only use the load events when require-js is not used.
             // Otherwise we use the ready-callback from require-js.
-            if (!fr.define) {
+            if (!addRequireJsSupport(fr)) {
                 callInstrumentListeners(fr, 'afterContent');
             }
         }
@@ -303,11 +303,21 @@ jasmine.ui.log = function(msg) {
      * when everything is loaded, but the ready signal was not yet sent.
      */
     function addRequireJsSupport(fr) {
-        fr.require = {
-          ready: function() {
-              callInstrumentListeners(fr, 'afterContent');
-          }
-        };
+        if (!fr.require) {
+            return false;
+        }
+        if (fr.require.resourcesDone) {
+            callInstrumentListeners(fr, 'afterContent');
+        } else {
+            var oldResourcesReady = fr.require.resourcesReady;
+            fr.require.resourcesReady = function(ready) {
+                if (ready) {
+                    callInstrumentListeners(fr, 'afterContent');
+                }
+                return oldResourcesReady.apply(this, arguments);
+            };
+        }
+        return true;
     }
 
     window.instrument = function(fr) {
@@ -324,7 +334,6 @@ jasmine.ui.log = function(msg) {
             });
             callInstrumentListeners(fr, 'beforeContent');
             addLoadEventListener(fr);
-            addRequireJsSupport(fr);
 
         } catch (ex) {
             fr.loadHtmlError = ex;

@@ -20,6 +20,9 @@ define(function() {
             changePageSpy.reset();
             scope.$eval("$activate(false, 'firstPage', 'secondPage')");
             expect(changePageSpy).toHaveBeenCalledWith('#secondPage', undefined);
+            changePageSpy.reset();
+            scope.$eval("$activate('firstPage2')");
+            expect(changePageSpy).toHaveBeenCalledWith('#firstPage2', undefined);
         });
 
         it('should be able to change to page using the $activate expression and promises', function() {

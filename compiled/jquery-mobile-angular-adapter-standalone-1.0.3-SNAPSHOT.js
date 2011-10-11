@@ -27082,6 +27082,11 @@ define('jqmng/activate',['jquery', 'angular'], function($, angular) {
      * @param falseCase
      */
     angular.Object.activate = function(self, result, trueCase, falseCase) {
+        if (arguments.length===2) {
+            // used without the test.
+            activate(result);
+            return;
+        }
         if (result && result.then) {
             result.then(function() {
                 activate(trueCase);

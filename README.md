@@ -174,6 +174,8 @@ Where result is some result (e.g. that of an action in a controller). If result 
 to the `successPage`. Otherwise, this navigates to the `errorPage`.
 The result can also be a promise, so that the navigation is not executed until the promise is resolved or rejected.
 
+Alternatively, this can also be used for unconditional navigation: `$activate('newPage')`.
+
 
 ### Paging for lists
 Lists can be paged in the sense that more entries can be additionally loaded. By "loading" we mean the

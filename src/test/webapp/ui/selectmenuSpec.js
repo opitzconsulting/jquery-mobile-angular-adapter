@@ -71,6 +71,23 @@ define(function() {
             });
         });
 
+        it('should save the default ui value into the model when using ng:repeat in the options', function() {
+            loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
+                var page = frame.$('#start');
+                page.append(
+                    '<div data-role="content" ng:init="l = [\'v1\',\'v2\']">' +
+                        '<select name="mysel2" id="mysel2" data-native-menu="true"><option ng:repeat="e in l" value="{{e}}">{{e}}</option></select>' +
+                        '</div>');
+            });
+            runs(function() {
+                var page = testframe().$("#start");
+                var select = page.find("#mysel2");
+                expect(select[0].value).toEqual("v1");
+                var scope = select.scope();
+                expect(scope.$get('mysel2')).toEqual("v1");
+            });
+        });
+
         it('should save the model value into the ui', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');

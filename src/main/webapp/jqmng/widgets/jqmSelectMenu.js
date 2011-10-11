@@ -28,6 +28,9 @@ define(['jquery'], function($) {
             // The default element may have changed, save it into the model
             self.element.trigger('change');
         });
+        // Initially fire a change event. Needed when the options are built using
+        // ng:repeat.
+        self.element.trigger('change');
     };
     var oldRefresh = fn.refresh;
     fn.refresh = function() {

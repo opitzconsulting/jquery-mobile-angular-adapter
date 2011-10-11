@@ -11,11 +11,14 @@ Changelog
 - `$activePage` was renamed to `$activate` and does not return the current page any more when
   called with no arguments. Furthermore, it does not more require the pageId to start with a `#`.
   If you have to access the current page, use `$.mobile.activePage`.
+- Added `$activate(result, successPage, errorPage)` function in expressions. By this, page navigation can be delegated to the markup,
+  and removed from the controllers. E.g. use `ngm:click="$activate(myAction(),'successPage','errorPage')"`.
 - `ngm:shared-controller` was added to share state between spearate pages
 - `onActivate` and `onPassivate` callbacks were removed. Use
   `ngm:event="pagebeforeshow:myCallback()"` instead, and `ngm:shared-controller` for sharing sate between pages.
 - `ngm:enterKey` was removed. Please use a form with `ng:submit` (and `data-ajax=false`) for this.
 - `<input type="range">` did produce two sliders. Bug was introduced in 1.0.2.
+- Added
 
 The changes to the `$activePage`, `onActivate` and `ngm:shared-controller` was made to have a more general
 solution that is also possible for sencha touch applications. By this, applications can easily switch between

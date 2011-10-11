@@ -11,7 +11,7 @@ define(['angular'], function(angular) {
      */
     angular.directive("ngm:event", function(expression, element) {
         var eventHandlers = {};
-        var pattern = /(.*?):(.*?)($|,)/g;
+        var pattern = /(.*?):([^:]+)($|,)/g;
         var match;
         var hasData = false;
         while (match = pattern.exec(expression)) {

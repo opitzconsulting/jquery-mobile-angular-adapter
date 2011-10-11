@@ -3,7 +3,6 @@
  */
 define([
     'ui/compileIntegrationSpec',
-    'ui/activateSpec',
     'ui/angularUrlIntegrationSpec',
     'ui/buttonSpec',
     'ui/checkBoxSpec',

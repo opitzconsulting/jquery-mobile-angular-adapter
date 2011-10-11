@@ -62,6 +62,27 @@ define(function() {
 
             });
         });
+
+        it('should work with function calls in the expression', function() {
+            loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
+                frame.$("#start").before('<div id="page1" data-role="page">' +
+                    '<div data-role="content"><a href="#" ngm:event="click:testit(another()),mousedown:sample(t())" id="mylink"></a></div>' +
+                    '</div>');
+
+            });
+            runs(function() {
+                var element = testframe().$("#page1");
+                var scope = element.scope();
+                scope.testit = function() {
+                    scope.result = true;
+                };
+                var link = element.find("#mylink");
+                expect(scope.result).toEqual(undefined);
+                link.click();
+                expect(scope.result).toEqual(true);
+            });
+        });
+
     });
 
 });

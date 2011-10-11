@@ -165,6 +165,15 @@ Default messages are:
 Every expression can now use the function `$iff` as a ternary operator:
 `$iff(test, trueCase, falseCase)` will return the `trueCase` if the `test` is truthy and the `falseCase` otherwise.
 
+### Function angular.Object.activate / $activate
+Every expression can now use the `$activate` expression to specify the navigation in the pages.
+By this, the controllers stay independent of the navigation process.
+
+Syntax: `$activate(result, successPage, errorPage)`
+Where result is some result (e.g. that of an action in a controller). If result is not false, this navigates
+to the `successPage`. Otherwise, this navigates to the `errorPage`.
+The result can also be a promise, so that the navigation is not executed until the promise is resolved or rejected.
+
 
 ### Paging for lists
 Lists can be paged in the sense that more entries can be additionally loaded. By "loading" we mean the

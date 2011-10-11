@@ -143,7 +143,7 @@ define('jqmng/globalScope',['jquery', 'angular'], function($, angular) {
     }
 });
 
-define('jqmng/activate',['jquery', 'jqmng/globalScope'], function($, globalScope) {
+define('jqmng/activate',['jquery', 'angular'], function($, angular) {
     /*
      * Service for page navigation.
      * Parameters (see $.mobile.changePage)
@@ -161,6 +161,34 @@ define('jqmng/activate',['jquery', 'jqmng/globalScope'], function($, globalScope
             $.mobile.changePage.call($.mobile, pageId, transition);
         }
     }
+
+    /**
+     * Helper function to put the navigation part out of the controller into the page.
+     * @param self
+     * @param result
+     * @param trueCase
+     * @param falseCase
+     */
+    angular.Object.activate = function(self, result, trueCase, falseCase) {
+        if (result && result.then) {
+            result.then(function() {
+                activate(trueCase);
+            }, function() {
+                if (falseCase) {
+                    activate(falseCase);
+                }
+            });
+        } else {
+            if (result!==false) {
+                activate(trueCase);
+            } else {
+                if (falseCase) {
+                    activate(falseCase);
+                }
+            }
+        }
+    };
+
 
     return {
         activate: activate
@@ -299,7 +327,7 @@ define('jqmng/event',['angular'], function(angular) {
      */
     angular.directive("ngm:event", function(expression, element) {
         var eventHandlers = {};
-        var pattern = /(.*?):(.*?)($|,)/g;
+        var pattern = /(.*?):([^:]+)($|,)/g;
         var match;
         var hasData = false;
         while (match = pattern.exec(expression)) {

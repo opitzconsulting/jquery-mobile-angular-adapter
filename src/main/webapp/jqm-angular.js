@@ -3,7 +3,7 @@ define([
     'angular',
     'jquery',
     'jqmng/globalScope',
-    'jqmng/activate',
+    'jqmng/navigate',
     'jqmng/waitDialog',
     'jqmng/event',
     'jqmng/fadein',
@@ -20,20 +20,4 @@ define([
     'jqmng/widgets/jqmSelectMenu',
     'jqmng/widgets/jqmSlider',
     'jqmng/jqmngStyle'
-], function(angular, $, globalScope, activate, waitDialog) {
-    // create global variables
-    $.mobile.globalScope = globalScope.globalScope;
-
-    // export waitDialog as angular Service
-    angular.service('$waitDialog', function() {
-        return waitDialog;
-    });
-    angular.service('$activate', function() {
-        return activate.activate;
-    });
-    return {
-        globalScope: globalScope.globalScope,
-        activate: activate.activate,
-        waitDialog: waitDialog
-    }
-});
+]);

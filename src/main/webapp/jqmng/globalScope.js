@@ -39,6 +39,8 @@ define(['jquery', 'angular'], function($, angular) {
         onCreateListeners.push(listener);
     }
 
+    $.mobile.globalScope = getGlobalScope;
+
     return {
         globalScope: getGlobalScope,
         onCreate: onCreate

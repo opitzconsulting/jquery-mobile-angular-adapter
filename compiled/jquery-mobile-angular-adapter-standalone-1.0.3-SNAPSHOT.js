@@ -27049,67 +27049,108 @@ define('jqmng/globalScope',['jquery', 'angular'], function($, angular) {
         onCreateListeners.push(listener);
     }
 
+    $.mobile.globalScope = getGlobalScope;
+
     return {
         globalScope: getGlobalScope,
         onCreate: onCreate
     }
 });
 
-define('jqmng/activate',['jquery', 'angular'], function($, angular) {
+define('jqmng/navigate',['jquery', 'angular'], function($, angular) {
     /*
      * Service for page navigation.
-     * Parameters (see $.mobile.changePage)
-     * - pageId: Id of page to navigate to. The special page id "back" navigates back.
-     * - transition (optional): Transition to be used.
+     * target has the syntax: [<transition>:]pageId
      */
-    function activate(pageId, transition) {
-        // set the page...
-        if (pageId == 'back') {
-            window.history.back();
+    function navigate(target) {
+        var parts = target.split(':');
+        var animation, pageId;
+        if (parts.length === 2 && parts[0] === 'back') {
+            var relativeIndex = getIndexInStackAndRemoveTail(parts[1]);
+            window.history.go(relativeIndex);
+            return;
+        } else if (parts.length === 2) {
+            animation = parts[0];
+            pageId = parts[1];
         } else {
-            if (pageId.charAt(0)!=='#') {
-                pageId = '#'+pageId;
-            }
-            $.mobile.changePage.call($.mobile, pageId, transition);
+            pageId = parts[0];
+            animation = undefined;
         }
+        if (pageId === 'back') {
+            window.history.go(-1);
+        } else {
+            if (pageId.charAt(0) !== '#') {
+                pageId = '#' + pageId;
+            }
+            $.mobile.changePage.call($.mobile, pageId, animation);
+        }
+    }
+
+    angular.service('$navigate', function() {
+        return navigate;
+    });
+
+    function getIndexInStackAndRemoveTail(pageId) {
+        var stack = $.mobile.urlHistory.stack;
+        var res = 0;
+        var pageUrl;
+        for (var i = stack.length - 2; i >= 0; i--) {
+            pageUrl = stack[i].pageUrl;
+            if (pageUrl === pageId) {
+                var res = i - stack.length + 1;
+                stack.splice(i + 1, stack.length - i);
+                return res;
+            }
+        }
+        return undefined;
     }
 
     /**
      * Helper function to put the navigation part out of the controller into the page.
-     * @param self
-     * @param result
-     * @param trueCase
-     * @param falseCase
+     * @param scope
      */
-    angular.Object.activate = function(self, result, trueCase, falseCase) {
-        if (arguments.length===2) {
+    angular.Object.navigate = function(scope) {
+        var service = scope.$service("$navigate");
+        if (arguments.length === 2) {
             // used without the test.
-            activate(result);
+            service(arguments[1]);
             return;
         }
-        if (result && result.then) {
-            result.then(function() {
-                activate(trueCase);
-            }, function() {
-                if (falseCase) {
-                    activate(falseCase);
+        // parse the arguments...
+        var test = arguments[1];
+        var outcomes = {};
+        var parts;
+        for (var i = 2; i < arguments.length; i++) {
+            parts = arguments[i].split(':');
+            outcomes[parts[0]] = parts[1];
+        }
+        if (test && test.then) {
+            // test is a promise.
+            test.then(function(test) {
+                if (outcomes[test]) {
+                    service(outcomes[test]);
+                } else if (outcomes.success) {
+                    service(outcomes.success);
+                }
+            }, function(test) {
+                if (outcomes[test]) {
+                    service(outcomes[test]);
+                } else  if (outcomes.failure) {
+                    service(outcomes.failure);
                 }
             });
         } else {
-            if (result!==false) {
-                activate(trueCase);
-            } else {
-                if (falseCase) {
-                    activate(falseCase);
-                }
+            if (outcomes[test]) {
+                service(outcomes[test]);
+            } else if (test !== false && outcomes.success) {
+                service(outcomes.success);
+            } else if (test === false && outcomes.failure) {
+                service(outcomes.failure);
             }
         }
     };
 
-
-    return {
-        activate: activate
-    }
+    return navigate;
 
 });
 
@@ -27157,8 +27198,7 @@ define('jqmng/waitDialog',['jquery'], function($) {
 
     /**
      * jquery mobile hides the wait dialog when pages are transitioned.
-     * This immediately closes wait dialogs that are opened in the onActivate
-     * function of controllers.
+     * This immediately closes wait dialogs that are opened in the pagebeforeshow event.
      */
     $('div').live('pageshow', function(event, ui) {
         updateUi();
@@ -27223,12 +27263,18 @@ define('jqmng/waitDialog',['jquery'], function($) {
         });
     }
 
-    return {
+    var res = {
         show: show,
         hide: hide,
         waitFor: waitFor,
         waitForWithCancel:waitForWithCancel
     };
+
+    angular.service('$waitDialog', function() {
+        return res;
+    });
+
+    return res;
 });
 
 define('jqmng/event',['angular'], function(angular) {
@@ -27237,25 +27283,14 @@ define('jqmng/event',['angular'], function(angular) {
      * includes taps, mousedowns, ...
      */
     angular.directive("ngm:click", function(expression, element) {
-        return angular.directive('ngm:event')('vclick:' + expression, element);
+        return angular.directive('ngm:event')('{vclick:"' + expression+'"}', element);
     });
 
-    /* A widget to bind general events like touches, ....
+    /**
+     * A widget to bind general events like touches, ....
      */
     angular.directive("ngm:event", function(expression, element) {
-        var eventHandlers = {};
-        var pattern = /(.*?):([^:]+)($|,)/g;
-        var match;
-        var hasData = false;
-        while (match = pattern.exec(expression)) {
-            hasData = true;
-            var event = match[1];
-            var handler = match[2];
-            eventHandlers[event] = handler;
-        }
-        if (!hasData) {
-            throw "Expression " + expression + " needs to have the syntax <event>:<handler>,...";
-        }
+        var eventHandlers = angular.fromJson(expression);
 
         var linkFn = function($updateView, element) {
             var self = this;
@@ -28081,7 +28116,7 @@ define('jqm-angular',[
     'angular',
     'jquery',
     'jqmng/globalScope',
-    'jqmng/activate',
+    'jqmng/navigate',
     'jqmng/waitDialog',
     'jqmng/event',
     'jqmng/fadein',
@@ -28098,21 +28133,5 @@ define('jqm-angular',[
     'jqmng/widgets/jqmSelectMenu',
     'jqmng/widgets/jqmSlider',
     'jqmng/jqmngStyle'
-], function(angular, $, globalScope, activate, waitDialog) {
-    // create global variables
-    $.mobile.globalScope = globalScope.globalScope;
-
-    // export waitDialog as angular Service
-    angular.service('$waitDialog', function() {
-        return waitDialog;
-    });
-    angular.service('$activate', function() {
-        return activate.activate;
-    });
-    return {
-        globalScope: globalScope.globalScope,
-        activate: activate.activate,
-        waitDialog: waitDialog
-    }
-});
+]);
 })();

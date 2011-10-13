@@ -3,22 +3,22 @@ Changelog
 
 1.0.3
 -------------
-- Bugfix to styling of elements like <a>, ... when used with ng:if (see issue #10).
+- Bugfix to styling of elements like `<a>`, ... when used with ng:if (see issue #10).
 - Bugfix for selects with options using `ng:repeat`: If the number of options changed
   new values were not displayed be jquery mobile. Was broken by 1.0.2.
 - Added a custom style to hide the angular validation popup (the red line around
   elements with validation errors still appears).
-- `$activePage` was renamed to `$activate` and does not return the current page any more when
-  called with no arguments. Furthermore, it does not more require the pageId to start with a `#`.
+- `$activePage` was renamed to `$navigate` and does not return the current page any more when
+  called with no arguments. It also only takes a single argument in the form ´[transition]:pageId´.
+  Furthermore, it does not more require the pageId to start with a `#`.
   If you have to access the current page, use `$.mobile.activePage`.
-- Added `$activate(result, successPage, errorPage)` function in expressions. By this, page navigation can be delegated to the markup,
-  and removed from the controllers. E.g. use `ngm:click="$activate(myAction(),'successPage','errorPage')"`.
+- Added `$navigate` function in expressions to move navigation from the controller to the page.
 - `ngm:shared-controller` was added to share state between spearate pages
 - `onActivate` and `onPassivate` callbacks were removed. Use
   `ngm:event="pagebeforeshow:myCallback()"` instead, and `ngm:shared-controller` for sharing sate between pages.
 - `ngm:enterKey` was removed. Please use a form with `ng:submit` (and `data-ajax=false`) for this.
 - `<input type="range">` did produce two sliders. Bug was introduced in 1.0.2.
-- Added
+- `ngm:event` now expects it's value to be a json string.
 
 The changes to the `$activePage`, `onActivate` and `ngm:shared-controller` was made to have a more general
 solution that is also possible for sencha touch applications. By this, applications can easily switch between

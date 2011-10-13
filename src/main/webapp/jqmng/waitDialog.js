@@ -42,8 +42,7 @@ define(['jquery'], function($) {
 
     /**
      * jquery mobile hides the wait dialog when pages are transitioned.
-     * This immediately closes wait dialogs that are opened in the onActivate
-     * function of controllers.
+     * This immediately closes wait dialogs that are opened in the pagebeforeshow event.
      */
     $('div').live('pageshow', function(event, ui) {
         updateUi();
@@ -108,10 +107,16 @@ define(['jquery'], function($) {
         });
     }
 
-    return {
+    var res = {
         show: show,
         hide: hide,
         waitFor: waitFor,
         waitForWithCancel:waitForWithCancel
     };
+
+    angular.service('$waitDialog', function() {
+        return res;
+    });
+
+    return res;
 });

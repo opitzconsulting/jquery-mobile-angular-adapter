@@ -4,25 +4,14 @@ define(['angular'], function(angular) {
      * includes taps, mousedowns, ...
      */
     angular.directive("ngm:click", function(expression, element) {
-        return angular.directive('ngm:event')('vclick:' + expression, element);
+        return angular.directive('ngm:event')('{vclick:"' + expression+'"}', element);
     });
 
-    /* A widget to bind general events like touches, ....
+    /**
+     * A widget to bind general events like touches, ....
      */
     angular.directive("ngm:event", function(expression, element) {
-        var eventHandlers = {};
-        var pattern = /(.*?):([^:]+)($|,)/g;
-        var match;
-        var hasData = false;
-        while (match = pattern.exec(expression)) {
-            hasData = true;
-            var event = match[1];
-            var handler = match[2];
-            eventHandlers[event] = handler;
-        }
-        if (!hasData) {
-            throw "Expression " + expression + " needs to have the syntax <event>:<handler>,...";
-        }
+        var eventHandlers = angular.fromJson(expression);
 
         var linkFn = function($updateView, element) {
             var self = this;

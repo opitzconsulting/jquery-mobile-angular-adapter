@@ -108,12 +108,11 @@ If the controller is used on more than one page, the instance of the controller 
 Note that the shared controller have the full scope functionality, e.g. for dependecy injection
 or using `$watch`.
 
-### Directive ngm:event(event1:handler1,event2:handler2,...)
+### Directive ngm:event({event1:'handler1',event2:'handler2',...})
 General event handler that integrates with jquery events, and also with jquery mobile events.
-The value of the attribute has the syntax `<events>:<function expression>,...`. The `events` part may contain one or
-more events (see jQuery bind function). There may be more than one events/function pair in the expression, separated by a komma.
+The value of the attribute is json and defines the event - handler mapping.
 
-Usage: E.g. `<a href="#" ngm:event="swiperight:myFn()">`
+Usage: E.g. `<a href="#" ngm:event="{swiperight:'myFn()'}">`
 
 ### Directive ngm:click(handler)
 Special click handler that integrates with jquery mobile's `vclick` event and by this also reacts to touches.
@@ -136,14 +135,12 @@ should be shown via a transition lasting a defined amount of milliseconds (the v
 Usage: E.g. `<div ngm:fadein="700">asdf</div>`
 
 
-### Service $activate(pageId, transition)
+### Service $navigate('[transition]:pageId')
 Service to change the current page.
-
-Parameters (see $.mobile.changePage)
-- pageId: Id of page to navigate to. The special page id "back" navigates back.
-- transition (optional): Transition to be used.
-
-Usage: E.g. `$activate('page2')`
+- If the transition has the special value `back` than the browser will go back in history to
+  the defined page, e.g. `back:hompage`.
+- The transition may be omitted, e.g. `$navigate('homepage')`.
+- To go back one page use `$navigate('back')`.
 
 ### Service $waitdialog
 The service `$waitdialog` allows the access to the jquery mobile wait dialog. It provides the following functions:
@@ -165,16 +162,19 @@ Default messages are:
 Every expression can now use the function `$iff` as a ternary operator:
 `$iff(test, trueCase, falseCase)` will return the `trueCase` if the `test` is truthy and the `falseCase` otherwise.
 
-### Function angular.Object.activate / $activate
-Every expression can now use the `$activate` expression to specify the navigation in the pages.
-By this, the controllers stay independent of the navigation process.
+### Function angular.Object.navigate / $navigate
+Every expression can now use the `$navigate` expression to define the navigation outside of the controlers
+in the html pages. By this, the controllers stay independent of the navigation process and is reusable.
 
-Syntax: `$activate(result, successPage, errorPage)`
-Where result is some result (e.g. that of an action in a controller). If result is not false, this navigates
-to the `successPage`. Otherwise, this navigates to the `errorPage`.
-The result can also be a promise, so that the navigation is not executed until the promise is resolved or rejected.
-
-Alternatively, this can also be used for unconditional navigation: `$activate('newPage')`.
+There are two types of syntax:
+1. `$activate(target)`: Navigates to the given target using the `$navigate` service, so the target can also
+   include a transition.
+2. `$activate(test,'outcome1:target','outcome2:target',...)`: Navigates to that target whose outcome equals
+   to the test. The special outcomes `success` is applied for any value for `test` that is not `false` (e.g. also `undefined`),
+   and the outcome `failure` is used for the value `false` of test.
+   This also supports promises. In that case, the navivation is done with the first argument of
+   the `done` / `fail` callback of the promise. Also, the `success` outcome is mapped to the `done` callback
+   and the `failure` outcome to the `fail` callback.
 
 
 ### Paging for lists

@@ -71,23 +71,6 @@ define(function() {
             });
         });
 
-        it('should save the default ui value into the model when using ng:repeat in the options', function() {
-            loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
-                var page = frame.$('#start');
-                page.append(
-                    '<div data-role="content" ng:init="l = [\'v1\',\'v2\']">' +
-                        '<select name="mysel2" id="mysel2" data-native-menu="true"><option ng:repeat="e in l" value="{{e}}">{{e}}</option></select>' +
-                        '</div>');
-            });
-            runs(function() {
-                var page = testframe().$("#start");
-                var select = page.find("#mysel2");
-                expect(select[0].value).toEqual("v1");
-                var scope = select.scope();
-                expect(scope.$get('mysel2')).toEqual("v1");
-            });
-        });
-
         it('should save the model value into the ui', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
@@ -159,56 +142,34 @@ define(function() {
             });
         });
 
-        it('should refresh the default value when the number of options changes', function() {
-            loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
-                var page = frame.$('#start');
-                // Note: Be sure to use ng:repeat, as this is the most problematic case!
-                page.append(
-                    '<div data-role="content">' +
-                        '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false"><option value="v1" ngm:if="option1" default="true">v1</option><option value="v2" ngm:if="option2">v2</option></select>' +
-                        '</div>');
-            });
-            runs(function() {
-                var page = testframe().$("#start");
-                var select = page.find("#mysel");
-                expect(select.children('option').length).toEqual(0);
-                var scope = select.scope();
-                scope.option1 = false;
-                scope.option2 = true;
-                expect(scope.mysel).toBeFalsy();
-                scope.$eval();
-                expect(scope.mysel).toEqual('v2');
-            });
-        });
-
         it('should refresh when the dialog opens', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 // Note: Be sure to use ng:repeat, as this is the most problematic case!
                 page.append(
                     '<div data-role="content">' +
-                        '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false"><option value="v1" ngm:if="option1" default="true">v1</option><option value="v2" ngm:if="option2">v2</option></select>' +
+                        '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false" ng:options="o for o in options"></select>' +
                         '</div>');
             });
             runs(function() {
                 var page = testframe().$("#start");
                 var select = page.find("#mysel");
                 var scope = select.scope();
-                scope.option1 = false;
-                scope.option2 = true;
+                scope.options = [1,2];
+                scope.mysel = 1;
                 scope.$eval();
                 select.selectmenu('open');
-                expect(page.find(".ui-selectmenu li").length).toEqual(1);
+                expect(page.find(".ui-selectmenu li").length).toEqual(2);
             });
         });
 
-        it('should be able to display the label of a new entry when the options grow', function() {
+        it('should be able to display the label of a new entry when the options grow in a native menu', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 // Note: Be sure to use ng:repeat, as this is the most problematic case!
                 page.append(
                     '<div data-role="content">' +
-                        '<select data-native-menu="true" name="myval" id="mysel"><option ng:repeat="e in list" value="{{e.key}}">{{e.value}}</option></select>' +
+                        '<select data-native-menu="true" name="myval" id="mysel" ng:options="e.value for e in list"></select>' +
                         '</div>');
             });
             runs(function() {
@@ -216,9 +177,9 @@ define(function() {
                 var select = page.find("#mysel");
                 var scope = select.scope();
                 expect(scope.myval).toBeFalsy();
-                scope.list = [{key: 'key1', value:'value1'}];
+                scope.list = [{value:'value1'}];
+                scope.myval=scope.list[0];
                 scope.$root.$eval();
-                expect(scope.myval).toBe("key1");
             });
             waitsForAsync();
             runs(function() {
@@ -226,7 +187,6 @@ define(function() {
                 expect(page.find(".ui-select .ui-btn-text").text()).toEqual("value1");
             });
         });
-
     });
 
 });

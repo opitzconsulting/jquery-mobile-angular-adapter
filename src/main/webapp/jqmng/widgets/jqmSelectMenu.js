@@ -21,22 +21,22 @@ define(['jquery'], function($) {
     fn._create = function() {
         var res = oldCreate.apply(this, arguments);
         var self = this;
-        this.element.bind('elementsAdded elementsRemoved', function(event) {
-            event.stopPropagation();
-            // refresh when the number of options change.
-            self.refresh();
-            // The default element may have changed, save it into the model
-            self.element.trigger('change');
-        });
-        // Initially fire a change event. Needed when the options are built using
-        // ng:repeat.
-        self.element.trigger('change');
+
+        // Note: We cannot use the prototype here,
+        // as there is a plugin in jquery mobile that overwrites
+        // the refresh and open functions...
+        var oldRefresh = self.refresh;
+        self.refresh = function() {
+            // The refresh is not enough (for native menus): also
+            // update the internal widget data to adjust to the new number of options.
+            this.selectOptions = this.element.find( "option" );
+            return oldRefresh.apply(this, arguments);
+        };
+        // Refresh the menu on open.
+        var oldOpen = self.open;
+        self.open = function() {
+            this.refresh();
+            return oldOpen.apply(this, arguments);
+        };
     };
-    var oldRefresh = fn.refresh;
-    fn.refresh = function() {
-        // The refresh is not enough: also
-        // update the internal widget data to adjust to the new number of options.
-        this.selectOptions = this.element.find( "option" );
-        return oldRefresh.apply(this, arguments);
-    }
 });

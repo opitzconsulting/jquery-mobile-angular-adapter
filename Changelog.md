@@ -19,6 +19,8 @@ Changelog
 - `ngm:enterKey` was removed. Please use a form with `ng:submit` (and `data-ajax=false`) for this.
 - `<input type="range">` did produce two sliders. Bug was introduced in 1.0.2.
 - `ngm:event` now expects it's value to be a json string.
+- No special support for `ng:repeat` used in `<option>` elements, as angular does not support this.
+  Added support for `ng:options`.
 
 The changes to the `$activePage`, `onActivate` and `ngm:shared-controller` was made to have a more general
 solution that is also possible for sencha touch applications. By this, applications can easily switch between

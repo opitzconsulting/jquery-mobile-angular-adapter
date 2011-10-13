@@ -27058,16 +27058,27 @@ define('jqmng/globalScope',['jquery', 'angular'], function($, angular) {
 });
 
 define('jqmng/navigate',['jquery', 'angular'], function($, angular) {
+    function splitAtFirstColon(value) {
+        var pos = value.indexOf(':');
+        if (pos===-1) {
+            return [value];
+        }
+        return [
+            value.substring(0, pos),
+            value.substring(pos+1)
+        ];
+    }
+
     /*
      * Service for page navigation.
      * target has the syntax: [<transition>:]pageId
      */
     function navigate(target) {
-        var parts = target.split(':');
+        var parts = splitAtFirstColon(target);
         var animation, pageId;
         if (parts.length === 2 && parts[0] === 'back') {
             var pageId = parts[1];
-            var relativeIndex = getIndexInStackAndRemoveTail(pageId);
+            var relativeIndex = getIndexInStack(pageId);
             if (relativeIndex === undefined) {
                 pageId = jqmChangePage(pageId, undefined);
             } else {
@@ -27101,16 +27112,14 @@ define('jqmng/navigate',['jquery', 'angular'], function($, angular) {
         return navigate;
     });
 
-    function getIndexInStackAndRemoveTail(pageId) {
+    function getIndexInStack(pageId) {
         var stack = $.mobile.urlHistory.stack;
         var res = 0;
         var pageUrl;
         for (var i = stack.length - 2; i >= 0; i--) {
             pageUrl = stack[i].pageUrl;
             if (pageUrl === pageId) {
-                var res = i - stack.length + 1;
-                stack.splice(i + 1, stack.length - i);
-                return res;
+                return i - stack.length + 1;
             }
         }
         return undefined;
@@ -27132,7 +27141,7 @@ define('jqmng/navigate',['jquery', 'angular'], function($, angular) {
         var outcomes = {};
         var parts;
         for (var i = 2; i < arguments.length; i++) {
-            parts = arguments[i].split(':');
+            parts = splitAtFirstColon(arguments[i]);
             outcomes[parts[0]] = parts[1];
         }
         if (test && test.then) {

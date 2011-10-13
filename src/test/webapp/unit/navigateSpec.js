@@ -35,7 +35,6 @@ define(['angular'], function(angular) {
                 ];
                 navigate('back:page1');
                 expect(goSpy).toHaveBeenCalledWith(-2);
-                expect($.mobile.urlHistory.stack).toEqual([{pageUrl: 'page1'}]);
                 expect(changePageSpy).not.toHaveBeenCalled();
             });
 
@@ -96,6 +95,10 @@ define(['angular'], function(angular) {
                 scope.test = promise;
                 scope.$eval("$navigate(test, 'success:page1', 'failure:page2', 'myout:page3')");
                 expect(navigateSpy).toHaveBeenCalledWith('page3');
+            });
+            it('should navigate to the given outcome with the given transition', function() {
+                scope.$eval("$navigate('myout', 'success:page1', 'failure:page2', 'myout:transition1:page3')");
+                expect(navigateSpy).toHaveBeenCalledWith('transition1:page3');
             });
 
         });

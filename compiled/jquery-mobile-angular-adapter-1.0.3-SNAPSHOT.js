@@ -1048,13 +1048,20 @@ define('jqmng/widgets/angularSelect',[
         return function(element, origBinder) {
             var scope = this;
             var res = origBinder();
+            var oldVal;
             if (name) {
-                scope.$watch(name, function(value) {
-                    var data = element.data();
-                    for (var key in data) {
-                        var widget = data[key];
-                        if (widget.refresh) {
-                            element[key]("refresh");
+                // Note: We cannot use $watch here, as ng:options uses $onEval to change the options,
+                // and that gets executed after the $watch.
+                scope.$onEval(function() {
+                    var newVal = scope.$eval(name);
+                    if (newVal!==oldVal) {
+                        oldVal = newVal;
+                        var data = element.data();
+                        for (var key in data) {
+                            var widget = data[key];
+                            if (widget.refresh) {
+                                element[key]("refresh");
+                            }
                         }
                     }
                 });
@@ -1176,24 +1183,24 @@ define('jqmng/widgets/jqmSelectMenu',['jquery'], function($) {
     fn._create = function() {
         var res = oldCreate.apply(this, arguments);
         var self = this;
-        this.element.bind('elementsAdded elementsRemoved', function(event) {
-            event.stopPropagation();
-            // refresh when the number of options change.
-            self.refresh();
-            // The default element may have changed, save it into the model
-            self.element.trigger('change');
-        });
-        // Initially fire a change event. Needed when the options are built using
-        // ng:repeat.
-        self.element.trigger('change');
+
+        // Note: We cannot use the prototype here,
+        // as there is a plugin in jquery mobile that overwrites
+        // the refresh and open functions...
+        var oldRefresh = self.refresh;
+        self.refresh = function() {
+            // The refresh is not enough (for native menus): also
+            // update the internal widget data to adjust to the new number of options.
+            this.selectOptions = this.element.find( "option" );
+            return oldRefresh.apply(this, arguments);
+        };
+        // Refresh the menu on open.
+        var oldOpen = self.open;
+        self.open = function() {
+            this.refresh();
+            return oldOpen.apply(this, arguments);
+        };
     };
-    var oldRefresh = fn.refresh;
-    fn.refresh = function() {
-        // The refresh is not enough: also
-        // update the internal widget data to adjust to the new number of options.
-        this.selectOptions = this.element.find( "option" );
-        return oldRefresh.apply(this, arguments);
-    }
 });
 
 define('jqmng/widgets/jqmSlider',['jquery'], function($) {

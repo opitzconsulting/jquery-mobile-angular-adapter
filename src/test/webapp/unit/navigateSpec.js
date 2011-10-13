@@ -1,8 +1,9 @@
 define(['angular'], function(angular) {
     describe("navigate", function() {
         describe("$navigate service", function() {
-            var navigate, oldUrlHistory, goSpy;
+            var navigate, oldUrlHistory, goSpy, changePageSpy;
             beforeEach(function() {
+                changePageSpy = spyOn($.mobile, 'changePage');
                 goSpy = spyOn(window.history, 'go');
                 navigate = angular.service("$navigate")();
                 oldUrlHistory = $.mobile.urlHistory.stack;
@@ -11,13 +12,11 @@ define(['angular'], function(angular) {
                 $.mobile.urlHistory.stack = oldUrlHistory;
             });
             it('should be able to change the page', function() {
-                var changePageSpy = spyOn($.mobile, 'changePage');
                 navigate('somePage');
                 expect(changePageSpy).toHaveBeenCalledWith('#somePage', undefined);
             });
 
             it('should be able to change the page with a transition', function() {
-                var changePageSpy = spyOn($.mobile, 'changePage');
                 navigate('someTransition:somePage');
                 expect(changePageSpy).toHaveBeenCalledWith('#somePage', 'someTransition');
             });
@@ -25,6 +24,7 @@ define(['angular'], function(angular) {
             it('should be able to go back', function() {
                 navigate('back');
                 expect(goSpy).toHaveBeenCalledWith(-1);
+                expect(changePageSpy).not.toHaveBeenCalled();
             });
 
             it('should be able to go back to a page', function() {
@@ -36,8 +36,19 @@ define(['angular'], function(angular) {
                 navigate('back:page1');
                 expect(goSpy).toHaveBeenCalledWith(-2);
                 expect($.mobile.urlHistory.stack).toEqual([{pageUrl: 'page1'}]);
+                expect(changePageSpy).not.toHaveBeenCalled();
             });
 
+            it('should be able to go back to a page that is not in the history', function() {
+                $.mobile.urlHistory.stack = [
+                    {pageUrl: 'page1'},
+                    {pageUrl: 'page2'},
+                    {pageUrl: 'page3'}
+                ];
+                navigate('back:page4');
+                expect(goSpy).not.toHaveBeenCalled();
+                expect(changePageSpy).toHaveBeenCalledWith('#page4', undefined);
+            });
         });
 
         describe('$navigate expression', function() {

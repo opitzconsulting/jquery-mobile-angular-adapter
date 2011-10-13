@@ -154,8 +154,13 @@ define('jqmng/navigate',['jquery', 'angular'], function($, angular) {
         var parts = target.split(':');
         var animation, pageId;
         if (parts.length === 2 && parts[0] === 'back') {
-            var relativeIndex = getIndexInStackAndRemoveTail(parts[1]);
-            window.history.go(relativeIndex);
+            var pageId = parts[1];
+            var relativeIndex = getIndexInStackAndRemoveTail(pageId);
+            if (relativeIndex === undefined) {
+                pageId = jqmChangePage(pageId, undefined);
+            } else {
+                window.history.go(relativeIndex);
+            }
             return;
         } else if (parts.length === 2) {
             animation = parts[0];
@@ -167,12 +172,18 @@ define('jqmng/navigate',['jquery', 'angular'], function($, angular) {
         if (pageId === 'back') {
             window.history.go(-1);
         } else {
-            if (pageId.charAt(0) !== '#') {
-                pageId = '#' + pageId;
-            }
-            $.mobile.changePage.call($.mobile, pageId, animation);
+            jqmChangePage(pageId, animation);
         }
     }
+
+    function jqmChangePage(pageId, animation) {
+        if (pageId.charAt(0) !== '#') {
+            pageId = '#' + pageId;
+        }
+        $.mobile.changePage.call($.mobile, pageId, animation);
+        return pageId;
+    }
+
 
     angular.service('$navigate', function() {
         return navigate;
@@ -223,7 +234,7 @@ define('jqmng/navigate',['jquery', 'angular'], function($, angular) {
             }, function(test) {
                 if (outcomes[test]) {
                     service(outcomes[test]);
-                } else  if (outcomes.failure) {
+                } else if (outcomes.failure) {
                     service(outcomes.failure);
                 }
             });

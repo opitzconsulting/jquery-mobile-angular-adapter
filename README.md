@@ -142,8 +142,8 @@ Service to change the current page.
 - The transition may be omitted, e.g. `$navigate('homepage')`.
 - To go back one page use `$navigate('back')`.
 
-### Service $waitdialog
-The service `$waitdialog` allows the access to the jquery mobile wait dialog. It provides the following functions:
+### Service $waitDialog
+The service `$waitDialog` allows the access to the jquery mobile wait dialog. It provides the following functions:
 - `show(msg, callback)`: Opens the wait dialog and shows the given message (if existing).
     If the user clicks on the wait dialog the given callback is called.
     This can be called even if the dialog is currently showing. It will the change the message

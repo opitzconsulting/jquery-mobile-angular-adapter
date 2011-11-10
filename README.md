@@ -97,7 +97,7 @@ However, please use `this.$root` to access the global scope in your code. This s
 Widgets, Directives and Services
 -----------
 
-### Directive ngm:shared-controller(name1:Controller1, name2:Controller2, ...)
+### Directive ngm:shared-controller="name1:Controller1, name2:Controller2, ..."
 Mobile pages are small, so often a usecase is split up into multiple pages.
 To share common behaviour and state between those pages, this directive allows shared controllers.
 
@@ -108,13 +108,13 @@ If the controller is used on more than one page, the instance of the controller 
 Note that the shared controller have the full scope functionality, e.g. for dependecy injection
 or using `$watch`.
 
-### Directive ngm:event({event1:'handler1',event2:'handler2',...})
+### Directive ngm:event="{event1:'handler1',event2:'handler2',...}"
 General event handler that integrates with jquery events, and also with jquery mobile events.
 The value of the attribute is json and defines the event - handler mapping.
 
 Usage: E.g. `<a href="#" ngm:event="{swiperight:'myFn()'}">`
 
-### Directive ngm:click(handler)
+### Directive ngm:click="handler"
 Special click handler that integrates with jquery mobile's `vclick` event and by this also reacts to touches.
 Also see `ngm:event` for the general case of binding a handler to events.
 

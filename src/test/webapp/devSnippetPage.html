@@ -1,20 +1,19 @@
 <!DOCTYPE html>
-<html xmlns:ng="http://angularjs.org" xmlns:ngm="http://jqm-angularjs.org">
+<html xmlns:ng="http://angularjs.org">
 <!--
 Test page during development.
 -->
 <head>
     <title>MobileToys</title>
     <script>parent.instrument && parent.instrument(window);</script>
-    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
 
-    <link rel="stylesheet" href="lib/jquery.mobile-1.0b3-oc1.css"/>
+    <link rel="stylesheet" href="lib/jquery.mobile-1.0rc2.css"/>
 
 
-    <script src="lib/jquery-1.6.2.js"></script>
+    <script src="lib/jquery-1.7.js"></script>
     <script src="lib/angular-0.9.19.js" ng:autobind></script>
-    <script src="lib/jquery.mobile.noinit.js"></script>
-    <script src="lib/jquery.mobile-1.0b3-oc1.js"></script>
+    <script src="lib/jquery.mobile-1.0rc2.js"></script>
     <script src="lib/require.js" data-main="jqm-angular"></script>
     <script>
         require.s.contexts._.jQueryCheck();
@@ -35,10 +34,17 @@ Test page during development.
 
 <div data-role="page" id="start" ng:controller="TestController">
     <div data-role="content">
-        <select name="test" ng:options="l for l in list" data-native-menu="false"></select>
+        <ul data-role="listview">
+            <li><a href="#page2">hallo</a></li>
+            <li><a href="#page2">hallo</a></li>
+            <li><a href="#page2">hallo</a></li>
+            <li><a href="#page2">hallo</a></li>
+            <li><a href="#page2">hallo</a></li>
+            <li><a href="#page2">hallo</a></li>
+            <li><a href="#page2">hallo</a></li>
+            <li><a href="#page2">hallo</a></li>
 
-        <button ng:click="list = [1,2];">Save</button>
-        {{test}}
+        </ul>
     </div>
 </div>
 

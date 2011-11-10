@@ -23,15 +23,20 @@ define(['angular'], function(angular) {
 
         it('should append new elements at the same level even when they wrap themselves in new parents', function() {
             var element = angular.element('<div><button ng:repeat="l in list"></button></div>');
-            var scope = angular.scope();
-            scope.list = [1];
-            angular.compile(element)(scope);
-            element.trigger('create');
-            // Button should add a parent
-            expect(element.children('div').length).toBe(1);
-            scope.list = [1,2];
-            scope.$eval();
-            expect(element.children('div').length).toBe(2);
+            $("body").append(element);
+            try {
+                var scope = angular.scope();
+                scope.list = [1];
+                angular.compile(element)(scope);
+                element.trigger('create');
+                // Button should add a parent
+                expect(element.children('div').length).toBe(1);
+                scope.list = [1,2];
+                scope.$eval();
+                expect(element.children('div').length).toBe(2);
+            } finally {
+                element.remove();
+            }
         });
     });
 });

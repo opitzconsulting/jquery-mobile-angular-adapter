@@ -3,9 +3,8 @@ Changelog
 
 1.0.3
 -------------
+- Upgraded to jQuery Mobile RC2.
 - Bugfix to styling of elements like `<a>`, ... when used with ng:if (see issue #10).
-- Bugfix for selects with options using `ng:repeat`: If the number of options changed
-  new values were not displayed be jquery mobile. Was broken by 1.0.2.
 - Added a custom style to hide the angular validation popup (the red line around
   elements with validation errors still appears).
 - `$activePage` was renamed to `$navigate` and does not return the current page any more when

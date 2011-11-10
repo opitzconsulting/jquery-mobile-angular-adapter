@@ -19,13 +19,14 @@ define(function() {
                 var header = input.find('h3');
                 var content = input.find(".ui-collapsible-content");
                 expect(content.hasClass('ui-collapsible-content-collapsed')).toBeTruthy();
-                header.trigger('vclick'); // for jqm 1 beta
+                console.log(header);
+                header.trigger('click');
                 expect(content.hasClass('ui-collapsible-content-collapsed')).toBeFalsy();
             });
 
         });
 
-        it('should be removable when ng:repeat shrinks', function() {
+        xit('should be removable when ng:repeat shrinks', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 // Note: Be sure to use ng:repeat, as this is the most problematic case!

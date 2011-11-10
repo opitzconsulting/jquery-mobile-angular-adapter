@@ -14,20 +14,28 @@ define(['jquery', 'angular', 'jqmng/globalScope'], function($, angular, globalSc
      * @param targetPage
      */
     function degradeInputs(targetPage) {
-        var page = targetPage.data( "page" ),
-            o = page.options;
+        var page = targetPage.data("page"), options;
+
+        if (!page) {
+            return;
+        }
+
+        options = page.options;
 
         // degrade inputs to avoid poorly implemented native functionality
-        targetPage.find( "input" ).not( o.keepNative ).each(function() {
-            var $this = $( this ),
-                type = this.getAttribute( "type" ),
-                optType = o.degradeInputs[ type ] || "text";
+        targetPage.find("input").not(page.keepNativeSelector()).each(function() {
+            var $this = $(this),
+                type = this.getAttribute("type"),
+                optType = options.degradeInputs[ type ] || "text";
 
-            if ( o.degradeInputs[ type ] ) {
-                $this.replaceWith(
-                    $( "<div>" ).html( $this.clone() ).html()
-                        .replace( /\s+type=["']?\w+['"]?/, " type=\"" + optType + "\" data-" + $.mobile.ns + "type=\"" + type + "\" " )
-                );
+            if (options.degradeInputs[ type ]) {
+                var html = $("<div>").html($this.clone()).html(),
+                    // In IE browsers, the type sometimes doesn't exist in the cloned markup, so we replace the closing tag instead
+                    hasType = html.indexOf(" type=") > -1,
+                    findstr = hasType ? /\s+type=["']?\w+['"]?/ : /\/?>/,
+                    repstr = " type=\"" + optType + "\" data-" + $.mobile.ns + "type=\"" + type + "\"" + ( hasType ? "" : ">" );
+
+                $this.replaceWith(html.replace(findstr, repstr));
             }
         });
     }

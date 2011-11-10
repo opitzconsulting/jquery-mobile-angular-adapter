@@ -9,5 +9,14 @@ define([
     'unit/iffSpec',
     'unit/ifSpec',
     'unit/sharedControllerSpec',
-    'unit/repeatSpec'
+    'unit/repeatSpec',
+    'unit/buttonSpec',
+    'unit/checkBoxSpec',
+    'unit/collapsibleSpec',
+    'unit/inputButtonSpec',
+    'unit/inputSliderSpec',
+    'unit/radioSpec',
+    'unit/selectSliderSpec',
+    'unit/textInputSpec',
+    'unit/listViewSpec'
 ]);

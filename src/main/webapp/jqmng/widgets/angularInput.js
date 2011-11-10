@@ -30,7 +30,7 @@ define([
             var origBinder = oldInput.call(this, fakeElement);
             var newBinder = function() {
                 var scope = this;
-                var element = arguments[origBinder.$inject.length];
+                var element = arguments[newBinder.$inject.length];
                 if (checkboxRadio) {
                     // Angular binds to the click event for radio and check boxes,
                     // but jquery mobile fires a change event. So be sure that angular only listens to the change event,
@@ -59,7 +59,7 @@ define([
                 }
                 return res;
             };
-            newBinder.$inject = origBinder.$inject;
+            newBinder.$inject = origBinder.$inject || [];
             return newBinder;
         });
 

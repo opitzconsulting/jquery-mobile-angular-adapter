@@ -86,5 +86,26 @@ define([], function() {
             })
         });
 
+        it("should work with degraded inputs", function() {
+            loadHtml('/jqmng/ui/test-fixture.html', function(win) {
+                var $ = win.$;
+                $.mobile.page.prototype.options.degradeInputs.number = "text";
+                var page1 = $("#start");
+                page1.append('<input type="number" name="myname" id="myname">');
+            });
+            runs(function() {
+                var win = testframe();
+                var $ = win.$;
+                var page1 = $("#start");
+                var input = page1.find("#myname");
+                expect(input.length).toBe(1);
+                expect(input.attr("type")).toBe("text");
+                var scope = page1.scope();
+                scope.myname = "hello";
+                scope.$root.$eval();
+                expect(input.val()).toBe("hello");
+            })
+        });
+
     });
 });

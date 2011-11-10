@@ -19,9 +19,6 @@ define(function() {
                 scope = select.scope();
                 expect(scope.$get('mysel')).toEqual("v1");
 
-                // find the menu and click on the second entry
-                testframe().innerHeight = 10;
-                select.selectmenu('open');
                 dialog = $(".ui-dialog");
                 dialogOpen = false;
                 expect(dialog.length).toEqual(1);
@@ -31,6 +28,9 @@ define(function() {
                 dialog.bind('pagehide', function() {
                     dialogOpen = false;
                 });
+                // find the menu and click on the second entry
+                testframe().innerHeight = 10;
+                select.selectmenu('open');
             });
             waitsFor(function() {
                 return dialogOpen;
@@ -44,6 +44,7 @@ define(function() {
                 return !dialogOpen;
             });
         });
+
         it('should save the ui value into the model when using non native menus', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');

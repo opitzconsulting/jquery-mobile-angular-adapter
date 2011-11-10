@@ -41,7 +41,7 @@ define(function() {
             });
         });
 
-        it('should use the diabled attribute', function() {
+        it('should use the disabled attribute', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 // Note: Be sure to use ng:repeat, as this is the most problematic case!

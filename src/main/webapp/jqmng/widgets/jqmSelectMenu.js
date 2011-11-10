@@ -24,15 +24,7 @@ define(['jquery'], function($) {
 
         // Note: We cannot use the prototype here,
         // as there is a plugin in jquery mobile that overwrites
-        // the refresh and open functions...
-        var oldRefresh = self.refresh;
-        self.refresh = function() {
-            // The refresh is not enough (for native menus): also
-            // update the internal widget data to adjust to the new number of options.
-            this.selectOptions = this.element.find( "option" );
-            return oldRefresh.apply(this, arguments);
-        };
-        // Refresh the menu on open.
+        // the open functions...
         var oldOpen = self.open;
         self.open = function() {
             this.refresh();

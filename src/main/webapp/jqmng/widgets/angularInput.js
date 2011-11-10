@@ -12,21 +12,25 @@ define([
                 .not(":jqmData(role='none'), :jqmData(role='nojs')").length > 0;
         }
 
-        proxyUtil.createAngularWidgetProxy('input', function(element) {
+        var oldInput = angular.widget("input");
+        angular.widget("input", function(element) {
             var textinput = isTextInput(element);
             var checkboxRadio = isCheckboxRadio(element);
 
             var name = element.attr('name');
-            var oldType = element[0].type;
+            var type = element[0].type;
             // Need to set the type temporarily always to 'text' so that
             // the original angular widget is used.
             if (textinput) {
-                element[0].type = 'text';
-                element[0]['data-type'] = oldType;
+                type = 'text';
             }
-            return function(element, origBinder) {
+            // We fake an element during compile phase, as setting the type attribute
+            // is not allowed by the dom (although it works in many browsers...)
+            var fakeElement = [{type: type}];
+            var origBinder = oldInput.call(this, fakeElement);
+            var newBinder = function() {
                 var scope = this;
-                element[0].type = oldType;
+                var element = arguments[origBinder.$inject.length];
                 if (checkboxRadio) {
                     // Angular binds to the click event for radio and check boxes,
                     // but jquery mobile fires a change event. So be sure that angular only listens to the change event,
@@ -40,7 +44,7 @@ define([
                         return origBind.call(this, events, callback);
                     };
                 }
-                var res = origBinder();
+                var res = origBinder.apply(this, arguments);
                 // Watch the name and refresh the widget if needed
                 if (name) {
                     scope.$watch(name, function(value) {
@@ -55,6 +59,8 @@ define([
                 }
                 return res;
             };
+            newBinder.$inject = origBinder.$inject;
+            return newBinder;
         });
 
     });

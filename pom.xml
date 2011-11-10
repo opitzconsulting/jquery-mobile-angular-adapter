@@ -114,10 +114,10 @@
                                         <module>
                                             <name>jquery-mobile-angular-adapter-standalone</name>
                                             <include>
-                                                <entry>lib/jquery-1.7</entry>
+                                                <entry>lib/jquery-1.6.2</entry>
                                                 <entry>lib/mobileinit</entry>
                                                 <entry>lib/angular-0.9.19</entry>
-                                                <entry>lib/jquery.mobile-1.0rc2</entry>
+                                                <entry>lib/jquery.mobile-1.0rc2-oc1</entry>
                                                 <entry>../../../compiled/jquery-mobile-angular-adapter-${version}</entry>
                                             </include>
                                         </module>

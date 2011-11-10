@@ -8,12 +8,12 @@ Test page during development.
     <script>parent.instrument && parent.instrument(window);</script>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
 
-    <link rel="stylesheet" href="lib/jquery.mobile-1.0rc2.css"/>
+    <link rel="stylesheet" href="lib/jquery.mobile-1.0rc2-oc1.css"/>
 
 
-    <script src="lib/jquery-1.7.js"></script>
-    <script src="lib/angular-0.9.19.js" ng:autobind></script>
-    <script src="lib/jquery.mobile-1.0rc2.js"></script>
+    <script src="lib/jquery-1.6.2.js"></script>
+    <script src="lib/angular-0.9.19.js"></script>
+    <script src="lib/jquery.mobile-1.0rc2-oc1.js"></script>
     <script src="lib/require.js" data-main="jqm-angular"></script>
     <script>
         require.s.contexts._.jQueryCheck();
@@ -23,28 +23,24 @@ Test page during development.
 
 <script>
 
-    function TestController() {
-        this.test = function() {
-            $("start").append('<div></div>');
-            $("start").after('<div></div>');
+    function TestController($defer) {
+        var self = this;
+        self.cities = [{"id":1,"name":"Bergisch Gladbach"},{"id":2,"name":"Berlin"},{"id":4,"name":"Frankfurt"},{"id":3,"name":"Köln"},{"id":5,"name":"Leverkusen"},{"id":6,"name":"München"},{"id":7,"name":"Rosenheim"}];
+        this.testIt = function() {
+            var options = $("#start").find("option");
+            console.log(options.eq(1).attr("selected"));
         }
-
     }
+
+    TestController.$inject = ['$defer'];
 </script>
 
 <div data-role="page" id="start" ng:controller="TestController">
     <div data-role="content">
-        <ul data-role="listview">
-            <li><a href="#page2">hallo</a></li>
-            <li><a href="#page2">hallo</a></li>
-            <li><a href="#page2">hallo</a></li>
-            <li><a href="#page2">hallo</a></li>
-            <li><a href="#page2">hallo</a></li>
-            <li><a href="#page2">hallo</a></li>
-            <li><a href="#page2">hallo</a></li>
-            <li><a href="#page2">hallo</a></li>
+        <input ng:repeat="item in [1]" name="mysel" id="mysel" type="text">
+        {{myNumber}}
+        <a href="" ngm:click="testIt()">Test</a>
 
-        </ul>
     </div>
 </div>
 

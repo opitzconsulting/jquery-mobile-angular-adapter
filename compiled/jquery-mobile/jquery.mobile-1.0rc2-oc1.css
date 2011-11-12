@@ -1,5 +1,5 @@
 /*!
- * jQuery Mobile v1.0rc2
+ * jQuery Mobile v Git > Date: Fri Nov 11 09:58:34 2011 +0100 Info SHA1: c8f3860b88a97d25905155c3988296282df2b20e
  * http://jquerymobile.com/
  *
  * Copyright 2010, jQuery Project
@@ -1279,137 +1279,161 @@ a.ui-link-inherit {
   	to {-webkit-transform: rotate(360deg);}
 }
 
-/* Transitions from jQtouch (with small modifications): http://www.jqtouch.com/
-Built by David Kaneda and maintained by Jonathan Stark.
-*/
-.in, .out {
-	-webkit-animation-timing-function: ease-in-out;
-	-webkit-animation-duration: 350ms;
+.in.animate, .out.animate {
+	-webkit-transition: 350ms ease-in-out;
+	   -moz-transition: 350ms ease-in-out;
+	     -o-transition: 350ms ease-in-out;
+	        transition: 350ms ease-in-out;
 }
 
-
-.slide.out {
-	-webkit-transform: translateX(-100%);
-	-webkit-animation-name: slideouttoleft;
+/* To avoid flashing, we need to make sure we toggle
+ * the display/visibility of the page that is being
+ * transitioned to at the same time we set its z-index.
+ */
+.ui-page.in {
+	display: block;
+	visibility: visible;
 }
 
-.slide.in {
-	-webkit-transform: translateX(0);
-	-webkit-animation-name: slideinfromright;
+.slide.animate,
+.slideup.animate,
+.slidedown.animate {
+	-webkit-transition-property: -webkit-transform;
+	   -moz-transition-property:    -moz-transform;
+	     -o-transition-property:      -o-transform;
+	        transition-property:         transform;
 }
 
-.slide.out.reverse {
-	-webkit-transform: translateX(100%);
-	-webkit-animation-name: slideouttoright;
-}
-
+.slide.in,
 .slide.in.reverse {
+	z-index: 10;
+}
+
+.slide.out,
+.slide.out.reverse {
+	z-index: 0;
+}
+
+.slide.in,
+.slide.out.reverse.animate {
+	-webkit-transform: translateX(100%);
+	   -moz-transform: translateX(100%);
+	     -o-transform: translateX(100%);
+		    transform: translateX(100%);
+}
+
+.slide.in.animate,
+.slide.in.reverse.animate,
+.slide.out,
+.slide.out.reverse {
 	-webkit-transform: translateX(0);
-	-webkit-animation-name: slideinfromleft;
+	   -moz-transform: translateX(0);
+	     -o-transform: translateX(0);
+		    transform: translateX(0);
 }
 
-.slideup.out {
-	-webkit-animation-name: dontmove;
-	z-index: 0;
+.slide.in.reverse,
+.slide.out.animate {
+	-webkit-transform: translateX(-100%);
+	   -moz-transform: translateX(-100%);
+	     -o-transform: translateX(-100%);
+		    transform: translateX(-100%);
 }
 
-.slideup.in {
-	-webkit-transform: translateY(0);
-	-webkit-animation-name: slideinfrombottom;
+.slideup.in,
+.slideup.out.reverse,
+.slidedown.in,
+.slidedown.out.reverse {
 	z-index: 10;
 }
 
-.slideup.in.reverse {
-	z-index: 0;
-	-webkit-animation-name: dontmove;
-}
-
-.slideup.out.reverse {
-	-webkit-transform: translateY(100%);
-	z-index: 10;
-	-webkit-animation-name: slideouttobottom;
-}
-
-.slidedown.out {
-	-webkit-animation-name: dontmove;
-	z-index: 0;
-}
-
-.slidedown.in {
-	-webkit-transform: translateY(0);
-	-webkit-animation-name: slideinfromtop;
-	z-index: 10;
-}
-
+.slideup.out,
+.slideup.in.reverse,
+.slidedown.out,
 .slidedown.in.reverse {
 	z-index: 0;
-	-webkit-animation-name: dontmove;
 }
 
-.slidedown.out.reverse {
+.slideup.in.reverse,
+.slideup.in.reverse.animate,
+.slideup.out,
+.slideup.out.animate,
+.slidedown.in.reverse,
+.slidedown.in.reverse.animate,
+.slidedown.out,
+.slidedown.out.animate {
+	/* For the page that doesn't animate, translate3d needs to
+	 * be set on it to prevent flashing and produce a smoother
+	 * animation on the Motorola Xoom (Android 3.1).
+	 */
+	-webkit-transform: translate3d(0,0,0);
+	   -moz-transform: translate3d(0,0,0);
+	     -o-transform: translate3d(0,0,0);
+            transform: translate3d(0,0,0);
+}
+
+.slideup.in,
+.slideup.out.reverse.animate {
+	-webkit-transform: translateY(100%);
+	   -moz-transform: translateY(100%);
+	     -o-transform: translateY(100%);
+            transform: translateY(100%);
+}
+
+.slidedown.in,
+.slidedown.out.reverse.animate {
 	-webkit-transform: translateY(-100%);
-	z-index: 10;
-	-webkit-animation-name: slideouttotop;
+	   -moz-transform: translateY(-100%);
+	     -o-transform: translateY(-100%);
+            transform: translateY(-100%);
 }
 
-@-webkit-keyframes slideinfromright {
-    from { -webkit-transform: translateX(100%); }
-    to { -webkit-transform: translateX(0); }
+.slideup.in.animate, 
+.slideup.out.reverse,
+.slidedown.in.animate, 
+.slidedown.out.reverse {
+	-webkit-transform: translateY(0);
+	   -moz-transform: translateY(0);
+	     -o-transform: translateY(0);
+            transform: translateY(0);
 }
 
-@-webkit-keyframes slideinfromleft {
-    from { -webkit-transform: translateX(-100%); }
-    to { -webkit-transform: translateX(0); }
+.fade.animate {
+	-webkit-transition-property: opacity;
+	   -moz-transition-property: opacity;
+	     -o-transition-property: opacity;
+            transition-property: opacity;
 }
 
-@-webkit-keyframes slideouttoleft {
-    from { -webkit-transform: translateX(0); }
-    to { -webkit-transform: translateX(-100%); }
-}
-
-@-webkit-keyframes slideouttoright {
-    from { -webkit-transform: translateX(0); }
-    to { -webkit-transform: translateX(100%); }
-}
-
-@-webkit-keyframes slideinfromtop {
-    from { -webkit-transform: translateY(-100%); }
-    to { -webkit-transform: translateY(0); }
-}
-
-@-webkit-keyframes slideinfrombottom {
-    from { -webkit-transform: translateY(100%); }
-    to { -webkit-transform: translateY(0); }
-}
-
-@-webkit-keyframes slideouttobottom {
-    from { -webkit-transform: translateY(0); }
-    to { -webkit-transform: translateY(100%); }
-}
-
-@-webkit-keyframes slideouttotop {
-    from { -webkit-transform: translateY(0); }
-    to { -webkit-transform: translateY(-100%); }
-}
-@-webkit-keyframes fadein {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@-webkit-keyframes fadeout {
-    from { opacity: 1; }
-    to { opacity: 0; }
-}
-
+.fade.in,
 .fade.out {
-	z-index: 0;
-	-webkit-animation-name: fadeout;
+	/* translate3d() needs to be set on both pages for a smoother
+	 * animation on the Motorola Xoom (Android 3.1).
+	 */
+	-webkit-transform: translate3d(0,0,0);
+	   -moz-transform: translate3d(0,0,0);
+	     -o-transform: translate3d(0,0,0);
+	        transform: translate3d(0,0,0);
 }
 
-.fade.in {
-	opacity: 1;
+.fade.in,
+.fade.out.reverse {
 	z-index: 10;
-	-webkit-animation-name: fadein;
+}
+
+.fade.out,
+.fade.in.reverse {
+	z-index: 0;
+}
+
+.fade.in,
+.fade.out.animate {
+	opacity: 0;
+}
+
+.fade.in.animate, 
+.fade.out {
+    opacity: 1;
 }
 
 /* The properties in this rule are only necessary for the 'flip' transition.
@@ -1420,6 +1444,7 @@ Built by David Kaneda and maintained by Jonathan Stark.
  */
 .viewport-flip {
 	-webkit-perspective: 1000;
+	perspective: 1000;
 	position: absolute;
 }
 
@@ -1431,105 +1456,89 @@ Built by David Kaneda and maintained by Jonathan Stark.
 }
 
 .flip {
-	-webkit-animation-duration: .65s;
-	-webkit-backface-visibility:hidden;
-	-webkit-transform:translateX(0); /* Needed to work around an iOS 3.1 bug that causes listview thumbs to disappear when -webkit-visibility:hidden is used. */
+	-webkit-backface-visibility: hidden;
+	-webkit-transform: translateX(0); /* Needed to work around an iOS 3.1 bug that causes listview thumbs to disappear when -webkit-visibility:hidden is used. */
 }
 
-.flip.out {
-	-webkit-transform: rotateY(-180deg) scale(.8);
-	-webkit-animation-name: flipouttoleft;
+.flip.in.animate, .flip.out.animate {
+	-webkit-transition-duration: .65s;
 }
 
-.flip.in {
-	-webkit-transform: rotateY(0) scale(1);
-	-webkit-animation-name: flipinfromleft;
-}
-
-/* Shake it all about */
-
-.flip.out.reverse {
+.flip.in,
+.flip.out.reverse.animate {
 	-webkit-transform: rotateY(180deg) scale(.8);
-	-webkit-animation-name: flipouttoright;
 }
 
+.flip.in.animate,
+.flip.out,
+.flip.out.reverse,
+.flip.in.reverse.animate {
+	-webkit-transform: rotateY(0deg) scale(1.0);
+}
+
+.flip.out.animate,
 .flip.in.reverse {
-	-webkit-transform: rotateY(0) scale(1);
-	-webkit-animation-name: flipinfromright;
+	-webkit-transform: rotateY(-180deg) scale(.8);
 }
 
-@-webkit-keyframes flipinfromright {
-    from { -webkit-transform: rotateY(-180deg) scale(.8); }
-    to { -webkit-transform: rotateY(0) scale(1); }
-}
-
-@-webkit-keyframes flipinfromleft {
-    from { -webkit-transform: rotateY(180deg) scale(.8); }
-    to { -webkit-transform: rotateY(0) scale(1); }
-}
-
-@-webkit-keyframes flipouttoleft {
-    from { -webkit-transform: rotateY(0) scale(1); }
-    to { -webkit-transform: rotateY(-180deg) scale(.8); }
-}
-
-@-webkit-keyframes flipouttoright {
-    from { -webkit-transform: rotateY(0) scale(1); }
-    to { -webkit-transform: rotateY(180deg) scale(.8); }
-}
-
-
-/* Hackish, but reliable. */
-
-@-webkit-keyframes dontmove {
-    from { opacity: 1; }
-    to { opacity: 1; }
+.pop.animate {
+	-webkit-transition-property: -webkit-transform, opacity;
+	   -moz-transition-property:    -moz-transform, opacity;
+	     -o-transition-property:      -o-transform, opacity;
+            transition-property:         transform, opacity;
 }
 
 .pop {
 	-webkit-transform-origin: 50% 50%;
+	   -moz-transform-origin: 50% 50%;
+	     -o-transform-origin: 50% 50%;
+	        transform-origin: 50% 50%;
 }
 
-.pop.in {
-	-webkit-transform: scale(1);
-    opacity: 1;
-	-webkit-animation-name: popin;
+.pop.in,
+.pop.out.reverse {
 	z-index: 10;
 }
 
+.pop.out,
 .pop.in.reverse {
 	z-index: 0;
-	-webkit-animation-name: dontmove;
 }
 
-.pop.out.reverse {
+.pop.in.reverse,
+.pop.in.reverse.animate,
+.pop.out,
+.pop.out.animate {
+	-webkit-transform: translate3d(0,0,0);
+	   -moz-transform: translate3d(0,0,0);
+	     -o-transform: translate3d(0,0,0);
+	        transform: translate3d(0,0,0);
+    opacity: 1;
+}
+
+.pop.in,
+.pop.out.reverse.animate {
 	-webkit-transform: scale(.2);
+	   -moz-transform: scale(.2);
+	     -o-transform: scale(.2);
+	        transform: scale(.2);
 	opacity: 0;
-	-webkit-animation-name: popout;
-	z-index: 10;
 }
 
-@-webkit-keyframes popin {
-    from {
-        -webkit-transform: scale(.2);
-        opacity: 0;
-    }
-    to {
-        -webkit-transform: scale(1);
-        opacity: 1;
-    }
+.pop.in.animate, 
+.pop.out.reverse {
+	-webkit-transform: scale(1.0);
+	   -moz-transform: scale(1.0);
+	     -o-transform: scale(1.0);
+	        transform: scale(1.0);
+    opacity: 1;
 }
 
-@-webkit-keyframes popout {
-    from {
-        -webkit-transform: scale(1);
-        opacity: 1;
-    }
-    to {
-        -webkit-transform: scale(.2);
-        opacity: 0;
-    }
-}/*
+
+@-o-viewport {
+	min-zoom: 1;
+}
+/*
 * jQuery Mobile Framework
 * Copyright (c) jQuery Project
 * Dual licensed under the MIT (MIT-LICENSE.txt) or GPL (GPL-LICENSE.txt) licenses.
@@ -1879,7 +1888,12 @@ a.ui-slider-handle .ui-btn-inner { padding-left: 0; padding-right: 0; }
 
 div.ui-slider-switch { height: 32px;  overflow: hidden; margin-left: 0; }
 div.ui-slider-inneroffset { margin-left: 50%; position: absolute; top: 1px; height: 100%; width: 50%; }
-a.ui-slider-handle-snapping { -webkit-transition: left 100ms linear; }
+.ui-slider-handle-snapping {
+	-webkit-transition: left 100ms linear;
+	   -moz-transition: left 100ms linear;
+	     -o-transition: left 100ms linear;
+	        transition: left 100ms linear;
+}
 div.ui-slider-labelbg { position: absolute; top:0; margin: 0; border-width: 0; }
 div.ui-slider-switch div.ui-slider-labelbg-a { width: 60%; height: 100%; left: 0; }
 div.ui-slider-switch div.ui-slider-labelbg-b { width: 60%; height: 100%; right: 0; }

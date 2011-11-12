@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.opitzconsulting.html5</groupId>
     <artifactId>jquery-mobile-angular-adapter</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.3</version>
     <name>JQuery Mobile Angular Adapter</name>
     <packaging>war</packaging>
     <description>Adapter for using jquery mobile with angular</description>
@@ -12,7 +12,7 @@
         <browser>/Applications/Google Chrome.app/Contents/MacOS/Google Chrome</browser>
         <!-- optimizer for minification: uglify or closure -->
         <jsOptimizer>uglify</jsOptimizer>
-        <jsSuffix>-${version}</jsSuffix>
+        <jsSuffix>-${project.version}</jsSuffix>
     </properties>
 
     <build>
@@ -65,6 +65,67 @@
             <build>
                 <plugins>
                     <plugin>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>2.5</version>
+                        <executions>
+                            <execution>
+                                <id>copy-resources</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${basedir}/target/wrap</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${basedir}/src/main/wrap</directory>
+                                            <filtering>true</filtering>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>copy-jquery-mobile</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${basedir}/compiled/jquery-mobile</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${basedir}/src/main/webapp/lib</directory>
+                                            <includes>
+                                                <include>images/*</include>
+                                                <include>jquery.mobile*</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>copy-optimized-files</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${basedir}/compiled/min</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${basedir}/target/requirejs/optimize</directory>
+                                            <includes>
+                                                <include>jquery-mobile-angular-adapter-standalone-${project.version}.js</include>
+                                                <include>jquery-mobile-angular-adapter-${project.version}.js</include>
+                                                <include>jquery-mobile/**/*</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <groupId>com.voltvoodoo</groupId>
                         <artifactId>brew</artifactId>
 
@@ -77,7 +138,7 @@
                                 </goals>
                                 <configuration>
                                     <jsOptimizer>none</jsOptimizer>
-                                    <optimizedFileNameSuffix>-${version}</optimizedFileNameSuffix>
+                                    <optimizedFileNameSuffix>-${project.version}</optimizedFileNameSuffix>
                                     <optimizeSourceDir>${basedir}/src/main/webapp</optimizeSourceDir>
                                     <optimizeBuildDir>${basedir}/target/requirejs/build</optimizeBuildDir>
                                     <optimizeOutputDir>${basedir}/compiled</optimizeOutputDir>
@@ -92,8 +153,8 @@
                                         </module>
                                     </modules>
                                     <wrap>
-                                        <startFile>${basedir}/src/main/build/header.js</startFile>
-                                        <endFile>${basedir}/src/main/build/footer.js</endFile>
+                                        <startFile>${basedir}/target/wrap/header.js</startFile>
+                                        <endFile>${basedir}/target/wrap/footer.js</endFile>
                                     </wrap>
                                 </configuration>
                             </execution>
@@ -105,7 +166,7 @@
                                 </goals>
                                 <configuration>
                                     <jsOptimizer>none</jsOptimizer>
-                                    <optimizedFileNameSuffix>-${version}</optimizedFileNameSuffix>
+                                    <optimizedFileNameSuffix>-${project.version}</optimizedFileNameSuffix>
                                     <optimizeSourceDir>${basedir}/target/requirejs/build</optimizeSourceDir>
                                     <optimizeBuildDir>${basedir}/target/requirejs/build</optimizeBuildDir>
                                     <optimizeOutputDir>${basedir}/compiled</optimizeOutputDir>
@@ -118,7 +179,8 @@
                                                 <entry>lib/mobileinit</entry>
                                                 <entry>lib/angular-0.9.19</entry>
                                                 <entry>lib/jquery.mobile-1.0rc2-oc1</entry>
-                                                <entry>../../../compiled/jquery-mobile-angular-adapter-${version}</entry>
+                                                <entry>../../../compiled/jquery-mobile-angular-adapter-${project.version}
+                                                </entry>
                                             </include>
                                         </module>
                                     </modules>
@@ -135,14 +197,11 @@
                                     <optimizedFileNameSuffix>.min</optimizedFileNameSuffix>
                                     <optimizeSourceDir>${basedir}/compiled</optimizeSourceDir>
                                     <optimizeBuildDir>${basedir}/target/requirejs/optimize</optimizeBuildDir>
-                                    <optimizeOutputDir>${basedir}/compiled</optimizeOutputDir>
+                                    <optimizeOutputDir>${basedir}/target/requirejs/noop</optimizeOutputDir>
                                     <skipModuleInsertion>true</skipModuleInsertion>
                                     <modules>
                                         <module>
-                                            <name>jquery-mobile-angular-adapter-standalone-${version}</name>
-                                        </module>
-                                        <module>
-                                            <name>jquery-mobile-angular-adapter-${version}</name>
+                                            <name>jquery-mobile-angular-adapter-${project.version}</name>
                                         </module>
                                     </modules>
                                 </configuration>

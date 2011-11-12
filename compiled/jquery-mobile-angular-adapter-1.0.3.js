@@ -1,25 +1,9 @@
 /**
- * The MIT License
+ * jQuery Mobile angularJS adaper v1.0.3
+ * http://github.com/tigbro/jquery-mobile-angular-adapter
  *
- * Copyright (c) 2011 Tobias Bosch (OPITZ CONSULTING GmbH, www.opitz-consulting.com)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * Copyright 2011, Tobias Bosch (OPITZ CONSULTING GmbH)
+ * Licensed under the MIT license.
  */
 (function() {
 
@@ -157,13 +141,35 @@ define('jqmng/navigate',['jquery', 'angular'], function($, angular) {
         ];
     }
 
+    function callActivateFnOnPageChange(fnName, params) {
+        if (fnName) {
+            $(document).one("pagebeforechange", function(event, data) {
+                var toPageUrl = $.mobile.path.parseUrl( data.toPage );
+                var page = $("#"+toPageUrl.hash.substring(1));
+                function executeCall() {
+                    var scope = page.scope();
+                    scope[fnName].apply(scope, params);
+                }
+                if (!page.data("page")) {
+                    page.one("pagecreate", executeCall);
+                    return;
+                }
+                executeCall();
+            });
+        }
+    }
+
     /*
      * Service for page navigation.
-     * target has the syntax: [<transition>:]pageId
+     * @param target has the syntax: [<transition>:]pageId
+     * @param activateFunctionName Function to call in the target scope.
+     * @param further params Parameters for the function that should be called in the target scope.
      */
-    function navigate(target) {
+    function navigate(target, activateFunctionName) {
+        var activateParams = Array.prototype.slice.call(arguments, 2);
         var parts = splitAtFirstColon(target);
         var animation, pageId;
+        callActivateFnOnPageChange(activateFunctionName, activateParams);
         if (parts.length === 2 && parts[0] === 'back') {
             var pageId = parts[1];
             var relativeIndex = getIndexInStack(pageId);
@@ -692,20 +698,28 @@ define('jqmng/widgets/pageCompile',['jquery', 'angular', 'jqmng/globalScope'], f
      * @param targetPage
      */
     function degradeInputs(targetPage) {
-        var page = targetPage.data( "page" ),
-            o = page.options;
+        var page = targetPage.data("page"), options;
+
+        if (!page) {
+            return;
+        }
+
+        options = page.options;
 
         // degrade inputs to avoid poorly implemented native functionality
-        targetPage.find( "input" ).not( o.keepNative ).each(function() {
-            var $this = $( this ),
-                type = this.getAttribute( "type" ),
-                optType = o.degradeInputs[ type ] || "text";
+        targetPage.find("input").not(page.keepNativeSelector()).each(function() {
+            var $this = $(this),
+                type = this.getAttribute("type"),
+                optType = options.degradeInputs[ type ] || "text";
 
-            if ( o.degradeInputs[ type ] ) {
-                $this.replaceWith(
-                    $( "<div>" ).html( $this.clone() ).html()
-                        .replace( /\s+type=["']?\w+['"]?/, " type=\"" + optType + "\" data-" + $.mobile.ns + "type=\"" + type + "\" " )
-                );
+            if (options.degradeInputs[ type ]) {
+                var html = $("<div>").html($this.clone()).html(),
+                    // In IE browsers, the type sometimes doesn't exist in the cloned markup, so we replace the closing tag instead
+                    hasType = html.indexOf(" type=") > -1,
+                    findstr = hasType ? /\s+type=["']?\w+['"]?/ : /\/?>/,
+                    repstr = " type=\"" + optType + "\" data-" + $.mobile.ns + "type=\"" + type + "\"" + ( hasType ? "" : ">" );
+
+                $this.replaceWith(html.replace(findstr, repstr));
             }
         });
     }
@@ -993,21 +1007,25 @@ define('jqmng/widgets/angularInput',[
                 .not(":jqmData(role='none'), :jqmData(role='nojs')").length > 0;
         }
 
-        proxyUtil.createAngularWidgetProxy('input', function(element) {
+        var oldInput = angular.widget("input");
+        angular.widget("input", function(element) {
             var textinput = isTextInput(element);
             var checkboxRadio = isCheckboxRadio(element);
 
             var name = element.attr('name');
-            var oldType = element[0].type;
+            var type = element[0].type;
             // Need to set the type temporarily always to 'text' so that
             // the original angular widget is used.
             if (textinput) {
-                element[0].type = 'text';
-                element[0]['data-type'] = oldType;
+                type = 'text';
             }
-            return function(element, origBinder) {
+            // We fake an element during compile phase, as setting the type attribute
+            // is not allowed by the dom (although it works in many browsers...)
+            var fakeElement = [{type: type}];
+            var origBinder = oldInput.call(this, fakeElement);
+            var newBinder = function() {
                 var scope = this;
-                element[0].type = oldType;
+                var element = arguments[newBinder.$inject.length];
                 if (checkboxRadio) {
                     // Angular binds to the click event for radio and check boxes,
                     // but jquery mobile fires a change event. So be sure that angular only listens to the change event,
@@ -1021,7 +1039,7 @@ define('jqmng/widgets/angularInput',[
                         return origBind.call(this, events, callback);
                     };
                 }
-                var res = origBinder();
+                var res = origBinder.apply(this, arguments);
                 // Watch the name and refresh the widget if needed
                 if (name) {
                     scope.$watch(name, function(value) {
@@ -1036,6 +1054,8 @@ define('jqmng/widgets/angularInput',[
                 }
                 return res;
             };
+            newBinder.$inject = origBinder.$inject || [];
+            return newBinder;
         });
 
     });
@@ -1186,15 +1206,7 @@ define('jqmng/widgets/jqmSelectMenu',['jquery'], function($) {
 
         // Note: We cannot use the prototype here,
         // as there is a plugin in jquery mobile that overwrites
-        // the refresh and open functions...
-        var oldRefresh = self.refresh;
-        self.refresh = function() {
-            // The refresh is not enough (for native menus): also
-            // update the internal widget data to adjust to the new number of options.
-            this.selectOptions = this.element.find( "option" );
-            return oldRefresh.apply(this, arguments);
-        };
-        // Refresh the menu on open.
+        // the open functions...
         var oldOpen = self.open;
         self.open = function() {
             this.refresh();

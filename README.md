@@ -14,7 +14,34 @@ values in angular change.
 E.g. the select tag is enhanced by jquery mobile,
 and if someone changes it's value programmatically, the refresh-function needs to be called.
 
-Finally provides special enhancements useful for mobile applications.
+Fixes the jquery mobile widgets so that they are correctly removed form the dom,
+when angular removes them (e.g. in a `ng:repeat`).
+
+Provides special enhancements useful for mobile applications.
+
+Finally provies a special version of jquery mobile that contains some bugfixes.
+
+Dependencies
+----------------
+- angular 0.9.19
+- jquery 1.6.2 (Please note: Newer versions of jquery do not work, as angular 0.9.19
+  does not work with them...)
+- jquery mobile 1.0rc2
+
+Bugfixed version of jquery mobile
+---------------------------------
+This also provides a special version of jquery-mobile that contains the following:
+
+- integration of the `transitions` branch of jquery-mobile for WebKit browsers.
+  This is fixes several bugs especially on android (see jquery mobile #455).
+- address bar will always be visible on android. This is not yet really solved
+  by jquery mobile as without this, the address bar shows up again from time to time.
+  (see jquery mobile #1673)
+- Bugfix for highlighting problem on `data-role="listview"` lists toghether with
+  jquery 1.6.2. Those lists will not remove the highlighting when the mouse hovers
+  over them. The underlying issue is an issue of jquery (see jquery #10192) and already
+  fixed in jquery 1.7. However, the adapter currently only runs with angular 0.9.19,
+  which does not work with jquery 1.7.
 
 Sample
 ------------
@@ -40,12 +67,23 @@ ATTENTION: Do NOT use the `autobind` mode of angular!
     <html xmlns:ng="http://angularjs.org" xmlns:ngm="http://jqm-angularjs.org">
     <head>
         <title>MobileToys</title>
-        <link rel="stylesheet" href="lib/jquery.mobile-1.0b1-oc1.css"/>
+        <link rel="stylesheet" href="lib/jquery.mobile-1.0rc2-oc1.css"/>
         <script src="lib/jquery-1.6.1.js"></script>
-        <script src="lib/jquery.mobile-1.0b1-oc1.js"></script>
+        <script src="lib/jquery.mobile-1.0rc2-oc1.js"></script>
         <script src="lib/angular-0.9.15.js"></script>
         <script src="lib/jquery-mobile-angular-adapter.js"></script>
     </head>
+
+
+Directory layout
+-------------------
+This follows the usual maven directory layout:
+
+- src/main/webapp: The production code
+- src/test/webapp: The test code
+- compiled: The result of the javascript compilation
+- compiled/jquery-mobile: The bugfixed version of jquery-mobile.
+- compiled/min: Contains the minified files.
 
 
 Build
@@ -69,14 +107,6 @@ Running the tests
 - `mvn clean package jetty:run`: This will start a webserver under `localhost:8080/jqmng`.
   The unit-tests can be run via the url `localhost:8080/jqmng/UnitSpecRunner.html`
   The ui-tests can be run via the url `localhost:8080/jqmng/UiSpecRunner.html`
-
-Directory layout
--------------------
-This follows the usual maven directory layout:
-
-- src/main/webapp: The production code
-- src/test/webapp: The test code
-- compiled: The result of the javascript compilation
 
 
 Scopes
@@ -135,12 +165,14 @@ should be shown via a transition lasting a defined amount of milliseconds (the v
 Usage: E.g. `<div ngm:fadein="700">asdf</div>`
 
 
-### Service $navigate('[transition]:pageId')
-Service to change the current page.
+### Service $navigate('[transition]:pageId'[,activateFn][,activateFnParam1, ...])
+Service to change the given page.
 - If the transition has the special value `back` than the browser will go back in history to
   the defined page, e.g. `back:hompage`.
 - The transition may be omitted, e.g. `$navigate('homepage')`.
 - To go back one page use `$navigate('back')`.
+- If the `activateFn` function is given, it will be called after the navigation on the target page with
+  `activateFnParam1, ...` as arguments. The invocation is done before the `pagebeforeshow` event on the target page.
 
 ### Service $waitDialog
 The service `$waitDialog` allows the access to the jquery mobile wait dialog. It provides the following functions:

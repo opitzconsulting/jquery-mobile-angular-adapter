@@ -10,13 +10,35 @@ define(['jquery', 'angular'], function($, angular) {
         ];
     }
 
+    function callActivateFnOnPageChange(fnName, params) {
+        if (fnName) {
+            $(document).one("pagebeforechange", function(event, data) {
+                var toPageUrl = $.mobile.path.parseUrl( data.toPage );
+                var page = $("#"+toPageUrl.hash.substring(1));
+                function executeCall() {
+                    var scope = page.scope();
+                    scope[fnName].apply(scope, params);
+                }
+                if (!page.data("page")) {
+                    page.one("pagecreate", executeCall);
+                    return;
+                }
+                executeCall();
+            });
+        }
+    }
+
     /*
      * Service for page navigation.
-     * target has the syntax: [<transition>:]pageId
+     * @param target has the syntax: [<transition>:]pageId
+     * @param activateFunctionName Function to call in the target scope.
+     * @param further params Parameters for the function that should be called in the target scope.
      */
-    function navigate(target) {
+    function navigate(target, activateFunctionName) {
+        var activateParams = Array.prototype.slice.call(arguments, 2);
         var parts = splitAtFirstColon(target);
         var animation, pageId;
+        callActivateFnOnPageChange(activateFunctionName, activateParams);
         if (parts.length === 2 && parts[0] === 'back') {
             var pageId = parts[1];
             var relativeIndex = getIndexInStack(pageId);

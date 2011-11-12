@@ -4,6 +4,7 @@ Changelog
 1.0.3
 -------------
 - Upgraded to jQuery Mobile RC2.
+- Provides a bugfixed version of jquery mobile.
 - Bugfix to styling of elements like `<a>`, ... when used with ng:if (see issue #10).
 - Added a custom style to hide the angular validation popup (the red line around
   elements with validation errors still appears).
@@ -14,7 +15,7 @@ Changelog
 - Added `$navigate` function in expressions to move navigation from the controller to the page.
 - `ngm:shared-controller` was added to share state between spearate pages
 - `onActivate` and `onPassivate` callbacks were removed. Use
-  `ngm:event="pagebeforeshow:myCallback()"` instead, and `ngm:shared-controller` for sharing sate between pages.
+  `ngm:event="pagebeforeshow:myCallback()"` or `$navigate(toPage, activateFn)` instead.
 - `ngm:enterKey` was removed. Please use a form with `ng:submit` (and `data-ajax=false`) for this.
 - `<input type="range">` did produce two sliders. Bug was introduced in 1.0.2.
 - `ngm:event` now expects it's value to be a json string.

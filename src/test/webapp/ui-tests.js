@@ -5,5 +5,6 @@ define([
     'ui/angularUrlIntegrationSpec',
     'ui/selectmenuSpec',
     'ui/compileIntegrationSpec',
-    'ui/waitDialogServiceSpec'
+    'ui/waitDialogServiceSpec',
+    'ui/navigateSpec'
 ]);

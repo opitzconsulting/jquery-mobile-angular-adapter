@@ -45,8 +45,9 @@ This also provides a special version of jquery-mobile that contains the followin
 
 Sample
 ------------
-- Sample Github project [phonecat-mobile](https://github.com/tigbro/phonecat-mobile).
-- Js fiddle [Todo mobile](http://jsfiddle.net/Du2DY/3/).
+- Js fiddle [Todo mobile](http://jsfiddle.net/tigbro/Du2DY/).
+- Single source app for jquery-mobile and sencha touch: [https://github.com/tigbro/todo-mobile](https://github.com/tigbro/todo-mobile)
+- Sample Github project with requirejs [phonecat-mobile](https://github.com/tigbro/phonecat-mobile).
 
 
 Limitations

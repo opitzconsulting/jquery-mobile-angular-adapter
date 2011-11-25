@@ -32,8 +32,6 @@ Bugfixed version of jquery mobile
 ---------------------------------
 This also provides a special version of jquery-mobile that contains the following:
 
-- integration of the `transitions` branch of jquery-mobile for WebKit browsers.
-  This is fixes several bugs especially on android (see jquery mobile #455).
 - address bar will always be visible on android. This is not yet really solved
   by jquery mobile as without this, the address bar shows up again from time to time.
   (see jquery mobile #1673)
@@ -68,9 +66,9 @@ ATTENTION: Do NOT use the `autobind` mode of angular!
     <html xmlns:ng="http://angularjs.org" xmlns:ngm="http://jqm-angularjs.org">
     <head>
         <title>MobileToys</title>
-        <link rel="stylesheet" href="lib/jquery.mobile-1.0rc2-oc1.css"/>
+        <link rel="stylesheet" href="lib/jquery.mobile-1.0-oc1.css"/>
         <script src="lib/jquery-1.6.1.js"></script>
-        <script src="lib/jquery.mobile-1.0rc2-oc1.js"></script>
+        <script src="lib/jquery.mobile-1.0-oc1.js"></script>
         <script src="lib/angular-0.9.15.js"></script>
         <script src="lib/jquery-mobile-angular-adapter.js"></script>
     </head>

@@ -1,6 +1,15 @@
 Changelog
 =====================
 
+1.0.4
+------------
+- Update to jQuery Mobile 1.0. The adapter itself was not changed,
+  but the standalone version now includes jquery mobile 1.0.
+- Pleaes note that the jquery mobile version provided with the adapter does
+  not more contain the "transitions" branch from jquery mobile. For the detailed
+  list of applied patches see the Readme.
+
+
 1.0.3
 -------------
 - Upgraded to jQuery Mobile RC2.

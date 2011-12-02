@@ -21,7 +21,7 @@
             <plugin>
                 <groupId>com.voltvoodoo</groupId>
                 <artifactId>brew</artifactId>
-                <version>0.2.8-SNAPSHOT</version>
+                <version>0.2.10</version>
                 <configuration>
                     <optimizeBuildDir>${basedir}/target/requirejs/build</optimizeBuildDir>
                 </configuration>

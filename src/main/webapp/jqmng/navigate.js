@@ -47,7 +47,7 @@ define(['jquery', 'angular'], function($, angular) {
                 var pageId = parts[1];
                 var relativeIndex = getIndexInStack(pageId);
                 if (relativeIndex === undefined) {
-                    pageId = jqmChangePage(pageId, undefined);
+                    pageId = jqmChangePage(pageId, {reverse: true});
                 } else {
                     window.history.go(relativeIndex);
                 }

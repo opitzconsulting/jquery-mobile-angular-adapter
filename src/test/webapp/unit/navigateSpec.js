@@ -44,7 +44,7 @@ define(['angular'], function(angular) {
                 expect(changePageSpy).not.toHaveBeenCalled();
             });
 
-            it('should be able to go back to a page that is not in the history', function() {
+            it('should be able to go back to a page that is not in the history with using the reverse transition', function() {
                 $.mobile.urlHistory.stack = [
                     {pageUrl: 'page1'},
                     {pageUrl: 'page2'},
@@ -52,7 +52,7 @@ define(['angular'], function(angular) {
                 ];
                 navigate('back:page4');
                 expect(goSpy).not.toHaveBeenCalled();
-                expect(changePageSpy).toHaveBeenCalledWith('#page4');
+                expect(changePageSpy).toHaveBeenCalledWith('#page4', {reverse: true});
             });
         });
 

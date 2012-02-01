@@ -28,7 +28,13 @@ define(function() {
                     dialogOpen = false;
                 });
                 // find the menu and click on the second entry
-                testframe().innerHeight = 10;
+                var oldHeight = testframe().$.fn.height;
+                testframe().$.fn.height = function() {
+                    if (this[0].window == testframe()) {
+                        return 10;
+                    }
+                    return oldHeight.apply(this, arguments);
+                };
                 select.selectmenu('open');
             });
             waitsFor(function() {

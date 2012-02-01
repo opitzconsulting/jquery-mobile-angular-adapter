@@ -1,5 +1,5 @@
 /**
- * jQuery Mobile angularJS adaper v1.0.5-SNAPSHOT
+ * jQuery Mobile angularJS adaper v1.0.5
  * http://github.com/tigbro/jquery-mobile-angular-adapter
  *
  * Copyright 2011, Tobias Bosch (OPITZ CONSULTING GmbH)
@@ -167,37 +167,46 @@ define('jqmng/navigate',['jquery', 'angular'], function($, angular) {
      */
     function navigate(target, activateFunctionName) {
         var activateParams = Array.prototype.slice.call(arguments, 2);
-        var parts = splitAtFirstColon(target);
-        var animation, pageId;
+        var navigateOptions, pageId;
         callActivateFnOnPageChange(activateFunctionName, activateParams);
-        if (parts.length === 2 && parts[0] === 'back') {
-            var pageId = parts[1];
-            var relativeIndex = getIndexInStack(pageId);
-            if (relativeIndex === undefined) {
-                pageId = jqmChangePage(pageId, undefined);
-            } else {
-                window.history.go(relativeIndex);
-            }
-            return;
-        } else if (parts.length === 2) {
-            animation = parts[0];
-            pageId = parts[1];
+        if (typeof target === 'object') {
+            navigateOptions = target;
+            pageId = navigateOptions.target;
         } else {
-            pageId = parts[0];
-            animation = undefined;
+            var parts = splitAtFirstColon(target);
+            if (parts.length === 2 && parts[0] === 'back') {
+                var pageId = parts[1];
+                var relativeIndex = getIndexInStack(pageId);
+                if (relativeIndex === undefined) {
+                    pageId = jqmChangePage(pageId, undefined);
+                } else {
+                    window.history.go(relativeIndex);
+                }
+                return;
+            } else if (parts.length === 2) {
+                navigateOptions = { transition: parts[0] };
+                pageId = parts[1];
+            } else {
+                pageId = parts[0];
+                navigateOptions = undefined;
+            }
         }
         if (pageId === 'back') {
             window.history.go(-1);
         } else {
-            jqmChangePage(pageId, animation);
+            jqmChangePage(pageId, navigateOptions);
         }
     }
 
-    function jqmChangePage(pageId, animation) {
+    function jqmChangePage(pageId, navigateOptions) {
         if (pageId.charAt(0) !== '#') {
             pageId = '#' + pageId;
         }
-        $.mobile.changePage.call($.mobile, pageId, animation);
+        var callArgs = [pageId];
+        if (navigateOptions) {
+            callArgs.push(navigateOptions);
+        }
+        $.mobile.changePage.apply($.mobile, callArgs);
         return pageId;
     }
 
@@ -353,7 +362,7 @@ define('jqmng/waitDialog',['jquery'], function($) {
      * @param msg (optional)
      */
     function waitFor(promise, msg) {
-        show();
+        show(msg);
         promise.always(function() {
             hide();
         });
@@ -361,18 +370,18 @@ define('jqmng/waitDialog',['jquery'], function($) {
 
     /**
      *
-     * @param promise
+     * @param deferred
      * @param cancelData
      * @param msg (optional)
      */
-    function waitForWithCancel(promise, cancelData, msg) {
+    function waitForWithCancel(deferred, cancelData, msg) {
         if (!msg) {
             msg = $.mobile.loadingMessageWithCancel;
         }
         show(msg, function() {
-            promise.reject(cancelData);
+            deferred.reject(cancelData);
         });
-        promise.always(function() {
+        deferred.always(function() {
             hide();
         });
     }
@@ -397,7 +406,7 @@ define('jqmng/event',['angular'], function(angular) {
      * includes taps, mousedowns, ...
      */
     angular.directive("ngm:click", function(expression, element) {
-        return angular.directive('ngm:event')('{vclick:"' + expression+'"}', element);
+        return angular.directive('ngm:event')('{vclick:"' + expression + '"}', element);
     });
 
     /**
@@ -407,26 +416,49 @@ define('jqmng/event',['angular'], function(angular) {
         var eventHandlers = angular.fromJson(expression);
 
         var linkFn = function($updateView, element) {
-            var self = this;
             for (var eventType in eventHandlers) {
-                    (function(eventType) {
-                        var handler = eventHandlers[eventType];
-                        element.bind(eventType, function(event) {
-                            var res = self.$tryEval(handler, element);
-                            $updateView();
-                            if (eventType.charAt(0)=='v') {
-                                // This is required to prevent a second
-                                // click event, see
-                                // https://github.com/jquery/jquery-mobile/issues/1787
-                                event.preventDefault();
-                            }
-                        });
-                    })(eventType);
+                registerEventHandler(this, $updateView, element, eventType, eventHandlers[eventType]);
             }
         };
         linkFn.$inject = ['$updateView'];
         return linkFn;
     });
+
+    function registerEventHandler(scope, $updateView, element, eventType, handler) {
+        element.bind(eventType, function(event) {
+            var res = scope.$tryEval(handler, element);
+            $updateView();
+            if (eventType.charAt(0) == 'v') {
+                // This is required to prevent a second
+                // click event, see
+                // https://github.com/jquery/jquery-mobile/issues/1787
+                event.preventDefault();
+            }
+        });
+    }
+
+    function createEventDirective(directive, eventType) {
+        angular.directive('ngm:' + directive, function(eventHandler) {
+            var linkFn = function($updateView, element) {
+                registerEventHandler(this, $updateView, element, eventType, eventHandler);
+            };
+            linkFn.$inject = ['$updateView'];
+            return linkFn;
+        });
+    }
+
+    var eventDirectives = {taphold:'taphold',swipe:'swipe', swiperight:'swiperight',
+        swipeleft:'swipeleft',
+        pagebeforeshow:'pagebeforeshow',
+        pagebeforehide:'pagebeforehide',
+        pageshow:'pageshow',
+        pagehide:'pagehide',
+        click:'vclick'
+    };
+    for (var directive in eventDirectives) {
+        createEventDirective(directive, eventDirectives[directive])
+    }
+
 });
 
 define('jqmng/fadein',['angular'], function(angular) {
@@ -655,7 +687,7 @@ define('jqmng/sharedController',['angular'], function(angular) {
     }
 
     function parseSharedControllersExpression(expression) {
-        var pattern = /(.*?):(.*?)($|,)/g;
+        var pattern = /([^\s,:]+)\s*:\s*([^\s,:]+)/g;
         var match;
         var hasData = false;
         var controllers = {}
@@ -731,8 +763,16 @@ define('jqmng/widgets/pageCompile',['jquery', 'angular', 'jqmng/globalScope'], f
         degradeInputs(page);
         angular.compile(page)(childScope);
         parentScope.$eval();
-        // The second pagecreate does only initialize
-        // the widgets that we did not already create by angular.
+        var createJqmWidgetsFlag = false;
+        childScope.$onEval(99999, function() {
+            if (createJqmWidgetsFlag) {
+                createJqmWidgetsFlag = false;
+                page.trigger('create');
+            }
+        });
+        childScope.createJqmWidgets = function() {
+            createJqmWidgetsFlag = true;
+        }
         page.trigger("pagecreate");
     });
 
@@ -762,10 +802,23 @@ define('jqmng/widgets/pageCompile',['jquery', 'angular', 'jqmng/globalScope'], f
     });
 
     /**
-     * Create jquery elements when elements were added to the dom.
+     * When scopes are created by angular, the elements within the scope need to be enhanced by jquery mobile.
+     * We do this by using a special directive that triggers the create event on the page.
+     * In a later release of angular there will be angular events that we can hook to.
+     * <p>
+     * Note that is is required to use the page as target for the event, as some jqm plugins
+     * require the parent elements to be enhanced before the child elements, e.g.
+     * If there are links in a list:
+     * The "links" plugin will not enhance links that have the ui-link-inherited class,
+     * which gets set by the listview plugin.
+     * We solve this problem by always triggering the create event
+     * on the page, and letting jquery mobile figure out the correct order.
      */
-    $(document).bind('elementsAdded', function(event) {
-        $(event.target).trigger('create');
+    angular.directive("ngm:createwidgets", function(expression) {
+        return function(element) {
+            var scope = this;
+            scope.createJqmWidgets && scope.createJqmWidgets();
+        };
     });
 
     var currScope = null;
@@ -891,13 +944,11 @@ define('jqmng/widgets/angularRepeat',['jqmng/widgets/widgetProxyUtil'], function
      * Modify original ng:repeat so that all created items directly have a parent
      * (old style repeat). This is slower, however simplifies the integration with jquery mobile a lot!
      * <p>
-     * This will furthermore create the events "elementsAdded" and "elementsRemoved" if
-     * elements were added or deleted (only once per eval).
-     * <p>
      * This also takes care for jquery widgets wrapping themselves into other elements
      * (e.g. setting a div as new parent).
      */
     angular.widget('@ng:repeat', function(expression, element) {
+        element.attr('ngm:createwidgets', 'true');
         element.removeAttr('ng:repeat');
         element.replaceWith(angular.element('<!-- ng:repeat: ' + expression + ' -->'));
         var linker = this.compile(element);
@@ -927,8 +978,6 @@ define('jqmng/widgets/angularRepeat',['jqmng/widgets/widgetProxyUtil'], function
                     collectionLength = angular.Array.size(collection, true),
                     childScope,
                     key;
-                var addedElements = [];
-                var removedElements = [];
 
                 for (key in collection) {
                     if (collection.hasOwnProperty(key)) {
@@ -966,7 +1015,6 @@ define('jqmng/widgets/angularRepeat',['jqmng/widgets/widgetProxyUtil'], function
                                 appendPosition.after(clone);
                                 lastIterElement = clone;
                             });
-                            addedElements.push(lastIterElement);
                         }
                         index ++;
                     }
@@ -977,20 +1025,27 @@ define('jqmng/widgets/angularRepeat',['jqmng/widgets/widgetProxyUtil'], function
                     // Sencha Integration: Destroy widgets
                     var child = children.pop();
                     var childElement = child.$element;
-                    removedElements.push(childElement);
                     childElement.remove();
                 }
 
-                if (addedElements.length>0) {
-                    parent.trigger('elementsAdded', addedElements);
-                } else if (removedElements.length>0) {
-                    parent.trigger('elementsRemoved', removedElements);
-                }
             }, iterStartElement);
         };
     });
 
 
+});
+
+define('jqmng/widgets/angularSwitch',['jqmng/widgets/widgetProxyUtil'], function(proxyUtil) {
+    /**
+     * Modify the original ng:switch so that it adds the ngm:createwidgets attribute to all cases that will
+     * fire the jqm create event whenever a new scope is created.
+     */
+    proxyUtil.createAngularWidgetProxy('ng:switch', function(element) {
+        element.children().attr('ngm:createwidgets', 'true');
+        return function(element, origBinder) {
+            return origBinder();
+        }
+    });
 });
 
 define('jqmng/widgets/angularInput',[
@@ -1172,18 +1227,29 @@ define('jqmng/widgets/jqmListView',[
     fn._create = function() {
         var self = this;
         var res = oldCreate.apply(this, arguments);
-        // refresh the list when the children change
-        this.element.bind('elementsAdded elementsRemoved', function(event) {
-            event.stopPropagation();
+        // refresh the list when the children change.
+        this.element.bind('create', function(event) {
             self.refresh();
+            // register listeners when the children are destroyed.
+            // Do this only once per child.
+            var children = self.element.children('li');
+            var child, i;
+            for (i=0; i<children.length; i++) {
+                child = children.eq(i);
+                if (!child.data('listlistener')) {
+                    child.data('listlistener', true);
+                    child.bind("remove", function() {
+                        self.refresh();
+                    });
+                }
+            }
         });
     };
 });
 
 define('jqmng/widgets/jqmSelectMenu',['jquery'], function($) {
 
-    // selectmenu may create:
-    // - parent element
+    // selectmenu may create parent element and extra pages
     var fn = $.mobile.selectmenu.prototype;
     var oldDestroy = fn.destroy;
     fn.destroy = function() {
@@ -1216,7 +1282,7 @@ define('jqmng/widgets/jqmSelectMenu',['jquery'], function($) {
 });
 
 define('jqmng/widgets/jqmSlider',['jquery'], function($) {
-    // Button wraps the actual button into another div that is stored in the
+    // Slider wraps the actual input into another div that is stored in the
     // "slider" property.
     var fn = $.mobile.slider.prototype;
     var oldDestroy = fn.destroy;
@@ -1252,6 +1318,7 @@ define('jqm-angular',[
     'jqmng/sharedController',
     'jqmng/widgets/pageCompile',
     'jqmng/widgets/angularRepeat',
+    'jqmng/widgets/angularSwitch',
     'jqmng/widgets/angularInput',
     'jqmng/widgets/angularSelect',
     'jqmng/widgets/disabledHandling',

@@ -8,7 +8,7 @@ Changelog
 - ng:switch now works correctly.
 - Styling issues with links in lists were resolved
 - New event directives: `ngm:tap`,`ngm:taphold`,`ngm:swipe`,`ngm:swiperight`,`ngm:swipeleft`,`ngm:pagebeforeshow`,`ngm:pagebeforehide`,`ngm:pageshow`,`ngm:pagehide`
-
+- Upgraded to jquery mobile 1.0.1
 
 
 1.0.4

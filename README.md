@@ -143,11 +143,11 @@ The value of the attribute is json and defines the event - handler mapping.
 
 Usage: E.g. `<a href="#" ngm:event="{swiperight:'myFn()'}">`
 
-### Directive ngm:click="handler"
-Special click handler that integrates with jquery mobile's `vclick` event and by this also reacts to touches.
-Also see `ngm:event` for the general case of binding a handler to events.
+### Event-Directives `ngm:click`, `ngm:tap`,`ngm:taphold`,`ngm:swipe`,`ngm:swiperight`,`ngm:swipeleft`,`ngm:pagebeforeshow`,`ngm:pagebeforehide`,`ngm:pageshow`,`ngm:pagehide`
+For the mentioned events there are special directives to simplify the markup. Each of them is equivalent to
+using the `ngm:event` directive with the corresponding event name.
 
-Usage: E.g. `<a href="#" ngm:click="myFn()">`
+Usage: E.g. `<a href="#" ngm:swipeleft="myFn()">`
 
 ### Attribute Widget @ngm:if
 The attribute widget `@ngm:if` allows to add/remove an element to/from the dom, depending on an expression.

@@ -21,24 +21,20 @@ Test page during development.
 </head>
 <body>
 
-<div data-role="page" id="start" ng:init="data = {mylist:[1]}">
+<div data-role="page" id="start">
 <div data-role="content">
-    <ul data-role="listview" id="list">
-        <li ng:repeat="l in data.mylist">
-            <a href="#test2" ng:click="data.mylist=[1,2]">Test
-            </a>
-        </li>
-    </ul>
-    <ul data-role="listview" id="list2">
-        <li>
-            <a href="#test2" ng:click="data.mylist=[1,2]">Test
-            </a>
-        </li>
-    </ul>
+    <div ngm:swipe="test=3">Page2</div>
+    Test: {{test}}
 
 </div>
 </div>
 
+<div data-role="page" id="page2">
+<div data-role="content">
+    Page2  3
+
+</div>
+</div>
 
 </body>
 </html>

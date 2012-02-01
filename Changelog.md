@@ -6,6 +6,9 @@ Changelog
 - Allow an object to be passed to `$navigate` service as first argument to leverage the full power
   of jqm `changePage` function.
 - ng:switch now works correctly.
+- Styling issues with links in lists were resolved
+- New event directives: `ngm:tap`,`ngm:taphold`,`ngm:swipe`,`ngm:swiperight`,`ngm:swipeleft`,`ngm:pagebeforeshow`,`ngm:pagebeforehide`,`ngm:pageshow`,`ngm:pagehide`
+
 
 
 1.0.4

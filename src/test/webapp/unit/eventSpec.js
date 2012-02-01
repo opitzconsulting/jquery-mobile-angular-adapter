@@ -1,14 +1,4 @@
 define(['angular'], function(angular) {
-    describe("ngmClick", function() {
-        it('should eval the expression when vclick is fired', function() {
-            var element = angular.element('<span ngm:click="clicked = true"</span>');
-            var scope = angular.compile(element)();
-            element.trigger('vclick');
-            expect(scope.clicked).toEqual(true);
-        });
-
-    });
-
     describe("ngm:event", function() {
 
         it('should eval the expression when the event is fired', function() {
@@ -29,6 +19,26 @@ define(['angular'], function(angular) {
             element.mousedown();
             expect(scope.c).toEqual(undefined);
             expect(scope.m).toEqual(true);
+        });
+    });
+
+    describe("event shortcuts", function() {
+        it("should eval the expression when the event is fired", function() {
+            var events = {taphold:'taphold',swipe:'swipe', swiperight:'swiperight',
+                swipeleft:'swipeleft',
+                pagebeforeshow:'pagebeforeshow',
+                pagebeforehide:'pagebeforehide',
+                pageshow:'pageshow',
+                pagehide:'pagehide',
+                click:'vclick'
+            };
+            for (var event in events) {
+                var element = angular.element('<span ngm:'+event+'="executed=true"></span>');
+                var scope = angular.compile(element)();
+                element.trigger(events[event]);
+                expect(scope.executed).toEqual(true);
+            }
+
         });
     });
 

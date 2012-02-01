@@ -83,7 +83,7 @@ define(['jquery'], function($) {
      * @param msg (optional)
      */
     function waitFor(promise, msg) {
-        show();
+        show(msg);
         promise.always(function() {
             hide();
         });

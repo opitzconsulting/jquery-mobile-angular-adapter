@@ -92,10 +92,22 @@ define(function() {
             });
         });
 
-        it('should waitFor the end of promises', function() {
+        it('should waitFor the end of promises with the default message', function() {
             runs(function() {
                 var p = $.Deferred();
                 service.waitFor(p);
+                expect(loader.find("h1").text()).toEqual($.mobile.loadingMessage);
+                expect($.mobile.showPageLoadingMsg).toHaveBeenCalled();
+                p.resolve();
+                expect($.mobile.hidePageLoadingMsg).toHaveBeenCalled();
+            });
+        });
+
+        it('should waitFor the end of promises with the given message', function() {
+            runs(function() {
+                var p = $.Deferred();
+                service.waitFor(p, 'someMessage');
+                expect(loader.find("h1").text()).toEqual("someMessage");
                 expect($.mobile.showPageLoadingMsg).toHaveBeenCalled();
                 p.resolve();
                 expect($.mobile.hidePageLoadingMsg).toHaveBeenCalled();

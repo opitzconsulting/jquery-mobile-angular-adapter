@@ -23,8 +23,13 @@ Test page during development.
 
 <div data-role="page" id="start">
 <div data-role="content">
-    <div ngm:swipe="test=3">Page2</div>
-    Test: {{test}}
+    <input type="date" name="someDate" id="someDate">
+    {{someDate}}
+    <script>
+        $("#someDate").bind("change input blur", function() {
+            alert("changed");
+        });
+    </script>
 
 </div>
 </div>

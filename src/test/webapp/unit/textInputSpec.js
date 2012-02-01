@@ -37,7 +37,7 @@ define(["unit/testUtils"], function(utils) {
         it('should work with type="tel"', function() {
             var d = utils.compileInPage('<input name="mysel" type="tel">');
             var input = d.element;
-            expect(input.prop('type')).toEqual('tel');
+            expect(input.attr('type')).toEqual('tel');
             var scope = input.scope();
             expect(scope.$get('mysel')).toBeFalsy();
             input[0].value = '123';
@@ -48,12 +48,25 @@ define(["unit/testUtils"], function(utils) {
         it('should work with type="number"', function() {
             var d = utils.compileInPage('<input name="mysel" type="number">');
             var input = d.element;
-            expect(input.prop('type')).toEqual('number');
+            expect(input.attr('type')).toEqual('number');
             var scope = input.scope();
             expect(scope.$get('mysel')).toBeFalsy();
             input[0].value = '123';
             input.trigger('change');
             expect(scope.$get('mysel')).toEqual('123');
+        });
+
+        it('should work with type="date"', function() {
+            var d = utils.compileInPage('<input name="mysel" type="date">');
+            var input = d.element;
+            expect(input.attr('type')).toEqual('date');
+            var scope = input.scope();
+            expect(scope.$get('mysel')).toBeFalsy();
+            input[0].value = '1999-10-09';
+            // Note: On iOS5 date is supported, but it does not fire a change event!
+            // Hence we react to the blur event...
+            input.trigger('blur');
+            expect(scope.$get('mysel')).toEqual('1999-10-09');
         });
     });
 

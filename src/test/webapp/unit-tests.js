@@ -18,5 +18,6 @@ define([
     'unit/radioSpec',
     'unit/selectSliderSpec',
     'unit/textInputSpec',
-    'unit/listViewSpec'
+    'unit/listViewSpec',
+    'unit/switchSpec'
 ]);

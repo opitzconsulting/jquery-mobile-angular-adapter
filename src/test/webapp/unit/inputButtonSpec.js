@@ -3,9 +3,8 @@ define(["unit/testUtils"], function(utils) {
     describe("input button", function() {
 
         it('should allow clicks via ng:click', function() {
-            // Note: Be sure to use ng:repeat, as this is the most problematic case!
             var d = utils.compileInPage(
-                '<input type="submit" ng:repeat="item in [1]" id="mysel" ng:click="flag = true">'
+                '<input type="submit" ng:click="flag = true">'
             );
             var input = d.element;
             var scope = input.scope();
@@ -15,9 +14,8 @@ define(["unit/testUtils"], function(utils) {
         });
 
         it('should use the disabled attribute', function() {
-            // Note: Be sure to use ng:repeat, as this is the most problematic case!
             var d = utils.compileInPage(
-                '<input type="submit" ng:repeat="item in [1]" id="mysel" ng:click="flag = true" ng:bind-attr="{disabled: \'{{disabled}}\'}">');
+                '<input type="submit" ng:click="flag = true" ng:bind-attr="{disabled: \'{{disabled}}\'}">');
             var input = d.element;
             var scope = input.scope();
             var parentDiv = input.parent();
@@ -29,16 +27,15 @@ define(["unit/testUtils"], function(utils) {
             expect(parentDiv.hasClass('ui-disabled')).toBeTruthy();
         });
 
-        it('should be removable when ng:repeat shrinks', function() {
-            // Note: Be sure to use ng:repeat, as this is the most problematic case!
-            var d = utils.compileInPage('<div ng:init="mylist=[1,2]">' +
-                '<input type="submit" ng:repeat="item in mylist" id="mysel" ng:click="flag = true">' +
+        it('should be removable', function() {
+            var d = utils.compileInPage('<div>' +
+                '<input type="submit" value="1"><input type="submit" value="2"></input>' +
                 '</div>');
             var container = d.element;
             var scope = container.scope();
             expect(container.children('div').length).toEqual(2);
-            scope.mylist = [1];
-            scope.$eval();
+            // removal of the button should also remove the parent div
+            container.find('input').eq(0).remove();
             expect(container.children('div').length).toEqual(1);
         });
     });

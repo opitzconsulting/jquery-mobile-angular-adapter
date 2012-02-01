@@ -12,6 +12,7 @@ define([
     'jqmng/sharedController',
     'jqmng/widgets/pageCompile',
     'jqmng/widgets/angularRepeat',
+    'jqmng/widgets/angularSwitch',
     'jqmng/widgets/angularInput',
     'jqmng/widgets/angularSelect',
     'jqmng/widgets/disabledHandling',

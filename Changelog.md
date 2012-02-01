@@ -5,7 +5,7 @@ Changelog
 ------------
 - Allow an object to be passed to `$navigate` service as first argument to leverage the full power
   of jqm `changePage` function.
-
+- ng:switch now works correctly.
 
 
 1.0.4

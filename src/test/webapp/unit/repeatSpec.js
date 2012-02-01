@@ -1,24 +1,29 @@
 define(['angular'], function(angular) {
     describe('ng:repeat', function() {
-        it('should fire elemensAdded and elementsRemoved when new elements are created / deleted', function() {
+        it("should fire the create event for every entry when the list grows", function() {
             var element = angular.element('<div><div ng:repeat="l in list"></div></div>');
             var scope = angular.compile(element)();
-            var added = 0;
-            var removed = 0;
-            element.bind('elementsAdded', function() {
-                added++;
-            });
-            element.bind('elementsRemoved', function() {
-                removed++;
+            var createCount = 0;
+            element.bind('create', function() {
+                createCount++;
             });
             scope.list = [0,1];
             scope.$eval();
-            expect(added).toEqual(1);
-            expect(removed).toEqual(0);
+            expect(createCount).toEqual(2);
+        });
+
+        it("should fire the remove event for every entry when the list shrinks", function() {
+            var element = angular.element('<div><div ng:repeat="l in list"></div></div>');
+            var scope = angular.compile(element)();
+            scope.list = [0,1];
+            scope.$eval();
+            var removeCount = 0;
+            element.children('div').bind('remove', function() {
+                removeCount++;
+            });
             scope.list = [];
             scope.$eval();
-            expect(added).toEqual(1);
-            expect(removed).toEqual(1);
+            expect(removeCount).toEqual(2);
         });
 
         it('should append new elements at the same level even when they wrap themselves in new parents', function() {

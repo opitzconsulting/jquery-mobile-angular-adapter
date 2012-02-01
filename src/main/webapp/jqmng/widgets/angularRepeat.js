@@ -3,13 +3,11 @@ define(['jqmng/widgets/widgetProxyUtil'], function(proxyUtil) {
      * Modify original ng:repeat so that all created items directly have a parent
      * (old style repeat). This is slower, however simplifies the integration with jquery mobile a lot!
      * <p>
-     * This will furthermore create the events "elementsAdded" and "elementsRemoved" if
-     * elements were added or deleted (only once per eval).
-     * <p>
      * This also takes care for jquery widgets wrapping themselves into other elements
      * (e.g. setting a div as new parent).
      */
     angular.widget('@ng:repeat', function(expression, element) {
+        element.attr('ngm:createwidgets', 'true');
         element.removeAttr('ng:repeat');
         element.replaceWith(angular.element('<!-- ng:repeat: ' + expression + ' -->'));
         var linker = this.compile(element);
@@ -39,8 +37,6 @@ define(['jqmng/widgets/widgetProxyUtil'], function(proxyUtil) {
                     collectionLength = angular.Array.size(collection, true),
                     childScope,
                     key;
-                var addedElements = [];
-                var removedElements = [];
 
                 for (key in collection) {
                     if (collection.hasOwnProperty(key)) {
@@ -78,7 +74,6 @@ define(['jqmng/widgets/widgetProxyUtil'], function(proxyUtil) {
                                 appendPosition.after(clone);
                                 lastIterElement = clone;
                             });
-                            addedElements.push(lastIterElement);
                         }
                         index ++;
                     }
@@ -89,15 +84,9 @@ define(['jqmng/widgets/widgetProxyUtil'], function(proxyUtil) {
                     // Sencha Integration: Destroy widgets
                     var child = children.pop();
                     var childElement = child.$element;
-                    removedElements.push(childElement);
                     childElement.remove();
                 }
 
-                if (addedElements.length>0) {
-                    parent.trigger('elementsAdded', addedElements);
-                } else if (removedElements.length>0) {
-                    parent.trigger('elementsRemoved', removedElements);
-                }
             }, iterStartElement);
         };
     });

@@ -5,10 +5,9 @@ define(function() {
             var scope, dialog, dialogOpen;
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
-                // Note: Be sure to use ng:repeat, as this is the most problematic case!
                 page.append(
                     '<div data-role="content">' +
-                        '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                        '<select name="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {
@@ -48,10 +47,9 @@ define(function() {
         it('should save the ui value into the model when using non native menus', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
-                // Note: Be sure to use ng:repeat, as this is the most problematic case!
                 page.append(
                     '<div data-role="content">' +
-                        '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                        '<select name="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {
@@ -72,13 +70,12 @@ define(function() {
             });
         });
 
-        it('should save the model value into the ui', function() {
+        it('should save the model value into the ui when using non native menus', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
-                // Note: Be sure to use ng:repeat, as this is the most problematic case!
                 page.append(
                     '<div data-role="content">' +
-                        '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                        '<select name="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {
@@ -101,10 +98,9 @@ define(function() {
         it('should use the disabled attribute', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
-                // Note: Be sure to use ng:repeat, as this is the most problematic case!
                 page.append(
                     '<div data-role="content">' +
-                        '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                        '<select name="mysel" id="mysel" data-native-menu="false" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {
@@ -122,13 +118,12 @@ define(function() {
             });
         });
 
-        it('should be removable when ng:repeat shrinks', function() {
+        it('should be removable', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
-                // Note: Be sure to use ng:repeat, as this is the most problematic case!
                 page.append(
-                    '<div data-role="content" ng:init="mylist = [1,2]">' +
-                        '<select ng:repeat="item in mylist" name="mysel" id="mysel" data-native-menu="false" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                    '<div data-role="content">' +
+                        '<select name="mysel" id="mysel" data-native-menu="false" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {
@@ -136,10 +131,10 @@ define(function() {
                 var scope = page.scope();
                 // ui select creates a new parent for itself
                 var content = page.find(":jqmData(role='content')");
-                expect(content.children('div').length).toEqual(2);
-                scope.mylist = [1];
-                scope.$root.$eval();
                 expect(content.children('div').length).toEqual(1);
+                // select creates a parent div. This should be removed when the select is removed.
+                content.find('select').eq(0).remove();
+                expect(content.children('div').length).toEqual(0);
             });
         });
 

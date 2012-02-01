@@ -47,8 +47,6 @@ define(['jquery', 'angular', 'jqmng/globalScope'], function($, angular, globalSc
         degradeInputs(page);
         angular.compile(page)(childScope);
         parentScope.$eval();
-        // The second pagecreate does only initialize
-        // the widgets that we did not already create by angular.
         page.trigger("pagecreate");
     });
 
@@ -78,10 +76,14 @@ define(['jquery', 'angular', 'jqmng/globalScope'], function($, angular, globalSc
     });
 
     /**
-     * Create jquery elements when elements were added to the dom.
+     * When scopes are created by angular, the elements within the scope need to be enhanced by jquery mobile.
+     * We do this by using a special directive that triggers the corresponding event.
+     * In a later release of angular there will be angular events that we can hook to.
      */
-    $(document).bind('elementsAdded', function(event) {
-        $(event.target).trigger('create');
+    angular.directive("ngm:createwidgets", function(expression) {
+        return function(element) {
+            element.parent().trigger('create');
+        };
     });
 
     var currScope = null;

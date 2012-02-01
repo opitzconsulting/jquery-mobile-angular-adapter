@@ -1,7 +1,6 @@
 define(['jquery'], function($) {
 
-    // selectmenu may create:
-    // - parent element
+    // selectmenu may create parent element and extra pages
     var fn = $.mobile.selectmenu.prototype;
     var oldDestroy = fn.destroy;
     fn.destroy = function() {

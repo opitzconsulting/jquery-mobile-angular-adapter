@@ -1,5 +1,5 @@
 define(['jquery'], function($) {
-    // Button wraps the actual button into another div that is stored in the
+    // Slider wraps the actual input into another div that is stored in the
     // "slider" property.
     var fn = $.mobile.slider.prototype;
     var oldDestroy = fn.destroy;

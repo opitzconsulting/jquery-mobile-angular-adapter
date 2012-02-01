@@ -2,9 +2,8 @@ define(["unit/testUtils"], function(utils) {
 
     describe("selectSlider", function() {
         it('should save the ui value into the model', function() {
-            // Note: Be sure to use ng:repeat, as this is the most problematic case!
             var d = utils.compileInPage(
-                '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>'
+                '<select name="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>'
             );
             var select = d.element;
             var scope = select.scope();
@@ -18,8 +17,7 @@ define(["unit/testUtils"], function(utils) {
         });
 
         it('should save the model value into the ui', function() {
-            // Note: Be sure to use ng:repeat, as this is the most problematic case!
-            var d = utils.compileInPage('<select ng:repeat="item in [1]" name="mysel" id="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+            var d = utils.compileInPage('<select name="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
             var select = d.element;
             var scope = select.scope();
             expect(select[0].value).toEqual("v1");
@@ -35,9 +33,8 @@ define(["unit/testUtils"], function(utils) {
         });
 
         it('should use the disabled attribute', function() {
-            // Note: Be sure to use ng:repeat, as this is the most problematic case!
             var d = utils.compileInPage(
-                '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-role="slider" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+                '<select name="mysel" data-role="slider" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
             var select = d.element;
             var scope = select.scope();
             scope.$set('disabled', false);
@@ -50,16 +47,17 @@ define(["unit/testUtils"], function(utils) {
             expect(disabled).toEqual(true);
         });
 
-        it('should be removable when ng:repeat shrinks', function() {
-            var d = utils.compileInPage('<div ng:init="mylist = [1,2]">' +
-                '<select ng:repeat="item in mylist" name="mysel" id="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+        it('should be removable', function() {
+            var d = utils.compileInPage('<div>' +
+                '<select name="mysel" data-role="slider"><option value="v1" default="true">v1</option></select>' +
+                '<select name="mysel2" data-role="slider"><option value="v1" default="true">v1</option></select>' +
                 '</div>');
             var container = d.element;
             var scope = container.scope();
-            expect(container.children('.ui-slider').length).toEqual(2);
-            scope.mylist = [1];
-            scope.$eval();
-            expect(container.children('.ui-slider').length).toEqual(1);
+            expect(container.children('div').length).toEqual(2);
+            // removal of the slider should also remove the parent div
+            container.find("select").eq(0).remove();
+            expect(container.children('div').length).toEqual(1);
         });
     });
 

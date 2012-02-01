@@ -25,10 +25,22 @@ define([
     fn._create = function() {
         var self = this;
         var res = oldCreate.apply(this, arguments);
-        // refresh the list when the children change
-        this.element.bind('elementsAdded elementsRemoved', function(event) {
-            event.stopPropagation();
+        // refresh the list when the children change.
+        this.element.bind('create', function(event) {
             self.refresh();
+            // register listeners when the children are destroyed.
+            // Do this only once per child.
+            var children = self.element.children('li');
+            var child, i;
+            for (i=0; i<children.length; i++) {
+                child = children.eq(i);
+                if (!child.data('listlistener')) {
+                    child.data('listlistener', true);
+                    child.bind("remove", function() {
+                        self.refresh();
+                    });
+                }
+            }
         });
     };
 });

@@ -2,8 +2,7 @@ define(["unit/testUtils"], function(utils) {
 
     describe("inputSlider", function() {
         it('should save the ui value into the model', function() {
-            // Note: Be sure to use ng:repeat, as this is the most problematic case!
-            var d = utils.compileInPage('<input ng:repeat="l in [0] " type="number" data-type="range"  name="mysel" id="mysel" value="150" min="0" max="300">');
+            var d = utils.compileInPage('<input type="number" data-type="range"  name="mysel" value="150" min="0" max="300">');
             var input = d.element;
             var scope = input.scope();
             expect(scope.$get('mysel')).toEqual("150");
@@ -13,8 +12,7 @@ define(["unit/testUtils"], function(utils) {
         });
 
         it('should save the model value into the ui', function() {
-            // Note: Be sure to use ng:repeat, as this is the most problematic case!
-            var d = utils.compileInPage('<input ng:repeat="l in [0] " type="number" data-type="range"  name="mysel" id="mysel" value="150" min="0" max="300">');
+            var d = utils.compileInPage('<input type="number" data-type="range"  name="mysel" value="150" min="0" max="300">');
             var input = d.element;
             var scope = input.scope();
             expect(input[0].value).toEqual("150");
@@ -24,8 +22,7 @@ define(["unit/testUtils"], function(utils) {
         });
 
         it('should use the disabled attribute', function() {
-            // Note: Be sure to use ng:repeat, as this is the most problematic case!
-            var d = utils.compileInPage('<input ng:repeat="l in [0] " type="number" data-type="range"  name="mysel" id="mysel" value="150" min="0" max="300" ng:bind-attr="{disabled: \'{{disabled}}\'}">');
+            var d = utils.compileInPage('<input type="number" data-type="range"  name="mysel" value="150" min="0" max="300" ng:bind-attr="{disabled: \'{{disabled}}\'}">');
             var input = d.element;
             var scope = input.scope();
             scope.$set('disabled', false);
@@ -38,16 +35,17 @@ define(["unit/testUtils"], function(utils) {
             expect(disabled).toEqual(true);
 
         });
-        it('should be removable when ng:repeat shrinks', function() {
-            var d = utils.compileInPage('<div ng:init="mylist = [1,2]">' +
-                '<input ng:repeat="l in mylist " type="number" data-type="range" name="mysel" id="mysel" value="150" min="0" max="300">' +
+        it('should be removable', function() {
+            var d = utils.compileInPage('<div>' +
+                '<input type="number" data-type="range" value="150" min="0" max="300">' +
+                '<input type="number" data-type="range" value="150" min="0" max="300">' +
                 '</div>');
             var container = d.element;
             var scope = container.scope();
-            expect(container.children('.ui-slider').length).toEqual(2);
-            scope.mylist = [1];
-            scope.$eval();
-            expect(container.children('.ui-slider').length).toEqual(1);
+            expect(container.children('div').length).toEqual(2);
+            // removal of the slider should also remove the parent div
+            container.find('input').eq(0).remove();
+            expect(container.children('div').length).toEqual(1);
         });
     });
 

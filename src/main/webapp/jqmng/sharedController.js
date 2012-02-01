@@ -21,7 +21,7 @@ define(['angular'], function(angular) {
     }
 
     function parseSharedControllersExpression(expression) {
-        var pattern = /(.*?):(.*?)($|,)/g;
+        var pattern = /([^\s,:]+)\s*:\s*([^\s,:]+)/g;
         var match;
         var hasData = false;
         var controllers = {}

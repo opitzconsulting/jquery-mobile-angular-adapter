@@ -126,7 +126,7 @@ However, please use `this.$root` to access the global scope in your code. This s
 Widgets, Directives and Services
 -----------
 
-### Directive ngm:shared-controller="name1:Controller1, name2:Controller2, ..."
+### Directive ngm:shared-controller="name1:Controller1,name2:Controller2, ..."
 Mobile pages are small, so often a usecase is split up into multiple pages.
 To share common behaviour and state between those pages, this directive allows shared controllers.
 

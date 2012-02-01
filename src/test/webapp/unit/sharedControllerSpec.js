@@ -20,6 +20,26 @@ define(['angular'], function(angular) {
             expect(scope.shared2).toBe(instances[1]);
         });
 
+        it('should work with space between the controllers', function() {
+            var instances = [];
+            function SharedController1() {
+                instances.push(this);
+            }
+            var instances = [];
+            function SharedController2() {
+                instances.push(this);
+            }
+            window.SharedController1 = SharedController1;
+            window.SharedController2 = SharedController2;
+            var element = angular.element('<div><div ngm:shared-controller="shared1:SharedController1, shared2:SharedController2"></div></div>');
+            var rootScope = angular.scope();
+            angular.compile(element)(rootScope);
+            var scope = element.children('div').scope();
+            expect(instances.length).toBe(2);
+            expect(scope.shared1).toBe(instances[0]);
+            expect(scope.shared2).toBe(instances[1]);
+        });
+
         it('should share instance between usages', function() {
             var instances = [];
             function SharedController1() {

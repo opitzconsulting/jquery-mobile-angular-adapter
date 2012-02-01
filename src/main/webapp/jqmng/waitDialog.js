@@ -91,18 +91,18 @@ define(['jquery'], function($) {
 
     /**
      *
-     * @param promise
+     * @param deferred
      * @param cancelData
      * @param msg (optional)
      */
-    function waitForWithCancel(promise, cancelData, msg) {
+    function waitForWithCancel(deferred, cancelData, msg) {
         if (!msg) {
             msg = $.mobile.loadingMessageWithCancel;
         }
         show(msg, function() {
-            promise.reject(cancelData);
+            deferred.reject(cancelData);
         });
-        promise.always(function() {
+        deferred.always(function() {
             hide();
         });
     }

@@ -13,12 +13,18 @@ define(['angular'], function(angular) {
             });
             it('should be able to change the page', function() {
                 navigate('somePage');
-                expect(changePageSpy).toHaveBeenCalledWith('#somePage', undefined);
+                expect(changePageSpy).toHaveBeenCalledWith('#somePage');
+            });
+
+            it('should allow an object to pass through to changePage', function() {
+                var changePageObj = {target: 'somePage', transition: 'someTransition'};
+                navigate(changePageObj);
+                expect(changePageSpy).toHaveBeenCalledWith('#somePage', changePageObj);
             });
 
             it('should be able to change the page with a transition', function() {
                 navigate('someTransition:somePage');
-                expect(changePageSpy).toHaveBeenCalledWith('#somePage', 'someTransition');
+                expect(changePageSpy).toHaveBeenCalledWith('#somePage', {transition: 'someTransition'});
             });
 
             it('should be able to go back', function() {
@@ -46,7 +52,7 @@ define(['angular'], function(angular) {
                 ];
                 navigate('back:page4');
                 expect(goSpy).not.toHaveBeenCalled();
-                expect(changePageSpy).toHaveBeenCalledWith('#page4', undefined);
+                expect(changePageSpy).toHaveBeenCalledWith('#page4');
             });
         });
 

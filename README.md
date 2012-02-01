@@ -172,6 +172,10 @@ Service to change the given page.
 - To go back one page use `$navigate('back')`.
 - If the `activateFn` function is given, it will be called after the navigation on the target page with
   `activateFnParam1, ...` as arguments. The invocation is done before the `pagebeforeshow` event on the target page.
+- If you want to pass special options to the jquery mobile `changePage` function:
+  Pass in an object to the `$navigate` function instead of a pageId. This object will be forwarded
+  to jqm `changePage`. To define the new pageId, this object needs the additional property `target`.
+
 
 ### Service $waitDialog
 The service `$waitDialog` allows the access to the jquery mobile wait dialog. It provides the following functions:

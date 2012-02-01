@@ -36,37 +36,46 @@ define(['jquery', 'angular'], function($, angular) {
      */
     function navigate(target, activateFunctionName) {
         var activateParams = Array.prototype.slice.call(arguments, 2);
-        var parts = splitAtFirstColon(target);
-        var animation, pageId;
+        var navigateOptions, pageId;
         callActivateFnOnPageChange(activateFunctionName, activateParams);
-        if (parts.length === 2 && parts[0] === 'back') {
-            var pageId = parts[1];
-            var relativeIndex = getIndexInStack(pageId);
-            if (relativeIndex === undefined) {
-                pageId = jqmChangePage(pageId, undefined);
-            } else {
-                window.history.go(relativeIndex);
-            }
-            return;
-        } else if (parts.length === 2) {
-            animation = parts[0];
-            pageId = parts[1];
+        if (typeof target === 'object') {
+            navigateOptions = target;
+            pageId = navigateOptions.target;
         } else {
-            pageId = parts[0];
-            animation = undefined;
+            var parts = splitAtFirstColon(target);
+            if (parts.length === 2 && parts[0] === 'back') {
+                var pageId = parts[1];
+                var relativeIndex = getIndexInStack(pageId);
+                if (relativeIndex === undefined) {
+                    pageId = jqmChangePage(pageId, undefined);
+                } else {
+                    window.history.go(relativeIndex);
+                }
+                return;
+            } else if (parts.length === 2) {
+                navigateOptions = { transition: parts[0] };
+                pageId = parts[1];
+            } else {
+                pageId = parts[0];
+                navigateOptions = undefined;
+            }
         }
         if (pageId === 'back') {
             window.history.go(-1);
         } else {
-            jqmChangePage(pageId, animation);
+            jqmChangePage(pageId, navigateOptions);
         }
     }
 
-    function jqmChangePage(pageId, animation) {
+    function jqmChangePage(pageId, navigateOptions) {
         if (pageId.charAt(0) !== '#') {
             pageId = '#' + pageId;
         }
-        $.mobile.changePage.call($.mobile, pageId, animation);
+        var callArgs = [pageId];
+        if (navigateOptions) {
+            callArgs.push(navigateOptions);
+        }
+        $.mobile.changePage.apply($.mobile, callArgs);
         return pageId;
     }
 

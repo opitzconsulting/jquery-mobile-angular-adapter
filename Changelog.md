@@ -1,6 +1,13 @@
 Changelog
 =====================
 
+1.0.5
+------------
+- Allow an object to be passed to `$navigate` service as first argument to leverage the full power
+  of jqm `changePage` function.
+
+
+
 1.0.4
 ------------
 - Update to jQuery Mobile 1.0. The adapter itself was not changed,

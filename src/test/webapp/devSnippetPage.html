@@ -21,28 +21,18 @@ Test page during development.
 </head>
 <body>
 
-<script>
-
-    function TestController($defer) {
-        var self = this;
-        self.cities = [{"id":1,"name":"Bergisch Gladbach"},{"id":2,"name":"Berlin"},{"id":4,"name":"Frankfurt"},{"id":3,"name":"Köln"},{"id":5,"name":"Leverkusen"},{"id":6,"name":"München"},{"id":7,"name":"Rosenheim"}];
-        this.testIt = function() {
-            var options = $("#start").find("option");
-            console.log(options.eq(1).attr("selected"));
-        }
-    }
-
-    TestController.$inject = ['$defer'];
-</script>
-
-<div data-role="page" id="start" ng:controller="TestController">
+<div data-role="page" id="start">
     <div data-role="content">
-        <input ng:repeat="item in [1]" name="mysel" id="mysel" type="text">
-        {{myNumber}}
-        <a href="" ngm:click="testIt()">Test</a>
-
+        <a href="" ngm:click="$navigate({target: 'page2', transition:'pop'})">Test</a>
     </div>
 </div>
+
+<div data-role="page" id="page2">
+    <div data-role="content">
+        <a href="" ngm:click="$navigate('page2:pop','pop')">Test2</a>
+    </div>
+</div>
+
 
 </body>
 </html>

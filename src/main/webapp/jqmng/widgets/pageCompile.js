@@ -47,6 +47,16 @@ define(['jquery', 'angular', 'jqmng/globalScope'], function($, angular, globalSc
         degradeInputs(page);
         angular.compile(page)(childScope);
         parentScope.$eval();
+        var createJqmWidgetsFlag = false;
+        childScope.$onEval(99999, function() {
+            if (createJqmWidgetsFlag) {
+                createJqmWidgetsFlag = false;
+                page.trigger('create');
+            }
+        });
+        childScope.createJqmWidgets = function() {
+            createJqmWidgetsFlag = true;
+        }
         page.trigger("pagecreate");
     });
 
@@ -77,12 +87,21 @@ define(['jquery', 'angular', 'jqmng/globalScope'], function($, angular, globalSc
 
     /**
      * When scopes are created by angular, the elements within the scope need to be enhanced by jquery mobile.
-     * We do this by using a special directive that triggers the corresponding event.
+     * We do this by using a special directive that triggers the create event on the page.
      * In a later release of angular there will be angular events that we can hook to.
+     * <p>
+     * Note that is is required to use the page as target for the event, as some jqm plugins
+     * require the parent elements to be enhanced before the child elements, e.g.
+     * If there are links in a list:
+     * The "links" plugin will not enhance links that have the ui-link-inherited class,
+     * which gets set by the listview plugin.
+     * We solve this problem by always triggering the create event
+     * on the page, and letting jquery mobile figure out the correct order.
      */
     angular.directive("ngm:createwidgets", function(expression) {
         return function(element) {
-            element.parent().trigger('create');
+            var scope = this;
+            scope.createJqmWidgets && scope.createJqmWidgets();
         };
     });
 

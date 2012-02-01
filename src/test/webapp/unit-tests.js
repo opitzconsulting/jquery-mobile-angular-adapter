@@ -19,5 +19,6 @@ define([
     'unit/selectSliderSpec',
     'unit/textInputSpec',
     'unit/listViewSpec',
-    'unit/switchSpec'
+    'unit/switchSpec',
+    'unit/usecaseSpec'
 ]);

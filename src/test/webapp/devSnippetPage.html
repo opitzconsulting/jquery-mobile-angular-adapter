@@ -21,24 +21,22 @@ Test page during development.
 </head>
 <body>
 
-<div data-role="page" id="start">
-    <div data-role="content">
-        <input type="submit" ng:click="flag = true">
-        <a href="" ngm:click="list = [1,2]" data-role="button">Fill</a>
-        <a href="" ngm:click="list = []" data-role="button">Clear</a>
-        <ul data-role="listview" data-inset="true">
-            <li ng:repeat="l in list">
-                Test
-                <button>Test</button>
-            </li>
-        </ul>
-    </div>
-</div>
+<div data-role="page" id="start" ng:init="data = {mylist:[1]}">
+<div data-role="content">
+    <ul data-role="listview" id="list">
+        <li ng:repeat="l in data.mylist">
+            <a href="#test2" ng:click="data.mylist=[1,2]">Test
+            </a>
+        </li>
+    </ul>
+    <ul data-role="listview" id="list2">
+        <li>
+            <a href="#test2" ng:click="data.mylist=[1,2]">Test
+            </a>
+        </li>
+    </ul>
 
-<div data-role="page" id="page2">
-    <div data-role="content">
-        <a href="" ngm:click="$navigate('page2:pop','pop')">Test2</a>
-    </div>
+</div>
 </div>
 
 

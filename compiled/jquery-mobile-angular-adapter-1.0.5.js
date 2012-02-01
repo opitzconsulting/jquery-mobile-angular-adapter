@@ -178,7 +178,7 @@ define('jqmng/navigate',['jquery', 'angular'], function($, angular) {
                 var pageId = parts[1];
                 var relativeIndex = getIndexInStack(pageId);
                 if (relativeIndex === undefined) {
-                    pageId = jqmChangePage(pageId, undefined);
+                    pageId = jqmChangePage(pageId, {reverse: true});
                 } else {
                     window.history.go(relativeIndex);
                 }
@@ -1057,6 +1057,7 @@ define('jqmng/widgets/angularInput',[
                 .not(":jqmData(role='none'), :jqmData(role='nojs')").length > 0;
 
         }
+
         function isTextInput(element) {
             return element.filter($.mobile.textinput.prototype.options.initSelector)
                 .not(":jqmData(role='none'), :jqmData(role='nojs')").length > 0;
@@ -1068,7 +1069,8 @@ define('jqmng/widgets/angularInput',[
             var checkboxRadio = isCheckboxRadio(element);
 
             var name = element.attr('name');
-            var type = element[0].type;
+            var type = element.attr('type');
+            var origType = type;
             // Need to set the type temporarily always to 'text' so that
             // the original angular widget is used.
             if (textinput) {
@@ -1076,20 +1078,33 @@ define('jqmng/widgets/angularInput',[
             }
             // We fake an element during compile phase, as setting the type attribute
             // is not allowed by the dom (although it works in many browsers...)
-            var fakeElement = [{type: type}];
+            var fakeElement = [
+                {type: type}
+            ];
             var origBinder = oldInput.call(this, fakeElement);
             var newBinder = function() {
                 var scope = this;
                 var element = arguments[newBinder.$inject.length];
+                var origBind = element.bind;
                 if (checkboxRadio) {
                     // Angular binds to the click event for radio and check boxes,
                     // but jquery mobile fires a change event. So be sure that angular only listens to the change event,
                     // and no more to the click event, as the click event is too early / jqm has not updated
                     // the checked status.
-                    var origBind = element.bind;
+
                     element.bind = function(events, callback) {
                         if (events.indexOf('click') != -1) {
                             events = "change";
+                        }
+                        return origBind.call(this, events, callback);
+                    };
+                }
+                if (origType === 'date') {
+                    // on iOS 5, date inputs do not fire a change event.
+                    // so we need to also listen for blur events.
+                    element.bind = function(events, callback) {
+                        if (events.indexOf('change') != -1) {
+                            events += " blur";
                         }
                         return origBind.call(this, events, callback);
                     };

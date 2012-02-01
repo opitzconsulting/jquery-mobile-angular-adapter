@@ -26,7 +26,7 @@ Test page during development.
     <input type="date" name="someDate" id="someDate">
     {{someDate}}
     <script>
-        $("#someDate").bind("change input blur", function() {
+        $("#someDate").bind("change input", function() {
             alert("changed");
         });
     </script>

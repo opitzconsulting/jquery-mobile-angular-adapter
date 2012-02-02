@@ -18,28 +18,29 @@ Test page during development.
     <script>
         require.s.contexts._.jQueryCheck();
     </script>
+
+    <script>
+
+        MainController = function() {
+            this.fill = function() {
+                this.items = [1,2];
+            }
+        }
+    </script>
 </head>
 <body>
 
-<div data-role="page" id="start">
-<div data-role="content">
-    <input type="date" name="someDate" id="someDate">
-    {{someDate}}
-    <script>
-        $("#someDate").bind("change input", function() {
-            alert("changed");
-        });
-    </script>
+<div data-role="page" id="start" ng:controller="MainController">
+<div data-role="content" >
+        <button ngm:click="fill()">Fill</button>
+        <ul data-role="listview" data-inset="true">
+            <li ng:repeat="i in items"></li>
+
+        </ul>
 
 </div>
 </div>
 
-<div data-role="page" id="page2">
-<div data-role="content">
-    Page2  3
-
-</div>
-</div>
 
 </body>
 </html>

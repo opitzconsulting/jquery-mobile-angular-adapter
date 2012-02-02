@@ -1,59 +1,36 @@
 define(["unit/testUtils"], function(utils) {
 
     describe("listview", function() {
-        it('should be working without ng:repeat', function() {
-            var d = utils.compileInPage(
-                '<ul data-role="listview">' +
-                    '<li id="entry">Test</li>' +
-                    '</ul>');
-            var list = d.element;
-            var li = list.find("li");
-            expect(li.hasClass('ui-li')).toBeTruthy();
-        });
-
-        it('should be usable with ng:repeat', function() {
-            var d = utils.compileInPage(
-                '<ul data-role="listview">' +
-                    '<li ng:repeat="item in [1]">{{item}} Test</li>' +
-                    '</ul');
-            var page = d.page;
-            var li = page.find("li");
-            expect(li.hasClass('ui-li')).toBeTruthy();
-        });
-
-        it('should refresh entries when they are added and enhanced by the create event', function() {
+        it('should refresh when first the requestrefresh event on a list item ' +
+            'and then the page create event is fired', function() {
             var d = utils.compileInPage(
                 '<ul data-role="listview" data-inset="true"><li>1</li></ul>');
             var list = d.element;
             var lis = list.find("li");
-            expect(lis.eq(0).hasClass('ui-corner-top'));
+            expect(lis.eq(0).hasClass('ui-corner-top')).toBe(true);
             expect(lis.eq(0).text()).toBe('1');
-            expect(lis.eq(0).hasClass('ui-corner-bottom'));
+            expect(lis.eq(0).hasClass('ui-corner-bottom')).toBe(true);
             list.append('<li>2</li>');
-            list.trigger('create');
+            lis.eq(0).trigger('requestrefresh');
+            d.page.trigger('create');
             lis = list.find("li");
-            expect(lis.length).toEqual(2);
-            expect(lis.eq(0).hasClass('ui-corner-top'));
-            expect(lis.eq(0).text()).toBe('1');
-            expect(lis.eq(1).hasClass('ui-corner-bottom'));
-            expect(lis.eq(1).text()).toBe('2');
+            expect(lis.eq(0).hasClass('ui-corner-top')).toBe(true);
+            expect(lis.eq(1).hasClass('ui-corner-bottom')).toBe(true);
         });
 
-        it('should refresh when entries are removed', function() {
+        it('should not refresh when the requestrefresh event on a list item is not fired ' +
+            'and then the page create event is fired', function() {
             var d = utils.compileInPage(
-                '<ul data-role="listview" data-inset="true"><li>1</li><li>2</li></ul>');
-            var container = d.element;
-            var lis = container.children('li');
-            expect(lis.length).toEqual(2);
-            expect(lis.eq(0).hasClass('ui-corner-top'));
+                '<ul data-role="listview" data-inset="true"><li>1</li></ul>');
+            var list = d.element;
+            var lis = list.find("li");
+            expect(lis.eq(0).hasClass('ui-corner-top')).toBe(true);
             expect(lis.eq(0).text()).toBe('1');
-            expect(lis.eq(1).hasClass('ui-corner-bottom'));
-            expect(lis.eq(1).text()).toBe('2');
-            container.children('li').eq(0).remove();
-            var lis = container.children('li');
-            expect(lis.eq(0).hasClass('ui-corner-top'));
-            expect(lis.eq(0).text()).toBe('2');
-            expect(lis.eq(0).hasClass('ui-corner-bottom'));
+            expect(lis.eq(0).hasClass('ui-corner-bottom')).toBe(true);
+            list.append('<li>2</li>');
+            d.page.trigger('create');
+            lis = list.find("li");
+            expect(lis.eq(1).hasClass('ui-corner-bottom')).toBe(false);
         });
 
         it('should be removable when subpages are used', function() {

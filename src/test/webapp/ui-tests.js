@@ -6,5 +6,6 @@ define([
     'ui/selectmenuSpec',
     'ui/compileIntegrationSpec',
     'ui/waitDialogServiceSpec',
-    'ui/navigateSpec'
+    'ui/navigateSpec',
+    'ui/usecaseSpec'
 ]);

@@ -106,6 +106,5 @@ define([], function() {
                 expect(input.val()).toBe("hello");
             })
         });
-
     });
 });

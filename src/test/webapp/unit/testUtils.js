@@ -21,10 +21,13 @@ define(["jquery", "angular"], function($, angular) {
         return res;
     }
 
-    function compileInPage(html) {
+    function compileInPage(html, pageControllerName) {
         var elements = test$("<div>"+html+"</div>").children().addClass("result", "true");
         var page = test$('<div id="start" data-role="page" data-url="start"><div data-role="content"></div></div>');
         test$("body").append(page);
+        if (pageControllerName) {
+            page.attr('ng:controller', pageControllerName);
+        }
         page.find(":jqmData(role='content')").append(elements);
         page.page();
         return {

@@ -3,6 +3,7 @@
  */
 define([
     'jqm-angular',
+    'unit/compileIntegrationUnitSpec',
     'unit/eventSpec',
     'unit/navigateSpec',
     'unit/arrayPagingSpec',

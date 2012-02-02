@@ -764,23 +764,95 @@ define('jqmng/widgets/pageCompile',['jquery', 'angular', 'jqmng/globalScope'], f
         angular.compile(page)(childScope);
         parentScope.$eval();
         var createJqmWidgetsFlag = false;
-        childScope.$onEval(99999, function() {
+        // Do NOT use childScope here:
+        // The page may have created an own scope by using ng:controller,
+        // and we only eval that child scope!
+        page.scope().$onEval(99999, function() {
             if (createJqmWidgetsFlag) {
                 createJqmWidgetsFlag = false;
                 page.trigger('create');
             }
         });
-        childScope.createJqmWidgets = function() {
+        page.bind('requestrefresh', function() {
             createJqmWidgetsFlag = true;
-        }
+        });
         page.trigger("pagecreate");
     });
+
+    /**
+     * For refreshing widgets we implement a new strategy for jquery mobile:
+     * When new elements are added or removed to the dom, the requestrefresh event is fired on those elements.
+     * All elements that have a refresh event and through which the event passes are marked.
+     * During the next page create event those widgets automatically refresh themselves.
+     * The page create event is automatically fired at the end of every eval, when at least one requestrefresh
+     * event happened.
+     */
+    function installFireRequestrefreshEventWhenElementsAreRemoved() {
+        var _cleanData = $.cleanData;
+        $.cleanData = function(elems) {
+            for (var i = 0, elem; (elem = elems[i]) != null; i++) {
+                $(elem).trigger("requestrefresh");
+            }
+            _cleanData(elems);
+        };
+    }
+
+    installFireRequestrefreshEventWhenElementsAreRemoved();
+
+    /**
+     * Directive for fireing the requestrefresh event when new elements are created by angular.
+     * This directive is used by our enhanced ng:repeat and ng:switch widgets.
+     */
+    angular.directive("ngm:createwidgets", function(expression) {
+        return function(element) {
+            element.trigger('requestrefresh');
+
+        };
+    });
+
+    function instrumentRefreshOnInit(widget) {
+        var _create = widget.prototype._create;
+        widget.prototype._create = function() {
+            var res = _create.apply(this, arguments);
+            var self = this;
+            this.element.bind("requestrefresh", function() {
+                self.requestrefresh = true;
+            });
+            return res;
+        };
+        // the _init function is called whenever the widget is
+        // called like this: element.widget().
+        // This happens every time the create event is fired through jquery mobile.
+        var _init = widget.prototype._init;
+        widget.prototype._init = function() {
+            var res = _init.apply(this, arguments);
+            if (this.requestrefresh) {
+                this.requestrefresh = false;
+                this.refresh();
+            }
+            return res;
+
+        }
+    }
+
+    function instrumentWidgetsWithRefreshFunction() {
+        for (var name in $.mobile) {
+            var val = $.mobile[name];
+            if (typeof val === 'function') {
+                if (val.prototype.refresh) {
+                    instrumentRefreshOnInit(val);
+                }
+            }
+        }
+    }
+
+    instrumentWidgetsWithRefreshFunction();
 
     $('div').live('jqmngpagebeforeshow', function(event, data) {
         var currPageScope = $(event.target).scope();
         if (currPageScope) {
-            currScope = currPageScope;
-            currScope.$service("$updateView")();
+            setCurrScope(currPageScope);
+            currPageScope.$service("$updateView")();
         }
         var page = $(event.target);
         page.trigger("pagebeforeshow", data);
@@ -801,27 +873,12 @@ define('jqmng/widgets/pageCompile',['jquery', 'angular', 'jqmng/globalScope'], f
         page.trigger("pageshow", data);
     });
 
-    /**
-     * When scopes are created by angular, the elements within the scope need to be enhanced by jquery mobile.
-     * We do this by using a special directive that triggers the create event on the page.
-     * In a later release of angular there will be angular events that we can hook to.
-     * <p>
-     * Note that is is required to use the page as target for the event, as some jqm plugins
-     * require the parent elements to be enhanced before the child elements, e.g.
-     * If there are links in a list:
-     * The "links" plugin will not enhance links that have the ui-link-inherited class,
-     * which gets set by the listview plugin.
-     * We solve this problem by always triggering the create event
-     * on the page, and letting jquery mobile figure out the correct order.
-     */
-    angular.directive("ngm:createwidgets", function(expression) {
-        return function(element) {
-            var scope = this;
-            scope.createJqmWidgets && scope.createJqmWidgets();
-        };
-    });
-
     var currScope = null;
+
+    function setCurrScope(scope) {
+        currScope = scope;
+    }
+
     // The eval function of the global scope should eval
     // the active scope only.
     globalScope.onCreate(function(scope) {
@@ -860,6 +917,10 @@ define('jqmng/widgets/pageCompile',['jquery', 'angular', 'jqmng/globalScope'], f
             return res;
         }, {$inject:['$log']});
     })(angular);
+
+    return {
+        setCurrScope: setCurrScope
+    }
 });
 
 /**

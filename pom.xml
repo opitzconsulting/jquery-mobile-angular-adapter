@@ -183,6 +183,9 @@
                                                 <entry>../../../compiled/jquery-mobile-angular-adapter-${project.version}
                                                 </entry>
                                             </include>
+                                            <exclude>
+                                                <entry>jquery.js</entry>
+                                            </exclude>
                                         </module>
                                     </modules>
                                 </configuration>

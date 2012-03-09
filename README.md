@@ -26,7 +26,7 @@ Dependencies
 - angular 0.9.19
 - jquery 1.6.2 (Please note: Newer versions of jquery do not work, as angular 0.9.19
   does not work with them...)
-- jquery mobile 1.0.1
+- jquery mobile 1.1.0
 
 Bugfixed version of jquery mobile
 ---------------------------------

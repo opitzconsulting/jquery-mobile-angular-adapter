@@ -27587,7 +27587,7 @@ $( document ).bind( "pagecreate create", function( e ){
 }));
 
 /**
- * jQuery Mobile angularJS adaper v1.0.6-SNAPSHOT
+ * jQuery Mobile angularJS adaper v1.0.6
  * http://github.com/tigbro/jquery-mobile-angular-adapter
  *
  * Copyright 2011, Tobias Bosch (OPITZ CONSULTING GmbH)

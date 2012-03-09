@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.opitzconsulting.html5</groupId>
     <artifactId>jquery-mobile-angular-adapter</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6-SNAPSHOT</version>
     <name>JQuery Mobile Angular Adapter</name>
     <packaging>war</packaging>
     <description>Adapter for using jquery mobile with angular</description>
@@ -13,6 +13,7 @@
         <!-- optimizer for minification: uglify or closure -->
         <jsOptimizer>uglify</jsOptimizer>
         <jsSuffix>-${project.version}</jsSuffix>
+        <jqmVersion>1.1.0-rc.1-oc1</jqmVersion>
     </properties>
 
     <build>
@@ -178,7 +179,7 @@
                                                 <entry>lib/jquery-1.6.2</entry>
                                                 <entry>lib/mobileinit</entry>
                                                 <entry>lib/angular-0.9.19</entry>
-                                                <entry>lib/jquery.mobile-1.0.1-oc1</entry>
+                                                <entry>lib/jquery.mobile-${jqmVersion}</entry>
                                                 <entry>../../../compiled/jquery-mobile-angular-adapter-${project.version}
                                                 </entry>
                                             </include>

@@ -311,7 +311,9 @@ jasmine.ui.log = function(msg) {
         } else {
             var oldResourcesReady = fr.require.resourcesReady;
             fr.require.resourcesReady = function(ready) {
-                if (ready) {
+                if (ready && !fr.resourcesReadyCalls) {
+                    // Somehow, requirejs calls this function more than once...
+                    fr.resourcesReadyCalls = true;
                     callInstrumentListeners(fr, 'afterContent');
                 }
                 return oldResourcesReady.apply(this, arguments);

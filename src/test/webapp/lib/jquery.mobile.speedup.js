@@ -3,7 +3,6 @@
  */
 $(document).bind("mobileinit", function(){
     // Disable transitions
-    $.mobile.defaultTransitionHandler = $.mobile.noneTransitionHandler;
     $.mobile.defaultPageTransition = "none";
     $.mobile.defaultDialogTransition = "none";
     var oldTimeout = window.setTimeout;

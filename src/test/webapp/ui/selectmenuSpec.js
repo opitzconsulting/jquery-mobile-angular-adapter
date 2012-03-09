@@ -2,7 +2,7 @@ define(function() {
 
     describe("selectmenu", function() {
         it('should save the ui value into the model when using non native menus and popups', function() {
-            var scope, dialog, dialogOpen;
+            var scope, dialogOpen;
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 page.append(
@@ -17,16 +17,10 @@ define(function() {
                 expect(select[0].value).toEqual("v1");
                 scope = select.scope();
                 expect(scope.$get('mysel')).toEqual("v1");
-
-                dialog = $(".ui-dialog");
-                dialogOpen = false;
-                expect(dialog.length).toEqual(1);
-                dialog.bind('pageshow', function() {
-                    dialogOpen = true;
-                });
-                dialog.bind('pagehide', function() {
-                    dialogOpen = false;
-                });
+                dialogOpen = function() {
+                    return select.data('selectmenu').isOpen;
+                };
+                expect(dialogOpen()).toBeFalsy();
                 // find the menu and click on the second entry
                 var oldHeight = testframe().$.fn.height;
                 testframe().$.fn.height = function() {
@@ -38,18 +32,18 @@ define(function() {
                 select.selectmenu('open');
             });
             waitsFor(function() {
-                return dialogOpen;
+                return dialogOpen();
             });
             runs(function() {
                 var $ = testframe().$;
+                var dialog = $(".ui-dialog");
                 $(dialog.find('li a')[1]).trigger('click')
                 expect(scope.$get('mysel')).toEqual("v2");
             });
             waitsFor(function() {
-                return !dialogOpen;
+                return !dialogOpen();
             });
         });
-
         it('should save the ui value into the model when using non native menus', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');

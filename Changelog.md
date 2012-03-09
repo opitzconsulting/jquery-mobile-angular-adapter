@@ -1,6 +1,12 @@
 Changelog
 =====================
 
+1.0.6
+-------------
+- Update to jquery mobile 1.1
+- `$waitDialog.show()` if called without a message only shows the default message
+  if `$.mobile.loadingMessageTextVisible` is true (see jquery mobile docs for that property).
+
 1.0.5
 ------------
 - Allow an object to be passed to `$navigate` service as first argument to leverage the full power

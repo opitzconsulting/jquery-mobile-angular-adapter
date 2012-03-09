@@ -33,8 +33,15 @@ define(['jquery'], function($) {
         if (showCalls.length > 0) {
             var lastCall = showCalls[showCalls.length - 1];
             var msg = lastCall.msg;
-            $.mobile.loadingMessage = msg;
+            var oldMessage = $.mobile.loadingMessage;
+            var oldTextVisible = $.mobile.loadingMessageTextVisible;
+            if (msg) {
+                $.mobile.loadingMessage = msg;
+                $.mobile.loadingMessageTextVisible = true;
+            }
             $.mobile.showPageLoadingMsg();
+            $.mobile.loadingMessageTextVisible = oldTextVisible;
+            $.mobile.loadingMessage = oldMessage;
         } else {
             $.mobile.hidePageLoadingMsg();
         }
@@ -63,9 +70,6 @@ define(['jquery'], function($) {
         }
         if (typeof arguments[1] == 'function') {
             tapCallback = arguments[1];
-        }
-        if (!msg) {
-            msg = $.mobile.loadingMessage;
         }
 
         showCalls.push({msg: msg, callback: tapCallback});

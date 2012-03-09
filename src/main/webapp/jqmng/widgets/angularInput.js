@@ -63,6 +63,11 @@ define([
                 // Watch the name and refresh the widget if needed
                 if (name) {
                     scope.$watch(name, function(value) {
+                        // Angular only sets the checked property on the dom element,
+                        // but not explicitly the css attribute. However, the later is checked by jquery mobile.
+                        if (checkboxRadio) {
+                            element.attr('checked', element[0].checked);
+                        }
                         var data = element.data();
                         for (var key in data) {
                             var widget = data[key];

@@ -1,13 +1,15 @@
 /*
  * waitdialog service.
  */
-define(['jquery'], function($) {
+jqmng.define('jqmng/waitDialog', ['jquery'], function($) {
     var showCalls = [];
 
     function onClick(event) {
         var lastCall = showCalls[showCalls.length - 1];
         if (lastCall.callback) {
-            lastCall.callback.apply(this, arguments);
+            rootScope.$apply(function() {
+                lastCall.callback.apply(this, arguments);
+            });
         }
         // This is required to prevent a second
         // click event, see
@@ -81,6 +83,10 @@ define(['jquery'], function($) {
         updateUi();
     }
 
+    function always(promise, callback) {
+        promise.then(callback, callback);
+    }
+
     /**
      *
      * @param promise
@@ -88,7 +94,7 @@ define(['jquery'], function($) {
      */
     function waitFor(promise, msg) {
         show(msg);
-        promise.always(function() {
+        always(promise, function() {
             hide();
         });
     }
@@ -106,7 +112,7 @@ define(['jquery'], function($) {
         show(msg, function() {
             deferred.reject(cancelData);
         });
-        deferred.always(function() {
+        always(deferred.promise, function() {
             hide();
         });
     }
@@ -118,9 +124,12 @@ define(['jquery'], function($) {
         waitForWithCancel:waitForWithCancel
     };
 
-    angular.service('$waitDialog', function() {
+    var mod = angular.module('ng');
+    var rootScope;
+    mod.service('$waitDialog', ['$rootScope', function($rootScope) {
+        rootScope = $rootScope;
         return res;
-    });
+    }]);
 
     return res;
 });

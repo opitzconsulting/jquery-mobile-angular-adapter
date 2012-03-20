@@ -1,6 +1,17 @@
 Changelog
 =====================
 
+1.0.7
+-------------
+- Update to angular 1.0 and jquery 1.7
+- ng-app directive of angular is required
+- removed `iff` expression as it was only used internally and is now no more needed.
+- removed `$.mobile.globalScope` Use angular's `$rootScope` service instead.
+- removed `ngm:fadein` directive, as it is not related to mobile
+- updated the build process
+- removed custom build of jquery mobile, as no patches are needed any more to work
+  with angular 1.0.
+
 1.0.6
 -------------
 - Update to jquery mobile 1.1

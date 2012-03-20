@@ -1,35 +1,55 @@
-define([
-    'jqmng/widgets/widgetProxyUtil'
-], function(widgetProxyUtil) {
-    widgetProxyUtil.createAngularDirectiveProxy('ng:bind-attr', function(expression) {
-        var regex = /([^:{'"]+)/;
-        var attr = regex.exec(expression)[1];
-        if (attr !== 'disabled') {
-            return function() {
+jqmng.define('jqmng/widgets/disabledHandling', ['jquery', 'angular'], function ($, angular) {
+        var mod = angular.module('ng');
 
-            };
-        } else {
-            return function(element) {
-                var scope = this;
-                var oldValue;
-                // Note: We cannot use scope.$watch here:
-                // We want to be called after the proxied angular implementation, and
-                // that uses $onEval. $watch always gets evaluated before $onEval.
-                scope.$onEval(function() {
-                    var value = element.attr(attr);
-                    if (value != oldValue) {
-                        oldValue = value;
-                        var jqmOperation = value?"disable":"enable";
-                        var data = element.data();
-                        for (var key in data) {
-                            var widget = data[key];
-                            if (widget[jqmOperation]) {
-                                element[key](jqmOperation);
-                            }
+        function instrumentAttrSetter(element, attr) {
+            // Note: We cannot use attr.$observe here, as we also want to
+            // be able to listen to ng-bind-attr!
+            var _$set = attr.$set;
+            if (_$set.instrumented) {
+                return;
+            }
+            attr.$set = function (key, value) {
+                var res = _$set.apply(this, arguments);
+                if (key === 'disabled') {
+                    var jqmOperation = 'enable';
+                    if (value === 'disabled' || value == 'true') {
+                        jqmOperation = 'disable';
+                    }
+                    var data = element.data();
+                    for (var key in data) {
+                        var widget = data[key];
+                        if (widget[jqmOperation]) {
+                            element[key](jqmOperation);
                         }
                     }
-                });
-            }
+                }
+                return res;
+            };
+            attr.$set.instrumented = true;
         }
-    });
-});
+
+        mod.directive('ngBindAttr', function () {
+            return {
+                compile:function () {
+                    return {
+                        post:function (scope, element, attr) {
+                            instrumentAttrSetter(element, attr);
+                        }
+                    }
+                }
+            }
+        });
+
+        mod.directive('disabled', function () {
+            return {
+                compile:function () {
+                    return {
+                        post:function (scope, element, attr) {
+                            instrumentAttrSetter(element, attr);
+                        }
+                    }
+                }
+            }
+        });
+    }
+);

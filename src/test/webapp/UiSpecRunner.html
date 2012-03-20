@@ -7,16 +7,17 @@
     <script src="lib/jasmine-ui.js"></script>
     <script src="lib/jasmine-html.js"></script>
 
-    <script src="lib/require.js" data-main="ui-tests"></script>
-    <script>
-        require(['lib/domReady!'], function(doc) {
-            jasmine.getEnv().addReporter(new jasmine.TrivialReporter());
-            jasmine.getEnv().execute();
-        });
-    </script>
-
+    <script src="lib/simple-require.js"></script>
+    <script src="ui/selectmenuSpec.js"></script>
+    <script src="ui/compileIntegrationSpec.js"></script>
+    <script src="ui/usecaseSpec.js"></script>
+    <script src="ui/waitDialogServiceSpec.js"></script>
+    <script src="ui/navigateSpec.js"></script>
 </head>
 <body>
-
+    <script>
+        jasmine.getEnv().addReporter(new jasmine.TrivialReporter());
+        jasmine.getEnv().execute();
+    </script>
 </body>
 </html>

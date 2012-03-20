@@ -1,4 +1,4 @@
-define(['jquery', 'angular'], function($, angular) {
+jqmng.define('jqmng/navigate', ['jquery', 'angular'], function($, angular) {
     function splitAtFirstColon(value) {
         var pos = value.indexOf(':');
         if (pos===-1) {
@@ -80,8 +80,11 @@ define(['jquery', 'angular'], function($, angular) {
     }
 
 
-    angular.service('$navigate', function() {
-        return navigate;
+    var mod = angular.module('ng');
+    mod.provider('$navigate', function() {
+        this.$get = function() {
+            return navigate;
+        }
     });
 
     function getIndexInStack(pageId) {
@@ -97,12 +100,19 @@ define(['jquery', 'angular'], function($, angular) {
         return undefined;
     }
 
+    mod.run(['$rootScope', '$navigate', function($rootScope, $navigate) {
+        $rootScope.$navigate = function() {
+            var args = Array.prototype.slice.call(arguments);
+            args.unshift($navigate);
+            return navigateExpression.apply(this, args);
+        }
+    }]);
+
     /**
      * Helper function to put the navigation part out of the controller into the page.
      * @param scope
      */
-    angular.Object.navigate = function(scope) {
-        var service = scope.$service("$navigate");
+    var navigateExpression = function(service) {
         if (arguments.length === 2) {
             // used without the test.
             service(arguments[1]);

@@ -1,32 +1,32 @@
-define([
-    'jqmng/widgets/widgetProxyUtil'
-], function(proxyUtil) {
-    proxyUtil.createAngularWidgetProxy('select', function(element) {
-        var name = element.attr('name');
-        return function(element, origBinder) {
-            var scope = this;
-            var res = origBinder();
-            var oldVal;
-            if (name) {
-                // Note: We cannot use $watch here, as ng:options uses $onEval to change the options,
-                // and that gets executed after the $watch.
-                scope.$onEval(function() {
-                    var newVal = scope.$eval(name);
-                    if (newVal!==oldVal) {
-                        oldVal = newVal;
-                        var data = element.data();
-                        for (var key in data) {
-                            var widget = data[key];
-                            if (widget.refresh) {
-                                element[key]("refresh");
-                            }
+jqmng.define('jqmng/widgets/angularSelect', ['jquery', 'angular'], function ($, angular) {
+    var mod = angular.module('ng');
+    mod.directive("select", function () {
+        return {
+            restrict:'E',
+            require:'?ngModel',
+            compile:function (tElement, tAttrs) {
+                return {
+                    post:function (scope, iElement, iAttrs, ctrl) {
+                        if (!ctrl) {
+                            return;
                         }
-                    }
-                });
-            }
+                        var _$render = ctrl.$render;
+                        ctrl.$render = function () {
+                            var res = _$render.apply(this, arguments);
+                            var data = iElement.data();
+                            for (var key in data) {
+                                var widget = data[key];
+                                if (widget.refresh) {
+                                    iElement[key]("refresh");
+                                }
+                            }
 
-            return res;
+                            return res;
+                        };
+                    }
+                }
+
+            }
         }
     });
-
 });

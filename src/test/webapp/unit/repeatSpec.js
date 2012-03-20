@@ -1,4 +1,4 @@
-define(["unit/testUtils"], function(utils) {
+jqmng.require(["unit/testUtils"], function(utils) {
     describe('ng:repeat', function() {
         it("should fire the requestrefresh event for every entry when the list grows", function() {
             var c = utils.compileInPage('<div><div ng:repeat="l in list"></div></div>');
@@ -9,7 +9,7 @@ define(["unit/testUtils"], function(utils) {
                 eventCount++;
             });
             scope.list = [0,1,3];
-            scope.$eval();
+            scope.$digest();
             expect(eventCount).toEqual(3);
         });
 
@@ -17,11 +17,11 @@ define(["unit/testUtils"], function(utils) {
             var c = utils.compileInPage('<div><button ng:repeat="l in list"></button></div>');
             var scope = c.element.scope();
             scope.list = [1];
-            scope.$eval();
+            scope.$digest();
             // Button should add a parent
             expect(c.element.children('div').length).toBe(1);
             scope.list = [1,2];
-            scope.$eval();
+            scope.$digest();
             expect(c.element.children('div').length).toBe(2);
         });
     });

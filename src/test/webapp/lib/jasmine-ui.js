@@ -303,6 +303,8 @@ jasmine.ui.log = function(msg) {
      * when everything is loaded, but the ready signal was not yet sent.
      */
     function addRequireJsSupport(fr) {
+        // permanently deactivated as this is still buggy!
+        return false;
         if (!fr.require) {
             return false;
         }

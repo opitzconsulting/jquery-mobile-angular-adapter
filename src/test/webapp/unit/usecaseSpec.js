@@ -1,4 +1,4 @@
-define(["unit/testUtils"], function(utils) {
+jqmng.require(["unit/testUtils"], function(utils) {
     /**
      * Different usecases to reproduce errors from github issues.
      */

@@ -1,16 +1,17 @@
-define(['angular'], function(angular) {
+jqmng.require(['angular', "unit/testUtils"], function(angular, utils) {
     describe("ngm:event", function() {
 
         it('should eval the expression when the event is fired', function() {
-            var element = angular.element('<span ngm:event="{click:\'clicked=true\'}"></span>');
-            var scope = angular.compile(element)();
-            element.click();
+            var d = utils.compileInPage('<span ngm:event="{click:\'clicked=true\'}"></span>');
+            var scope = d.element.scope();
+            d.element.click();
             expect(scope.clicked).toEqual(true);
         });
 
         it('should work with multiple event/function pairs', function() {
-            var element = angular.element('<span ngm:event="{mousedown:\'m = true\', click:\'c = true\'}"></span>');
-            var scope = angular.compile(element)();
+            var d = utils.compileInPage('<span ngm:event="{mousedown:\'m = true\', click:\'c = true\'}"></span>');
+            var element = d.element;
+            var scope = element.scope();
             expect(scope.c).toEqual(undefined);
             element.click();
             expect(scope.c).toEqual(true);
@@ -33,12 +34,23 @@ define(['angular'], function(angular) {
                 click:'vclick'
             };
             for (var event in events) {
-                var element = angular.element('<span ngm:'+event+'="executed=true"></span>');
-                var scope = angular.compile(element)();
+                var d = utils.compileInPage('<span ngm:'+event+'="executed=true"></span>');
+                var element = d.element;
+                var scope = element.scope();
                 element.trigger(events[event]);
                 expect(scope.executed).toEqual(true);
             }
+        });
 
+        it("should work together with ng:model", function() {
+            var d = utils.compileInPage('<input ng:click="executed=true" type="text" ng:model="data"></span>');
+            var element = d.element;
+            var scope = element.scope();
+            element.trigger('click');
+            expect(scope.executed).toEqual(true);
+            element.val('test');
+            element.trigger('blur');
+            expect(scope.data).toBe('test');
         });
     });
 

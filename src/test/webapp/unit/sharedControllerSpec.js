@@ -1,56 +1,54 @@
-define(['angular'], function(angular) {
+jqmng.require(['angular', 'unit/testUtils'], function(angular, utils) {
     describe('ngm:shared-controller', function() {
         it('should create an instance of the defined controllers and store them in the current scope', function() {
             var instances = [];
-            function SharedController1() {
-                instances.push(this);
+            function SharedController1($scope) {
+                instances.push($scope);
             }
             var instances = [];
-            function SharedController2() {
-                instances.push(this);
+            function SharedController2($scope) {
+                instances.push($scope);
             }
             window.SharedController1 = SharedController1;
             window.SharedController2 = SharedController2;
-            var element = angular.element('<div><div ngm:shared-controller="shared1:SharedController1,shared2:SharedController2"></div></div>');
-            var rootScope = angular.scope();
-            angular.compile(element)(rootScope);
+            var d = utils.compileInPage('<div><div ngm:shared-controller="shared1:SharedController1,shared2:SharedController2"></div></div>');
+            var element = d.element;
+            var rootScope = element.scope().$root;
             var scope = element.children('div').scope();
             expect(instances.length).toBe(2);
             expect(scope.shared1).toBe(instances[0]);
             expect(scope.shared2).toBe(instances[1]);
         });
-
         it('should work with space between the controllers', function() {
             var instances = [];
-            function SharedController1() {
-                instances.push(this);
+            function SharedController1($scope) {
+                instances.push($scope);
             }
             var instances = [];
-            function SharedController2() {
-                instances.push(this);
+            function SharedController2($scope) {
+                instances.push($scope);
             }
             window.SharedController1 = SharedController1;
             window.SharedController2 = SharedController2;
-            var element = angular.element('<div><div ngm:shared-controller="shared1:SharedController1, shared2:SharedController2"></div></div>');
-            var rootScope = angular.scope();
-            angular.compile(element)(rootScope);
+            var d = utils.compileInPage('<div><div ngm:shared-controller="shared1:SharedController1, shared2:SharedController2"></div></div>');
+            var element = d.element;
+            var rootScope = element.scope().$root;
             var scope = element.children('div').scope();
             expect(instances.length).toBe(2);
             expect(scope.shared1).toBe(instances[0]);
             expect(scope.shared2).toBe(instances[1]);
         });
-
         it('should share instance between usages', function() {
             var instances = [];
-            function SharedController1() {
-                instances.push(this);
+            function SharedController1($scope) {
+                instances.push($scope);
             }
             window.SharedController1 = SharedController1;
-            var element = angular.element(
+            var d = utils.compileInPage(
                 '<div><div id="id1" ngm:shared-controller="shared1:SharedController1"></div>' +
                     '<div id="id2" ngm:shared-controller="shared1:SharedController1"></div></div>');
-            var rootScope = angular.scope();
-            angular.compile(element)(rootScope);
+            var element = d.element;
+            var rootScope = d.element.scope().$root;
             var scope1 = element.children('#id1').scope();
             var scope2 = element.children('#id2').scope();
             expect(instances.length).toBe(1);

@@ -1,4 +1,4 @@
-define([
+jqmng.define('jqmng/widgets/jqmButton', [
     'jquery'
 ], function($) {
     // Button wraps the actual button into another div that is stored in the

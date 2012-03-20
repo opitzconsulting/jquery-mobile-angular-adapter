@@ -19,55 +19,32 @@ when angular removes them (e.g. in a `ng:repeat`).
 
 Provides special enhancements useful for mobile applications.
 
-Finally provies a special version of jquery mobile that contains some bugfixes.
-
 Dependencies
 ----------------
-- angular 0.9.19
-- jquery 1.6.2 (Please note: Newer versions of jquery do not work, as angular 0.9.19
-  does not work with them...)
+- angular 1.0
+- jquery 1.7.1
 - jquery mobile 1.1.0
-
-Bugfixed version of jquery mobile
----------------------------------
-This also provides a special version of jquery-mobile that contains the following:
-
-- address bar will always be visible on android. This is not yet really solved
-  by jquery mobile as without this, the address bar shows up again from time to time.
-  (see jquery mobile #1673)
-- Bugfix for highlighting problem on `data-role="listview"` lists toghether with
-  jquery 1.6.2. Those lists will not remove the highlighting when the mouse hovers
-  over them. The underlying issue is an issue of jquery (see jquery #10192) and already
-  fixed in jquery 1.7. However, the adapter currently only runs with angular 0.9.19,
-  which does not work with jquery 1.7.
 
 Sample
 ------------
 - Js fiddle [Todo mobile](http://jsfiddle.net/tigbro/Du2DY/).
 - Single source app for jquery-mobile and sencha touch: [https://github.com/tigbro/todo-mobile](https://github.com/tigbro/todo-mobile)
 
-Limitations
-------------
-This deactivates angular's feature to change urls via the `$browser` or `$location` services.
-This was needed as angular's url handling is incompatibly with jquery mobile and leads to
-unwanted navigations.
-
-
 Usage
 ---------
 
 Include this adapter _after_ angular and jquery mobile (see below).
 
-ATTENTION: Do NOT use the `autobind` mode of angular!
+ATTENTION: The directive `ng-app` for the html element is required, as in all angular applications.
 
 
-    <html xmlns:ng="http://angularjs.org" xmlns:ngm="http://jqm-angularjs.org">
+    <html xmlns:ng="http://angularjs.org" xmlns:ngm="http://jqm-angularjs.org" ng-app>
     <head>
         <title>MobileToys</title>
-        <link rel="stylesheet" href="lib/jquery.mobile-1.0-oc1.css"/>
-        <script src="lib/jquery-1.6.1.js"></script>
-        <script src="lib/jquery.mobile-1.0-oc1.js"></script>
-        <script src="lib/angular-0.9.15.js"></script>
+        <link rel="stylesheet" href="lib/jquery.mobile-1.1.css"/>
+        <script src="lib/jquery-1.7.1.js"></script>
+        <script src="lib/jquery.mobile-1.1.0.js"></script>
+        <script src="lib/angular-1.1.0.js"></script>
         <script src="lib/jquery-mobile-angular-adapter.js"></script>
     </head>
 
@@ -79,22 +56,18 @@ This follows the usual maven directory layout:
 - src/main/webapp: The production code
 - src/test/webapp: The test code
 - compiled: The result of the javascript compilation
-- compiled/jquery-mobile: The bugfixed version of jquery-mobile.
 - compiled/min: Contains the minified files.
 
 
 Build
 --------------------------
-The build is done using maven and requirejs.
+The build is done using maven and node js.
 
 - `mvn clean package -Pbuild`: This will create a new version of the adapter and put it into `/compiled`.
 
 The build also creates a standalone library including jquery, jquery-mobile and angular.
 If you want to do something during the initialization of jquery-mobile, use the following callback:
 `window.mobileinit = function() { ... }`
-
-Please install the latest version of the maven plugin `brew`. This project provides a
-snapshot release in `/localrepo`.
 
 Running the tests
 -------------------
@@ -108,18 +81,10 @@ Running the tests
 
 Scopes
 -----------
-The adapter creates a global scope by compiling just down until the `body` tag and then stopping there.
-Any controller associated to the `body` tag will be part of the global scope.
-
-Every page of jquery mobile gets a separate scope. The `$eval` of the global scope only evaluates the currently active page,
+Every page of jquery mobile gets a separate scope. The `$digest` of the global scope only evaluates the currently active page,
 so there is no performance interaction between pages.
 
 For communicating between the pages use the `ngm:shared-controller` directive (see below).
-
-The global scope can be access via the function `$.mobile.globalScope` or via `$("body").scope()`.
-However, please use `this.$root` to access the global scope in your code. This simplifies testing!
-
-
 
 Widgets, Directives and Services
 -----------
@@ -154,14 +119,6 @@ does not allow elements between an `ul` and an `li` element.
 
 Usage: E.g. `<div ngm:if="myFlag">asdfasdf</div>`
 
-### Directive ngm:fadein
-For smooth fadings between `ngm:if` changes, there is also the directive `ngm:fadein`.
-This specifies that the display of the coresponding element
-should be shown via a transition lasting a defined amount of milliseconds (the value of the attribute).
-
-Usage: E.g. `<div ngm:fadein="700">asdf</div>`
-
-
 ### Service $navigate('[transition]:pageId'[,activateFn][,activateFnParam1, ...])
 Service to change the given page.
 - If the transition has the special value `back` than the browser will go back in history to
@@ -191,11 +148,7 @@ Default messages are:
 - `$.mobile.loadingMessage`: for all other cases
 
 
-### Function angular.Object.iff / $iff
-Every expression can now use the function `$iff` as a ternary operator:
-`$iff(test, trueCase, falseCase)` will return the `trueCase` if the `test` is truthy and the `falseCase` otherwise.
-
-### Function angular.Object.navigate / $navigate
+### Angular-Expressions: Function $navigate
 Every expression can now use the `$navigate` expression to define the navigation outside of the controlers
 in the html pages. By this, the controllers stay independent of the navigation process and is reusable.
 

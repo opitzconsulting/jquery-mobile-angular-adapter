@@ -1,7 +1,4 @@
-/**
- * Wrapper around window.angular.
- */
-define('angular', function() {
+jqmng.define('angular', function() {
     if (typeof angular !== "undefined") {
         return angular;
     }

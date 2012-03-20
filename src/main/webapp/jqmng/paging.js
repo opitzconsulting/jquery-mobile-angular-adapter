@@ -13,7 +13,7 @@
  <a href="#" ngm:click="list.$paged().loadNextPage()">Load more</a>
  </li>
  */
-define(['jquery', 'angular', 'jqmng/globalScope'], function($, angular, globalScope) {
+jqmng.define('jqmng/paging', ['jquery', 'angular', 'jqmng/globalScope'], function($, angular, globalScope) {
     /**
      * The default page size for all lists.
      * Can be overwritten using array.pageSize.

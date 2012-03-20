@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.opitzconsulting.html5</groupId>
     <artifactId>jquery-mobile-angular-adapter</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.7-SNAPSHOT</version>
     <name>JQuery Mobile Angular Adapter</name>
     <packaging>war</packaging>
     <description>Adapter for using jquery mobile with angular</description>
@@ -66,151 +66,24 @@
             <build>
                 <plugins>
                     <plugin>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <version>2.5</version>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.1.1</version>
                         <executions>
                             <execution>
-                                <id>copy-resources</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${basedir}/target/wrap</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${basedir}/src/main/wrap</directory>
-                                            <filtering>true</filtering>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>copy-jquery-mobile</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${basedir}/compiled/jquery-mobile</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${basedir}/src/main/webapp/lib</directory>
-                                            <includes>
-                                                <include>images/*</include>
-                                                <include>jquery.mobile*</include>
-                                            </includes>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>copy-optimized-files</id>
+                                <id>some-execution</id>
                                 <phase>package</phase>
                                 <goals>
-                                    <goal>copy-resources</goal>
+                                    <goal>exec</goal>
                                 </goals>
-                                <configuration>
-                                    <outputDirectory>${basedir}/compiled/min</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>${basedir}/target/requirejs/optimize</directory>
-                                            <includes>
-                                                <include>jquery-mobile-angular-adapter-standalone-${project.version}.js</include>
-                                                <include>jquery-mobile-angular-adapter-${project.version}.js</include>
-                                                <include>jquery-mobile/**/*</include>
-                                            </includes>
-                                        </resource>
-                                    </resources>
-                                </configuration>
                             </execution>
                         </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>com.voltvoodoo</groupId>
-                        <artifactId>brew</artifactId>
-
-                        <executions>
-                            <execution>
-                                <id>build-main</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>optimize</goal>
-                                </goals>
-                                <configuration>
-                                    <jsOptimizer>none</jsOptimizer>
-                                    <optimizedFileNameSuffix>-${project.version}</optimizedFileNameSuffix>
-                                    <optimizeSourceDir>${basedir}/src/main/webapp</optimizeSourceDir>
-                                    <optimizeBuildDir>${basedir}/target/requirejs/build</optimizeBuildDir>
-                                    <optimizeOutputDir>${basedir}/compiled</optimizeOutputDir>
-                                    <skipModuleInsertion>true</skipModuleInsertion>
-                                    <modules>
-                                        <module>
-                                            <name>jquery-mobile-angular-adapter</name>
-                                            <include>
-                                                <entry>lib/simple-require</entry>
-                                                <entry>jqm-angular</entry>
-                                            </include>
-                                        </module>
-                                    </modules>
-                                    <wrap>
-                                        <startFile>${basedir}/target/wrap/header.js</startFile>
-                                        <endFile>${basedir}/target/wrap/footer.js</endFile>
-                                    </wrap>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>build-standalone</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>optimize</goal>
-                                </goals>
-                                <configuration>
-                                    <jsOptimizer>none</jsOptimizer>
-                                    <optimizedFileNameSuffix>-${project.version}</optimizedFileNameSuffix>
-                                    <optimizeSourceDir>${basedir}/target/requirejs/build</optimizeSourceDir>
-                                    <optimizeBuildDir>${basedir}/target/requirejs/build</optimizeBuildDir>
-                                    <optimizeOutputDir>${basedir}/compiled</optimizeOutputDir>
-                                    <skipModuleInsertion>true</skipModuleInsertion>
-                                    <modules>
-                                        <module>
-                                            <name>jquery-mobile-angular-adapter-standalone</name>
-                                            <include>
-                                                <entry>lib/jquery-1.6.2</entry>
-                                                <entry>lib/mobileinit</entry>
-                                                <entry>lib/angular-0.9.19</entry>
-                                                <entry>lib/jquery.mobile-${jqmVersion}</entry>
-                                                <entry>../../../compiled/jquery-mobile-angular-adapter-${project.version}
-                                                </entry>
-                                            </include>
-                                            <exclude>
-                                                <entry>jquery.js</entry>
-                                            </exclude>
-                                        </module>
-                                    </modules>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>minify</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>optimize</goal>
-                                </goals>
-                                <configuration>
-                                    <jsOptimizer>${jsOptimizer}</jsOptimizer>
-                                    <optimizedFileNameSuffix>.min</optimizedFileNameSuffix>
-                                    <optimizeSourceDir>${basedir}/compiled</optimizeSourceDir>
-                                    <optimizeBuildDir>${basedir}/target/requirejs/optimize</optimizeBuildDir>
-                                    <optimizeOutputDir>${basedir}/target/requirejs/noop</optimizeOutputDir>
-                                    <skipModuleInsertion>true</skipModuleInsertion>
-                                    <modules>
-                                        <module>
-                                            <name>jquery-mobile-angular-adapter-${project.version}</name>
-                                        </module>
-                                    </modules>
-                                </configuration>
-                            </execution>
-                        </executions>
+                        <configuration>
+                            <executable>node</executable>
+                            <arguments>
+                                <argument>build.js</argument>
+                            </arguments>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -222,53 +95,6 @@
             <id>test</id>
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>com.voltvoodoo</groupId>
-                        <artifactId>brew</artifactId>
-                        <configuration>
-                            <optimizeOutputDir>${basedir}/target/requirejs/garbage</optimizeOutputDir>
-                            <!-- no optimizer nor wrapping for tests -->
-                            <jsOptimizer>none</jsOptimizer>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>optimize-main</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>optimize</goal>
-                                </goals>
-                                <configuration>
-                                    <optimizeSourceDir>${basedir}/src/main/webapp</optimizeSourceDir>
-                                    <modules>
-                                        <module>
-                                            <name>jqm-angular</name>
-                                        </module>
-                                    </modules>
-                                </configuration>
-                            </execution>
-
-                            <!-- This second execution relies on the fact that the first execution
-                   left the modules of src/main/webapp in the build directory -->
-                            <execution>
-                                <id>optimize-test</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>optimize</goal>
-                                </goals>
-                                <configuration>
-                                    <optimizeSourceDir>${basedir}/src/test/webapp</optimizeSourceDir>
-                                    <modules>
-                                        <module>
-                                            <name>unit-tests</name>
-                                        </module>
-                                        <module>
-                                            <name>ui-tests</name>
-                                        </module>
-                                    </modules>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <plugin>
                         <groupId>com.google.jstestdriver</groupId>
                         <artifactId>maven-jstestdriver-plugin</artifactId>
@@ -305,25 +131,13 @@
                         </executions>
                     </plugin>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-war-plugin</artifactId>
-                        <configuration>
-                            <warSourceExcludes>**/*.js,**/*.css
-                            </warSourceExcludes>
-                            <webResources>
-                                <resource>
-                                    <directory>target/requirejs/build</directory>
-                                </resource>
-                            </webResources>
-                        </configuration>
-                    </plugin>
-                    <plugin>
                         <groupId>org.mortbay.jetty</groupId>
                         <artifactId>jetty-maven-plugin</artifactId>
                         <configuration>
                             <webAppConfig>
                                 <resourceBases>
-                                    <resourceBase>${basedir}/target/${project.artifactId}</resourceBase>
+                                    <resourceBase>${basedir}/src/main/webapp</resourceBase>
+                                    <resourceBase>${basedir}/src/test/webapp</resourceBase>
                                 </resourceBases>
                             </webAppConfig>
                         </configuration>

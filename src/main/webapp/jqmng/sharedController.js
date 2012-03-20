@@ -1,23 +1,15 @@
-define(['angular'], function(angular) {
-    function findCtrlFunction(name) {
-        var parts = name.split('.');
-        var base = window;
-        var part;
-        for (var i = 0; i < parts.length; i++) {
-            part = parts[i];
-            base = base[part];
-        }
-        return base;
-    }
+jqmng.define('jqmng/sharedController', ['angular'], function(angular) {
+    var storageName = '$$sharedControllers';
 
-    function sharedCtrl(rootScope, name) {
-        var ctrl = findCtrlFunction(name);
-        var instance = rootScope[name];
-        if (!instance) {
-            instance = rootScope.$new(ctrl);
-            rootScope[name] = instance;
+    function sharedCtrl(rootScope, controllerName, $controller) {
+        var storage = rootScope[storageName] = rootScope[storageName] || {};
+        var scopeInstance = storage[controllerName];
+        if (!scopeInstance) {
+            scopeInstance = rootScope.$new();
+            $controller(controllerName, {$scope: scopeInstance});
+            storage[controllerName] = scopeInstance;
         }
-        return instance;
+        return scopeInstance;
     }
 
     function parseSharedControllersExpression(expression) {
@@ -35,15 +27,22 @@ define(['angular'], function(angular) {
         return controllers;
     }
 
-    angular.directive('ngm:shared-controller', function(expression) {
-        this.scope(true);
-        var controllers = parseSharedControllersExpression(expression);
-        return function(element) {
-            var scope = this;
-            for (var name in controllers) {
-                scope[name] = sharedCtrl(scope.$root, controllers[name]);
+    var mod = angular.module('ng');
+    mod.directive('ngmSharedController', ['$controller', function($controller) {
+        return {
+            scope: true,
+            compile: function(element, attrs) {
+                var expression = attrs.ngmSharedController;
+                var controllers = parseSharedControllersExpression(expression);
+                var preLink = function(scope) {
+                    for (var name in controllers) {
+                        scope[name] = sharedCtrl(scope.$root, controllers[name], $controller);
+                    }
+                };
+                return {
+                    pre: preLink
+                }
             }
-        }
-
-    });
+        };
+    }]);
 });

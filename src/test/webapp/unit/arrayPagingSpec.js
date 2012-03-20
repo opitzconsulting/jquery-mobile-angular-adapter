@@ -1,4 +1,4 @@
-define([
+jqmng.require([
     'angular'
 ], function(angular) {
     describe("arrayPaging", function() {
@@ -26,7 +26,7 @@ define([
             var p1 = angular.Array.paged(l);
             expect(normalize(p1)).toEqual([1,2]);
             l.shift();
-            $.mobile.globalScope().$eval();
+            $.mobile.globalScope().$digest();
             var p2 = angular.Array.paged(l);
             expect(p1).toBe(p2);
             expect(normalize(p2)).toEqual([2,3]);

@@ -1,4 +1,4 @@
-define([
+jqmng.define('jqmng/widgets/jqmListView', [
     'jquery'
 ], function($) {
     // Listview may create subpages that need to be removed when the widget is destroyed.

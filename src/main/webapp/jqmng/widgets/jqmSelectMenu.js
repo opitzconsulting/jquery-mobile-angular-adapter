@@ -1,4 +1,4 @@
-define(['jquery'], function($) {
+jqmng.define('jqmng/widgets/jqmSelectMenu', ['jquery'], function($) {
 
     // selectmenu may create parent element and extra pages
     var fn = $.mobile.selectmenu.prototype;

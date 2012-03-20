@@ -3,18 +3,32 @@
  * an ng:switch element in the dom, e.g. between ul and li.
  * Uses ng:repeat and angular.Object.iff under the hood.
  */
-define(['angular'], function(angular) {
-    angular.Object.iff = function(self, test, trueCase, falseCase) {
-        if (test) {
-            return trueCase;
-        } else {
-            return falseCase;
-        }
-    }
+jqmng.define('jqmng/if', ['angular'], function (angular) {
+    var mod = angular.module('ng');
+    var ngIfDirective = {
+        transclude: 'element',
+        priority: 1000,
+        terminal: true,
+        compile: function(element, attr, linker) {
+            return function(scope, iterStartElement, attr){
+                var expression = attr.ngmIf;
 
-    angular.widget('@ngm:if', function(expression, element) {
-        var newExpr = 'ngmif in $iff(' + expression + ",[1],[])";
-        element.removeAttr('ngm:if');
-        return angular.widget('@ng:repeat').call(this, newExpr, element);
-    });
+                var lastElement;
+                var lastScope;
+                scope.$watch(expression, function(newValue){
+                        if (newValue) {
+                            lastScope = scope.$new();
+                            linker(lastScope, function(clone){
+                                lastElement = clone;
+                                iterStartElement.after(clone);
+                            });
+                        } else {
+                            lastElement && lastElement.remove();
+                            lastScope && lastScope.$destroy();
+                        }
+                    });
+            };
+        }
+    };
+    mod.directive('ngmIf', function() { return ngIfDirective; });
 });

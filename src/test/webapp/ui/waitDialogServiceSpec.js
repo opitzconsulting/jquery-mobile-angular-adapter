@@ -1,7 +1,7 @@
-define(function () {
+jqmng.require([], function () {
 
     describe("waitdialogService", function () {
-        var updateViewSpy, service, loader, $, win;
+        var service, loader, $, win, injector, $q;
 
         beforeEach(function () {
             loadHtml('/jqmng/ui/test-fixture.html');
@@ -11,8 +11,9 @@ define(function () {
                 loader = $(".ui-loader");
                 spyOn($.mobile, 'showPageLoadingMsg').andCallThrough();
                 spyOn($.mobile, 'hidePageLoadingMsg').andCallThrough();
-                updateViewSpy = jasmine.createSpy();
-                service = win.angular.service('$waitDialog')(updateViewSpy);
+                injector = win.$("body").injector();
+                service = injector.get("$waitDialog");
+                $q = injector.get("$q");
             });
         });
 
@@ -116,22 +117,24 @@ define(function () {
         describe('waitFor', function () {
             it('should waitFor the end of promises with the default message', function () {
                 runs(function () {
-                    var p = $.Deferred();
-                    service.waitFor(p);
+                    var p = $q.defer();
+                    service.waitFor(p.promise);
                     expect(loader.find("h1").text()).toEqual($.mobile.loadingMessage);
                     expect($.mobile.showPageLoadingMsg).toHaveBeenCalled();
                     p.resolve();
+                    $("body").scope().$apply();
                     expect($.mobile.hidePageLoadingMsg).toHaveBeenCalled();
                 });
             });
 
             it('should waitFor the end of promises with the given message', function () {
                 runs(function () {
-                    var p = $.Deferred();
-                    service.waitFor(p, 'someMessage');
+                    var p = $q.defer();
+                    service.waitFor(p.promise, 'someMessage');
                     expect(loader.find("h1").text()).toEqual("someMessage");
                     expect($.mobile.showPageLoadingMsg).toHaveBeenCalled();
                     p.resolve();
+                    $("body").scope().$apply();
                     expect($.mobile.hidePageLoadingMsg).toHaveBeenCalled();
                 });
             });
@@ -142,9 +145,10 @@ define(function () {
                     $.mobile.hidePageLoadingMsg.andCallFake(function () {
                         hideCalledAfterShow = $.mobile.showPageLoadingMsg.callCount > 0;
                     });
-                    var p = $.Deferred();
+                    var p = $q.defer();
                     p.resolve();
-                    service.waitFor(p);
+                    service.waitFor(p.promise);
+                    $("body").scope().$apply();
                     expect(hideCalledAfterShow).toBeTruthy();
                 });
             });
@@ -155,9 +159,9 @@ define(function () {
 
             it('should waitFor the end of promises and cancel promises when clicked', function () {
                 runs(function () {
-                    var p = $.Deferred();
+                    var p = $q.defer();
                     var callback = jasmine.createSpy();
-                    p.fail(callback);
+                    p.promise.then(null, callback);
                     var cancelRes = {test:true};
                     service.waitForWithCancel(p, cancelRes);
                     expect($.mobile.showPageLoadingMsg).toHaveBeenCalled();

@@ -1,11 +1,12 @@
-define(['angular'], function(angular) {
+jqmng.require(['angular'], function(angular) {
     describe("navigate", function() {
         describe("$navigate service", function() {
             var navigate, oldUrlHistory, goSpy, changePageSpy;
             beforeEach(function() {
                 changePageSpy = spyOn($.mobile, 'changePage');
                 goSpy = spyOn(window.history, 'go');
-                navigate = angular.service("$navigate")();
+                navigate = angular.injector(["ng"]).get('$navigate');
+
                 oldUrlHistory = $.mobile.urlHistory.stack;
             });
             afterEach(function() {
@@ -57,53 +58,65 @@ define(['angular'], function(angular) {
         });
 
         describe('$navigate expression', function() {
-            var scope, navigateSpy;
+            var scope, navigateSpy, $q;
             beforeEach(function() {
                 navigateSpy = jasmine.createSpy();
-                scope = angular.scope(null, angular.service, {$navigate: navigateSpy});
+                var injector = angular.injector(["ng", function($provide) {
+                    $provide.value('$navigate', navigateSpy);
+                }]);
+                scope = injector.get('$rootScope');
+                $q = injector.get('$q');
             });
             it('should navigate if a single argument is given', function() {
-                scope.$eval("$navigate('myPage')");
+                scope.$apply("$navigate('myPage')");
                 expect(navigateSpy).toHaveBeenCalledWith('myPage');
             });
             it('should navigate to the success outcome if result is not false', function() {
-                scope.$eval("$navigate(undefined, 'success:page1', 'failure:page2')");
+                scope.$apply("$navigate(undefined, 'success:page1', 'failure:page2')");
                 expect(navigateSpy).toHaveBeenCalledWith('page1');
             });
             it('should navigate to the failure outcome if result is false', function() {
-                scope.$eval("$navigate(false, 'success:page1', 'failure:page2')");
+                scope.$apply("$navigate(false, 'success:page1', 'failure:page2')");
                 expect(navigateSpy).toHaveBeenCalledWith('page2');
             });
             it('should navigate to the given outcome', function() {
-                scope.$eval("$navigate('myout', 'success:page1', 'failure:page2', 'myout:page3')");
+                scope.$apply("$navigate('myout', 'success:page1', 'failure:page2', 'myout:page3')");
                 expect(navigateSpy).toHaveBeenCalledWith('page3');
             });
             it('should navigate to the success outcome if promise is resolved', function() {
-                var promise = $.Deferred().resolve();
-                scope.test = promise;
-                scope.$eval("$navigate(test, 'success:page1', 'failure:page2')");
+                var deferred = $q.defer();
+                deferred.resolve();
+                scope.result = deferred.promise;
+                scope.$apply('result');
+                scope.$apply("$navigate(result, 'success:page1', 'failure:page2')");
                 expect(navigateSpy).toHaveBeenCalledWith('page1');
             });
             it('should navigate to the failure outcome if promise is rejected', function() {
-                var promise = $.Deferred().reject();
-                scope.test = promise;
-                scope.$eval("$navigate(test, 'success:page1', 'failure:page2')");
+                var deferred = $q.defer();
+                deferred.reject();
+                scope.result = deferred.promise;
+                scope.$apply('result');
+                scope.$apply("$navigate(result, 'success:page1', 'failure:page2')");
                 expect(navigateSpy).toHaveBeenCalledWith('page2');
             });
             it('should navigate to the given outcome of the resolved promise', function() {
-                var promise = $.Deferred().resolve('myout');
-                scope.test = promise;
-                scope.$eval("$navigate(test, 'success:page1', 'failure:page2', 'myout:page3')");
+                var deferred = $q.defer();
+                deferred.resolve('myout');
+                scope.result = deferred.promise;
+                scope.$apply('result');
+                scope.$apply("$navigate(result, 'success:page1', 'failure:page2', 'myout:page3')");
                 expect(navigateSpy).toHaveBeenCalledWith('page3');
             });
             it('should navigate to the given outcome of the rejected promise', function() {
-                var promise = $.Deferred().reject('myout');
-                scope.test = promise;
-                scope.$eval("$navigate(test, 'success:page1', 'failure:page2', 'myout:page3')");
+                var deferred = $q.defer();
+                deferred.reject('myout');
+                scope.result = deferred.promise;
+                scope.$apply('result');
+                scope.$apply("$navigate(result, 'success:page1', 'failure:page2', 'myout:page3')");
                 expect(navigateSpy).toHaveBeenCalledWith('page3');
             });
             it('should navigate to the given outcome with the given transition', function() {
-                scope.$eval("$navigate('myout', 'success:page1', 'failure:page2', 'myout:transition1:page3')");
+                scope.$apply("$navigate('myout', 'success:page1', 'failure:page2', 'myout:transition1:page3')");
                 expect(navigateSpy).toHaveBeenCalledWith('transition1:page3');
             });
 

@@ -1,4 +1,4 @@
-define(function() {
+jqmng.require([], function() {
     function visitPage(page, Page2Controller, events) {
         loadHtml('/jqmng/ui/test-fixture.html#' + page, function(frame) {
             var page = frame.$('#page2');
@@ -12,16 +12,16 @@ define(function() {
 
     function navigate() {
         var $ = testwindow().$;
-        var scope = $("#start").scope();
-        var navigate = scope.$service("$navigate");
+        var injector = $("#start").injector();
+        var navigate = injector.get("$navigate");
         return navigate.apply(this, arguments);
     }
 
     describe("navigate", function() {
         it("should call the given function on the target page", function() {
             var onActivateArguments;
-            visitPage("start", function() {
-                this.onActivate = function() {
+            visitPage("start", function($scope) {
+                $scope.onActivate = function() {
                     onActivateArguments = arguments;
                 }
             });
@@ -34,11 +34,10 @@ define(function() {
                 expect(onActivateArguments).toBeTruthy();
             });
         });
-
         it("should call the given function with the given arguments on the target page", function() {
             var onActivateArguments;
-            visitPage("start", function() {
-                this.onActivate = function() {
+            visitPage("start", function($scope) {
+                $scope.onActivate = function() {
                     onActivateArguments = arguments;
                 }
             });
@@ -51,11 +50,10 @@ define(function() {
                 expect(onActivateArguments).toEqual(["param1", "param2"]);
             });
         });
-
         it("should call the given function on the target page on back navigation", function() {
             var onActivateArguments;
-            visitPage("page2", function() {
-                this.onActivate = function() {
+            visitPage("page2", function($scope) {
+                $scope.onActivate = function() {
                     onActivateArguments = arguments;
                 }
             });
@@ -72,11 +70,10 @@ define(function() {
                 expect(onActivateArguments).toBeTruthy();
             });
         });
-
         it("should call the given function on the target page on back navigation with pageId", function() {
             var onActivateArguments;
-            visitPage("page2", function() {
-                this.onActivate = function() {
+            visitPage("page2", function($scope) {
+                $scope.onActivate = function() {
                     onActivateArguments = arguments;
                 }
             });
@@ -93,15 +90,14 @@ define(function() {
                 expect(onActivateArguments).toBeTruthy();
             });
         });
-
         it("should call the given function on the target page before the pagebeforeshow event", function() {
             var onActivateArguments, onActivateArgumentsOnBeforeShow
             var beforeShowCallCount = 0;
-            visitPage("start", function() {
-                this.onActivate = function() {
+            visitPage("start", function($scope) {
+                $scope.onActivate = function() {
                     onActivateArguments = arguments;
                 };
-                this.onBeforeShow = function() {
+                $scope.onBeforeShow = function() {
                     beforeShowCallCount ++;
                     onActivateArgumentsOnBeforeShow = onActivateArguments;
                 }
@@ -120,6 +116,5 @@ define(function() {
                 expect(beforeShowCallCount).toBe(1);
             });
         });
-
     });
 });

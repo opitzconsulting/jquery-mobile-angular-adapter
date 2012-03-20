@@ -1,4 +1,4 @@
-define(["unit/testUtils"], function(utils) {
+jqmng.require(["unit/testUtils"], function(utils) {
 
     describe("button", function() {
         it('should allow clicks via ng:click', function() {
@@ -6,9 +6,9 @@ define(["unit/testUtils"], function(utils) {
             var page = d.page;
             var input = d.element;
             var scope = input.scope();
-            expect(scope.$get('flag')).toBeFalsy();
+            expect(scope.flag).toBeFalsy();
             input.trigger('click');
-            expect(scope.$get('flag')).toBeTruthy();
+            expect(scope.flag).toBeTruthy();
         });
 
         it('should use the disabled attribute', function() {
@@ -17,11 +17,11 @@ define(["unit/testUtils"], function(utils) {
             var input = d.element;
             var scope = input.scope();
             var parentDiv = input.parent();
-            scope.$set('disabled', false);
-            scope.$eval();
+            scope.disabled=false;
+            scope.$digest();
             expect(parentDiv.hasClass('ui-disabled')).toBeFalsy();
-            scope.$set('disabled', true);
-            scope.$eval();
+            scope.disabled=true;
+            scope.$digest();
             expect(parentDiv.hasClass('ui-disabled')).toBeTruthy();
         });
 

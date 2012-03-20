@@ -1,11 +1,6 @@
 /*
  * Helper library to prevent the auto initialization of jquery.
- * Needed for unit tests.
+ * Needed for unit tests. Include this after jquery mobile.
  */
-$(document).bind("mobileinit", function(){
-   $.extend(  $.mobile , {
-    gradeA: function() {
-        return false;
-    }
-  });
-});
+$.mobile.initializePage = function() { };
+

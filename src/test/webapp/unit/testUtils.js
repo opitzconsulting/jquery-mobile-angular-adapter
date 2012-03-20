@@ -1,4 +1,4 @@
-define(["jquery", "angular"], function($, angular) {
+jqmng.define('unit/testUtils', ["jquery", "angular"], function($, angular) {
 
     beforeEach(function() {
         $.mobile.pageContainer = $("body");
@@ -29,16 +29,33 @@ define(["jquery", "angular"], function($, angular) {
             page.attr('ng:controller', pageControllerName);
         }
         page.find(":jqmData(role='content')").append(elements);
-        page.page();
+        angular.injector(['ng']).invoke(function($compile, $rootScope) {
+            $compile(page)($rootScope);
+            $rootScope.$apply();
+        });
         return {
             page: page,
-            element: page.find(".result")
+            element: $(".result").removeClass("result")
         }
 
     }
 
+    function compile(html) {
+        var wrapperElement = $('<div>'+html+'</div>');
+        wrapperElement.children().addClass("result", "true");
+        $("body").append(wrapperElement);
+        var rootScope;
+        angular.injector(['ng']).invoke(function($compile, $rootScope) {
+            rootScope = $rootScope;
+            $compile(wrapperElement)($rootScope);
+            $rootScope.$apply();
+        });
+        return $(".result").removeClass("result");
+    }
+
+
     return {
-        compilePage: compilePage,
+        compile: compile,
         compileInPage: compileInPage
     };
 });

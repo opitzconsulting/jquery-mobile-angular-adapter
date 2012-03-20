@@ -1,4 +1,4 @@
-define(function() {
+jqmng.require([], function() {
 
     describe("selectmenu", function() {
         it('should save the ui value into the model when using non native menus and popups', function() {
@@ -6,8 +6,8 @@ define(function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 page.append(
-                    '<div data-role="content">' +
-                        '<select name="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                    '<div data-role="content" ng:init="mysel=\'v1\'">' +
+                        '<select ng:model="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {
@@ -16,7 +16,7 @@ define(function() {
                 var select = page.find("#mysel");
                 expect(select[0].value).toEqual("v1");
                 scope = select.scope();
-                expect(scope.$get('mysel')).toEqual("v1");
+                expect(scope.mysel).toEqual("v1");
                 dialogOpen = function() {
                     return select.data('selectmenu').isOpen;
                 };
@@ -38,18 +38,19 @@ define(function() {
                 var $ = testframe().$;
                 var dialog = $(".ui-dialog");
                 $(dialog.find('li a')[1]).trigger('click')
-                expect(scope.$get('mysel')).toEqual("v2");
+                expect(scope.mysel).toEqual("v2");
             });
             waitsFor(function() {
                 return !dialogOpen();
             });
         });
+
         it('should save the ui value into the model when using non native menus', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 page.append(
-                    '<div data-role="content">' +
-                        '<select name="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                    '<div data-role="content" ng:init="mysel=\'v1\'">' +
+                        '<select ng:model="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {
@@ -57,7 +58,7 @@ define(function() {
                 var select = page.find("#mysel");
                 expect(select[0].value).toEqual("v1");
                 var scope = select.scope();
-                expect(scope.$get('mysel')).toEqual("v1");
+                expect(scope.mysel).toEqual("v1");
 
                 // find the menu and click on the second entry
                 select.selectmenu('open');
@@ -66,7 +67,7 @@ define(function() {
                 var option = testframe().$(options[1]);
                 option.trigger('click');
                 select.selectmenu('close');
-                expect(scope.$get('mysel')).toEqual("v2");
+                expect(scope.mysel).toEqual("v2");
             });
         });
 
@@ -74,8 +75,8 @@ define(function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 page.append(
-                    '<div data-role="content">' +
-                        '<select name="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                    '<div data-role="content" ng:init="mysel=\'v1\'">' +
+                        '<select ng:model="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {
@@ -87,32 +88,31 @@ define(function() {
                 // that displays the actual value of the select box.
                 var valueSpan = select.parent().find(".ui-btn-text");
                 expect(valueSpan.text()).toEqual("v1");
-                scope.$set("mysel", "v2");
-                scope.$eval();
+                scope.mysel= "v2";
+                scope.$apply();
                 expect(select[0].value).toEqual("v2");
                 expect(valueSpan.text()).toEqual("v2");
             });
         });
 
-
         it('should use the disabled attribute', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 page.append(
-                    '<div data-role="content">' +
-                        '<select name="mysel" id="mysel" data-native-menu="false" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                    '<div data-role="content" ng:init="mysel=\'v1\'">' +
+                        '<select ng:model="mysel" id="mysel" data-native-menu="false" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {
                 var page = testframe().$("#start");
                 var select = page.find("#mysel");
                 var scope = select.scope();
-                scope.$set('disabled', false);
-                scope.$eval();
+                scope.disabled=false;
+                scope.$apply();
                 var disabled = select.selectmenu('option', 'disabled');
                 expect(disabled).toEqual(false);
-                scope.$set('disabled', true);
-                scope.$eval();
+                scope.disabled=true;
+                scope.$apply();
                 var disabled = select.selectmenu('option', 'disabled');
                 expect(disabled).toEqual(true);
             });
@@ -122,8 +122,8 @@ define(function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 page.append(
-                    '<div data-role="content">' +
-                        '<select name="mysel" id="mysel" data-native-menu="false" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                    '<div data-role="content" ng:init="mysel=\'v1\'">' +
+                        '<select ng:model="mysel" id="mysel" data-native-menu="false" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {
@@ -144,7 +144,7 @@ define(function() {
                 // Note: Be sure to use ng:repeat, as this is the most problematic case!
                 page.append(
                     '<div data-role="content">' +
-                        '<select ng:repeat="item in [1]" name="mysel" id="mysel" data-native-menu="false" ng:options="o for o in options"></select>' +
+                        '<select ng:repeat="item in [1]" ng:model="mysel" id="mysel" data-native-menu="false" ng:options="o for o in options"></select>' +
                         '</div>');
             });
             runs(function() {
@@ -153,7 +153,7 @@ define(function() {
                 var scope = select.scope();
                 scope.options = [1,2];
                 scope.mysel = 1;
-                scope.$eval();
+                scope.$apply();
                 select.selectmenu('open');
                 expect(page.find(".ui-selectmenu li").length).toEqual(2);
             });
@@ -165,7 +165,7 @@ define(function() {
                 // Note: Be sure to use ng:repeat, as this is the most problematic case!
                 page.append(
                     '<div data-role="content">' +
-                        '<select data-native-menu="true" name="myval" id="mysel" ng:options="e.value for e in list"></select>' +
+                        '<select data-native-menu="true" ng:model="myval" id="mysel" ng:options="e.value for e in list"></select>' +
                         '</div>');
             });
             runs(function() {
@@ -175,7 +175,7 @@ define(function() {
                 expect(scope.myval).toBeFalsy();
                 scope.list = [{value:'value1'}];
                 scope.myval=scope.list[0];
-                scope.$root.$eval();
+                scope.$root.$apply();
             });
             waitsForAsync();
             runs(function() {

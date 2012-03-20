@@ -1,4 +1,4 @@
-define(function() {
+jqmng.require([], function() {
     describe("usecases", function() {
         describe("lists", function() {
             it("should refresh lists with ng:repeat", function() {
@@ -10,8 +10,8 @@ define(function() {
                         '<div data-role="content">' +
                             '<button ng:click="fill()" id="fill">Fill</button><ul data-role="listview" id="list"><li ng:repeat="item in items"></li></ul>' +
                             '</div>');
-                    frame.PageController = function() {
-                        this.fill = function() {
+                    frame.PageController = function($scope) {
+                        $scope.fill = function() {
                             this.items = [1,2];
                         }
                     }

@@ -1,11 +1,12 @@
-define(['angular'], function(angular) {
+jqmng.require(['angular', 'unit/testUtils'], function(angular, utils) {
 
     describe("ngm:if", function() {
         var element, scope;
 
         function compile(html) {
-            element = angular.element(html);
-            scope = angular.compile(element)();
+            var d = utils.compileInPage(html);
+            element = d.element;
+            scope = element.scope();
         }
 
         beforeEach(function() {
@@ -36,7 +37,7 @@ define(['angular'], function(angular) {
             var options = select.children('option');
             expect(options.length).toEqual(0);
             scope.test = true;
-            scope.$eval();
+            scope.$digest();
             var options = select.children('option');
             expect(options.length).toEqual(1);
         });

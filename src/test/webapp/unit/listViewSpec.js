@@ -1,4 +1,4 @@
-define(["unit/testUtils"], function(utils) {
+jqmng.require(["unit/testUtils"], function(utils) {
 
     describe("listview", function() {
         it('should refresh when first the requestrefresh event on a list item ' +

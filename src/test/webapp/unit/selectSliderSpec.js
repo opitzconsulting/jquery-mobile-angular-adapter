@@ -1,32 +1,31 @@
-define(["unit/testUtils"], function(utils) {
+jqmng.require(["unit/testUtils"], function(utils) {
 
     describe("selectSlider", function() {
         it('should save the ui value into the model', function() {
             var d = utils.compileInPage(
-                '<select name="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>'
+                '<select ng:model="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>'
             );
             var select = d.element;
-            var scope = select.scope();
-            expect(scope.$get('mysel')).toEqual("v1");
+            var scope = select.scope().$parent;
             // jquery mobile uses an anchor to simulate the select
             var anchor = d.page.find("a");
             expect(anchor.length).toEqual(1);
             anchor.trigger('vmousedown');
             anchor.trigger('vmouseup');
-            expect(scope.$get('mysel')).toEqual("v2");
+            expect(scope.mysel).toEqual("v2");
         });
 
         it('should save the model value into the ui', function() {
-            var d = utils.compileInPage('<select name="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+            var d = utils.compileInPage('<select ng:model="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
             var select = d.element;
-            var scope = select.scope();
+            var scope = d.page.scope();
             expect(select[0].value).toEqual("v1");
             // jquery mobile creates a new span
             // that displays the actual value of the select box.
             var anchor = d.page.find("a");
             expect(anchor.attr('aria-valuetext')).toEqual("v1");
-            scope.$set("mysel", "v2");
-            scope.$eval();
+            scope.mysel="v2";
+            scope.$digest();
             expect(select[0].value).toEqual("v2");
             anchor = d.page.find("a");
             expect(anchor.attr('aria-valuetext')).toEqual("v2");
@@ -34,22 +33,22 @@ define(["unit/testUtils"], function(utils) {
 
         it('should use the disabled attribute', function() {
             var d = utils.compileInPage(
-                '<select name="mysel" data-role="slider" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+                '<select ng:model="mysel" data-role="slider" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
             var select = d.element;
-            var scope = select.scope();
-            scope.$set('disabled', false);
-            scope.$eval();
+            var scope = select.scope().$parent;
+            scope.disabled = false;
+            scope.$digest();
             var disabled = select.slider('option', 'disabled');
             expect(disabled).toEqual(false);
-            scope.$set('disabled', true);
-            scope.$eval();
+            scope.disabled = true;
+            scope.$digest();
             var disabled = select.slider('option', 'disabled');
             expect(disabled).toEqual(true);
         });
 
         it('should be removable', function() {
             var d = utils.compileInPage('<div>' +
-                '<select name="mysel" data-role="slider"><option value="v1" default="true">v1</option></select>' +
+                '<select ng:model="mysel" data-role="slider"><option value="v1" default="true">v1</option></select>' +
                 '<select name="mysel2" data-role="slider"><option value="v1" default="true">v1</option></select>' +
                 '</div>');
             var container = d.element;

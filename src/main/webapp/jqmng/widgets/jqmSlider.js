@@ -1,4 +1,4 @@
-define(['jquery'], function($) {
+jqmng.define('jqmng/widgets/jqmSlider', ['jquery'], function($) {
     // Slider wraps the actual input into another div that is stored in the
     // "slider" property.
     var fn = $.mobile.slider.prototype;

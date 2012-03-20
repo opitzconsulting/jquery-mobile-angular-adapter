@@ -1,31 +1,25 @@
-define(['angular'], function(angular) {
-    /* A widget for clicks.
-     * Just as ng:click, but reacts to the jquery mobile vclick event, which
-     * includes taps, mousedowns, ...
-     */
-    angular.directive("ngm:click", function(expression, element) {
-        return angular.directive('ngm:event')('{vclick:"' + expression + '"}', element);
-    });
+jqmng.define('jqmng/event', ['angular'], function (angular) {
+    var mod = angular.module('ng');
 
     /**
      * A widget to bind general events like touches, ....
      */
-    angular.directive("ngm:event", function(expression, element) {
-        var eventHandlers = angular.fromJson(expression);
-
-        var linkFn = function($updateView, element) {
-            for (var eventType in eventHandlers) {
-                registerEventHandler(this, $updateView, element, eventType, eventHandlers[eventType]);
+    mod.directive("ngmEvent", function () {
+        return {
+            compile:function (element, attrs) {
+                var eventHandlers = angular.fromJson(attrs.ngmEvent);
+                return function (scope, element, attrs) {
+                    for (var eventType in eventHandlers) {
+                        registerEventHandler(scope, element, eventType, eventHandlers[eventType]);
+                    }
+                }
             }
-        };
-        linkFn.$inject = ['$updateView'];
-        return linkFn;
+        }
     });
 
-    function registerEventHandler(scope, $updateView, element, eventType, handler) {
-        element.bind(eventType, function(event) {
-            var res = scope.$tryEval(handler, element);
-            $updateView();
+    function registerEventHandler(scope, element, eventType, handler) {
+        element.bind(eventType, function (event) {
+            var res = scope.$apply(handler, element);
             if (eventType.charAt(0) == 'v') {
                 // This is required to prevent a second
                 // click event, see
@@ -36,22 +30,21 @@ define(['angular'], function(angular) {
     }
 
     function createEventDirective(directive, eventType) {
-        angular.directive('ngm:' + directive, function(eventHandler) {
-            var linkFn = function($updateView, element) {
-                registerEventHandler(this, $updateView, element, eventType, eventHandler);
+        mod.directive(directive, function () {
+            return function (scope, element,attrs) {
+                var eventHandler = attrs[directive];
+                registerEventHandler(scope, element, eventType, eventHandler);
             };
-            linkFn.$inject = ['$updateView'];
-            return linkFn;
         });
     }
 
-    var eventDirectives = {taphold:'taphold',swipe:'swipe', swiperight:'swiperight',
-        swipeleft:'swipeleft',
-        pagebeforeshow:'pagebeforeshow',
-        pagebeforehide:'pagebeforehide',
-        pageshow:'pageshow',
-        pagehide:'pagehide',
-        click:'vclick'
+    var eventDirectives = {ngmTaphold:'taphold', ngmSwipe:'swipe', ngmSwiperight:'swiperight',
+        ngmSwipeleft:'swipeleft',
+        ngmPagebeforeshow:'pagebeforeshow',
+        ngmPagebeforehide:'pagebeforehide',
+        ngmPageshow:'pageshow',
+        ngmPagehide:'pagehide',
+        ngmClick:'vclick'
     };
     for (var directive in eventDirectives) {
         createEventDirective(directive, eventDirectives[directive])

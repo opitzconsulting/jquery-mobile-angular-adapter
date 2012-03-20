@@ -1,95 +1,44 @@
-define(['jqmng/widgets/widgetProxyUtil'], function(proxyUtil) {
+jqmng.define('jqmng/widgets/angularRepeat', ['jquery', 'angular'], function ($, angular) {
+
     /**
-     * Modify original ng:repeat so that all created items directly have a parent
-     * (old style repeat). This is slower, however simplifies the integration with jquery mobile a lot!
-     * <p>
-     * This also takes care for jquery widgets wrapping themselves into other elements
-     * (e.g. setting a div as new parent).
+     * Modify the original repeat: Make sure that all elements are added under the same parent.
+     * This is important, as some jquery mobile widgets wrap the elements into new elements,
+     * and angular just uses element.after().
      */
-    angular.widget('@ng:repeat', function(expression, element) {
-        element.attr('ngm:createwidgets', 'true');
-        element.removeAttr('ng:repeat');
-        element.replaceWith(angular.element('<!-- ng:repeat: ' + expression + ' -->'));
-        var linker = this.compile(element);
-        return function(iterStartElement) {
-            var match = expression.match(/^\s*(.+)\s+in\s+(.*)\s*$/),
-                lhs, rhs, valueIdent, keyIdent;
-            if (! match) {
-                throw Error("Expected ng:repeat in form of '_item_ in _collection_' but got '" +
-                    expression + "'.");
+    function instrumentNodeFunction(parent, node, fnName) {
+        var _old = node[fnName];
+        node[fnName] = function (otherNode) {
+            var target = this;
+            while (target.parent()[0] !== parent) {
+                target = target.parent();
+                if (target.length === 0) {
+                    throw new Error("Could not find the expected parent in the node path", this, parent);
+                }
             }
-            lhs = match[1];
-            rhs = match[2];
-            match = lhs.match(/^([\$\w]+)|\(([\$\w]+)\s*,\s*([\$\w]+)\)$/);
-            if (!match) {
-                throw Error("'item' in 'item in collection' should be identifier or (key, value) but got '" +
-                    rhs + "'.");
-            }
-            valueIdent = match[3] || match[1];
-            keyIdent = match[2];
-            var children = [], currentScope = this;
-            var parent = iterStartElement.parent();
-            this.$onEval(function() {
-                var index = 0,
-                    childCount = children.length,
-                    lastIterElement = iterStartElement,
-                    collection = this.$tryEval(rhs, iterStartElement),
-                    collectionLength = angular.Array.size(collection, true),
-                    childScope,
-                    key;
+            instrumentNode(parent, otherNode);
+            return _old.call(target, otherNode);
+        };
+    }
 
-                for (key in collection) {
-                    if (collection.hasOwnProperty(key)) {
-                        if (index < childCount) {
-                            // reuse existing child
-                            childScope = children[index];
-                            childScope[valueIdent] = collection[key];
-                            if (keyIdent) childScope[keyIdent] = key;
-                            lastIterElement = childScope.$element;
-                            childScope.$position = index == 0
-                                ? 'first'
-                                : (index == collectionLength - 1 ? 'last' : 'middle');
-                            childScope.$eval();
-                        } else {
-                            // grow children
-                            childScope = angular.scope(currentScope);
-                            childScope[valueIdent] = collection[key];
-                            if (keyIdent) childScope[keyIdent] = key;
-                            childScope.$index = index;
-                            childScope.$position = index == 0
-                                ? 'first'
-                                : (index == collectionLength - 1 ? 'last' : 'middle');
-                            children.push(childScope);
-                            linker(childScope, function(clone) {
-                                clone.attr('ng:repeat-index', index);
+    function instrumentNode(parent, node) {
+        var fns = ['after', 'before'];
+        for (var i = 0; i < fns.length; i++) {
+            instrumentNodeFunction(parent, node, fns[i]);
+        }
+    }
 
-                                // Always use old way for jquery mobile, so
-                                // that new elements instantly have a connection to the document root.
-                                // Some jquery mobile widgets add new parents.
-                                // Compensate this for adding.
-                                var appendPosition = lastIterElement;
-                                while (appendPosition.length>0 && appendPosition.parent()[0]!==parent[0]) {
-                                    appendPosition = appendPosition.parent();
-                                }
-                                appendPosition.after(clone);
-                                lastIterElement = clone;
-                            });
-                        }
-                        index ++;
+    var mod = angular.module('ng');
+    mod.directive('ngRepeat', function () {
+        return {
+            priority:1000, // same as original repeat
+            compile:function (element, attr, linker) {
+                return {
+                    pre:function (scope, iterStartElement, attr) {
+                        instrumentNode(iterStartElement.parent()[0], iterStartElement);
                     }
-                }
-
-                // shrink children
-                while (children.length > index) {
-                    // Sencha Integration: Destroy widgets
-                    var child = children.pop();
-                    var childElement = child.$element;
-                    childElement.remove();
-                }
-
-            }, iterStartElement);
+                };
+            }
         };
     });
-
 
 });

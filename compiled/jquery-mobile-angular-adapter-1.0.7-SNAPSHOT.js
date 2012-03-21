@@ -875,14 +875,41 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
     var currScope = null;
 
     function setCurrScope(scope) {
-        if (scope===scope.$root) {
-            console.log("now");
-        }
         currScope = scope;
     }
 
     var ng = angular.module('ng');
     ng.run(patchRootDigest);
+    ng.run(deactivateAngularLocationService);
+
+    /**
+     * Deactivate the url changing capabilities
+     * of angular, so we do not get into trouble with
+     * jquery mobile: angular saves the current url before a $digest
+     * and updates the url after the $digest.
+     * <p>
+     * This also replaces the hashListen implementation
+     * of angular by the jquery mobile impementation,
+     * so we do not have two polling functions, ...
+     * <p>
+     * Attention: By this, urls can no more be changed via angular's $location service!
+     */
+    function deactivateAngularLocationService($browser) {
+            $browser.onHashChange = function(handler) {
+                $(window).bind('hashchange', handler);
+                return handler;
+            };
+            var lastUrl = location.href;
+            $browser.url = function(url) {
+                if (url) {
+                    lastUrl = url;
+                }
+                return lastUrl;
+            };
+    }
+    deactivateAngularLocationService.$inject = ['$browser'];
+
+    var compiledPages = [];
 
     function patchRootDigest($rootScope) {
         var _apply = $rootScope.$apply;
@@ -904,6 +931,22 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
                 // This is due to performance reasons!
                 currScope && currScope.$digest();
             }
+            // run the jquery mobile page compiler
+            // AFTER the angular compiler is completely finished.
+            // (Cannot be done in an angular directive...)
+            if (compiledPages.length>0) {
+                var pages = compiledPages;
+                compiledPages = [];
+                if (!$rootScope.jqmInitialized) {
+                    $rootScope.jqmInitialized = true;
+                    //$(window).unbind("hashchange");
+                    $.mobile.initializePage();
+                }
+                for (var i=0; i<pages.length; i++) {
+                    pages[i].page();
+                }
+            }
+
             return res;
         };
     }
@@ -951,6 +994,8 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
                 degradeInputs(tElement);
                 return {
                     pre:function preLink(scope, iElement, iAttrs) {
+                        compiledPages.push(iElement);
+                        iElement.data('angularLinked', true);
                         // Detatch the scope for the normal $digest cycle
                         scope.$destroy();
                         var createJqmWidgetsFlag = false;
@@ -961,22 +1006,12 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
                         scope.$digest = function () {
                             var res = oldDigest.apply(this, arguments);
                             // Create jquery mobile widgets as needed on the page
-                            if (createJqmWidgetsFlag) {
+                            if (iElement.data("page") && createJqmWidgetsFlag) {
                                 createJqmWidgetsFlag = false;
                                 iElement.trigger('create');
                             }
                             return res;
                         };
-                    },
-                    post:function preLink(scope, iElement, iAttrs) {
-                        if (!iElement.data("page")) {
-                            iElement.data('angularLinked', true);
-                            if (!scope.$root.jqmInitialized) {
-                                scope.$root.jqmInitialized = true;
-                                $.mobile.initializePage();
-                            }
-                            iElement.page();
-                        }
                     }
                 }
             }

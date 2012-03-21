@@ -7,7 +7,6 @@ jqmng.require([], function() {
                 var page1 = win.$("#start");
                 page1.page();
                 expect(page1.scope()).toBeTruthy();
-                console.log(page1.scope());
                 expect(page1.scope().$parent).toBe(win.$(win.document.documentElement).scope());
             });
         });
@@ -63,7 +62,7 @@ jqmng.require([], function() {
                 expect(anchors.hasClass('ui-btn')).toBeTruthy();
             })
         });
-        /*
+
         it("should work with degraded inputs", function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(win) {
                 var $ = win.$;
@@ -84,6 +83,5 @@ jqmng.require([], function() {
                 expect(input.val()).toBe("hello");
             })
         });
-        */
     });
 });

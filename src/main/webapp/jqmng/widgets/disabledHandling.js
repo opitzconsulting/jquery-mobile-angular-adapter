@@ -51,5 +51,17 @@ jqmng.define('jqmng/widgets/disabledHandling', ['jquery', 'angular'], function (
                 }
             }
         });
+
+        mod.directive('ngDisabled', function () {
+            return {
+                compile:function () {
+                    return {
+                        post:function (scope, element, attr) {
+                            instrumentAttrSetter(element, attr);
+                        }
+                    }
+                }
+            }
+        });
     }
 );

@@ -83,8 +83,11 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
     });
 
     $('div').live('jqmngpagebeforeshow', function (event, data) {
-        var currPageScope = $(event.target).scope();
-        if (currPageScope) {
+        var page = $(event.target);
+        var currPageScope = page.scope();
+        if (page.data('angularLinked') && currPageScope) {
+            // We only need to trigger the digest for pages
+            // creates by angular, and not for those that are dynamically created by jquery mobile.
             setCurrScope(currPageScope);
             currPageScope.$root.$digest();
         }
@@ -110,6 +113,9 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
     var currScope = null;
 
     function setCurrScope(scope) {
+        if (scope===scope.$root) {
+            console.log("now");
+        }
         currScope = scope;
     }
 
@@ -118,37 +124,26 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
     ng.run(patchRootDigest);
     var pages = [];
     function patchRootDigest($rootScope) {
+        var _apply = $rootScope.$apply;
+        $rootScope.$apply = function() {
+            if ($rootScope.$$phase) {
+                return $rootScope.$eval.apply(this, arguments);
+            }
+            return _apply.apply(this, arguments);
+        };
+
         var _digest = $rootScope.$digest;
         $rootScope.$digest = function() {
-            var pages = $(":jqmData(role='page')");
-            var hasCompiledPages = false;
-            var notCompiledPages = [];
-            for (var i=0; i<pages.length; i++) {
-                var page = pages.eq(i);
-                if (page.data("page")) {
-                    // used when angular creates new pages on the fly
-                    hasCompiledPages = true;
-                } else {
-                    notCompiledPages.push(page);
-                }
+            if ($rootScope.$$phase) {
+                return;
             }
-            if (!hasCompiledPages) {
-                // first page compile...
-                $.mobile.initializePage();
-            }
-            for (var i=0; i<notCompiledPages.length; i++) {
-                // Case: Angular added a new page. This needs to be compiled
-                // with angular first.
-                var page = notCompiledPages[i];
-                page.page();
-            }
-            // digest the current page separately.
-            // This is due to performance reasons!
-            if (this !== currScope) {
+            var res = _digest.apply(this, arguments);
+            if (this===$rootScope) {
+                // digest the current page separately.
+                // This is due to performance reasons!
                 currScope && currScope.$digest();
             }
-
-            return _digest.apply(this, arguments);
+            return res;
         };
     }
     patchRootDigest.$inject = ['$rootScope'];
@@ -194,13 +189,13 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
         return {
             restrict:'A',
             scope:true,
-            compile:function compile(tElement, tAttrs, transclude) {
+            compile:function compile(tElement, tAttrs) {
                 degradeInputs(tElement);
                 if (tAttrs.role !== 'page') {
                     return {};
                 }
                 return {
-                    pre:function preLink(scope, iElement, iAttrs, controller) {
+                    pre:function preLink(scope, iElement, iAttrs) {
                         // Detatch the scope for the normal $digest cycle
                         scope.$destroy();
                         var createJqmWidgetsFlag = false;
@@ -217,6 +212,16 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
                             }
                             return res;
                         };
+                    },
+                    post:function preLink(scope, iElement, iAttrs) {
+                        if (!iElement.data("page")) {
+                            iElement.data('angularLinked', true);
+                            if (!scope.$root.jqmInitialized) {
+                                scope.$root.jqmInitialized = true;
+                                $.mobile.initializePage();
+                            }
+                            iElement.page();
+                        }
                     }
                 }
             }

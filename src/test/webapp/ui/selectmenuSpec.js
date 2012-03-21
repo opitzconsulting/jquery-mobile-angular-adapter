@@ -44,7 +44,7 @@ jqmng.require([], function() {
                 return !dialogOpen();
             });
         });
-
+        /*
         it('should save the ui value into the model when using non native menus', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
@@ -183,6 +183,7 @@ jqmng.require([], function() {
                 expect(page.find(".ui-select .ui-btn-text").text()).toEqual("value1");
             });
         });
+        */
     });
 
 });

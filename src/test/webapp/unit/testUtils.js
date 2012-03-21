@@ -14,13 +14,6 @@ jqmng.define('unit/testUtils', ["jquery", "angular"], function($, angular) {
         return $.apply(this, arguments);
     }
 
-    function compilePage(html) {
-        var res = test$(html);
-        test$("body").append(res);
-        res.page();
-        return res;
-    }
-
     function compileInPage(html, pageControllerName) {
         var elements = test$("<div>"+html+"</div>").children().addClass("result", "true");
         var page = test$('<div id="start" data-role="page" data-url="start"><div data-role="content"></div></div>');

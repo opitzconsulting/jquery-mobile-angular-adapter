@@ -100,58 +100,6 @@ jqmng.define('jqmng/navigate', ['jquery', 'angular'], function($, angular) {
         return undefined;
     }
 
-    mod.run(['$rootScope', '$navigate', function($rootScope, $navigate) {
-        $rootScope.$navigate = function() {
-            var args = Array.prototype.slice.call(arguments);
-            args.unshift($navigate);
-            return navigateExpression.apply(this, args);
-        }
-    }]);
-
-    /**
-     * Helper function to put the navigation part out of the controller into the page.
-     * @param scope
-     */
-    var navigateExpression = function(service) {
-        if (arguments.length === 2) {
-            // used without the test.
-            service(arguments[1]);
-            return;
-        }
-        // parse the arguments...
-        var test = arguments[1];
-        var outcomes = {};
-        var parts;
-        for (var i = 2; i < arguments.length; i++) {
-            parts = splitAtFirstColon(arguments[i]);
-            outcomes[parts[0]] = parts[1];
-        }
-        if (test && test.then) {
-            // test is a promise.
-            test.then(function(test) {
-                if (outcomes[test]) {
-                    service(outcomes[test]);
-                } else if (outcomes.success) {
-                    service(outcomes.success);
-                }
-            }, function(test) {
-                if (outcomes[test]) {
-                    service(outcomes[test]);
-                } else if (outcomes.failure) {
-                    service(outcomes.failure);
-                }
-            });
-        } else {
-            if (outcomes[test]) {
-                service(outcomes[test]);
-            } else if (test !== false && outcomes.success) {
-                service(outcomes.success);
-            } else if (test === false && outcomes.failure) {
-                service(outcomes.failure);
-            }
-        }
-    };
-
     return navigate;
 
 });

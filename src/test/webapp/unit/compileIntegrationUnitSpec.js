@@ -59,5 +59,48 @@ jqmng.require(["unit/testUtils"], function(utils) {
             expect(watch2Counter).toBeGreaterThan(0);
             expect(watch1Counter).toBe(0);
         });
+
+        it("should work fine with asyncEval that changes something in the page", function() {
+            var page = utils.compile('<div data-role="page" id="page1"></div>');
+            page.data( "page" )._trigger("beforeshow");
+            var pageCounter = 0;
+            var scope = page.scope();
+            scope.$watch('flag', function() {
+                pageCounter++;
+            });
+            scope.$root.$evalAsync(function() {
+                scope.flag = true;
+            });
+            pageCounter = 0;
+            scope.$root.$digest();
+            expect(pageCounter).toBe(1);
+        });
+
+        it("should work with pages created dynamically by jquery mobile", function() {
+            var element = utils.compile('<div></div>');
+            var page = $('<div data-role="page" id="page1"></div>').page();
+            element.append(page);
+            page.data( "page" )._trigger("beforeshow");
+            element.scope().$root.$digest();
+        });
+
+        it("should allow $apply within $apply", function() {
+            var scope = angular.injector(["ng"]).get("$rootScope");
+            var res;
+            scope.$watch(function() {
+                res = scope.$apply('1+2');
+            });
+            scope.$apply();
+            expect(res).toBe(3);
+        });
+
+        it("should allow $digest within $digest", function() {
+            var scope = angular.injector(["ng"]).get("$rootScope");
+            scope.$watch(function() {
+                scope.$digest();
+            });
+            scope.$digest();
+        });
+
     });
 });

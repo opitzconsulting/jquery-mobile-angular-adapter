@@ -478,16 +478,6 @@ jqmng.define('jqmng/widgets/angularInput', ['jquery', 'angular'], function ($, a
                                 return _bind.call(this, events, callback);
                             };
                         }
-                        if (type === 'date') {
-                            // on iOS 5, date inputs do not fire a change event.
-                            // so we need to also listen for blur events.
-                            iElement.bind = function (events, callback) {
-                                if (events.indexOf('change') != -1) {
-                                    events += " blur";
-                                }
-                                return _bind.call(this, events, callback);
-                            };
-                        }
                     },
                     post:function (scope, iElement, iAttrs, ctrl) {
                         if (!ctrl) {
@@ -892,9 +882,8 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
     }
 
     var ng = angular.module('ng');
-
     ng.run(patchRootDigest);
-    var pages = [];
+
     function patchRootDigest($rootScope) {
         var _apply = $rootScope.$apply;
         $rootScope.$apply = function() {
@@ -927,28 +916,22 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
      * @param targetPage
      */
     function degradeInputs(targetPage) {
-        var page = targetPage.data("page"), options;
-
-        if (!page) {
-            return;
-        }
-
-        options = page.options;
+        var options = $.mobile.page.prototype.options;
 
         // degrade inputs to avoid poorly implemented native functionality
-        targetPage.find("input").not(page.keepNativeSelector()).each(function () {
-            var $this = $(this),
-                type = this.getAttribute("type"),
+        targetPage.find( "input" ).not( options.keepNativeDefault ).each(function() {
+            var $this = $( this ),
+                type = this.getAttribute( "type" ),
                 optType = options.degradeInputs[ type ] || "text";
 
-            if (options.degradeInputs[ type ]) {
-                var html = $("<div>").html($this.clone()).html(),
+            if ( options.degradeInputs[ type ] ) {
+                var html = $( "<div>" ).html( $this.clone() ).html(),
                     // In IE browsers, the type sometimes doesn't exist in the cloned markup, so we replace the closing tag instead
-                    hasType = html.indexOf(" type=") > -1,
+                    hasType = html.indexOf( " type=" ) > -1,
                     findstr = hasType ? /\s+type=["']?\w+['"]?/ : /\/?>/,
                     repstr = " type=\"" + optType + "\" data-" + $.mobile.ns + "type=\"" + type + "\"" + ( hasType ? "" : ">" );
 
-                $this.replaceWith(html.replace(findstr, repstr));
+                $this.replaceWith( html.replace( findstr, repstr ) );
             }
         });
     }
@@ -962,10 +945,10 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
             restrict:'A',
             scope:true,
             compile:function compile(tElement, tAttrs) {
-                degradeInputs(tElement);
-                if (tAttrs.role !== 'page') {
+                if (tAttrs.role !== 'page' && tAttrs.role !== 'dialog') {
                     return {};
                 }
+                degradeInputs(tElement);
                 return {
                     pre:function preLink(scope, iElement, iAttrs) {
                         // Detatch the scope for the normal $digest cycle

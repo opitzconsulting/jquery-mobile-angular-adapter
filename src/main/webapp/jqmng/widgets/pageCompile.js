@@ -113,16 +113,42 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
     var currScope = null;
 
     function setCurrScope(scope) {
-        if (scope===scope.$root) {
-            console.log("now");
-        }
         currScope = scope;
     }
 
     var ng = angular.module('ng');
-
     ng.run(patchRootDigest);
-    var pages = [];
+    ng.run(deactivateAngularLocationService);
+
+    /**
+     * Deactivate the url changing capabilities
+     * of angular, so we do not get into trouble with
+     * jquery mobile: angular saves the current url before a $digest
+     * and updates the url after the $digest.
+     * <p>
+     * This also replaces the hashListen implementation
+     * of angular by the jquery mobile impementation,
+     * so we do not have two polling functions, ...
+     * <p>
+     * Attention: By this, urls can no more be changed via angular's $location service!
+     */
+    function deactivateAngularLocationService($browser) {
+            $browser.onHashChange = function(handler) {
+                $(window).bind('hashchange', handler);
+                return handler;
+            };
+            var lastUrl = location.href;
+            $browser.url = function(url) {
+                if (url) {
+                    lastUrl = url;
+                }
+                return lastUrl;
+            };
+    }
+    deactivateAngularLocationService.$inject = ['$browser'];
+
+    var compiledPages = [];
+
     function patchRootDigest($rootScope) {
         var _apply = $rootScope.$apply;
         $rootScope.$apply = function() {
@@ -143,6 +169,22 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
                 // This is due to performance reasons!
                 currScope && currScope.$digest();
             }
+            // run the jquery mobile page compiler
+            // AFTER the angular compiler is completely finished.
+            // (Cannot be done in an angular directive...)
+            if (compiledPages.length>0) {
+                var pages = compiledPages;
+                compiledPages = [];
+                if (!$rootScope.jqmInitialized) {
+                    $rootScope.jqmInitialized = true;
+                    //$(window).unbind("hashchange");
+                    $.mobile.initializePage();
+                }
+                for (var i=0; i<pages.length; i++) {
+                    pages[i].page();
+                }
+            }
+
             return res;
         };
     }
@@ -155,28 +197,22 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
      * @param targetPage
      */
     function degradeInputs(targetPage) {
-        var page = targetPage.data("page"), options;
-
-        if (!page) {
-            return;
-        }
-
-        options = page.options;
+        var options = $.mobile.page.prototype.options;
 
         // degrade inputs to avoid poorly implemented native functionality
-        targetPage.find("input").not(page.keepNativeSelector()).each(function () {
-            var $this = $(this),
-                type = this.getAttribute("type"),
+        targetPage.find( "input" ).not( options.keepNativeDefault ).each(function() {
+            var $this = $( this ),
+                type = this.getAttribute( "type" ),
                 optType = options.degradeInputs[ type ] || "text";
 
-            if (options.degradeInputs[ type ]) {
-                var html = $("<div>").html($this.clone()).html(),
+            if ( options.degradeInputs[ type ] ) {
+                var html = $( "<div>" ).html( $this.clone() ).html(),
                     // In IE browsers, the type sometimes doesn't exist in the cloned markup, so we replace the closing tag instead
-                    hasType = html.indexOf(" type=") > -1,
+                    hasType = html.indexOf( " type=" ) > -1,
                     findstr = hasType ? /\s+type=["']?\w+['"]?/ : /\/?>/,
                     repstr = " type=\"" + optType + "\" data-" + $.mobile.ns + "type=\"" + type + "\"" + ( hasType ? "" : ">" );
 
-                $this.replaceWith(html.replace(findstr, repstr));
+                $this.replaceWith( html.replace( findstr, repstr ) );
             }
         });
     }
@@ -190,12 +226,14 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
             restrict:'A',
             scope:true,
             compile:function compile(tElement, tAttrs) {
-                degradeInputs(tElement);
-                if (tAttrs.role !== 'page') {
+                if (tAttrs.role !== 'page' && tAttrs.role !== 'dialog') {
                     return {};
                 }
+                degradeInputs(tElement);
                 return {
                     pre:function preLink(scope, iElement, iAttrs) {
+                        compiledPages.push(iElement);
+                        iElement.data('angularLinked', true);
                         // Detatch the scope for the normal $digest cycle
                         scope.$destroy();
                         var createJqmWidgetsFlag = false;
@@ -206,22 +244,12 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
                         scope.$digest = function () {
                             var res = oldDigest.apply(this, arguments);
                             // Create jquery mobile widgets as needed on the page
-                            if (createJqmWidgetsFlag) {
+                            if (iElement.data("page") && createJqmWidgetsFlag) {
                                 createJqmWidgetsFlag = false;
                                 iElement.trigger('create');
                             }
                             return res;
                         };
-                    },
-                    post:function preLink(scope, iElement, iAttrs) {
-                        if (!iElement.data("page")) {
-                            iElement.data('angularLinked', true);
-                            if (!scope.$root.jqmInitialized) {
-                                scope.$root.jqmInitialized = true;
-                                $.mobile.initializePage();
-                            }
-                            iElement.page();
-                        }
                     }
                 }
             }

@@ -41,16 +41,6 @@ jqmng.define('jqmng/widgets/angularInput', ['jquery', 'angular'], function ($, a
                                 return _bind.call(this, events, callback);
                             };
                         }
-                        if (type === 'date') {
-                            // on iOS 5, date inputs do not fire a change event.
-                            // so we need to also listen for blur events.
-                            iElement.bind = function (events, callback) {
-                                if (events.indexOf('change') != -1) {
-                                    events += " blur";
-                                }
-                                return _bind.call(this, events, callback);
-                            };
-                        }
                     },
                     post:function (scope, iElement, iAttrs, ctrl) {
                         if (!ctrl) {

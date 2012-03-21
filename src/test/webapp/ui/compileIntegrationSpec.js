@@ -68,7 +68,7 @@ jqmng.require([], function() {
                 var $ = win.$;
                 $.mobile.page.prototype.options.degradeInputs.number = "text";
                 var page1 = $("#start");
-                page1.append('<input type="number" name="myname" id="myname">');
+                page1.append('<input type="number" ng-model="myname" id="myname">');
             });
             runs(function() {
                 var win = testframe();
@@ -78,9 +78,9 @@ jqmng.require([], function() {
                 expect(input.length).toBe(1);
                 expect(input.attr("type")).toBe("text");
                 var scope = page1.scope();
-                scope.myname = "hello";
-                scope.$root.$eval();
-                expect(input.val()).toBe("hello");
+                scope.myname = 1234;
+                scope.$root.$digest();
+                expect(input.val()).toBe("1234");
             })
         });
     });

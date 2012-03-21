@@ -1,6 +1,16 @@
 jqmng.require(["unit/testUtils"], function(utils) {
     describe('compileIntegrationUnit', function() {
         it("should create jqm pages when angular compiles a page", function() {
+            var c = utils.compile('<div data-role="page"></div>');
+            expect(c.hasClass('ui-page')).toBe(true);
+        });
+
+        it("should create jqm dialogs when angular compiles a page", function() {
+            var c = utils.compile('<div data-role="dialog"></div>');
+            expect(c.hasClass('ui-page')).toBe(true);
+        });
+
+        it("should create jqm pages when angular compiles a page", function() {
             var c = utils.compileInPage('<div></div>');
             expect(c.page.hasClass('ui-page')).toBe(true);
         });

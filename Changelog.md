@@ -8,8 +8,6 @@ Changelog
 - removed `iff` expression as it was only used internally and is now no more needed.
 - removed `$.mobile.globalScope` Use angular's `$rootScope` service instead.
 - removed `ngm:fadein` directive, as it is not related to mobile
-- removed `$navigate` expression, as angular now automatically evaluates promises to the result of the promises,
-  by which the `$navigate` expression was no more able to wait for the end of a call.
 - TODO: The paging will change, as angular no more allows us to enhance list-expressions. Probably using filters.
 - updated the build process
 - removed custom build of jquery mobile, as no patches are needed any more to work

@@ -154,6 +154,21 @@ Default messages are:
 - `$.mobile.loadingMessage`: for all other cases
 
 
+### Angular-Expressions: Function $navigate
+Every expression can now use the `$navigate` expression to define the navigation outside of the controlers
+in the html pages. By this, the controllers stay independent of the navigation process and is reusable.
+
+There are two types of syntax:
+1. `$activate(target)`: Navigates to the given target using the `$navigate` service, so the target can also
+   include a transition.
+2. `$activate(test,'outcome1:target','outcome2:target',...)`: Navigates to that target whose outcome equals
+   to the test. The special outcomes `success` is applied for any value for `test` that is not `false` (e.g. also `undefined`),
+   and the outcome `failure` is used for the value `false` of test.
+   This also supports promises. In that case, the navivation is done with the first argument of
+   the `done` / `fail` callback of the promise. Also, the `success` outcome is mapped to the `done` callback
+   and the `failure` outcome to the `fail` callback.
+
+
 ### Paging for lists
 Lists can be paged in the sense that more entries can be additionally loaded. By "loading" we mean the
 display of a sublist of a list that is already fully loaded in JavaScript. This is useful, as the main performance

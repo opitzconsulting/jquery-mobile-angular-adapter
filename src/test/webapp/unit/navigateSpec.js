@@ -72,39 +72,39 @@ jqmng.require(['angular'], function(angular) {
                 }
             });
             it('should navigate to the success outcome if result is not false', function() {
-                scope.$apply("undefined | $navigate:'success:page1':'failure:page2'");
+                scope.$apply("undefined | navigate:'success:page1':'failure:page2'");
                 expect(navigateSpy).toHaveBeenCalledWith('page1');
             });
             it('should navigate to the failure outcome if result is false', function() {
-                scope.$apply("false|$navigate:'success:page1':'failure:page2'");
+                scope.$apply("false| navigate:'success:page1':'failure:page2'");
                 expect(navigateSpy).toHaveBeenCalledWith('page2');
             });
             it('should navigate to the given outcome', function() {
-                scope.$apply("'myout' | $navigate:'success:page1': 'failure:page2' : 'myout:page3'");
+                scope.$apply("'myout' | navigate:'success:page1': 'failure:page2' : 'myout:page3'");
                 expect(navigateSpy).toHaveBeenCalledWith('page3');
             });
             it('should navigate to the success outcome if promise is resolved', function() {
                 deferred.resolve();
-                scope.$apply("deferResult() | $navigate:'success:page1' : 'failure:page2'");
+                scope.$apply("deferResult() | navigate:'success:page1' : 'failure:page2'");
                 expect(navigateSpy).toHaveBeenCalledWith('page1');
             });
             it('should navigate to the failure outcome if promise is rejected', function() {
                 deferred.reject();
-                scope.$apply("deferResult() | $navigate:'success:page1' : 'failure:page2'");
+                scope.$apply("deferResult() | navigate:'success:page1' : 'failure:page2'");
                 expect(navigateSpy).toHaveBeenCalledWith('page2');
             });
             it('should navigate to the given outcome of the resolved promise', function() {
                 deferred.resolve('myout');
-                scope.$apply("deferResult() | $navigate: 'success:page1' : 'failure:page2' : 'myout:page3'");
+                scope.$apply("deferResult() | navigate: 'success:page1' : 'failure:page2' : 'myout:page3'");
                 expect(navigateSpy).toHaveBeenCalledWith('page3');
             });
             it('should navigate to the given outcome of the rejected promise', function() {
                 deferred.reject('myout');
-                scope.$apply("deferResult() | $navigate: 'success:page1' : 'failure:page2': 'myout:page3'");
+                scope.$apply("deferResult() | navigate: 'success:page1' : 'failure:page2': 'myout:page3'");
                 expect(navigateSpy).toHaveBeenCalledWith('page3');
             });
             it('should navigate to the given outcome with the given transition', function() {
-                scope.$apply("'myout' | $navigate: 'success:page1' : 'failure:page2' : 'myout:transition1:page3'");
+                scope.$apply("'myout' | navigate: 'success:page1' : 'failure:page2' : 'myout:transition1:page3'");
                 expect(navigateSpy).toHaveBeenCalledWith('transition1:page3');
             });
 

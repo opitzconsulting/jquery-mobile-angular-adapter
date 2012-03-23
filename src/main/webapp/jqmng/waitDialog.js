@@ -126,7 +126,7 @@ jqmng.define('jqmng/waitDialog', ['jquery'], function($) {
 
     var mod = angular.module('ng');
     var rootScope;
-    mod.service('$waitDialog', ['$rootScope', function($rootScope) {
+    mod.factory('$waitDialog', ['$rootScope', function($rootScope) {
         rootScope = $rootScope;
         return res;
     }]);

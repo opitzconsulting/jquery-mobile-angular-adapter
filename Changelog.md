@@ -5,11 +5,10 @@ Changelog
 -------------
 - Update to angular 1.0 and jquery 1.7
 - ng-app directive of angular is required
-- `$navigate` expression was changed to a filter (note: the `$navigate` service was untouched by this).
+- `$navigate` expression was changed to the `navigate` filter (note: the `$navigate` service was untouched by this).
+- `paged` expression was changed to the `paged` filter.
 - removed `iff` expression as it was only used internally and is now no more needed.
-- removed `$.mobile.globalScope` Use angular's `$rootScope` service instead.
-- removed `ngm:fadein` directive, as it is not related to mobile
-- TODO: The paging will change, as angular no more allows us to enhance list-expressions. Probably using filters.
+- removed `$.mobile.globalScope` as it was only used internally. Use angular's `$rootScope` service instead.
 - updated the build process
 - removed custom build of jquery mobile, as no patches are needed any more to work
   with angular 1.0.

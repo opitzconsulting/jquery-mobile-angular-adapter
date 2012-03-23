@@ -24,8 +24,5 @@
 <jsp:include page="jqmng/widgets/jqmSelectMenu.js"/>
 <jsp:include page="jqmng/widgets/jqmSlider.js"/>
 <jsp:include page="jqmng/widgets/pageCompile.js"/>
-/*
-<%-- TODO
-jsp:include page="jqmng/paging.js"
---%>
-*/
+<jsp:include page="jqmng/paging.js"/>
+<jsp:include page="jqmng/fadein.js"/>

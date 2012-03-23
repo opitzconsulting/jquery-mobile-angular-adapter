@@ -81,10 +81,8 @@ jqmng.define('jqmng/navigate', ['jquery', 'angular'], function($, angular) {
 
 
     var mod = angular.module('ng');
-    mod.provider('$navigate', function() {
-        this.$get = function() {
-            return navigate;
-        }
+    mod.factory('$navigate', function() {
+        return navigate;
     });
 
     function getIndexInStack(pageId) {
@@ -108,7 +106,7 @@ jqmng.define('jqmng/navigate', ['jquery', 'angular'], function($, angular) {
         }
     }]);
 
-    mod.filter('$navigate', ['$navigate', function($navigateService) {
+    mod.filter('navigate', ['$navigate', function($navigateService) {
         return function(test) {
             // parse the arguments...
             var outcomes = {};
@@ -143,12 +141,6 @@ jqmng.define('jqmng/navigate', ['jquery', 'angular'], function($, angular) {
             }
         };
     }]);
-
-    /**
-     * Helper function to put the navigation part out of the controller into the page.
-     * @param scope
-     */
-
 
     return navigate;
 

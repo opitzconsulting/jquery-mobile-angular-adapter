@@ -15,7 +15,7 @@ E.g. the select tag is enhanced by jquery mobile,
 and if someone changes it's value programmatically, the refresh-function needs to be called.
 
 Fixes the jquery mobile widgets so that they are correctly removed form the dom,
-when angular removes them (e.g. in a `ng:repeat`).
+when angular removes them (e.g. in a `ng-repeat`).
 
 Provides special enhancements useful for mobile applications.
 
@@ -90,12 +90,12 @@ Scopes
 Every page of jquery mobile gets a separate scope. The `$digest` of the global scope only evaluates the currently active page,
 so there is no performance interaction between pages.
 
-For communicating between the pages use the `ngm:shared-controller` directive (see below).
+For communicating between the pages use the `ngm-shared-controller` directive (see below).
 
 Widgets, Directives and Services
 -----------
 
-### Directive ngm:shared-controller="name1:Controller1,name2:Controller2, ..."
+### Directive ngm-shared-controller="name1:Controller1,name2:Controller2, ..."
 Mobile pages are small, so often a usecase is split up into multiple pages.
 To share common behaviour and state between those pages, this directive allows shared controllers.
 
@@ -106,24 +106,32 @@ If the controller is used on more than one page, the instance of the controller 
 Note that the shared controller have the full scope functionality, e.g. for dependecy injection
 or using `$watch`.
 
-### Directive ngm:event="{event1:'handler1',event2:'handler2',...}"
+### Directive ngm-event="{event1:'handler1',event2:'handler2',...}"
 General event handler that integrates with jquery events, and also with jquery mobile events.
 The value of the attribute is json and defines the event - handler mapping.
 
-Usage: E.g. `<a href="#" ngm:event="{swiperight:'myFn()'}">`
+Usage: E.g. `<a href="#" ngm-event="{swiperight:'myFn()'}">`
 
-### Event-Directives `ngm:click`, `ngm:tap`,`ngm:taphold`,`ngm:swipe`,`ngm:swiperight`,`ngm:swipeleft`,`ngm:pagebeforeshow`,`ngm:pagebeforehide`,`ngm:pageshow`,`ngm:pagehide`
+### Event-Directives `ngm-click`, `ngm-tap`,`ngm-taphold`,`ngm-swipe`,`ngm-swiperight`,`ngm-swipeleft`,`ngm-pagebeforeshow`,`ngm-pagebeforehide`,`ngm-pageshow`,`ngm-pagehide`
 For the mentioned events there are special directives to simplify the markup. Each of them is equivalent to
-using the `ngm:event` directive with the corresponding event name.
+using the `ngm-event` directive with the corresponding event name.
 
-Usage: E.g. `<a href="#" ngm:swipeleft="myFn()">`
+Usage: E.g. `<a href="#" ngm-swipeleft="myFn()">`
 
-### Attribute Widget @ngm:if
-The attribute widget `@ngm:if` allows to add/remove an element to/from the dom, depending on an expression.
-This is especially useful at places where we cannot insert an `ng:switch` into the dom. E.g. jquery mobile
+### Directive ngm-fadein
+For smooth fadings between `ngm-if` changes, there is also the directive `ngm-fadein`.
+This specifies that the display of the coresponding element
+should be shown via a transition lasting a defined amount of milliseconds (the value of the attribute).
+
+Usage: E.g. `<div ngm-fadein="700">asdf</div>`
+
+
+### Attribute Widget @ngm-if
+The attribute widget `@ngm-if` allows to add/remove an element to/from the dom, depending on an expression.
+This is especially useful at places where we cannot insert an `ng-switch` into the dom. E.g. jquery mobile
 does not allow elements between an `ul` and an `li` element.
 
-Usage: E.g. `<div ngm:if="myFlag">asdfasdf</div>`
+Usage: E.g. `<div ngm-if="myFlag">asdfasdf</div>`
 
 ### Service $navigate('[transition]:pageId'[,activateFn][,activateFnParam1, ...])
 Service to change the given page.
@@ -154,13 +162,13 @@ Default messages are:
 - `$.mobile.loadingMessage`: for all other cases
 
 
-### Filter $navigate
+### Filter `navigate`: Navigation in Expressions
 Every expression can now use the `$navigate` as a filter to define the navigation outside of the controlers
 in the html pages. By this, the controllers stay independent of the navigation process and is reusable.
 
 Syntax: `test | $activate: 'outcome1:target' : 'outcome2:target' : ...`
 
-Example: `<button ngm-click="doSomething() | $navigate : 'success:successPage' : 'failure:failurePage'">`
+Example: `<button ngm-click="doSomething() | navigate : 'success:successPage' : 'failure:failurePage'">`
 
 This navigates to that target whose outcome equals
 to the test. The special outcomes `success` is applied for any value for `test` that is not `false` (e.g. also `undefined`),
@@ -170,33 +178,40 @@ the `done` / `fail` callback of the promise. Also, the `success` outcome is mapp
 and the `failure` outcome to the `fail` callback.
 
 
-### Paging for lists
+### Filter `paged`: Paging for lists
 Lists can be paged in the sense that more entries can be additionally loaded. By "loading" we mean the
 display of a sublist of a list that is already fully loaded in JavaScript. This is useful, as the main performance
 problems result from DOM operations, which can be reduced with this paging mechanism.
 
-To implement this paging mechaism, we extend the angular array type with the folling function:
-`angular.Array.paged(array[,filterExpr[,orderByExpr]])`:
+To implement this paging mechanism, the angular filter `paged` was created.
+For displaying a page within a list, simply use:
+
+    list | paged:{pageSize: 12, filter: someFilter, orderBy: someOrder})
 
 This returns the subarray of the given filtered and ordered array with the currently loaded pages.
-The default page size is defined by `$.mobile.defaultListPageSize`. It can be overwritten by the property `pageSize`
-on arrays. For the filtering and sorting see the `angular.Array.filter` and `angular.Array.orderBy`.
+For the `filter` and `orderBy` parameter see the builtin angular filters `filter` and `orderBy`.
+The parameters `pageSize`, `filter` and `orderBy` are optional and can be combined in any order.
+If the pageSize is omitted, the default page size is used. This is by default 10, and can be configured using
 
-The resulting list provides the following functions:
-- `hasMorePages()`: Returns a boolean indicating if there are more pages that can be loaded.
-- `loadNextPage()`: Loads the next page from the list that was given to `angular.Array.paged`.
+    module(["ng"]).value('defaultListPageSize', 123);
 
-Note that this will cache the result of two calls until the next eval cycle or a change to the filter or orderBy arguments.
+To show a button that loads the next page of the list, use the following syntax:
 
-As angular instruments all lists in expressions automatically with the functions form the `angular.Array` namespace,
-the function `paged` can directly be used in all angular expressions, with a `$` as prefix.
+    <a href="#" ngm-if="list | paged:'hasMore'" ngm-click="list | paged:'loadMore'">Load More</a>
+
+The filter `paged|'hasMore'` returns a boolean indicating if all pages of the list have been loaded.
+The filter `paged|'loadMore'` loads the next page into the list.
+
+Note that this will cache the result of the paging, filtering and sorting until something changes.
+By this, paging should work fine also for large lists.
+
 The following example shows an example for a paged list for the data in the variable `myList`:
 
 
     <ul data-role="listview">
-        <li ng:repeat="item in list.$paged()">{{item}}</li>
-        <li ngm:if="list.$paged().hasMorePages()">
-            <a href="#" ngm:click="list.$paged().loadNextPage()">Load more</a>
+        <li ng-repeat="item in list | paged:{pageSize:10}">{{item}}</li>
+        <li ngm-if="list | paged:'hasMore'">
+            <a href="#" ngm-click="list | paged:'loadMore'">Load more</a>
          </li>
     </ul>
 

@@ -19,22 +19,21 @@ Test page during development.
     <script>
 
         MainController = function ($scope) {
-            $scope.fill = function () {
-                this.items = [1, 2];
+            var list = [];
+            for (var i=0; i<100; i++) {
+                list.push(i);
             }
+            $scope.list = list;
         }
     </script>
 </head>
 <body>
-<div data-role="page" id="start">
+<div data-role="page" id="start" ng:controller="MainController">
     <div data-role="content">
-        <a href="#page2" data-role="button">Page2</a>
-    </div>
-</div>
-
-<div data-role="page" id="page2">
-    <div data-role="content">
-        Hello
+        <ul data-role="listview">
+            <div ngm-fadein="1000" ngm-if="test">Hello</div>
+            <button ng-click="test=true">Show it</button>
+        </ul>
     </div>
 </div>
 

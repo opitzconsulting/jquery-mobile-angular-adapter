@@ -1,26 +1,37 @@
 var fs  = require("fs");
 var carrier = require('carrier');
+var uglify = require('uglify-js');
+var encoding = "utf-8";
 
 function readVersion() {
-    var pom = fs.readFileSync('pom.xml', 'utf-8');
+    var pom = fs.readFileSync('pom.xml', encoding);
     return /<version>(.*)<\/version>/.exec(pom)[1];
 }
 
 var versionPlaceholder = "${project.version}";
-var includeRegex = /<jsp:include page="(.*)"\/>/;
+var includeRegex = /<jsp:include page="(.*)"\/>/g;
 
-function parseFile(version) {
-    var input = fs.createReadStream('src/main/webapp/jqm-angular.jsp');
-    var out = fs.createWriteStream('compiled/jquery-mobile-angular-adapter-'+version+'.js');
-    carrier.carry(input, function(line) {
-        line = line.replace(versionPlaceholder, version);
-        var match = includeRegex.exec(line);
-        if (match) {
-            var fileName = match[1];
-            line = fs.readFileSync("src/main/webapp/"+fileName,'utf-8');
-        }
-        out.write(line+'\n');
-    });
+function compress(instring, outfile) {
+    var  jsp = uglify.parser,
+        pro = uglify.uglify;
+    var ast = jsp.parse(instring);
+    ast = pro.ast_mangle(ast);
+    ast = pro.ast_squeeze(ast);
+    return pro.gen_code(ast);
 }
 
-parseFile(readVersion());
+function build(inputName, outputName, version) {
+    var input = fs.readFileSync(inputName, encoding);
+    input = input.replace(versionPlaceholder, version);
+    input = input.replace(includeRegex, function(data, fileName) {
+        return fs.readFileSync("src/main/webapp/"+fileName,encoding);
+    });
+
+    fs.writeFileSync('compiled/'+outputName+'-'+version+'.js', input, encoding);
+    fs.writeFileSync('compiled/min/'+outputName+'-'+version+'.js', compress(input), encoding);
+}
+
+
+var v = readVersion();
+build('src/main/webapp/jqm-angular.jsp', 'jquery-mobile-angular-adapter', v);
+build('src/main/webapp/jqm-angular-standalone.jsp', 'jquery-mobile-angular-adapter-standalone', v);

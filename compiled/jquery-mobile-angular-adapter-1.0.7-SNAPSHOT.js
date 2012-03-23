@@ -59,6 +59,38 @@ jqmng.define('jquery', function() {
         return $;
     }
 });
+jqmng.define('jqmng/scopeReconnect', ['angular'], function (angular) {
+
+
+    var ng = angular.module('ng');
+    ng.run(['$rootScope', function($rootScope) {
+        var _$destroy = $rootScope.$destroy;
+        $rootScope.$destroy = function() {
+            this.$$destroyed = true;
+            return _$destroy.apply(this, arguments);
+        };
+        $rootScope.$reconnect = function() {
+            var child = this;
+            if (child===$rootScope) {
+                // Nothing to do here.
+                return;
+            }
+            if (!child.$$destroyed) {
+                return;
+            }
+            child.$$destroyed = false;
+            // See Scope.$new for this logic...
+            child.$$prevSibling = $rootScope.$$childTail;
+            if ($rootScope.$$childHead) {
+                $rootScope.$$childTail.$$nextSibling = child;
+                $rootScope.$$childTail = child;
+            } else {
+                $rootScope.$$childHead = $rootScope.$$childTail = child;
+            }
+
+        }
+    }]);
+});
 jqmng.define('jqmng/event', ['angular'], function (angular) {
     var mod = angular.module('ng');
 
@@ -230,10 +262,8 @@ jqmng.define('jqmng/navigate', ['jquery', 'angular'], function($, angular) {
 
 
     var mod = angular.module('ng');
-    mod.provider('$navigate', function() {
-        this.$get = function() {
-            return navigate;
-        }
+    mod.factory('$navigate', function() {
+        return navigate;
     });
 
     function getIndexInStack(pageId) {
@@ -257,49 +287,41 @@ jqmng.define('jqmng/navigate', ['jquery', 'angular'], function($, angular) {
         }
     }]);
 
-    /**
-     * Helper function to put the navigation part out of the controller into the page.
-     * @param scope
-     */
-    var navigateExpression = function(service) {
-        if (arguments.length === 2) {
-            // used without the test.
-            service(arguments[1]);
-            return;
-        }
-        // parse the arguments...
-        var test = arguments[1];
-        var outcomes = {};
-        var parts;
-        for (var i = 2; i < arguments.length; i++) {
-            parts = splitAtFirstColon(arguments[i]);
-            outcomes[parts[0]] = parts[1];
-        }
-        if (test && test.then) {
-            // test is a promise.
-            test.then(function(test) {
-                if (outcomes[test]) {
-                    service(outcomes[test]);
-                } else if (outcomes.success) {
-                    service(outcomes.success);
-                }
-            }, function(test) {
-                if (outcomes[test]) {
-                    service(outcomes[test]);
-                } else if (outcomes.failure) {
-                    service(outcomes.failure);
-                }
-            });
-        } else {
-            if (outcomes[test]) {
-                service(outcomes[test]);
-            } else if (test !== false && outcomes.success) {
-                service(outcomes.success);
-            } else if (test === false && outcomes.failure) {
-                service(outcomes.failure);
+    mod.filter('navigate', ['$navigate', function($navigateService) {
+        return function(test) {
+            // parse the arguments...
+            var outcomes = {};
+            var parts;
+            for (var i = 1; i < arguments.length; i++) {
+                parts = splitAtFirstColon(arguments[i]);
+                outcomes[parts[0]] = parts[1];
             }
-        }
-    };
+            if (test && test.then) {
+                // test is a promise.
+                test.then(function(test) {
+                    if (outcomes[test]) {
+                        $navigateService(outcomes[test]);
+                    } else if (outcomes.success) {
+                        $navigateService(outcomes.success);
+                    }
+                }, function(test) {
+                    if (outcomes[test]) {
+                        $navigateService(outcomes[test]);
+                    } else if (outcomes.failure) {
+                        $navigateService(outcomes.failure);
+                    }
+                });
+            } else {
+                if (outcomes[test]) {
+                    $navigateService(outcomes[test]);
+                } else if (test !== false && outcomes.success) {
+                    $navigateService(outcomes.success);
+                } else if (test === false && outcomes.failure) {
+                    $navigateService(outcomes.failure);
+                }
+            }
+        };
+    }]);
 
     return navigate;
 
@@ -307,14 +329,27 @@ jqmng.define('jqmng/navigate', ['jquery', 'angular'], function($, angular) {
 jqmng.define('jqmng/sharedController', ['angular'], function(angular) {
     var storageName = '$$sharedControllers';
 
-    function sharedCtrl(rootScope, controllerName, $controller) {
-        var storage = rootScope[storageName] = rootScope[storageName] || {};
-        var scopeInstance = storage[controllerName];
+    function storage(rootScope) {
+        return rootScope[storageName] = rootScope[storageName] || {};
+    }
+
+    function sharedCtrl(rootScope, controllerName, $controller, usedInPage) {
+        var store = storage(rootScope);
+        var scopeInstance = store[controllerName];
         if (!scopeInstance) {
             scopeInstance = rootScope.$new();
             $controller(controllerName, {$scope: scopeInstance});
-            storage[controllerName] = scopeInstance;
+            store[controllerName] = scopeInstance;
+            scopeInstance.$$referenceCount = 0;
         }
+        scopeInstance.$$referenceCount++;
+        usedInPage.bind("$destroy", function() {
+            scopeInstance.$$referenceCount--;
+            if (scopeInstance.$$referenceCount===0) {
+                scopeInstance.$destroy();
+                delete store[controllerName];
+            }
+        });
         return scopeInstance;
     }
 
@@ -322,7 +357,7 @@ jqmng.define('jqmng/sharedController', ['angular'], function(angular) {
         var pattern = /([^\s,:]+)\s*:\s*([^\s,:]+)/g;
         var match;
         var hasData = false;
-        var controllers = {}
+        var controllers = {};
         while (match = pattern.exec(expression)) {
             hasData = true;
             controllers[match[1]] = match[2];
@@ -342,7 +377,7 @@ jqmng.define('jqmng/sharedController', ['angular'], function(angular) {
                 var controllers = parseSharedControllersExpression(expression);
                 var preLink = function(scope) {
                     for (var name in controllers) {
-                        scope[name] = sharedCtrl(scope.$root, controllers[name], $controller);
+                        scope[name] = sharedCtrl(scope.$root, controllers[name], $controller, element);
                     }
                 };
                 return {
@@ -480,7 +515,7 @@ jqmng.define('jqmng/waitDialog', ['jquery'], function($) {
 
     var mod = angular.module('ng');
     var rootScope;
-    mod.service('$waitDialog', ['$rootScope', function($rootScope) {
+    mod.factory('$waitDialog', ['$rootScope', function($rootScope) {
         rootScope = $rootScope;
         return res;
     }]);
@@ -902,7 +937,7 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
         if (page.data('angularLinked') && currPageScope) {
             // We only need to trigger the digest for pages
             // creates by angular, and not for those that are dynamically created by jquery mobile.
-            setCurrScope(currPageScope);
+            currPageScope.$reconnect();
             currPageScope.$root.$digest();
         }
         var page = $(event.target);
@@ -911,6 +946,10 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
 
     $('div').live('jqmngpagebeforehide', function (event, data) {
         var page = $(event.target);
+        var currPageScope = page.scope();
+        if (page.data('angularLinked') && currPageScope) {
+            currPageScope.$destroy();
+        }
         page.trigger("pagebeforehide", data);
     });
 
@@ -923,12 +962,6 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
         var page = $(event.target);
         page.trigger("pageshow", data);
     });
-
-    var currScope = null;
-
-    function setCurrScope(scope) {
-        currScope = scope;
-    }
 
     var ng = angular.module('ng');
     ng.run(patchRootDigest);
@@ -961,7 +994,8 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
     }
     deactivateAngularLocationService.$inject = ['$browser'];
 
-    var compiledPages = [];
+    var jqmCompilePages = [];
+    var jqmRefreshPages = [];
 
     function patchRootDigest($rootScope) {
         var _apply = $rootScope.$apply;
@@ -978,24 +1012,25 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
                 return;
             }
             var res = _digest.apply(this, arguments);
-            if (this===$rootScope) {
-                // digest the current page separately.
-                // This is due to performance reasons!
-                currScope && currScope.$digest();
-            }
             // run the jquery mobile page compiler
             // AFTER the angular compiler is completely finished.
             // (Cannot be done in an angular directive...)
-            if (compiledPages.length>0) {
-                var pages = compiledPages;
-                compiledPages = [];
-                if (!$rootScope.jqmInitialized) {
-                    $rootScope.jqmInitialized = true;
-                    //$(window).unbind("hashchange");
-                    $.mobile.initializePage();
+            if (this===$rootScope) {
+                if (jqmCompilePages.length>0) {
+                    var pages = jqmCompilePages;
+                    jqmCompilePages = [];
+                    if (!$rootScope.jqmInitialized) {
+                        $rootScope.jqmInitialized = true;
+                        //$(window).unbind("hashchange");
+                        $.mobile.initializePage();
+                    }
+                    for (var i=0; i<pages.length; i++) {
+                        pages[i].page();
+                    }
                 }
+                var pages = jqmRefreshPages;
                 for (var i=0; i<pages.length; i++) {
-                    pages[i].page();
+                    pages[i].trigger("create");
                 }
             }
 
@@ -1046,32 +1081,188 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
                 degradeInputs(tElement);
                 return {
                     pre:function preLink(scope, iElement, iAttrs) {
-                        compiledPages.push(iElement);
+                        jqmCompilePages.push(iElement);
                         iElement.data('angularLinked', true);
                         // Detatch the scope for the normal $digest cycle
                         scope.$destroy();
-                        var createJqmWidgetsFlag = false;
                         iElement.bind('requestrefresh', function () {
-                            createJqmWidgetsFlag = true;
+                            jqmRefreshPages.push(iElement);
                         });
-                        var oldDigest = scope.$digest;
-                        scope.$digest = function () {
-                            var res = oldDigest.apply(this, arguments);
-                            // Create jquery mobile widgets as needed on the page
-                            if (iElement.data("page") && createJqmWidgetsFlag) {
-                                createJqmWidgetsFlag = false;
-                                iElement.trigger('create');
-                            }
-                            return res;
-                        };
                     }
                 }
             }
         };
     });
 });
-/*
-<%-- TODO
-jsp:include page="jqmng/paging.js"
---%>
-*/
+jqmng.define('jqmng/paging', ['jquery', 'angular'], function ($, angular) {
+
+    function pagedListFilterFactory(defaultListPageSize, filterFilter, orderByFilter) {
+
+        function createPagedList(list) {
+            var enhanceFunctions = {
+                refreshIfNeeded:refreshIfNeeded,
+                setFilter:setFilter,
+                setOrderBy:setOrderBy,
+                setPageSize:setPageSize,
+                loadNextPage:loadNextPage,
+                hasMorePages:hasMorePages,
+                reset:reset,
+                refreshCount:0
+            };
+
+            var pagedList = [];
+            var pageSize, originalList, originalListClone, refreshNeeded, filter, orderBy, loadedCount, availableCount;
+
+            for (var fnName in enhanceFunctions) {
+                pagedList[fnName] = enhanceFunctions[fnName];
+            }
+            init(list);
+            var oldHasOwnProperty = pagedList.hasOwnProperty;
+            pagedList.hasOwnProperty = function (propName) {
+                if (propName in enhanceFunctions) {
+                    return false;
+                }
+                return oldHasOwnProperty.apply(this, arguments);
+            };
+            return pagedList;
+
+            function init(list) {
+                setPageSize(-1);
+                originalList = list;
+                originalListClone = [];
+                refreshNeeded = true;
+                reset();
+            }
+
+            function refresh() {
+                var list = originalList;
+                originalListClone = [].concat(list);
+                if (filter) {
+                    list = filterFilter(list, filter);
+                }
+                if (orderBy) {
+                    list = orderByFilter(list, orderBy);
+                }
+                if (loadedCount < pageSize) {
+                    loadedCount = pageSize;
+                }
+                if (loadedCount > list.length) {
+                    loadedCount = list.length;
+                }
+                availableCount = list.length;
+                var newData = list.slice(0, loadedCount);
+                var spliceArgs = [0, pagedList.length].concat(newData);
+                pagedList.splice.apply(pagedList, spliceArgs);
+                pagedList.refreshCount++;
+            }
+
+            function refreshIfNeeded() {
+                if (originalList.length != originalListClone.length) {
+                    refreshNeeded = true;
+                } else {
+                    for (var i = 0; i < originalList.length; i++) {
+                        if (originalList[i] !== originalListClone[i]) {
+                            refreshNeeded = true;
+                            break;
+                        }
+                    }
+                }
+                if (refreshNeeded) {
+                    refresh();
+                    refreshNeeded = false;
+                }
+                return pagedList;
+            }
+
+            function setPageSize(newPageSize) {
+                if (!newPageSize || newPageSize < 0) {
+                    newPageSize = defaultListPageSize;
+                }
+                if (newPageSize !== pageSize) {
+                    pageSize = newPageSize;
+                    refreshNeeded = true;
+                }
+            }
+
+            function setFilter(newFilter) {
+                if (!angular.equals(filter, newFilter)) {
+                    filter = newFilter;
+                    refreshNeeded = true;
+                }
+            }
+
+            function setOrderBy(newOrderBy) {
+                if (!angular.equals(orderBy, newOrderBy)) {
+                    orderBy = newOrderBy;
+                    refreshNeeded = true;
+                }
+            }
+
+            function loadNextPage() {
+                loadedCount = loadedCount + pageSize;
+                refreshNeeded = true;
+            }
+
+            function hasMorePages() {
+                refreshIfNeeded();
+                return loadedCount < availableCount;
+            }
+
+            function reset() {
+                loadedCount = 0;
+                refreshNeeded = true;
+            }
+        }
+
+        return function (list, param) {
+            if (!list) {
+                return list;
+            }
+            var pagedList = list.pagedList;
+            if (typeof param === 'string') {
+                if (!pagedList) {
+                    return;
+                }
+                // commands do not create a new paged list nor do they change the attributes of the list.
+                if (param === 'loadMore') {
+                    pagedList.loadNextPage();
+                } else if (param === 'hasMore') {
+                    return pagedList.hasMorePages();
+                }
+                return;
+            }
+            if (!pagedList) {
+                pagedList = createPagedList(list);
+                list.pagedList = pagedList;
+            }
+            if (param) {
+                pagedList.setPageSize(param.pageSize);
+                pagedList.setFilter(param.filter);
+                pagedList.setOrderBy(param.orderBy);
+            }
+            pagedList.refreshIfNeeded();
+            return pagedList;
+        };
+    }
+
+    pagedListFilterFactory.$inject = ['defaultListPageSize', 'filterFilter', 'orderByFilter'];
+    var mod = angular.module(['ng']);
+    mod.constant('defaultListPageSize', 10);
+    mod.filter('paged', pagedListFilterFactory);
+});
+jqmng.define('jqmng/fadein',['angular'], function(angular) {
+    /*
+     * Directive that fades in an element when angular
+     * uses it. Useful in templating when the underlying template changed.
+     */
+    angular.module(["ng"]).directive("ngmFadein", function() {
+        return {
+            compile: function(element) {
+                element.css({opacity:0.1});
+                return function(scope, element, attrs) {
+                    element.animate({opacity:1.0}, parseInt(attrs.ngmFadein));
+                }
+            }
+        };
+    });
+});

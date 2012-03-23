@@ -69,7 +69,7 @@ Build
 --------------------------
 The build is done using maven and node js.
 
-- `mvn clean package -Pbuild`: This will create a new version of the adapter and put it into `/compiled`.
+- `mvn clean package`: This will create a new version of the adapter and put it into `/compiled`.
 
 The build also creates a standalone library including jquery, jquery-mobile and angular.
 If you want to do something during the initialization of jquery-mobile, use the following callback:

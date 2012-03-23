@@ -145,7 +145,8 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
     }
     deactivateAngularLocationService.$inject = ['$browser'];
 
-    var compiledPages = [];
+    var jqmCompilePages = [];
+    var jqmRefreshPages = [];
 
     function patchRootDigest($rootScope) {
         var _apply = $rootScope.$apply;
@@ -165,16 +166,22 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
             // run the jquery mobile page compiler
             // AFTER the angular compiler is completely finished.
             // (Cannot be done in an angular directive...)
-            if (compiledPages.length>0) {
-                var pages = compiledPages;
-                compiledPages = [];
-                if (!$rootScope.jqmInitialized) {
-                    $rootScope.jqmInitialized = true;
-                    //$(window).unbind("hashchange");
-                    $.mobile.initializePage();
+            if (this===$rootScope) {
+                if (jqmCompilePages.length>0) {
+                    var pages = jqmCompilePages;
+                    jqmCompilePages = [];
+                    if (!$rootScope.jqmInitialized) {
+                        $rootScope.jqmInitialized = true;
+                        //$(window).unbind("hashchange");
+                        $.mobile.initializePage();
+                    }
+                    for (var i=0; i<pages.length; i++) {
+                        pages[i].page();
+                    }
                 }
+                var pages = jqmRefreshPages;
                 for (var i=0; i<pages.length; i++) {
-                    pages[i].page();
+                    pages[i].trigger("create");
                 }
             }
 
@@ -225,24 +232,13 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
                 degradeInputs(tElement);
                 return {
                     pre:function preLink(scope, iElement, iAttrs) {
-                        compiledPages.push(iElement);
+                        jqmCompilePages.push(iElement);
                         iElement.data('angularLinked', true);
                         // Detatch the scope for the normal $digest cycle
                         scope.$destroy();
-                        var createJqmWidgetsFlag = false;
                         iElement.bind('requestrefresh', function () {
-                            createJqmWidgetsFlag = true;
+                            jqmRefreshPages.push(iElement);
                         });
-                        var oldDigest = scope.$digest;
-                        scope.$digest = function () {
-                            var res = oldDigest.apply(this, arguments);
-                            // Create jquery mobile widgets as needed on the page
-                            if (iElement.data("page") && createJqmWidgetsFlag) {
-                                createJqmWidgetsFlag = false;
-                                iElement.trigger('create');
-                            }
-                            return res;
-                        };
                     }
                 }
             }

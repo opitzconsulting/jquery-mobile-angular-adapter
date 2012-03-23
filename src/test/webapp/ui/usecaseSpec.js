@@ -12,7 +12,7 @@ jqmng.require([], function() {
                             '</div>');
                     frame.PageController = function($scope) {
                         $scope.fill = function() {
-                            this.items = [1,2];
+                            $scope.items = [1,2];
                         }
                     }
                 });

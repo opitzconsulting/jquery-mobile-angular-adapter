@@ -156,13 +156,17 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
             }
             return _apply.apply(this, arguments);
         };
-
+        var refreshing = false;
         var _digest = $rootScope.$digest;
         $rootScope.$digest = function() {
             if ($rootScope.$$phase) {
                 return;
             }
             var res = _digest.apply(this, arguments);
+            if (refreshing) {
+                return;
+            }
+            refreshing = true;
             // run the jquery mobile page compiler
             // AFTER the angular compiler is completely finished.
             // (Cannot be done in an angular directive...)
@@ -180,11 +184,12 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
                     }
                 }
                 var pages = jqmRefreshPages;
+                jqmRefreshPages = [];
                 for (var i=0; i<pages.length; i++) {
                     pages[i].trigger("create");
                 }
             }
-
+            refreshing = false;
             return res;
         };
     }

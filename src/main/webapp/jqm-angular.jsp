@@ -9,6 +9,7 @@
 
 <jsp:include page="angular.js"/>
 <jsp:include page="jquery.js"/>
+<jsp:include page="jqmng/scopeReconnect.js"/>
 <jsp:include page="jqmng/event.js"/>
 <jsp:include page="jqmng/if.js"/>
 <jsp:include page="jqmng/navigate.js"/>

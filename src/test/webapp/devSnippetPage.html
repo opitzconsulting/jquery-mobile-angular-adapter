@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:ng="http://angularjs.org" ng-app>
+<html ng-app>
 <!--
 Test page during development.
 -->
@@ -12,39 +12,31 @@ Test page during development.
 
 
     <script src="lib/jquery-1.7.1.js"></script>
-    <script src="lib/angular-1.0.0.js"></script>
     <script src="lib/jquery.mobile-1.1.0-rc.1-oc1.js"></script>
+    <script src="lib/angular-1.0.0.js"></script>
     <script src="jqm-angular.jsp"></script>
 
     <script>
 
-        MainController = function($scope) {
-            $scope.fill = function() {
-                this.items = [1,2];
+        MainController = function ($scope) {
+            $scope.fill = function () {
+                this.items = [1, 2];
             }
         }
     </script>
 </head>
 <body>
-    <script>
-        $(window).bind('hashchange', function() {
-            console.log("now");
-        });
-
-    </script>
-
-
-<div data-role="page" id="start" ng:controller="MainController">
-<div data-role="content" >
-        <button ngm:click="fill()">Fill</button>
-        <ul data-role="listview" data-inset="true">
-            <li ng:repeat="i in items"></li>
-
-        </ul>
-
-</div>
+<div data-role="page" id="start">
+    <div data-role="content">
+        <a href="#page2" data-role="button">Page2</a>
+    </div>
 </div>
 
+<div data-role="page" id="page2">
+    <div data-role="content">
+        Hello
+    </div>
+</div>
 
 </body>
 </html>

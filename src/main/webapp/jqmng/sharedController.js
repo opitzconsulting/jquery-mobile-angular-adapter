@@ -1,14 +1,27 @@
 jqmng.define('jqmng/sharedController', ['angular'], function(angular) {
     var storageName = '$$sharedControllers';
 
-    function sharedCtrl(rootScope, controllerName, $controller) {
-        var storage = rootScope[storageName] = rootScope[storageName] || {};
-        var scopeInstance = storage[controllerName];
+    function storage(rootScope) {
+        return rootScope[storageName] = rootScope[storageName] || {};
+    }
+
+    function sharedCtrl(rootScope, controllerName, $controller, usedInPage) {
+        var store = storage(rootScope);
+        var scopeInstance = store[controllerName];
         if (!scopeInstance) {
             scopeInstance = rootScope.$new();
             $controller(controllerName, {$scope: scopeInstance});
-            storage[controllerName] = scopeInstance;
+            store[controllerName] = scopeInstance;
+            scopeInstance.$$referenceCount = 0;
         }
+        scopeInstance.$$referenceCount++;
+        usedInPage.bind("$destroy", function() {
+            scopeInstance.$$referenceCount--;
+            if (scopeInstance.$$referenceCount===0) {
+                scopeInstance.$destroy();
+                delete store[controllerName];
+            }
+        });
         return scopeInstance;
     }
 
@@ -16,7 +29,7 @@ jqmng.define('jqmng/sharedController', ['angular'], function(angular) {
         var pattern = /([^\s,:]+)\s*:\s*([^\s,:]+)/g;
         var match;
         var hasData = false;
-        var controllers = {}
+        var controllers = {};
         while (match = pattern.exec(expression)) {
             hasData = true;
             controllers[match[1]] = match[2];
@@ -36,7 +49,7 @@ jqmng.define('jqmng/sharedController', ['angular'], function(angular) {
                 var controllers = parseSharedControllersExpression(expression);
                 var preLink = function(scope) {
                     for (var name in controllers) {
-                        scope[name] = sharedCtrl(scope.$root, controllers[name], $controller);
+                        scope[name] = sharedCtrl(scope.$root, controllers[name], $controller, element);
                     }
                 };
                 return {

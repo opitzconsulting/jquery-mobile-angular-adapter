@@ -88,7 +88,7 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
         if (page.data('angularLinked') && currPageScope) {
             // We only need to trigger the digest for pages
             // creates by angular, and not for those that are dynamically created by jquery mobile.
-            setCurrScope(currPageScope);
+            currPageScope.$reconnect();
             currPageScope.$root.$digest();
         }
         var page = $(event.target);
@@ -97,6 +97,10 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
 
     $('div').live('jqmngpagebeforehide', function (event, data) {
         var page = $(event.target);
+        var currPageScope = page.scope();
+        if (page.data('angularLinked') && currPageScope) {
+            currPageScope.$destroy();
+        }
         page.trigger("pagebeforehide", data);
     });
 
@@ -109,12 +113,6 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
         var page = $(event.target);
         page.trigger("pageshow", data);
     });
-
-    var currScope = null;
-
-    function setCurrScope(scope) {
-        currScope = scope;
-    }
 
     var ng = angular.module('ng');
     ng.run(patchRootDigest);
@@ -164,11 +162,6 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
                 return;
             }
             var res = _digest.apply(this, arguments);
-            if (this===$rootScope) {
-                // digest the current page separately.
-                // This is due to performance reasons!
-                currScope && currScope.$digest();
-            }
             // run the jquery mobile page compiler
             // AFTER the angular compiler is completely finished.
             // (Cannot be done in an angular directive...)

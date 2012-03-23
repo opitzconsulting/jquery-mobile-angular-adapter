@@ -56,5 +56,28 @@ jqmng.require(['angular', 'unit/testUtils'], function(angular, utils) {
             expect(scope1.shared1).toBe(instances[0]);
             expect(scope2.shared1).toBe(instances[0]);
         });
+        it('should destroy instances when all pages that use it are destroyed', function() {
+            var sharedScope;
+            function SharedController1($scope) {
+                sharedScope = $scope;
+            }
+            window.SharedController1 = SharedController1;
+            var d = utils.compileInPage(
+                '<div><div id="id1" ngm:shared-controller="shared1:SharedController1"></div>' +
+                    '<div id="id2" ngm:shared-controller="shared1:SharedController1"></div></div>');
+            var element = d.element;
+            var rootScope = d.element.scope().$root;
+            var page1 = element.children('#id1');
+            var page2 = element.children('#id2');
+            expect(sharedScope.$root.$$sharedControllers.SharedController1).toBe(sharedScope);
+            spyOn(sharedScope, '$destroy').andCallThrough();
+            page2.remove();
+            expect(sharedScope.$destroy).not.toHaveBeenCalled();
+            expect(sharedScope.$root.$$sharedControllers.SharedController1).toBe(sharedScope);
+            page1.remove();
+            expect(sharedScope.$destroy).toHaveBeenCalled();
+            expect(sharedScope.$root.$$sharedControllers.SharedController1).toBeUndefined();
+        });
+
     });
 });

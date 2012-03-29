@@ -15,27 +15,20 @@ Test page during development.
     <script src="lib/jquery.mobile-1.1.0-rc.1-oc1.js"></script>
     <script src="lib/angular-1.0.0.js"></script>
     <script src="jqm-angular.jsp"></script>
-
-    <script>
-
-        MainController = function ($scope) {
-            var list = [];
-            for (var i=0; i<100; i++) {
-                list.push(i);
-            }
-            $scope.list = list;
-        }
-    </script>
 </head>
 <body>
-<div data-role="page" id="start" ng:controller="MainController">
+<div data-role="page" id="start">
     <div data-role="content">
-        <ul data-role="listview">
-            <div ngm-fadein="1000" ngm-if="test">Hello</div>
-            <button ng-click="test=true">Show it</button>
-        </ul>
+        <a href="testPage.html">Test Page</a>
     </div>
 </div>
+
+<div data-role="page" id="testPage" data-url="/jqmng/testPage.html">
+    <div data-role="content">
+        {{1+3}}
+    </div>
+</div>
+
 
 </body>
 </html>

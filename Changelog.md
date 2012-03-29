@@ -6,6 +6,7 @@ Changelog
 - Update to angular 1.0 and jquery 1.7
 - ng-app directive of angular is required
 - `$navigate` expression was changed to the `navigate` filter (note: the `$navigate` service was untouched by this).
+- `$navigate` now does no more add the "#" automatically. This allows multiple ajax pages to be used.
 - `paged` expression was changed to the `paged` filter.
 - removed `iff` expression as it was only used internally and is now no more needed.
 - removed `$.mobile.globalScope` as it was only used internally. Use angular's `$rootScope` service instead.

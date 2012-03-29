@@ -68,9 +68,6 @@ jqmng.define('jqmng/navigate', ['jquery', 'angular'], function($, angular) {
     }
 
     function jqmChangePage(pageId, navigateOptions) {
-        if (pageId.charAt(0) !== '#') {
-            pageId = '#' + pageId;
-        }
         var callArgs = [pageId];
         if (navigateOptions) {
             callArgs.push(navigateOptions);

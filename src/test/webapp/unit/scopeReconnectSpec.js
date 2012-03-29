@@ -20,6 +20,13 @@ jqmng.require(["unit/testUtils"], function (utils) {
                 expect(rootScope.$$childHead).toBe(null);
                 expect(rootScope.$$childTail).toBe(null);
             });
+            it("should clear $$nextSibling and $$prevSibling", function() {
+                var child2 = rootScope.$new();
+                rootScope.$new();
+                child2.$destroy();
+                expect(child2.$$nextSibling).toBe(null);
+                expect(child2.$$prevSibling).toBe(null);
+            });
             it("should remove the child form the $childHead/$childTail of the parent if it is the first child", function() {
                 var child2 = rootScope.$new();
                 childScope.$destroy();

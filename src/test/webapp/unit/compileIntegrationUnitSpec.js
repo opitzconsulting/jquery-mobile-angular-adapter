@@ -1,8 +1,22 @@
 jqmng.require(["unit/testUtils"], function (utils) {
+
     describe('compileIntegrationUnit', function () {
         it("should create jqm pages when angular compiles a page", function () {
             var c = utils.compile('<div data-role="page"></div>');
             expect(c.hasClass('ui-page')).toBe(true);
+        });
+
+        it("should create an angular scope when jqm dynamically loads a page", function() {
+            var c = utils.compile('<div></div>');
+            var scope = c.scope();
+            expect(scope).toBe(scope.$root);
+            c.append('<div data-role="page" id="newPage">{{1+2}}</div>');
+            var page = c.children('div');
+            page.page();
+            page.trigger("pagebeforeshow");
+            var scope = page.scope();
+            expect(scope).not.toBe(scope.$root);
+            expect(page.text()).toBe("3");
         });
 
         it("should create jqm dialogs when angular compiles a page", function () {
@@ -23,13 +37,25 @@ jqmng.require(["unit/testUtils"], function (utils) {
             expect(c.page.find('a').hasClass('ui-btn')).toBe(true);
         });
 
-        it("should fire a requestrefresh event when widgets are added to the page", function () {
+        it("should fire a requestrefresh event when elements are added to the page", function () {
             var c = utils.compileInPage('<div></div>');
             var eventCount = 0;
             c.page.bind('requestrefresh', function () {
                 eventCount++;
             });
             c.element.append('<a href="" data-role="button">Test</a>');
+            expect(eventCount).toEqual(1);
+        });
+
+        it("should fire create event after $digest only once when multiple elements are added to the page", function () {
+            var c = utils.compileInPage('<div></div>');
+            var eventCount = 0;
+            c.page.bind('create', function () {
+                eventCount++;
+            });
+            c.element.append('<a href="" data-role="button">Test</a>');
+            c.element.append('<a href="" data-role="button">Test</a>');
+            c.page.scope().$digest();
             expect(eventCount).toEqual(1);
         });
 
@@ -45,6 +71,34 @@ jqmng.require(["unit/testUtils"], function (utils) {
             expect(eventCount).toEqual(1);
         });
 
+        it("should fire the create event only once event when multiple elements are removed", function () {
+            var c = utils.compileInPage('<div><span></span><span></span></div>');
+            var element = c.element;
+            var scope = element.scope();
+            var eventCount = 0;
+            c.page.bind('create', function () {
+                eventCount++;
+            });
+            element.find('span').eq(0).remove();
+            element.find('span').eq(0).remove();
+            c.page.scope().$digest();
+            expect(eventCount).toEqual(1);
+        });
+
+        it("should not fire another create event if the dom was modified within a create event", function() {
+            var c = utils.compileInPage('<div></div>');
+            var eventCount = 0;
+            c.page.bind('create', function () {
+                eventCount++;
+                c.element.append('<a href="" data-role="button">Test</a>');
+            });
+            c.element.append('<a href="" data-role="button">Test</a>');
+            c.page.scope().$digest();
+            c.page.scope().$digest();
+            expect(eventCount).toEqual(1);
+
+        });
+
         it("should call $digest only for the current page", function () {
             var c = utils.compile('<div data-role="page" id="page1"></div><div data-role="page" id="page2"></div>');
             var page1 = c.eq(0);
@@ -58,13 +112,13 @@ jqmng.require(["unit/testUtils"], function (utils) {
                 watch2Counter++;
             });
             var rootScope = page1.scope().$root;
-            page1.data("page")._trigger("beforeshow");
+            page1.trigger("pagebeforeshow");
             watch1Counter = watch2Counter = 0;
             rootScope.$digest();
             expect(watch1Counter).toBeGreaterThan(0);
             expect(watch2Counter).toBe(0);
-            page1.data("page")._trigger("beforehide");
-            page2.data("page")._trigger("beforeshow");
+            page1.trigger("pagebeforehide");
+            page2.trigger("pagebeforeshow");
             watch1Counter = watch2Counter = 0;
             rootScope.$digest();
             expect(watch2Counter).toBeGreaterThan(0);
@@ -73,7 +127,7 @@ jqmng.require(["unit/testUtils"], function (utils) {
 
         it("should work fine with asyncEval that changes something in the page", function () {
             var page = utils.compile('<div data-role="page" id="page1"></div>');
-            page.data("page")._trigger("beforeshow");
+            page.trigger("pagebeforeshow");
             var pageCounter = 0;
             var scope = page.scope();
             scope.$watch('flag', function () {
@@ -91,7 +145,7 @@ jqmng.require(["unit/testUtils"], function (utils) {
             var element = utils.compile('<div></div>');
             var page = $('<div data-role="page" id="page1"></div>').page();
             element.append(page);
-            page.data("page")._trigger("beforeshow");
+            page.trigger("pagebeforeshow");
             element.scope().$root.$digest();
         });
 

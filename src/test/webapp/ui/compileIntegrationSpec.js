@@ -83,5 +83,32 @@ jqmng.require([], function() {
                 expect(input.val()).toBe("1234");
             })
         });
+        /** TODO make this work **/
+        xit("should allow dynamic creation of jquery mobile pages", function() {
+            loadHtml('/jqmng/ui/test-fixture.html', function(win) {
+                var $ = win.$;
+                $("body").append('<div ng-repeat="l in list" test="{{l}}" id="gen{{l}}" data-role="page"><div data-role="header">Generated page {{l}}</div></div>');
+                $("body").append('<div ng-repeat="l in list" test="{{l}}" id="gen{{l}}">Generated page {{l}}</div>');
+            });
+            runs(function() {
+                var win = testframe();
+                var $ = win.$;
+                var page1 = $("#start");
+                expect($('[data-role="page"]').length).toBe(3);
+                var scope = $("body").scope().$root;
+                scope.list = [1,2,3];
+                scope.$digest();
+                expect($('[data-role="page"]').length).toBe(5);
+                $.mobile.changePage("#gen2");
+            });
+            waitsForAsync();
+            runs(function() {
+                var win = testframe();
+                var $ = win.$;
+                var activePage = $.mobile.activePage;
+                expect(activePage.attr("id")).toBe("gen2");
+                expect(activePage.hasClass("ui-page"));
+            });
+        });
     });
 });

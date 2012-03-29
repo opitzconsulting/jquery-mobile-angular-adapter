@@ -6,7 +6,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
                 '<select ng:model="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>'
             );
             var select = d.element;
-            var scope = select.scope().$parent;
+            var scope = select.scope();
             // jquery mobile uses an anchor to simulate the select
             var anchor = d.page.find("a");
             expect(anchor.length).toEqual(1);
@@ -35,7 +35,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
             var d = utils.compileInPage(
                 '<select ng:model="mysel" data-role="slider" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
             var select = d.element;
-            var scope = select.scope().$parent;
+            var scope = select.scope();
             scope.disabled = false;
             scope.$digest();
             var disabled = select.slider('option', 'disabled');

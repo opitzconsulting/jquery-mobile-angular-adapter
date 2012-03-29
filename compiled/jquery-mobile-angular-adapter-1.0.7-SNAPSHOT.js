@@ -67,7 +67,8 @@ jqmng.define('jqmng/scopeReconnect', ['angular'], function (angular) {
         var _$destroy = $rootScope.$destroy;
         $rootScope.$destroy = function() {
             this.$$destroyed = true;
-            return _$destroy.apply(this, arguments);
+            var res = _$destroy.apply(this, arguments);
+            this.$$nextSibling = this.$$prevSibling = null;
         };
         $rootScope.$reconnect = function() {
             var child = this;
@@ -249,9 +250,6 @@ jqmng.define('jqmng/navigate', ['jquery', 'angular'], function($, angular) {
     }
 
     function jqmChangePage(pageId, navigateOptions) {
-        if (pageId.charAt(0) !== '#') {
-            pageId = '#' + pageId;
-        }
         var callArgs = [pageId];
         if (navigateOptions) {
             callArgs.push(navigateOptions);
@@ -848,10 +846,6 @@ jqmng.define('jqmng/widgets/jqmSlider', ['jquery'], function($) {
     };
 });
 jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, angular) {
-    // redirect all events from the page widget,
-    // so we can intercept them.
-    $.mobile.page.prototype.widgetEventPrefix = 'jqmngpage';
-
     /**
      * For refreshing widgets we implement a new strategy for jquery mobile:
      * When new elements are added or removed to the dom, the requestrefresh event is fired on those elements.
@@ -918,20 +912,7 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
 
     instrumentWidgetsWithRefreshFunction();
 
-    $('div').live('jqmngpagebeforecreate', function (event) {
-        // TODO check if the page already has a scope from angular.
-        // If not, the page was loaded dynamically by jquery mobile.
-        // Then create a new scope and compile the page!
-        var page = $(event.target);
-        page.trigger("pagebeforecreate");
-    });
-
-    $('div').live('jqmngpagecreate', function (event) {
-        var page = $(event.target);
-        page.trigger("pagecreate");
-    });
-
-    $('div').live('jqmngpagebeforeshow', function (event, data) {
+    $('div').live('pagebeforeshow', function (event, data) {
         var page = $(event.target);
         var currPageScope = page.scope();
         if (page.data('angularLinked') && currPageScope) {
@@ -940,32 +921,34 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
             currPageScope.$reconnect();
             currPageScope.$root.$digest();
         }
-        var page = $(event.target);
-        page.trigger("pagebeforeshow", data);
     });
 
-    $('div').live('jqmngpagebeforehide', function (event, data) {
+    $('div').live('pagebeforehide', function (event, data) {
         var page = $(event.target);
         var currPageScope = page.scope();
         if (page.data('angularLinked') && currPageScope) {
             currPageScope.$destroy();
         }
-        page.trigger("pagebeforehide", data);
-    });
-
-    $('div').live('jqmngpagehide', function (event, data) {
-        var page = $(event.target);
-        page.trigger("pagehide", data);
-    });
-
-    $('div').live('jqmngpageshow', function (event, data) {
-        var page = $(event.target);
-        page.trigger("pageshow", data);
     });
 
     var ng = angular.module('ng');
     ng.run(patchRootDigest);
     ng.run(deactivateAngularLocationService);
+
+    var _page = $.fn.page;
+    ng.run(['$rootScope', '$compile', function($rootScope, $compile) {
+        $.fn.page = function() {
+            var element = this;
+            if (!element.data('angularLinked')) {
+                var scope = $rootScope.$new();
+                // trigger a separate page compile...
+                $compile(element)(scope);
+                // TODO check if we are not already in a $digest cycle...
+                $rootScope.$digest();
+            }
+            return _page.apply(this, arguments);
+        };
+    }]);
 
     /**
      * Deactivate the url changing capabilities
@@ -995,7 +978,7 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
     deactivateAngularLocationService.$inject = ['$browser'];
 
     var jqmCompilePages = [];
-    var jqmRefreshPages = [];
+    var jqmRefreshPages = {};
 
     function patchRootDigest($rootScope) {
         var _apply = $rootScope.$apply;
@@ -1025,7 +1008,6 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
                     jqmCompilePages = [];
                     if (!$rootScope.jqmInitialized) {
                         $rootScope.jqmInitialized = true;
-                        //$(window).unbind("hashchange");
                         $.mobile.initializePage();
                     }
                     for (var i=0; i<pages.length; i++) {
@@ -1033,10 +1015,12 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
                     }
                 }
                 var pages = jqmRefreshPages;
-                jqmRefreshPages = [];
-                for (var i=0; i<pages.length; i++) {
-                    pages[i].trigger("create");
+                jqmRefreshPages = {};
+                for (var id in pages) {
+                    pages[id].trigger("create");
                 }
+                // Ignore all refresh requests that were created during the refreshing...
+                jqmRefreshPages = {};
             }
             refreshing = false;
             return res;
@@ -1073,17 +1057,30 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
 
     $.mobile.autoInitializePage = false;
 
+    // We want to create a special directive that matched data-role="page" and data-role="dialog",
+    // but none of the other data-role="..." elements of jquery mobile. As we want to create a new
+    // scope for that directive, this is only possible, if we preprocess the dom and add a new attribute
+    // that is unique for pages and dialogs.
+    ng.config(['$provide', function($provide) {
+        $provide.decorator('$compile', ['$delegate', function($delegate) {
+            return function(element) {
+                // TODO this is not clean (also matches siblings of the current page) nor performant!
+                $('[data-role="page"]', element.parent()).attr("data-role-page", "true");
+                $('[data-role="dialog"]', element.parent()).attr("data-role-page", "true");
+                degradeInputs(element);
+                return $delegate.apply(this, arguments);
+            }
+        }]);
+    }]);
+
     // Directive for jquery mobile pages. Refreshes the jquery mobile widgets
     // when the page changes.
-    ng.directive('role', function () {
+    ng.directive('rolePage', function () {
         return {
             restrict:'A',
             scope:true,
             compile:function compile(tElement, tAttrs) {
-                if (tAttrs.role !== 'page' && tAttrs.role !== 'dialog') {
-                    return {};
-                }
-                degradeInputs(tElement);
+                var id = tAttrs.id;
                 return {
                     pre:function preLink(scope, iElement, iAttrs) {
                         jqmCompilePages.push(iElement);
@@ -1091,7 +1088,7 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
                         // Detatch the scope for the normal $digest cycle
                         scope.$destroy();
                         iElement.bind('requestrefresh', function () {
-                            jqmRefreshPages.push(iElement);
+                            jqmRefreshPages[id] = iElement;
                         });
                     }
                 }

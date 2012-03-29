@@ -6,7 +6,8 @@ jqmng.define('jqmng/scopeReconnect', ['angular'], function (angular) {
         var _$destroy = $rootScope.$destroy;
         $rootScope.$destroy = function() {
             this.$$destroyed = true;
-            return _$destroy.apply(this, arguments);
+            var res = _$destroy.apply(this, arguments);
+            this.$$nextSibling = this.$$prevSibling = null;
         };
         $rootScope.$reconnect = function() {
             var child = this;

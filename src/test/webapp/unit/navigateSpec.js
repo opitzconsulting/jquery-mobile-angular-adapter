@@ -13,18 +13,18 @@ jqmng.require(['angular'], function(angular) {
                 $.mobile.urlHistory.stack = oldUrlHistory;
             });
             it('should be able to change the page', function() {
-                navigate('somePage');
+                navigate('#somePage');
                 expect(changePageSpy).toHaveBeenCalledWith('#somePage');
             });
 
             it('should allow an object to pass through to changePage', function() {
-                var changePageObj = {target: 'somePage', transition: 'someTransition'};
+                var changePageObj = {target: '#somePage', transition: 'someTransition'};
                 navigate(changePageObj);
                 expect(changePageSpy).toHaveBeenCalledWith('#somePage', changePageObj);
             });
 
             it('should be able to change the page with a transition', function() {
-                navigate('someTransition:somePage');
+                navigate('someTransition:#somePage');
                 expect(changePageSpy).toHaveBeenCalledWith('#somePage', {transition: 'someTransition'});
             });
 
@@ -51,7 +51,7 @@ jqmng.require(['angular'], function(angular) {
                     {pageUrl: 'page2'},
                     {pageUrl: 'page3'}
                 ];
-                navigate('back:page4');
+                navigate('back:#page4');
                 expect(goSpy).not.toHaveBeenCalled();
                 expect(changePageSpy).toHaveBeenCalledWith('#page4', {reverse: true});
             });

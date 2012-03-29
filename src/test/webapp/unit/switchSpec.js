@@ -5,7 +5,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
                 '<div ng:switch-when="case1"><a href="" data-role="button">b1</a></div>'+
                 '<div ng:switch-when="case2"><a href="" data-role="button">b2</a></div>'+
                 '</ng:switch>');
-            var scope = c.element.scope().$parent;
+            var scope = c.element.scope();
             var eventCount = 0;
             c.page.bind('requestrefresh', function() {
                 eventCount++;
@@ -22,7 +22,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
                 '<div ng:switch-when="case1"><a href="" data-role="button">b1</a></div>'+
                 '<div ng:switch-when="case2"><a href="" data-role="button">b2</a></div>'+
                 '</ng:switch>');
-            var scope = c.element.scope().$parent;
+            var scope = c.element.scope();
             scope.value = 'case1';
             scope.$digest();
             var removeCount = 0;

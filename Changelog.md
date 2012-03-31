@@ -1,10 +1,11 @@
 Changelog
 =====================
 
-1.0.7
+1.0.7rc1
 -------------
-- Update to angular 1.0 and jquery 1.7
+- Update to angular 1.0rc3 and jquery 1.7
 - ng-app directive of angular is required
+- 'ngm:event' directive is gone. Please use the new event directives introduced in 1.0.5
 - `$navigate` expression was changed to the `navigate` filter (note: the `$navigate` service was untouched by this).
 - `$navigate` now does no more add the "#" automatically. This allows multiple ajax pages to be used.
 - `paged` expression was changed to the `paged` filter.

@@ -26,6 +26,7 @@ jqmng.define('unit/testUtils', ["jquery", "angular"], function($, angular) {
             $compile(page)($rootScope);
             $rootScope.$apply();
         });
+        page.trigger("pagebeforeshow");
         return {
             page: page,
             element: $(".result").removeClass("result")

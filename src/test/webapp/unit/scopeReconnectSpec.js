@@ -69,5 +69,19 @@ jqmng.require(["unit/testUtils"], function (utils) {
             expect(rootScope.$$childHead).toBe(childScope);
             expect(rootScope.$$childTail).toBe(childScope);
         });
+        it("should work for child of childs", function() {
+            var childOfChild = childScope.$new();
+            childOfChild.$destroy();
+            var counter2 = 0;
+            childOfChild.$watch(function () {
+                counter2++;
+            });
+            childOfChild.$destroy();
+            rootScope.$digest();
+            expect(counter2).toBe(0);
+            childOfChild.$reconnect();
+            rootScope.$digest();
+            expect(counter2).toBe(2);
+        });
     });
 });

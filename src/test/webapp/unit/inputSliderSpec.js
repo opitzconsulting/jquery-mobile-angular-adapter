@@ -20,7 +20,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
         });
 
         it('should use the disabled attribute', function() {
-            var d = utils.compileInPage('<input type="number" data-type="range"  ng:model="mysel" value="150" min="0" max="300" ng:bind-attr="{disabled: \'{{disabled}}\'}">');
+            var d = utils.compileInPage('<input type="number" data-type="range"  ng:model="mysel" value="150" min="0" max="300" disabled="{{disabled}}">');
             var input = d.element;
             var scope = input.scope();
             scope.disabled = false;

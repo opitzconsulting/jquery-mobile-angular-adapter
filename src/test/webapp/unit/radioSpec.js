@@ -36,7 +36,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
         it('should use the disabled attribute', function() {
             var d = utils.compileInPage(
                 '<div>' +
-                    '<input ng:model="mysel" id="mysel" type="radio" value="v1" ng:bind-attr="{disabled: \'{{disabled}}\'}"><label for="mysel" id="mylab">Entry</label>' +
+                    '<input ng:model="mysel" id="mysel" type="radio" value="v1" disabled="{{disabled}}"><label for="mysel" id="mylab">Entry</label>' +
                     '</div>');
             var input = d.element.find("input");
             var parentDiv = input.parent();

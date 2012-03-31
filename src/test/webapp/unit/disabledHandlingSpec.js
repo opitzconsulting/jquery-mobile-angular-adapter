@@ -15,16 +15,8 @@ jqmng.require(["unit/testUtils"], function(utils) {
             expect(parentDiv.hasClass('ui-disabled')).toBeTruthy();
         }
 
-        it('should work with ng:bind-attr', function() {
-            execTest('ng:bind-attr="{disabled: \'{{disabled}}\'}');
-        });
-
         it('should work with {{ }}', function() {
             execTest('disabled="{{disabled}}"');
-        });
-
-        it('should work with ng:disabled', function() {
-            execTest('ng:disabled="{{disabled}}"');
         });
     });
 });

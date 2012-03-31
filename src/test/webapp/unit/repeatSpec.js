@@ -9,7 +9,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
                 eventCount++;
             });
             scope.list = [0,1,3];
-            scope.$digest();
+            scope.$root.$digest();
             expect(eventCount).toEqual(3);
         });
 
@@ -17,11 +17,11 @@ jqmng.require(["unit/testUtils"], function(utils) {
             var c = utils.compileInPage('<div><button ng:repeat="l in list"></button></div>');
             var scope = c.element.scope();
             scope.list = [1];
-            scope.$digest();
+            scope.$root.$digest();
             // Button should add a parent
             expect(c.element.children('div').length).toBe(1);
             scope.list = [1,2];
-            scope.$digest();
+            scope.$root.$digest();
             expect(c.element.children('div').length).toBe(2);
         });
     });

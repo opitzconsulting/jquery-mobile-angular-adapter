@@ -33,7 +33,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
 
         it('should use the disabled attribute', function() {
             var d = utils.compileInPage(
-                '<select ng:model="mysel" data-role="slider" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+                '<select ng:model="mysel" data-role="slider" disabled="{{disabled}}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
             var select = d.element;
             var scope = select.scope();
             scope.disabled = false;

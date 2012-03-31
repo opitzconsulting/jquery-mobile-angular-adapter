@@ -12,7 +12,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
         });
 
         it('should use the disabled attribute', function() {
-            var d = utils.compileInPage('<button id="mysel" ng:click="flag = true" ng:bind-attr="{disabled: \'{{disabled}}\'}">Test</button>');
+            var d = utils.compileInPage('<button id="mysel" ng:click="flag = true" disabled="{{disabled}}">Test</button>');
             var page = d.page;
             var input = d.element;
             var scope = input.scope();

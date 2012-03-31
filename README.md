@@ -135,9 +135,11 @@ Usage: E.g. `<div ngm-if="myFlag">asdfasdf</div>`
 
 ### Service $navigate('[transition]:pageId'[,activateFn][,activateFnParam1, ...])
 Service to change the given page.
+- The pageId is the pageId of `$.mobile.changePage`, e.g. `#homepage` for navigation within the current page
+  or `somePage.html` for loading another page.
 - If the transition has the special value `back` than the browser will go back in history to
-  the defined page, e.g. `back:hompage`.
-- The transition may be omitted, e.g. `$navigate('homepage')`.
+  the defined page, e.g. `back:#hompage`.
+- The transition may be omitted, e.g. `$navigate('#homepage')`.
 - To go back one page use `$navigate('back')`.
 - If the `activateFn` function is given, it will be called after the navigation on the target page with
   `activateFnParam1, ...` as arguments. The invocation is done before the `pagebeforeshow` event on the target page.

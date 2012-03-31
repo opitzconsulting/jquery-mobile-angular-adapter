@@ -6,6 +6,16 @@ jqmng.require(["unit/testUtils"], function (utils) {
             expect(c.hasClass('ui-page')).toBe(true);
         });
 
+        it("should create an own scope for a page", function () {
+            var c = utils.compile('<div data-role="page"></div>');
+            expect(c.scope()).not.toBe(c.scope().$root);
+        });
+
+        it("should not create an own scope for a non page widgets that also use data-role", function () {
+            var c = utils.compile('<a href="" data-role="button"></a>');
+            expect(c.scope()).toBe(c.scope().$root);
+        });
+
         it("should create an angular scope when jqm dynamically loads a page", function() {
             var c = utils.compile('<div></div>');
             var scope = c.scope();
@@ -33,7 +43,7 @@ jqmng.require(["unit/testUtils"], function (utils) {
             var c = utils.compileInPage('<div></div>');
             c.element.append('<a href="" data-role="button">Test</a>');
             expect(c.page.find('a').hasClass('ui-btn')).toBe(false);
-            c.page.scope().$digest();
+            c.page.scope().$root.$digest();
             expect(c.page.find('a').hasClass('ui-btn')).toBe(true);
         });
 
@@ -55,7 +65,7 @@ jqmng.require(["unit/testUtils"], function (utils) {
             });
             c.element.append('<a href="" data-role="button">Test</a>');
             c.element.append('<a href="" data-role="button">Test</a>');
-            c.page.scope().$digest();
+            c.page.scope().$root.$digest();
             expect(eventCount).toEqual(1);
         });
 
@@ -81,7 +91,7 @@ jqmng.require(["unit/testUtils"], function (utils) {
             });
             element.find('span').eq(0).remove();
             element.find('span').eq(0).remove();
-            c.page.scope().$digest();
+            c.page.scope().$root.$digest();
             expect(eventCount).toEqual(1);
         });
 
@@ -93,8 +103,8 @@ jqmng.require(["unit/testUtils"], function (utils) {
                 c.element.append('<a href="" data-role="button">Test</a>');
             });
             c.element.append('<a href="" data-role="button">Test</a>');
-            c.page.scope().$digest();
-            c.page.scope().$digest();
+            c.page.scope().$root.$digest();
+            c.page.scope().$root.$digest();
             expect(eventCount).toEqual(1);
 
         });

@@ -27,7 +27,7 @@ jqmng.require([], function() {
             });
             runs(function() {
                 expect(onActivateArguments).toBeFalsy();
-                navigate("page2", "onActivate");
+                navigate("#page2", "onActivate");
             });
             waitsForAsync();
             runs(function() {
@@ -43,7 +43,7 @@ jqmng.require([], function() {
             });
             runs(function() {
                 expect(onActivateArguments).toBeFalsy();
-                navigate("page2", "onActivate", "param1", "param2");
+                navigate("#page2", "onActivate", "param1", "param2");
             });
             waitsForAsync();
             runs(function() {
@@ -58,7 +58,7 @@ jqmng.require([], function() {
                 }
             });
             runs(function() {
-                navigate("start");
+                navigate("#start");
             });
             waitsForAsync();
             runs(function() {
@@ -78,12 +78,12 @@ jqmng.require([], function() {
                 }
             });
             runs(function() {
-                navigate("start");
+                navigate("#start");
             });
             waitsForAsync();
             runs(function() {
                 expect(onActivateArguments).toBeFalsy();
-                navigate("back:page2", "onActivate");
+                navigate("back:#page2", "onActivate");
             });
             waitsForAsync();
             runs(function() {
@@ -107,7 +107,7 @@ jqmng.require([], function() {
                 onActivateArgumentsOnBeforeShow = undefined;
                 expect(onActivateArguments).toBeUndefined();
                 expect(onActivateArgumentsOnBeforeShow).toBeUndefined();
-                navigate("page2", "onActivate");
+                navigate("#page2", "onActivate");
             });
             waitsForAsync();
             runs(function() {

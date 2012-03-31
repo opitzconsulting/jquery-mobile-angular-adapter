@@ -61,35 +61,38 @@ jqmng.define('jquery', function() {
 });
 jqmng.define('jqmng/scopeReconnect', ['angular'], function (angular) {
 
-
     var ng = angular.module('ng');
-    ng.run(['$rootScope', function($rootScope) {
-        var _$destroy = $rootScope.$destroy;
-        $rootScope.$destroy = function() {
-            this.$$destroyed = true;
-            var res = _$destroy.apply(this, arguments);
-            this.$$nextSibling = this.$$prevSibling = null;
-        };
-        $rootScope.$reconnect = function() {
-            var child = this;
-            if (child===$rootScope) {
-                // Nothing to do here.
-                return;
-            }
-            if (!child.$$destroyed) {
-                return;
-            }
-            child.$$destroyed = false;
-            // See Scope.$new for this logic...
-            child.$$prevSibling = $rootScope.$$childTail;
-            if ($rootScope.$$childHead) {
-                $rootScope.$$childTail.$$nextSibling = child;
-                $rootScope.$$childTail = child;
-            } else {
-                $rootScope.$$childHead = $rootScope.$$childTail = child;
-            }
+    ng.config(['$provide', function($provide) {
+        $provide.decorator('$rootScope', ['$delegate', function($rootScope) {
+            var _$destroy = $rootScope.$destroy;
+            $rootScope.$destroy = function() {
+                this.$$destroyed = true;
+                var res = _$destroy.apply(this, arguments);
+                this.$$nextSibling = this.$$prevSibling = null;
+            };
+            $rootScope.$reconnect = function() {
+                var child = this;
+                if (child===$rootScope) {
+                    // Nothing to do here.
+                    return;
+                }
+                if (!child.$$destroyed) {
+                    return;
+                }
+                var parent = child.$parent;
+                child.$$destroyed = false;
+                // See Scope.$new for this logic...
+                child.$$prevSibling = parent.$$childTail;
+                if (parent.$$childHead) {
+                    parent.$$childTail.$$nextSibling = child;
+                    parent.$$childTail = child;
+                } else {
+                    parent.$$childHead = parent.$$childTail = child;
+                }
 
-        }
+            };
+            return $rootScope;
+        }]);
     }]);
 });
 jqmng.define('jqmng/event', ['angular'], function (angular) {
@@ -943,7 +946,6 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
                 var scope = $rootScope.$new();
                 // trigger a separate page compile...
                 $compile(element)(scope);
-                // TODO check if we are not already in a $digest cycle...
                 $rootScope.$digest();
             }
             return _page.apply(this, arguments);
@@ -1000,8 +1002,9 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
             }
             refreshing = true;
             // run the jquery mobile page compiler
-            // AFTER the angular compiler is completely finished.
-            // (Cannot be done in an angular directive...)
+            // AFTER the angular compiler or any linking function is completely finished.
+            // (Cannot be done in an angular directive, as this would lead to
+            // interaction problems between angular and jqm modifying the dom...)
             if (this===$rootScope) {
                 if (jqmCompilePages.length>0) {
                     var pages = jqmCompilePages;
@@ -1063,10 +1066,10 @@ jqmng.define('jqmng/widgets/pageCompile', ['jquery', 'angular'], function ($, an
     // that is unique for pages and dialogs.
     ng.config(['$provide', function($provide) {
         $provide.decorator('$compile', ['$delegate', function($delegate) {
+            var selector = ':jqmData(role="page"), :jqmData(role="dialog")';
+            var rolePageAttr = 'data-role-page';
             return function(element) {
-                // TODO this is not clean (also matches siblings of the current page) nor performant!
-                $('[data-role="page"]', element.parent()).attr("data-role-page", "true");
-                $('[data-role="dialog"]', element.parent()).attr("data-role-page", "true");
+                element.filter(selector).add(element.find(selector)).attr(rolePageAttr, true);
                 degradeInputs(element);
                 return $delegate.apply(this, arguments);
             }

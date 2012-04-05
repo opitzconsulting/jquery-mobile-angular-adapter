@@ -1,5 +1,5 @@
 jqmng.define('jquery', function() {
-    if (typeof $ !== "undefined") {
-        return $;
+    if (typeof jQuery !== "undefined") {
+        return jQuery;
     }
 });

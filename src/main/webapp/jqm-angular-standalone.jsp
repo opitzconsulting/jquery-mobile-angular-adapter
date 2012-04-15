@@ -29,10 +29,10 @@
 * (c) 2010-2012 AngularJS http://angularjs.org
 * License: MIT
 */
-<jsp:include page="lib/jquery-1.7.1.js"/>
+<jsp:include page="lib/jquery.js"/>
 <jsp:include page="mobileinit.js"/>
-<jsp:include page="lib/jquery.mobile-1.1.0-rc.1-oc1.js"/>
-<jsp:include page="lib/angular-1.0.0.js"/>
+<jsp:include page="lib/jquery.mobile.js"/>
+<jsp:include page="lib/angular.js"/>
 
 <jsp:include page="lib/simple-require.js"/>
 

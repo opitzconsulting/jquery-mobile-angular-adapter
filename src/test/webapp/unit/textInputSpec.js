@@ -3,17 +3,17 @@ jqmng.require(["unit/testUtils"], function(utils) {
     describe("textInput", function() {
 
         it('should save the ui value into the model', function() {
-            var d = utils.compileInPage('<input ng:model="mysel" type="text">');
+            var d = utils.compileInPage('<input ng-model="mysel" type="text">');
             var input = d.element;
             var scope = input.scope();
             expect(scope.mysel).toBeFalsy();
             input[0].value = 'test';
-            input.trigger('blur');
+            utils.triggerInputEvent(input);
             expect(scope.mysel).toEqual('test');
         });
 
         it('should save the model value into the ui', function() {
-            var d = utils.compileInPage('<input ng:model="mysel" type="text">');
+            var d = utils.compileInPage('<input ng-model="mysel" type="text">');
             var input = d.element;
             var scope = input.scope();
             expect(input[0].value).toEqual('');
@@ -23,7 +23,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
         });
 
         it('should use the disabled attribute', function() {
-            var d = utils.compileInPage('<input ng:model="mysel" type="text" disabled="{{disabled}}">');
+            var d = utils.compileInPage('<input ng-model="mysel" type="text" disabled="{{disabled}}">');
             var input = d.element;
             var scope = input.scope();
             scope.disabled = false;
@@ -35,29 +35,29 @@ jqmng.require(["unit/testUtils"], function(utils) {
         });
 
         it('should work with type="tel"', function() {
-            var d = utils.compileInPage('<input ng:model="mysel" type="tel">');
+            var d = utils.compileInPage('<input ng-model="mysel" type="tel">');
             var input = d.element;
             expect(input.attr('type')).toEqual('tel');
             var scope = input.scope();
             expect(scope.mysel).toBeFalsy();
             input[0].value = '123';
-            input.trigger('blur');
+            utils.triggerInputEvent(input);
             expect(scope.mysel).toEqual('123');
         });
 
         it('should work with type="number"', function() {
-            var d = utils.compileInPage('<input ng:model="mysel" type="number">');
+            var d = utils.compileInPage('<input ng-model="mysel" type="number">');
             var input = d.element;
             expect(input.attr('type')).toEqual('number');
             var scope = input.scope();
             expect(scope.mysel).toBeFalsy();
             input[0].value = '123';
-            input.trigger('blur');
+            utils.triggerInputEvent(input);
             expect(scope.mysel).toEqual(123);
         });
 
         it('should work with type="date"', function() {
-            var d = utils.compileInPage('<input ng:model="mysel" type="date">');
+            var d = utils.compileInPage('<input ng-model="mysel" type="date">');
             var input = d.element;
             expect(input.attr('type')).toEqual('date');
             var scope = input.scope();

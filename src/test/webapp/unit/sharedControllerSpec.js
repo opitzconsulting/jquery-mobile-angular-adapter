@@ -1,5 +1,5 @@
 jqmng.require(['angular', 'unit/testUtils'], function(angular, utils) {
-    describe('ngm:shared-controller', function() {
+    describe('ngm-shared-controller', function() {
         it('should create an instance of the defined controllers and store them in the current scope', function() {
             var instances = [];
             function SharedController1($scope) {
@@ -11,7 +11,7 @@ jqmng.require(['angular', 'unit/testUtils'], function(angular, utils) {
             }
             window.SharedController1 = SharedController1;
             window.SharedController2 = SharedController2;
-            var d = utils.compileInPage('<div><div ngm:shared-controller="shared1:SharedController1,shared2:SharedController2"></div></div>');
+            var d = utils.compileInPage('<div><div ngm-shared-controller="shared1:SharedController1,shared2:SharedController2"></div></div>');
             var element = d.element;
             var rootScope = element.scope().$root;
             var scope = element.children('div').scope();
@@ -30,7 +30,7 @@ jqmng.require(['angular', 'unit/testUtils'], function(angular, utils) {
             }
             window.SharedController1 = SharedController1;
             window.SharedController2 = SharedController2;
-            var d = utils.compileInPage('<div><div ngm:shared-controller="shared1:SharedController1, shared2:SharedController2"></div></div>');
+            var d = utils.compileInPage('<div><div ngm-shared-controller="shared1:SharedController1, shared2:SharedController2"></div></div>');
             var element = d.element;
             var rootScope = element.scope().$root;
             var scope = element.children('div').scope();
@@ -45,8 +45,8 @@ jqmng.require(['angular', 'unit/testUtils'], function(angular, utils) {
             }
             window.SharedController1 = SharedController1;
             var d = utils.compileInPage(
-                '<div><div id="id1" ngm:shared-controller="shared1:SharedController1"></div>' +
-                    '<div id="id2" ngm:shared-controller="shared1:SharedController1"></div></div>');
+                '<div><div id="id1" ngm-shared-controller="shared1:SharedController1"></div>' +
+                    '<div id="id2" ngm-shared-controller="shared1:SharedController1"></div></div>');
             var element = d.element;
             var rootScope = d.element.scope().$root;
             var scope1 = element.children('#id1').scope();
@@ -63,8 +63,8 @@ jqmng.require(['angular', 'unit/testUtils'], function(angular, utils) {
             }
             window.SharedController1 = SharedController1;
             var d = utils.compileInPage(
-                '<div><div id="id1" ngm:shared-controller="shared1:SharedController1"></div>' +
-                    '<div id="id2" ngm:shared-controller="shared1:SharedController1"></div></div>');
+                '<div><div id="id1" ngm-shared-controller="shared1:SharedController1"></div>' +
+                    '<div id="id2" ngm-shared-controller="shared1:SharedController1"></div></div>');
             var element = d.element;
             var rootScope = d.element.scope().$root;
             var page1 = element.children('#id1');

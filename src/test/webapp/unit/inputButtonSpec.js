@@ -2,9 +2,9 @@ jqmng.require(["unit/testUtils"], function(utils) {
 
     describe("input button", function() {
 
-        it('should allow clicks via ng:click', function() {
+        it('should allow clicks via ng-click', function() {
             var d = utils.compileInPage(
-                '<input type="submit" ng:click="flag = true">'
+                '<input type="submit" ng-click="flag = true">'
             );
             var input = d.element;
             var scope = input.scope();
@@ -15,7 +15,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
 
         it('should use the disabled attribute', function() {
             var d = utils.compileInPage(
-                '<input type="submit" ng:click="flag = true" disabled="{{disabled}}">');
+                '<input type="submit" ng-click="flag = true" disabled="{{disabled}}">');
             var input = d.element;
             var scope = input.scope();
             var parentDiv = input.parent();

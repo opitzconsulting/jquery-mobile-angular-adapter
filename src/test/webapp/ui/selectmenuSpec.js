@@ -6,8 +6,8 @@ jqmng.require([], function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 page.append(
-                    '<div data-role="content" ng:init="mysel=\'v1\'">' +
-                        '<select ng:model="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                    '<div data-role="content" ng-init="mysel=\'v1\'">' +
+                        '<select ng-model="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {
@@ -49,8 +49,8 @@ jqmng.require([], function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 page.append(
-                    '<div data-role="content" ng:init="mysel=\'v1\'">' +
-                        '<select ng:model="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                    '<div data-role="content" ng-init="mysel=\'v1\'">' +
+                        '<select ng-model="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {
@@ -75,8 +75,8 @@ jqmng.require([], function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 page.append(
-                    '<div data-role="content" ng:init="mysel=\'v1\'">' +
-                        '<select ng:model="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                    '<div data-role="content" ng-init="mysel=\'v1\'">' +
+                        '<select ng-model="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {
@@ -99,8 +99,8 @@ jqmng.require([], function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 page.append(
-                    '<div data-role="content" ng:init="mysel=\'v1\'">' +
-                        '<select ng:model="mysel" id="mysel" data-native-menu="false" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                    '<div data-role="content" ng-init="mysel=\'v1\'">' +
+                        '<select ng-model="mysel" id="mysel" data-native-menu="false" ng-bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {
@@ -122,8 +122,8 @@ jqmng.require([], function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
                 page.append(
-                    '<div data-role="content" ng:init="mysel=\'v1\'">' +
-                        '<select ng:model="mysel" id="mysel" data-native-menu="false" ng:bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                    '<div data-role="content" ng-init="mysel=\'v1\'">' +
+                        '<select ng-model="mysel" id="mysel" data-native-menu="false" ng-bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
                         '</div>');
             });
             runs(function() {
@@ -141,10 +141,10 @@ jqmng.require([], function() {
         it('should refresh when the dialog opens', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
-                // Note: Be sure to use ng:repeat, as this is the most problematic case!
+                // Note: Be sure to use ng-repeat, as this is the most problematic case!
                 page.append(
                     '<div data-role="content">' +
-                        '<select ng:repeat="item in [1]" ng:model="mysel" id="mysel" data-native-menu="false" ng:options="o for o in options"></select>' +
+                        '<select ng-repeat="item in [1]" ng-model="mysel" id="mysel" data-native-menu="false" ng-options="o for o in options"></select>' +
                         '</div>');
             });
             runs(function() {
@@ -162,10 +162,10 @@ jqmng.require([], function() {
         it('should be able to display the label of a new entry when the options grow in a native menu', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(frame) {
                 var page = frame.$('#start');
-                // Note: Be sure to use ng:repeat, as this is the most problematic case!
+                // Note: Be sure to use ng-repeat, as this is the most problematic case!
                 page.append(
                     '<div data-role="content">' +
-                        '<select data-native-menu="true" ng:model="myval" id="mysel" ng:options="e.value for e in list"></select>' +
+                        '<select data-native-menu="true" ng-model="myval" id="mysel" ng-options="e.value for e in list"></select>' +
                         '</div>');
             });
             runs(function() {

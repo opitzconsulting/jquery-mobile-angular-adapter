@@ -2,7 +2,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
 
     describe("disabledHandling", function() {
         function execTest(attribute) {
-            var d = utils.compileInPage('<button id="mysel" ng:click="flag = true" '+attribute+'">Test</button>');
+            var d = utils.compileInPage('<button id="mysel" ng-click="flag = true" '+attribute+'">Test</button>');
             var page = d.page;
             var input = d.element;
             var scope = input.scope();

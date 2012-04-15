@@ -42,11 +42,11 @@ jqmng.require([], function() {
             });
         });
 
-        it('should style all non widgets when using ngm:if', function() {
+        it('should style all non widgets when using ngm-if', function() {
             loadHtml('/jqmng/ui/test-fixture.html', function(win) {
                 var $ = win.$;
                 var page1 = $("#start");
-                page1.append('<a data-role="button" ngm:if="test" id="myAnchor"></a>');
+                page1.append('<a data-role="button" ngm-if="test" id="myAnchor"></a>');
             });
             runs(function() {
                 var win = testframe();

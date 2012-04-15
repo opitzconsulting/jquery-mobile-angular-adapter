@@ -3,7 +3,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
     describe("selectSlider", function() {
         it('should save the ui value into the model', function() {
             var d = utils.compileInPage(
-                '<select ng:model="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>'
+                '<select ng-model="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>'
             );
             var select = d.element;
             var scope = select.scope();
@@ -16,7 +16,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
         });
 
         it('should save the model value into the ui', function() {
-            var d = utils.compileInPage('<select ng:model="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+            var d = utils.compileInPage('<select ng-model="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
             var select = d.element;
             var scope = d.page.scope();
             expect(select[0].value).toEqual("v1");
@@ -33,7 +33,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
 
         it('should use the disabled attribute', function() {
             var d = utils.compileInPage(
-                '<select ng:model="mysel" data-role="slider" disabled="{{disabled}}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+                '<select ng-model="mysel" data-role="slider" disabled="{{disabled}}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
             var select = d.element;
             var scope = select.scope();
             scope.disabled = false;
@@ -48,7 +48,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
 
         it('should be removable', function() {
             var d = utils.compileInPage('<div>' +
-                '<select ng:model="mysel" data-role="slider"><option value="v1" default="true">v1</option></select>' +
+                '<select ng-model="mysel" data-role="slider"><option value="v1" default="true">v1</option></select>' +
                 '<select name="mysel2" data-role="slider"><option value="v1" default="true">v1</option></select>' +
                 '</div>');
             var container = d.element;

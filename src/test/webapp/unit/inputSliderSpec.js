@@ -2,16 +2,16 @@ jqmng.require(["unit/testUtils"], function(utils) {
 
     describe("inputSlider", function() {
         it('should save the ui value into the model', function() {
-            var d = utils.compileInPage('<input type="number" data-type="range"  ng:model="mysel" min="0" max="300">');
+            var d = utils.compileInPage('<input type="number" data-type="range"  ng-model="mysel" min="0" max="300">');
             var input = d.element;
             var scope = input.scope();
             input.val(100);
-            input.trigger('blur');
+            utils.triggerInputEvent(input);
             expect(scope.mysel).toEqual("100");
         });
 
         it('should save the model value into the ui', function() {
-            var d = utils.compileInPage('<input type="number" data-type="range"  ng:model="mysel" min="0" max="300">');
+            var d = utils.compileInPage('<input type="number" data-type="range"  ng-model="mysel" min="0" max="300">');
             var input = d.element;
             var scope = input.scope();
             scope.mysel="100";
@@ -20,7 +20,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
         });
 
         it('should use the disabled attribute', function() {
-            var d = utils.compileInPage('<input type="number" data-type="range"  ng:model="mysel" value="150" min="0" max="300" disabled="{{disabled}}">');
+            var d = utils.compileInPage('<input type="number" data-type="range"  ng-model="mysel" value="150" min="0" max="300" disabled="{{disabled}}">');
             var input = d.element;
             var scope = input.scope();
             scope.disabled = false;

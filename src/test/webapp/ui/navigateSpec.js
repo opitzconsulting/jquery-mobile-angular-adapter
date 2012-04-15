@@ -2,10 +2,10 @@ jqmng.require([], function() {
     function visitPage(page, Page2Controller, events) {
         loadHtml('/jqmng/ui/test-fixture.html#' + page, function(frame) {
             var page = frame.$('#page2');
-            page.attr("ng:controller", "Page2Controller");
+            page.attr("ng-controller", "Page2Controller");
             frame.Page2Controller = Page2Controller;
             if (events) {
-                page.attr("ngm:event", frame.angular.toJson(events));
+                page.attr("ngm-event", frame.angular.toJson(events));
             }
         });
     }

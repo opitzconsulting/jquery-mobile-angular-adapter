@@ -28,6 +28,16 @@ jqmng.define('jqmng/widgets/angularInput', ['jquery', 'angular'], function ($, a
                             return;
                         }
                         var _bind = iElement.bind;
+                        if (type==='date') {
+                            // Angular binds to the input or keydown+change event.
+                            // However, date inputs on IOS5 do not fire any of those (only the blur event).
+                            iElement.bind = function (events, callback) {
+                                if (events.indexOf('input') != -1 || events.indexOf('change') != -1) {
+                                    events = "change blur";
+                                }
+                                return _bind.call(this, events, callback);
+                            };
+                        }
                         if (checkboxRadio) {
                             // Angular binds to the click event for radio and check boxes,
                             // but jquery mobile fires a change event. So be sure that angular only listens to the change event,

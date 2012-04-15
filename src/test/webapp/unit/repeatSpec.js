@@ -1,7 +1,7 @@
 jqmng.require(["unit/testUtils"], function(utils) {
-    describe('ng:repeat', function() {
+    describe('ng-repeat', function() {
         it("should fire the requestrefresh event for every entry when the list grows", function() {
-            var c = utils.compileInPage('<div><div ng:repeat="l in list"></div></div>');
+            var c = utils.compileInPage('<div><div ng-repeat="l in list"></div></div>');
             var element = c.element;
             var scope = element.scope();
             var eventCount = 0;
@@ -14,7 +14,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
         });
 
         it('should append new elements at the same level even when they wrap themselves in new parents', function() {
-            var c = utils.compileInPage('<div><button ng:repeat="l in list"></button></div>');
+            var c = utils.compileInPage('<div><button ng-repeat="l in list"></button></div>');
             var scope = c.element.scope();
             scope.list = [1];
             scope.$root.$digest();

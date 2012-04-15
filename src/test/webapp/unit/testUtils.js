@@ -19,7 +19,7 @@ jqmng.define('unit/testUtils', ["jquery", "angular"], function($, angular) {
         var page = test$('<div id="start" data-role="page" data-url="start"><div data-role="content"></div></div>');
         test$("body").append(page);
         if (pageControllerName) {
-            page.attr('ng:controller', pageControllerName);
+            page.attr('ng-controller', pageControllerName);
         }
         page.find(":jqmData(role='content')").append(elements);
         angular.injector(['ng']).invoke(function($compile, $rootScope) {
@@ -47,9 +47,19 @@ jqmng.define('unit/testUtils', ["jquery", "angular"], function($, angular) {
         return $(".result").removeClass("result");
     }
 
+    var inputEventSupported = "oninput" in document.createElement('div');
+
+    function triggerInputEvent(element) {
+        if (inputEventSupported) {
+            element.trigger('input');
+        } else {
+            element.trigger('change');
+        }
+    }
 
     return {
         compile: compile,
-        compileInPage: compileInPage
+        compileInPage: compileInPage,
+        triggerInputEvent: triggerInputEvent
     };
 });

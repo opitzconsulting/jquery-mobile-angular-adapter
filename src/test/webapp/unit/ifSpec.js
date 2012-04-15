@@ -1,6 +1,6 @@
 jqmng.require(['angular', 'unit/testUtils'], function(angular, utils) {
 
-    describe("ngm:if", function() {
+    describe("ngm-if", function() {
         var element, scope;
 
         function compile(html) {
@@ -16,23 +16,23 @@ jqmng.require(['angular', 'unit/testUtils'], function(angular, utils) {
         });
 
         it('should add the element if the expression is true', function() {
-            compile('<div><span ngm:if="true">A</span></div>');
+            compile('<div><span ngm-if="true">A</span></div>');
             expect(element.children('span').length).toEqual(1);
         });
 
         it('should remove the element if the expression is false', function() {
-            compile('<div><span ngm:if="false">A</span></div>');
+            compile('<div><span ngm-if="false">A</span></div>');
             expect(element.children('span').length).toEqual(0);
         });
 
         it('should use an own scope', function() {
-            compile('<div><span ngm:if="true"><span ng:init="test = true"></span></span></div>');
+            compile('<div><span ngm-if="true"><span ng-init="test = true"></span></span></div>');
             expect(scope.test).toBeFalsy();
             expect(element.children('span').scope().test).toBeTruthy();
         });
 
         it('should work with select options', function() {
-            compile('<div><select name="test"><option ngm:if="test" value="v1">V1</option></select></div>');
+            compile('<div><select name="test"><option ngm-if="test" value="v1">V1</option></select></div>');
             var select = element.find('select');
             var options = select.children('option');
             expect(options.length).toEqual(0);

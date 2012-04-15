@@ -3,7 +3,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
     describe("checkbox", function() {
         it('should save the ui value into the model', function() {
             var d = utils.compileInPage('<div>' +
-                '<input ng:model="mysel" id="mysel" type="checkbox">{{mysel}}<label for="mysel" id="mylab">Entry</label>' +
+                '<input ng-model="mysel" id="mysel" type="checkbox">{{mysel}}<label for="mysel" id="mylab">Entry</label>' +
                 '</div>');
             var page = d.page;
             var input = page.find("#mysel");
@@ -20,7 +20,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
         it('should save the model value into the ui', function() {
             var d = utils.compileInPage(
                 '<div>' +
-                    '<input ng:model="mysel" id="mysel" type="checkbox"><label for="mysel" id="mylab">Entry</label>' +
+                    '<input ng-model="mysel" id="mysel" type="checkbox"><label for="mysel" id="mylab">Entry</label>' +
                     '</div>');
             var page = d.page;
             var input = page.find("#mysel");
@@ -39,7 +39,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
         it('should use the disabled attribute', function() {
             var d = utils.compileInPage(
                 '<div>' +
-                    '<input ng:model="mysel" id="mysel" type="checkbox" value="false" disabled="{{disabled}}"><label for="mysel" id="mylab">Entry</label>' +
+                    '<input ng-model="mysel" id="mysel" type="checkbox" value="false" disabled="{{disabled}}"><label for="mysel" id="mylab">Entry</label>' +
                     '</div>');
             var page = d.page;
             var input = page.find("#mysel");

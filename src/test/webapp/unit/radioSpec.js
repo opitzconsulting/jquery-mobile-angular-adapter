@@ -4,7 +4,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
 
         it('should save the ui value into the model', function() {
             var d = utils.compileInPage('<div>' +
-                '<input ng:model="mysel" id="mysel" type="radio" value="v1"><label for="mysel" id="mylab">Entry</label>' +
+                '<input ng-model="mysel" id="mysel" type="radio" value="v1"><label for="mysel" id="mylab">Entry</label>' +
                 '</div>');
             var input = d.element.find("input");
             var scope = input.scope();
@@ -18,7 +18,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
         });
         it('should save the model value into the ui', function() {
             var d = utils.compileInPage('<div>' +
-                '<input ng:model="mysel" id="mysel" type="radio" value="v1"><label for="mysel" id="mylab">Entry</label>' +
+                '<input ng-model="mysel" id="mysel" type="radio" value="v1"><label for="mysel" id="mylab">Entry</label>' +
                 '</div>');
             var input = d.element.find("input");
             var scope = input.scope();
@@ -36,7 +36,7 @@ jqmng.require(["unit/testUtils"], function(utils) {
         it('should use the disabled attribute', function() {
             var d = utils.compileInPage(
                 '<div>' +
-                    '<input ng:model="mysel" id="mysel" type="radio" value="v1" disabled="{{disabled}}"><label for="mysel" id="mylab">Entry</label>' +
+                    '<input ng-model="mysel" id="mysel" type="radio" value="v1" disabled="{{disabled}}"><label for="mysel" id="mylab">Entry</label>' +
                     '</div>');
             var input = d.element.find("input");
             var parentDiv = input.parent();

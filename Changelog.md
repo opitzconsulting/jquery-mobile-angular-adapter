@@ -3,6 +3,12 @@ Changelog
 
 1.0.7rc1
 -------------
+- extracted the jquery mobile change detection into the jquery mobile autorefresh plugin.
+- refactored the internal structure into code that is needed for integration and code that contains
+  utility functions.
+
+1.0.7rc1
+-------------
 - Update to angular 1.0rc3 and jquery 1.7
 - ng-app directive of angular is required
 - 'ngm:event' directive is gone. Please use the new event directives introduced in 1.0.5

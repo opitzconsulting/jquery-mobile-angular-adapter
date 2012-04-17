@@ -5,25 +5,22 @@ Description
 -------------
 
 Integration between jquery mobile and angular.js. Needed as jquery mobile
-enhances the pages with new elements and styles and so does angular. Another reason is
-that jquery mobile only enhances pages when they are navigated to, and not
-all at once, as angular does in autoinit mode.
+enhances the pages with new elements and styles and so does angular.
 
-Automatically refreshs the jquery mobile widgets when the corresponding
+Automatically refreshes the jquery mobile widgets when the corresponding
 values in angular change.
 E.g. the select tag is enhanced by jquery mobile,
 and if someone changes it's value programmatically, the refresh-function needs to be called.
 
-Fixes the jquery mobile widgets so that they are correctly removed form the dom,
-when angular removes them (e.g. in a `ng-repeat`).
+TODO we use the jquery-mobile-autorefresh plugin for this.
 
-Provides special enhancements useful for mobile applications.
+Also provides special utilities useful for mobile applications.
 
 Dependencies
 ----------------
-- angular 1.0
+- angular 1.0.0
 - jquery 1.7.1
-- jquery mobile 1.1.0
+- jquery mobile 1.1.0 Final
 
 Sample
 ------------

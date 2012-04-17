@@ -3,30 +3,18 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.opitzconsulting.html5</groupId>
     <artifactId>jquery-mobile-angular-adapter</artifactId>
-    <version>1.0.7-rc1</version>
+    <version>1.0.7-rc2-SNAPSHOT</version>
     <name>JQuery Mobile Angular Adapter</name>
     <packaging>war</packaging>
     <description>Adapter for using jquery mobile with angular</description>
 
     <properties>
         <browser>/Applications/Google Chrome.app/Contents/MacOS/Google Chrome</browser>
-        <!-- optimizer for minification: uglify or closure -->
-        <jsOptimizer>uglify</jsOptimizer>
-        <jsSuffix>-${project.version}</jsSuffix>
-        <jqmVersion>1.1.0-rc.1-oc1</jqmVersion>
     </properties>
 
     <build>
         <finalName>${project.artifactId}</finalName>
         <plugins>
-            <plugin>
-                <groupId>com.voltvoodoo</groupId>
-                <artifactId>brew</artifactId>
-                <version>0.2.10</version>
-                <configuration>
-                    <optimizeBuildDir>${basedir}/target/requirejs/build</optimizeBuildDir>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>

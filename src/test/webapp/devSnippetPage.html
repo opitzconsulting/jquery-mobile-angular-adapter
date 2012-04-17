@@ -10,7 +10,6 @@ Test page during development.
 
     <link rel="stylesheet" href="lib/jquery.mobile.css"/>
 
-
     <script src="lib/jquery.js"></script>
     <script src="lib/jquery.mobile.js"></script>
     <script src="lib/angular.js"></script>
@@ -19,18 +18,11 @@ Test page during development.
 <body>
 <div data-role="page" id="start">
     <div data-role="content">
-        <input type="date" id="dateInput">
+        <button ng-click="disabled=true">Disable</button>
+        <button ng-click="disabled=''">Enable</button>
+        <button ng-disabled="disabled">Test</button>
+        {{disabled}}
 
-        <script>
-
-            $("#dateInput").bind("input", function() {
-                alert("input");
-            });
-            $("#dateInput").bind("blur", function() {
-                alert("blur");
-            });
-        </script>
-        
     </div>
 </div>
 

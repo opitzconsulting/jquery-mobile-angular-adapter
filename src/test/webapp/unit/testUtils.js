@@ -1,4 +1,4 @@
-jqmng.define('unit/testUtils', ["jquery", "angular"], function($, angular) {
+(function($, angular, window) {
 
     beforeEach(function() {
         $.mobile.pageContainer = $("body");
@@ -31,7 +31,6 @@ jqmng.define('unit/testUtils', ["jquery", "angular"], function($, angular) {
             page: page,
             element: $(".result").removeClass("result")
         }
-
     }
 
     function compile(html) {
@@ -57,9 +56,11 @@ jqmng.define('unit/testUtils', ["jquery", "angular"], function($, angular) {
         }
     }
 
-    return {
+
+    // API
+    window.testutils = {
         compile: compile,
         compileInPage: compileInPage,
         triggerInputEvent: triggerInputEvent
     };
-});
+})(window.jQuery, window.angular, window);

@@ -4,7 +4,7 @@
      * Modify the original repeat: Make sure that all elements are added under the same parent.
      * This is important, as some jquery mobile widgets wrap the elements into new elements,
      * and angular just uses element.after().
-     * See angular issue TODO
+     * See angular issue 831
      */
     function instrumentNodeFunction(parent, node, fnName) {
         var _old = node[fnName];

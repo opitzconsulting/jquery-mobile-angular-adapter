@@ -22,14 +22,16 @@
             page.attr('ng-controller', pageControllerName);
         }
         page.find(":jqmData(role='content')").append(elements);
-        angular.injector(['ng']).invoke(function($compile, $rootScope) {
+        var injector = angular.injector(['ng']);
+        injector.invoke(function($compile, $rootScope) {
             $compile(page)($rootScope);
             $rootScope.$apply();
         });
-        page.trigger("pagebeforeshow");
+        $.mobile.activePage = page;
         return {
             page: page,
-            element: $(".result").removeClass("result")
+            element: $(".result").removeClass("result"),
+            injector: injector
         }
     }
 

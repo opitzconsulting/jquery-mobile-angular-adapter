@@ -5,7 +5,6 @@ Test page during development.
 -->
 <head>
     <title>MobileToys</title>
-    <script>parent.instrument && parent.instrument(window);</script>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
 
     <link rel="stylesheet" href="lib/jquery.mobile.css"/>
@@ -20,7 +19,7 @@ Test page during development.
     <div data-role="content">
         <button ng-click="disabled=true">Disable</button>
         <button ng-click="disabled=''">Enable</button>
-        <button ng-disabled="disabled">Test</button>
+        <button disabled="{{disabled}}">Test</button>
         {{disabled}}
 
     </div>

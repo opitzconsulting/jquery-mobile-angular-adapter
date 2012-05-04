@@ -3,6 +3,7 @@
     /*
      * Angular does not use $.prop or $.attr for setting the attributes "selected" (radio/check boxes) and "checked"
      * (select boxes). By this, we need to trigger the requestrefresh event ourselves.
+     * TODO use iAttrs.$observe for selected and checked and trigger a refresh on the widgets.
      */
     mod.directive("ngModel", function () {
         return {

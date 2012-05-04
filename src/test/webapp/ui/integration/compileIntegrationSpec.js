@@ -1,65 +1,62 @@
 describe('compileIntegration', function () {
-    it('should use the globalScope as parent of all page scopes', function () {
+
+    it("should call $.mobile.initializePage when the first page is compiled using angular", function () {
+        var rootScope;
+        loadHtml('/jqmng/ui/test-fixture.html', function (frame) {
+            var $ = frame.$;
+            var _old = $.mobile.initializePage;
+            $.mobile.initializePage = function () {
+                rootScope = $("body").injector().get("$rootScope");
+                return _old.apply(this, arguments);
+            }
+        });
+        runs(function () {
+            expect(rootScope).toBeTruthy();
+        });
+    });
+
+    it("should angular compile pages loaded dynamically by jqm", function () {
+        loadHtml('/jqmng/ui/test-fixture.html');
+        runs(function () {
+            var $ = testframe().$;
+            $.mobile.changePage('/jqmng/ui/externalPage.html');
+        });
+        waitsForAsync();
+        runs(function () {
+            var $ = testframe().$;
+            var page1Scope = $("#start").scope();
+            var extPage = $("#externalPage");
+            expect($.trim(extPage.text())).toBe('3');
+            var extPageScope = extPage.scope();
+            expect(extPageScope).toBeTruthy();
+            expect(extPageScope).not.toBe(extPageScope.$root);
+            expect(extPageScope.$root).toBe(page1Scope.$root);
+        });
+
+    });
+
+    it("should not angular compile pages created manually calling the page plugin", function () {
+        loadHtml('/jqmng/ui/test-fixture.html');
+        runs(function () {
+            var $ = testframe().$;
+            var page3 = $('<div id="externalPage" data-role="page">{{1+2}}</div>');
+            $("body").append(page3);
+            page3.page();
+            expect(page3.text()).toBe('{{1+2}}');
+            expect(page3.scope()).toBe(page3.scope().$root);
+        });
+
+    });
+
+    it('should use the $rootScope as parent of all page scopes', function () {
         loadHtml('/jqmng/ui/test-fixture.html');
         runs(function () {
             var win = testframe();
             var page1 = win.$("#start");
             page1.page();
             expect(page1.scope()).toBeTruthy();
-            expect(page1.scope().$parent).toBe(win.$(win.document.documentElement).scope());
+            expect(page1.scope().$root).toBe(win.$(win.document.documentElement).scope());
         });
-    });
-
-    it('should use a separate scope for every page whose digest does not trigger the digest of other pages', function () {
-        loadHtml('/jqmng/ui/test-fixture.html');
-        runs(function () {
-            var win = testframe();
-            var page1 = win.$("#start");
-            page1.page();
-            var scope1 = page1.scope();
-            var page2 = win.$("#page2");
-            page2.page();
-            var scope2 = page2.scope();
-            expect(scope1).not.toBe(scope2);
-            var page1evalCount = 0;
-            scope1.$watch(function () {
-                page1evalCount++;
-            });
-            var page2evalCount = 0;
-            scope2.$watch(function () {
-                page2evalCount++;
-            });
-            win.$.mobile.changePage('#start');
-            scope1.$digest();
-            expect(page1evalCount).toBeGreaterThan(0);
-            expect(page2evalCount).toEqual(0);
-            page1evalCount = page2evalCount = 0;
-            win.$.mobile.changePage('#page2');
-            scope2.$digest();
-            expect(page1evalCount).toEqual(0);
-            expect(page2evalCount).toBeGreaterThan(0);
-        });
-    });
-
-    it('should style all non widgets when using ngm-if', function () {
-        loadHtml('/jqmng/ui/test-fixture.html', function (win) {
-            var $ = win.$;
-            var page1 = $("#start");
-            page1.append('<a data-role="button" ngm-if="test" id="myAnchor"></a>');
-        });
-        runs(function () {
-            var win = testframe();
-            var $ = win.$;
-            var page1 = $("#start");
-            var anchors = page1.find("#myAnchor");
-            expect(anchors.length).toBe(0);
-            var scope = page1.scope();
-            scope.test = true;
-            scope.$root.$digest();
-            var anchors = page1.find("#myAnchor");
-            expect(anchors.length).toBe(1);
-            expect(anchors.hasClass('ui-btn')).toBeTruthy();
-        })
     });
 
     it("should work with degraded inputs", function () {
@@ -78,35 +75,32 @@ describe('compileIntegration', function () {
             expect(input.attr("type")).toBe("text");
             var scope = page1.scope();
             scope.myname = 1234;
-            scope.$root.$digest();
+            scope.$digest();
             expect(input.val()).toBe("1234");
         })
     });
-    /** TODO make this work **/
-    xit("should allow dynamic creation of jquery mobile pages", function () {
+
+    it("should evaluate the widget.prototype.options.initSelector and register corresponding angular directives", function() {
         loadHtml('/jqmng/ui/test-fixture.html', function (win) {
             var $ = win.$;
-            $("body").append('<div ng-repeat="l in list" test="{{l}}" id="gen{{l}}" data-role="page"><div data-role="header">Generated page {{l}}</div></div>');
-            $("body").append('<div ng-repeat="l in list" test="{{l}}" id="gen{{l}}">Generated page {{l}}</div>');
-        });
-        runs(function () {
-            var win = testframe();
-            var $ = win.$;
+            $.mobile.button.prototype.options.initSelector = 'type1, type2.someClass, [type3="button"], :jqmData(type4="button")';
             var page1 = $("#start");
-            expect($('[data-role="page"]').length).toBe(3);
-            var scope = $("body").scope().$root;
-            scope.list = [1, 2, 3];
-            scope.$digest();
-            expect($('[data-role="page"]').length).toBe(5);
-            $.mobile.changePage("#gen2");
+            page1.append('<div id="btn1plain"></div><type1 id="btn1"></type1>');
+            page1.append('<type2 id="btn2plain"></type2><type2 class="someClass" id="btn2"></type2>');
+            page1.append('<div type3="plain" id="btn3plain1"></div><div data-type3="button" id="btn3plain2"></div><div type3="button" id="btn3"></div>');
+            page1.append('<div data-type4="plain" id="btn4plain"></div><div data-type4="button" id="btn4"></div>');
         });
-        waitsForAsync();
         runs(function () {
-            var win = testframe();
-            var $ = win.$;
-            var activePage = $.mobile.activePage;
-            expect(activePage.attr("id")).toBe("gen2");
-            expect(activePage.hasClass("ui-page"));
+            var $ = testframe().$;
+            expect($("#btn1plain").data("button")).toBeFalsy();
+            expect($("#btn1").data("button")).toBeTruthy();
+            expect($("#btn2plain").data("button")).toBeFalsy();
+            expect($("#btn2").data("button")).toBeTruthy();
+            expect($("#btn3plain1").data("button")).toBeFalsy();
+            expect($("#btn3plain2").data("button")).toBeFalsy();
+            expect($("#btn3").data("button")).toBeTruthy();
+            expect($("#btn4plain").data("button")).toBeFalsy();
+            expect($("#btn4").data("button")).toBeTruthy();
         });
     });
 });

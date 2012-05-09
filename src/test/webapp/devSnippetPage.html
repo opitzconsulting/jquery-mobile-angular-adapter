@@ -15,15 +15,18 @@ Test page during development.
     <script src="jqm-angular.jsp"></script>
 </head>
 <body>
-<div data-role="page" id="start">
-    <div data-role="content">
-        <button ng-click="disabled=true">Disable</button>
-        <button ng-click="disabled=''">Enable</button>
-        <button disabled="{{disabled}}">Test</button>
-        {{disabled}}
-
+<div data-role="page">
+    <div data-role="collapsible-set" disabled="true">
+        <div data-role="collapsible">
+            <h3>Text1</h3>
+        </div>
+        <div data-role="collapsible">
+            <h3>Text2</h3>
+        </div>
     </div>
 </div>
+
+
 
 
 </body>

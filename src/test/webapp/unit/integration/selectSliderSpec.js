@@ -1,10 +1,22 @@
 describe("selectSlider", function () {
+    it("should stamp the widget using the jqm widget", function() {
+        spyOn($.fn, 'slider').andCallThrough();
+        var c = testutils.compileInPage('<select data-role="slider" ng-repeat="l in list"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+        expect($.fn.slider.callCount).toBe(0);
+        var scope = c.page.scope();
+        scope.list = [1,2];
+        scope.$root.$digest();
+        expect($.fn.slider.callCount).toBe(2);
+    });
+
     it('should save the ui value into the model', function () {
         var d = testutils.compileInPage(
             '<select ng-model="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>'
         );
         var select = d.element;
         var scope = select.scope();
+        scope.mysel = "v1";
+        scope.$root.$digest();
         // jquery mobile uses an anchor to simulate the select
         var anchor = d.page.find("a");
         expect(anchor.length).toEqual(1);
@@ -17,7 +29,8 @@ describe("selectSlider", function () {
         var d = testutils.compileInPage('<select ng-model="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
         var select = d.element;
         var scope = d.page.scope();
-        expect(select[0].value).toEqual("v1");
+        scope.mysel = "v1";
+        scope.$root.$digest();
         // jquery mobile creates a new span
         // that displays the actual value of the select box.
         var anchor = d.page.find("a");
@@ -44,10 +57,24 @@ describe("selectSlider", function () {
         expect(disabled).toEqual(true);
     });
 
+    it('should wrap the element and the slider into a new parent div so that it does not confuse the angular compiler', function() {
+        // If we have two sliders after each other, and allow the slider to append
+        // elements after the input elements, the angular compiler gets confused...
+        var c = testutils.compileInPage('<div>' +
+            '<select data-role="slider"><option value="v1" default="true">v1</option></select>' +
+            '<select data-role="slider"><option value="v1" default="true">v1</option></select>' +
+            '</div>');
+        var div = c.element;
+        expect(div.children("div").eq(0).children("select").length).toBe(1);
+        expect(div.children("div").eq(0).children("div[role='application']").length).toBe(1);
+        expect(div.children("div").eq(1).children("select").length).toBe(1);
+        expect(div.children("div").eq(1).children("div[role='application']").length).toBe(1);
+    });
+
     it('should be removable', function () {
         var d = testutils.compileInPage('<div>' +
-            '<select ng-model="mysel" data-role="slider"><option value="v1" default="true">v1</option></select>' +
-            '<select name="mysel2" data-role="slider"><option value="v1" default="true">v1</option></select>' +
+            '<select data-role="slider"><option value="v1" default="true">v1</option></select>' +
+            '<select data-role="slider"><option value="v1" default="true">v1</option></select>' +
             '</div>');
         var container = d.element;
         var scope = container.scope();

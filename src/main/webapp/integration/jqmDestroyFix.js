@@ -48,27 +48,26 @@
         }
     };
 
-    // Slider wraps the actual input into another div that is stored in the
-    // "slider" property.
+    // Slider appends a new element after the input/select element for which it was created.
+    // The angular compiler does not like this, so we wrap the two elements into a new parent node.
     var fn = $.mobile.slider.prototype;
-    var oldDestroy = fn.destroy;
-    fn.destroy = function() {
-        // Destroy the widget instance first to prevent
-        // a stack overflow.
-        oldDestroy.apply(this, arguments);
-        this.slider.remove();
+    var oldCreate = fn._create;
+    fn._create = function() {
+        var res = oldCreate.apply(this, arguments);
+        // var list = $().add(this.element).add(this.slider);
+        var parent = this.element[0].parentNode;
+        var div = document.createElement("div");
+        parent.insertBefore(div, this.element[0]);
+        div.appendChild(this.element[0]);
+        div.appendChild(this.slider[0]);
+        this.wrapper = $(div);
+        return res;
     };
 
-    // textinput does not have a "refresh" function that
-    // reads out the disabled attribute...
-    // (jquery mobile 1.1 Final).
-    var fn = $.mobile.textinput.prototype;
-    fn.refresh = function() {
-        var input = this.element[0];
-        if (input.disabled) {
-            this.disable();
-        } else {
-            this.enable();
-        }
+    var oldDestroy = fn.destroy;
+    fn.destroy = function() {
+        // Destroy the parent node that we created in _create.
+        oldDestroy.apply(this, arguments);
+        this.wrapper.remove();
     };
 })(window.jQuery);

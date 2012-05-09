@@ -44,7 +44,7 @@
             var rolePageAttr = 'jqm-page';
             return function (element) {
                 var parentPage = element.parents(selector);
-                if (parentPage.length>0) {
+                if (parentPage.length > 0) {
                     // within a parent page: enhance non-widgets markup.
                     var old = preventJqmWidgetCreation;
                     preventJqmWidgetCreation = true;
@@ -146,15 +146,21 @@
                 $compileProvider.directive(normalizeDirectiveName(directiveName), function () {
                     return {
                         restrict:directiveType,
-                        link:function (scope, iElement, iAttrs) {
-                            for (var i = 0; i < bindings.length; i++) {
-                                var localJqmWidgetName = bindings[i].widgetName;
-                                var localFilter = bindings[i].filter;
-                                if (!localFilter || iElement.filter(localFilter).length > 0) {
-                                    bindings[i].link.apply(this, arguments);
-                                    iElement[localJqmWidgetName]();
-                                    if (bindings[i].link) {
-                                        bindings[i].link.apply(this, arguments);
+                        require:['?ngModel'],
+                        compile:function () {
+                            return {
+                                post:function (scope, iElement, iAttrs, ctrls) {
+                                    for (var i = 0; i < bindings.length; i++) {
+                                        var localJqmWidgetName = bindings[i].widgetName;
+                                        if (!iElement.data(localJqmWidgetName)) {
+                                            var localFilter = bindings[i].filter;
+                                            if (!localFilter || iElement.filter(localFilter).length > 0) {
+                                                iElement[localJqmWidgetName]();
+                                                if (bindings[i].link) {
+                                                    bindings[i].link.apply(this, arguments);
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }

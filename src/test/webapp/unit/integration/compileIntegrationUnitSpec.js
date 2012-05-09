@@ -108,22 +108,8 @@ describe('compileIntegrationUnit', function () {
         scope.name = 123;
         scope.$digest();
         expect(c.element.val()).toBe('123');
+        $.mobile.page.prototype.options.degradeInputs.number = oldDegrade;
     });
-
-    // TODO move to different spec (button spec)
-    it("should enable and disable widgets using ng-disabled", function () {
-        var c = testutils.compileInPage('<div><button ng-disabled="disabled"></button></div>');
-        var btn = c.element.children();
-        var scope = btn.scope();
-        expect(btn.hasClass("ui-disabled")).toBe(false);
-        scope.disabled = true;
-        scope.$digest();
-        expect(btn.hasClass("ui-disabled")).toBe(true);
-        scope.disabled = false;
-        scope.$digest();
-        expect(btn.hasClass("ui-disabled")).toBe(false);
-    });
-
 
     describe("scopes", function () {
         it("should create an own scope for a page", function () {

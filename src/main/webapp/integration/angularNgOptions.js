@@ -1,77 +1,7 @@
 (function ($, angular) {
-
-    function watchJQueryDomChangesInSubtree(element, callback) {
-        for (var fnName in jqFnWatchers) {
-            jqFnWatchers[fnName](element, fnName, callback);
-        }
-    }
-
-    var jqFnWatchers = {
-        append: watchDomAddingFn,
-        after: watchAttributeChangingFn,
-        text: watchAttributeChangingFn,
-        val: watchAttributeChangingFn,
-        prop: watchAttributeChangingFn,
-        attr: watchAttributeChangingFn,
-        remove: watchAttributeChangingFn
-    };
-
-    function watchDomAddingFn(node, fnName, callback) {
-        var _old = node[fnName];
-        node[fnName] = function (otherNode) {
-            watchJQueryDomChangesInSubtree(otherNode, callback);
-            var res = _old.apply(this, arguments);
-            callback();
-            return res;
-        };
-    }
-
-    function watchAttributeChangingFn(node, fnName, callback) {
-        var _old = node[fnName];
-        node[fnName] = function (otherNode) {
-            var res = _old.apply(this, arguments);
-            callback();
-            return res;
-        };
-    }
-
-
-    /**
-     * Modify the original repeat: Make sure that all elements are added under the same parent.
-     * This is important, as some jquery mobile widgets wrap the elements into new elements,
-     * and angular just uses element.after().
-     * See angular issue 831
-     */
-    function instrumentNodeForNgRepeat(scope, parent, node, fnName) {
-        var _old = node[fnName];
-        node[fnName] = function (otherNode) {
-            var target = this;
-            while (target.parent()[0] !== parent) {
-                target = target.parent();
-                if (target.length === 0) {
-                    throw new Error("Could not find the expected parent in the node path", this, parent);
-                }
-            }
-            instrumentNodeForNgRepeat(scope, parent, otherNode, fnName);
-            var res = _old.call(target, otherNode);
-            scope.$emit("$childrenChanged");
-            return res;
-        };
-    }
-
-    var mod = angular.module('ng');
-    mod.directive('ngRepeat', function () {
-        return {
-            priority:1000, // same as original repeat
-            compile:function (element, attr, linker) {
-                return {
-                    pre:function (scope, iterStartElement, attr) {
-                        instrumentNodeForNgRepeat(scope, iterStartElement.parent()[0], iterStartElement, 'after');
-                    }
-                };
-            }
-        };
-    });
+    // This is a copy of parts of angular's ngOptions directive to detect changes in the values
+    // of ngOptions (emits the $childrenChanged event on the scope).
+    // This is needed as ngOptions does not provide a way to listen to changes.
 
     function sortedKeys(obj) {
         var keys = [];
@@ -84,6 +14,7 @@
     }
 
     var NG_OPTIONS_REGEXP = /^\s*(.*?)(?:\s+as\s+(.*?))?(?:\s+group\s+by\s+(.*))?\s+for\s+(?:([\$\w][\$\w\d]*)|(?:\(\s*([\$\w][\$\w\d]*)\s*,\s*([\$\w][\$\w\d]*)\s*\)))\s+in\s+(.*)$/;
+    var mod = angular.module('ng');
     mod.directive('ngOptions', ['$parse', function ($parse) {
         return {
             require: ['select', '?ngModel'],
@@ -109,7 +40,6 @@
 
                 scope.$watch(optionsModel, function() {
                     scope.$emit("$childrenChanged");
-                    console.log("now");
                 }, true);
 
                 function optionsModel() {

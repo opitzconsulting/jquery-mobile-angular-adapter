@@ -1,59 +1,21 @@
 describe("selectmenu", function () {
-    it('should save the ui value into the model when using non native menus and popups', function () {
-        var scope, dialogOpen;
-        loadHtml('/jqmng/ui/test-fixture.html', function (frame) {
-            var page = frame.$('#start');
-            page.append(
-                '<div data-role="content" ng-init="mysel=\'v1\'">' +
-                    '<select ng-model="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
-                    '</div>');
-        });
-        runs(function () {
-            var $ = testframe().$;
-            var page = $("#start");
-            var select = page.find("#mysel");
-            expect(select[0].value).toEqual("v1");
-            scope = select.scope();
-            expect(scope.mysel).toEqual("v1");
-            dialogOpen = function () {
-                return select.data('selectmenu').isOpen;
-            };
-            expect(dialogOpen()).toBeFalsy();
-            // find the menu and click on the second entry
-            var oldHeight = testframe().$.fn.height;
-            testframe().$.fn.height = function () {
-                if (this[0].window == testframe()) {
-                    return 10;
-                }
-                return oldHeight.apply(this, arguments);
-            };
-            select.selectmenu('open');
-        });
-        waitsFor(function () {
-            return dialogOpen();
-        });
-        runs(function () {
-            var $ = testframe().$;
-            var dialog = $(".ui-dialog");
-            $(dialog.find('li a')[1]).trigger('click')
-            expect(scope.mysel).toEqual("v2");
-        });
-        waitsFor(function () {
-            return !dialogOpen();
-        });
+    it("should stamp the widget using the jqm widget", function () {
+        spyOn($.fn, 'selectmenu');
+        var c = testutils.compileInPage('<select ng-repeat="l in list"><option value="v1">v1</option></select>');
+        expect($.fn.selectmenu.callCount).toBe(0);
+        var scope = c.page.scope();
+        scope.list = [1, 2];
+        scope.$root.$digest();
+        expect($.fn.selectmenu.callCount).toBe(2);
     });
 
-    it('should save the ui value into the model when using non native menus', function () {
-        loadHtml('/jqmng/ui/test-fixture.html', function (frame) {
-            var page = frame.$('#start');
-            page.append(
-                '<div data-role="content" ng-init="mysel=\'v1\'">' +
-                    '<select ng-model="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
-                    '</div>');
-        });
-        runs(function () {
-            var page = testframe().$("#start");
-            var select = page.find("#mysel");
+    describe('non native menus', function () {
+
+        it('should save the ui value into the model', function () {
+            var c = testutils.compileInPage(
+                '<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+            var page = c.page;
+            var select = c.element;
             expect(select[0].value).toEqual("v1");
             var scope = select.scope();
             expect(scope.mysel).toEqual("v1");
@@ -62,24 +24,16 @@ describe("selectmenu", function () {
             select.selectmenu('open');
             var popup = page.find(".ui-selectmenu");
             var options = popup.find("li");
-            var option = testframe().$(options[1]);
+            var option = $(options[1]);
             option.trigger('click');
             select.selectmenu('close');
             expect(scope.mysel).toEqual("v2");
         });
-    });
 
-    it('should save the model value into the ui when using non native menus', function () {
-        loadHtml('/jqmng/ui/test-fixture.html', function (frame) {
-            var page = frame.$('#start');
-            page.append(
-                '<div data-role="content" ng-init="mysel=\'v1\'">' +
-                    '<select ng-model="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
-                    '</div>');
-        });
-        runs(function () {
-            var page = testframe().$("#start");
-            var select = page.find("#mysel");
+        it('should save the model value into the ui', function () {
+            var c = testutils.compileInPage('<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+            var page = c.page;
+            var select = c.element;
             var scope = select.scope();
             expect(select[0].value).toEqual("v1");
             // jquery mobile creates a new span
@@ -91,19 +45,12 @@ describe("selectmenu", function () {
             expect(select[0].value).toEqual("v2");
             expect(valueSpan.text()).toEqual("v2");
         });
-    });
 
-    it('should use the disabled attribute', function () {
-        loadHtml('/jqmng/ui/test-fixture.html', function (frame) {
-            var page = frame.$('#start');
-            page.append(
-                '<div data-role="content" ng-init="mysel=\'v1\'">' +
-                    '<select ng-model="mysel" id="mysel" data-native-menu="false" ng-disabled="disabled"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
-                    '</div>');
-        });
-        runs(function () {
-            var page = testframe().$("#start");
-            var select = page.find("#mysel");
+        it('should use the disabled attribute', function () {
+            var c = testutils.compileInPage(
+                '<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="false" ng-disabled="disabled"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+            var page = c.page;
+            var select = c.element;
             var scope = select.scope();
             scope.disabled = false;
             scope.$root.$digest();
@@ -112,76 +59,54 @@ describe("selectmenu", function () {
             scope.disabled = true;
             scope.$root.$digest();
             var disabled = select.selectmenu('option', 'disabled');
-            console.log(select.parent().html());
             expect(disabled).toEqual(true);
         });
+
     });
 
     it('should be removable', function () {
-        loadHtml('/jqmng/ui/test-fixture.html', function (frame) {
-            var page = frame.$('#start');
-            page.append(
-                '<div data-role="content" ng-init="mysel=\'v1\'">' +
-                    '<select ng-model="mysel" id="mysel" data-native-menu="false" ng-bind-attr="{disabled: \'{{disabled}}\'}"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
-                    '</div>');
-        });
-        runs(function () {
-            var page = testframe().$("#start");
-            var scope = page.scope();
-            // ui select creates a new parent for itself
-            var content = page.find(":jqmData(role='content')");
-            expect(content.children('div').length).toEqual(1);
-            // select creates a parent div. This should be removed when the select is removed.
-            content.find('select').eq(0).remove();
-            expect(content.children('div').length).toEqual(0);
-        });
+        var c = testutils.compileInPage(
+            '<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+        var page = c.page;
+        var scope = page.scope();
+        // ui select creates a new parent for itself
+        var content = page.find(":jqmData(role='content')");
+        expect(content.children('div').length).toEqual(1);
+        // select creates a parent div. This should be removed when the select is removed.
+        content.find('select').eq(0).remove();
+        expect(content.children('div').length).toEqual(0);
     });
 
-    it('should refresh when the dialog opens', function () {
-        loadHtml('/jqmng/ui/test-fixture.html', function (frame) {
-            var page = frame.$('#start');
-            // Note: Be sure to use ng-repeat, as this is the most problematic case!
-            page.append(
-                '<div data-role="content">' +
-                    '<select ng-repeat="item in [1]" ng-model="mysel" id="mysel" data-native-menu="false" ng-options="o for o in options"></select>' +
-                    '</div>');
-        });
-        runs(function () {
-            var page = testframe().$("#start");
-            var select = page.find("#mysel");
-            var scope = select.scope();
-            scope.options = [1, 2];
-            scope.mysel = 1;
-            scope.$apply();
-            select.selectmenu('open');
-            expect(page.find(".ui-selectmenu li").length).toEqual(2);
-        });
+    it("should refresh only once when child entries are changed by angular using <option> elements", function () {
+        var c = testutils.compileInPage(
+            '<select data-native-menu="false"><option ng-repeat="l in list" value="{{l}}">{{l}}</option></select>');
+        var select = c.element;
+        var options = select.children("option");
+        expect(options.length).toBe(0);
+        var scope = c.element.scope();
+        var selectmenu = select.data("selectmenu");
+        spyOn(selectmenu, 'refresh').andCallThrough();
+        scope.list = [1, 2];
+        scope.$digest();
+        expect(selectmenu.refresh.callCount).toBe(1);
+        var options = select.children("option");
+        expect(options.length).toBe(2);
     });
 
-    it('should be able to display the label of a new entry when the options grow in a native menu', function () {
-        loadHtml('/jqmng/ui/test-fixture.html', function (frame) {
-            var page = frame.$('#start');
-            // Note: Be sure to use ng-repeat, as this is the most problematic case!
-            page.append(
-                '<div data-role="content">' +
-                    '<select data-native-menu="true" ng-model="myval" id="mysel" ng-options="e.value for e in list"></select>' +
-                    '</div>');
-        });
-        runs(function () {
-            var page = testframe().$("#start");
-            var select = page.find("#mysel");
-            var scope = select.scope();
-            expect(scope.myval).toBeFalsy();
-            scope.list = [
-                {value:'value1'}
-            ];
-            scope.myval = scope.list[0];
-            scope.$root.$apply();
-        });
-        waitsForAsync();
-        runs(function () {
-            var page = testframe().$("#start");
-            expect(page.find(".ui-select .ui-btn-text").text()).toEqual("value1");
-        });
+    it("should refresh only once when child entries are changed by angular using ng-options directive", function () {
+        var c = testutils.compileInPage(
+            '<select ng-init="data=1" list="1" ng-model="data" data-native-menu="false" ng-options="l for l in list"></select>');
+        var select = c.element;
+        var options = select.children("option");
+        expect(options.length).toBe(1);
+        var scope = c.element.scope();
+        var selectmenu = select.data("selectmenu");
+        spyOn(selectmenu, 'refresh').andCallThrough();
+        scope.list = [1, 2, 3];
+        scope.$digest();
+        expect(selectmenu.refresh.callCount).toBe(1);
+        var options = select.children("option");
+        expect(options.length).toBe(3);
     });
+
 });

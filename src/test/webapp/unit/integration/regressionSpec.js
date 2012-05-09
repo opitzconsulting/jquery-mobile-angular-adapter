@@ -10,5 +10,22 @@ describe('regression', function () {
         });
     });
 
+    describe("selectmenu", function () {
+        it('should be able to display the label of a new entry when the options grow in a native menu', function () {
+            var c = testutils.compileInPage(
+                '<select data-native-menu="true" ng-model="myval" ng-options="e.value for e in list"></select>');
+            var page = c.page;
+            var select = c.element;
+            var scope = select.scope();
+            expect(scope.myval).toBeFalsy();
+            scope.list = [
+                {value:'value1'}
+            ];
+            scope.myval = scope.list[0];
+            scope.$root.$apply();
+            expect(page.find(".ui-select .ui-btn-text").text()).toEqual("value1");
+        });
+    });
+
 });
 

@@ -25,9 +25,9 @@
         var injector = angular.injector(['ng']);
         injector.invoke(function($compile, $rootScope) {
             $compile(page)($rootScope);
+            $.mobile.activePage = page;
             $rootScope.$apply();
         });
-        $.mobile.activePage = page;
         return {
             page: page,
             element: $(".result").removeClass("result"),
@@ -48,16 +48,12 @@
         return $(".result").removeClass("result");
     }
 
-    var inputEventSupported = "oninput" in document.createElement('div');
-
     function triggerInputEvent(element) {
-        if (inputEventSupported) {
-            element.trigger('input');
-        } else {
-            element.trigger('change');
-        }
+        // Angular uses the "input" event in browsers that support it (eg. chrome).
+        // However, as jquery mobile fires the change event itself by some widgets,
+        // we ensured that angular always also reacts to the change event.
+        element.trigger('change');
     }
-
 
     // API
     window.testutils = {

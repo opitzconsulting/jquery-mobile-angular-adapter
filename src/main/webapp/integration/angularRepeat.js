@@ -1,12 +1,11 @@
 (function ($, angular) {
-
     /**
      * Modify the original repeat: Make sure that all elements are added under the same parent.
      * This is important, as some jquery mobile widgets wrap the elements into new elements,
      * and angular just uses element.after().
      * See angular issue 831
      */
-    function instrumentNodeFunction(parent, node, fnName) {
+    function instrumentNodeForNgRepeat(scope, parent, node, fnName) {
         var _old = node[fnName];
         node[fnName] = function (otherNode) {
             var target = this;
@@ -16,16 +15,11 @@
                     throw new Error("Could not find the expected parent in the node path", this, parent);
                 }
             }
-            instrumentNode(parent, otherNode);
-            return _old.call(target, otherNode);
+            instrumentNodeForNgRepeat(scope, parent, otherNode, fnName);
+            var res = _old.call(target, otherNode);
+            scope.$emit("$childrenChanged");
+            return res;
         };
-    }
-
-    function instrumentNode(parent, node) {
-        var fns = ['after', 'before'];
-        for (var i = 0; i < fns.length; i++) {
-            instrumentNodeFunction(parent, node, fns[i]);
-        }
     }
 
     var mod = angular.module('ng');
@@ -35,11 +29,10 @@
             compile:function (element, attr, linker) {
                 return {
                     pre:function (scope, iterStartElement, attr) {
-                        instrumentNode(iterStartElement.parent()[0], iterStartElement);
+                        instrumentNodeForNgRepeat(scope, iterStartElement.parent()[0], iterStartElement, 'after');
                     }
                 };
             }
         };
     });
-
 })(window.jQuery, window.angular);

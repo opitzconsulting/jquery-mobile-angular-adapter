@@ -1,19 +1,22 @@
 describe('ng-include', function () {
     var eventSpy, scope, element;
 
-    function init(response) {
+    function init(response, parentPage) {
         inject(function ($httpBackend) {
             $httpBackend.when('GET', /.*/).respond(response);
-            var c = testutils.compileInPage('<div ng-include="src"></div>');
-            element = c.element;
-            scope = c.element.scope();
+            if (parentPage) {
+                element = testutils.compileInPage('<div ng-include="src"></div>').element;
+            } else {
+                element = testutils.compile('<div ng-include="src"></div>');
+            }
+            scope = element.scope();
             eventSpy = jasmine.createSpy("$childrenChanged");
             scope.$on("$childrenChanged", eventSpy);
         });
     }
 
     it("should enhance loaded non widget markup", inject(function ($httpBackend) {
-        init('<a href="" data-role="button"></a>');
+        init('<a href="" data-role="button"></a>', true);
 
         scope.src = 'someUri';
         scope.$root.$digest();
@@ -22,14 +25,23 @@ describe('ng-include', function () {
     }));
 
     it("should enhance loaded widget markup", inject(function ($httpBackend) {
-        init('<button></button>');
+        init('<button></button>', true);
 
         scope.src = 'someUri';
         scope.$root.$digest();
         $httpBackend.flush();
 
-        console.log(element);
         expect(element.children('div').hasClass('ui-btn')).toBe(true);
+    }));
+
+    it("should compile included jqm page", inject(function($httpBackend) {
+        init('<div data-role="page"></div>');
+
+        scope.src = 'someUri';
+        scope.$root.$digest();
+        $httpBackend.flush();
+        expect(element.children('div').hasClass('ui-page')).toBe(true);
+
     }));
 
     it("should trigger the $childrenChanged event when data is finished loading", inject(function ($httpBackend) {

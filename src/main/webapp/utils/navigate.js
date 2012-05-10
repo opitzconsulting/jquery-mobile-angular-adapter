@@ -95,50 +95,6 @@
         return undefined;
     }
 
-    mod.run(['$rootScope', '$navigate', function($rootScope, $navigate) {
-        $rootScope.$navigate = function() {
-            var args = Array.prototype.slice.call(arguments);
-            args.unshift($navigate);
-            return navigateExpression.apply(this, args);
-        }
-    }]);
-
-    mod.filter('navigate', ['$navigate', function($navigateService) {
-        return function(test) {
-            // parse the arguments...
-            var outcomes = {};
-            var parts;
-            for (var i = 1; i < arguments.length; i++) {
-                parts = splitAtFirstColon(arguments[i]);
-                outcomes[parts[0]] = parts[1];
-            }
-            if (test && test.then) {
-                // test is a promise.
-                test.then(function(test) {
-                    if (outcomes[test]) {
-                        $navigateService(outcomes[test]);
-                    } else if (outcomes.success) {
-                        $navigateService(outcomes.success);
-                    }
-                }, function(test) {
-                    if (outcomes[test]) {
-                        $navigateService(outcomes[test]);
-                    } else if (outcomes.failure) {
-                        $navigateService(outcomes.failure);
-                    }
-                });
-            } else {
-                if (outcomes[test]) {
-                    $navigateService(outcomes[test]);
-                } else if (test !== false && outcomes.success) {
-                    $navigateService(outcomes.success);
-                } else if (test === false && outcomes.failure) {
-                    $navigateService(outcomes.failure);
-                }
-            }
-        };
-    }]);
-
     return navigate;
 
 })(window.jQuery, window.angular);

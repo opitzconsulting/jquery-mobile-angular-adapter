@@ -67,19 +67,77 @@ describe("selectmenu", function () {
             expect(disabled).toEqual(true);
         });
 
+        it('should be removable', function () {
+            var c = testutils.compileInPage(
+                '<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+            var page = c.page;
+            var scope = page.scope();
+            // ui select creates a new parent for itself
+            var content = page.find(":jqmData(role='content')");
+            expect(content.children('div').length).toEqual(1);
+            // select creates a parent div. This should be removed when the select is removed.
+            content.find('select').eq(0).remove();
+            expect(content.children('div').length).toEqual(0);
+        });
+
+
     });
 
-    it('should be removable', function () {
-        var c = testutils.compileInPage(
-            '<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
-        var page = c.page;
-        var scope = page.scope();
-        // ui select creates a new parent for itself
-        var content = page.find(":jqmData(role='content')");
-        expect(content.children('div').length).toEqual(1);
-        // select creates a parent div. This should be removed when the select is removed.
-        content.find('select').eq(0).remove();
-        expect(content.children('div').length).toEqual(0);
+    describe('native menus', function() {
+        it('should save the ui value into the model', function () {
+            var c = testutils.compileInPage(
+                '<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="true"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+            var page = c.page;
+            var select = c.element;
+            expect(select[0].value).toEqual("v1");
+            var scope = select.scope();
+            expect(scope.mysel).toEqual("v1");
+            select[0].value = "v2";
+            select.trigger("change");
+            expect(scope.mysel).toEqual("v2");
+        });
+
+        it('should save the model value into the ui', function () {
+            var c = testutils.compileInPage('<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="true"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+            var page = c.page;
+            var select = c.element;
+            var scope = select.scope();
+            expect(select[0].value).toEqual("v1");
+            scope.mysel = "v2";
+            scope.$root.$apply();
+            expect(select[0].value).toEqual("v2");
+        });
+
+        it('should use the disabled attribute', function () {
+            var c = testutils.compileInPage(
+                '<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="true" ng-disabled="disabled"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+            var page = c.page;
+            var select = c.element;
+            var scope = select.scope();
+            scope.disabled = false;
+            scope.$root.$digest();
+            var disabled = select.selectmenu('option', 'disabled');
+            expect(disabled).toEqual(false);
+            scope.disabled = true;
+            scope.$root.$digest();
+            var disabled = select.selectmenu('option', 'disabled');
+            expect(disabled).toEqual(true);
+        });
+
+        it('should be removable', function () {
+            var c = testutils.compileInPage(
+                '<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="true"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+            var page = c.page;
+            var scope = page.scope();
+            // ui select creates a new parent for itself
+            var content = page.find(":jqmData(role='content')");
+            expect(content.children('div').length).toEqual(1);
+            // select creates a parent div. This should be removed when the select is removed.
+            content.find('select').eq(0).remove();
+            expect(content.children('div').length).toEqual(0);
+        });
+
+
     });
 
     describe('options with ng-repeat', function () {

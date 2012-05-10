@@ -18,7 +18,7 @@
                     var p = $.mobile.activePage;
                     var activeScope = p && p.scope();
                     if (lastActiveScope && lastActiveScope !== activeScope) {
-                        lastActiveScope.$destroy();
+                        lastActiveScope.$disconnect();
                     }
                     lastActiveScope = activeScope;
                     if (activeScope) {
@@ -80,7 +80,7 @@
                         // Detach the scope from the normal $digest cycle.
                         // Needed so that only $.mobile.activePage gets digested when rootScope.$digest
                         // is called.
-                        scope.$destroy();
+                        scope.$disconnect();
                     }
                 }
             }

@@ -44,6 +44,17 @@ describe('compileIntegrationUnit', function () {
         expect(btn1).not.toBe(btn2);
     });
 
+    it("should not angular compile pages created manually calling the page plugin", function () {
+        var container = testutils.compile("<div></div>");
+        var page = $('<div id="externalPage" data-role="page">{{1+2}}</div>');
+        container.append(page);
+        page.page();
+        expect(page.text()).toBe('{{1+2}}');
+        expect(page.scope()).toBe(container.scope());
+        page.remove();
+
+    });
+
     describe("partials loaded by angular", function() {
         var containerCompile;
 

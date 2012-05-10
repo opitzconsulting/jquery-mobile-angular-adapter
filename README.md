@@ -115,13 +115,6 @@ using the `ngm-event` directive with the corresponding event name.
 
 Usage: E.g. `<a href="#" ngm-swipeleft="myFn()">`
 
-### Directive ngm-fadein
-For smooth fadings between `ngm-if` changes, there is also the directive `ngm-fadein`.
-This specifies that the display of the coresponding element
-should be shown via a transition lasting a defined amount of milliseconds (the value of the attribute).
-
-Usage: E.g. `<div ngm-fadein="700">asdf</div>`
-
 
 ### Attribute Widget @ngm-if
 The attribute widget `@ngm-if` allows to add/remove an element to/from the dom, depending on an expression.
@@ -159,22 +152,6 @@ The service `$waitDialog` allows the access to the jquery mobile wait dialog. It
 Default messages are:
 - `$.mobile.loadingMessageWithCancel`: for waitForWithCancel
 - `$.mobile.loadingMessage`: for all other cases
-
-
-### Filter `navigate`: Navigation in Expressions
-Every expression can now use the `$navigate` as a filter to define the navigation outside of the controlers
-in the html pages. By this, the controllers stay independent of the navigation process and is reusable.
-
-Syntax: `test | $activate: 'outcome1:target' : 'outcome2:target' : ...`
-
-Example: `<button ngm-click="doSomething() | navigate : 'success:successPage' : 'failure:failurePage'">`
-
-This navigates to that target whose outcome equals
-to the test. The special outcomes `success` is applied for any value for `test` that is not `false` (e.g. also `undefined`),
-and the outcome `failure` is used for the value `false` of test.
-This also supports promises. In that case, the navivation is done with the first argument of
-the `done` / `fail` callback of the promise. Also, the `success` outcome is mapped to the `done` callback
-and the `failure` outcome to the `fail` callback.
 
 
 ### Filter `paged`: Paging for lists

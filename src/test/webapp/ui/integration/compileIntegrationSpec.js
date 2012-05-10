@@ -32,52 +32,6 @@ describe('compileIntegration', function () {
             expect(extPageScope).not.toBe(extPageScope.$root);
             expect(extPageScope.$root).toBe(page1Scope.$root);
         });
-
-    });
-
-    it("should not angular compile pages created manually calling the page plugin", function () {
-        loadHtml('/jqmng/ui/test-fixture.html');
-        runs(function () {
-            var $ = testframe().$;
-            var page3 = $('<div id="externalPage" data-role="page">{{1+2}}</div>');
-            $("body").append(page3);
-            page3.page();
-            expect(page3.text()).toBe('{{1+2}}');
-            expect(page3.scope()).toBe(page3.scope().$root);
-        });
-
-    });
-
-    it('should use the $rootScope as parent of all page scopes', function () {
-        loadHtml('/jqmng/ui/test-fixture.html');
-        runs(function () {
-            var win = testframe();
-            var page1 = win.$("#start");
-            page1.page();
-            expect(page1.scope()).toBeTruthy();
-            expect(page1.scope().$root).toBe(win.$(win.document.documentElement).scope());
-        });
-    });
-
-    it("should work with degraded inputs", function () {
-        loadHtml('/jqmng/ui/test-fixture.html', function (win) {
-            var $ = win.$;
-            $.mobile.page.prototype.options.degradeInputs.number = "text";
-            var page1 = $("#start");
-            page1.append('<input type="number" ng-model="myname" id="myname">');
-        });
-        runs(function () {
-            var win = testframe();
-            var $ = win.$;
-            var page1 = $("#start");
-            var input = page1.find("#myname");
-            expect(input.length).toBe(1);
-            expect(input.attr("type")).toBe("text");
-            var scope = page1.scope();
-            scope.myname = 1234;
-            scope.$digest();
-            expect(input.val()).toBe("1234");
-        })
     });
 
     it("should evaluate the widget.prototype.options.initSelector and register corresponding angular directives", function() {

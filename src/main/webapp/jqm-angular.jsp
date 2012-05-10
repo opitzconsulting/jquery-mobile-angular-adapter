@@ -19,14 +19,8 @@
 <jsp:include page="integration/angularInput.js"/>
 
 <jsp:include page="utils/if.js"/>
-
-<%--
-
 <jsp:include page="utils/event.js"/>
 <jsp:include page="utils/navigate.js"/>
 <jsp:include page="utils/sharedController.js"/>
 <jsp:include page="utils/waitDialog.js"/>
 <jsp:include page="utils/paging.js"/>
-<jsp:include page="utils/fadein.js"/>
-
---%>

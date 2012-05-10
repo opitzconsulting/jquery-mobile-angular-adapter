@@ -3,9 +3,12 @@ Changelog
 
 1.0.7rc1
 -------------
-- extracted the jquery mobile change detection into the jquery mobile autorefresh plugin.
-- refactored the internal structure into code that is needed for integration and code that contains
-  utility functions.
+- Update to angular 1.0rc8
+- refactoring for performance improvements.
+- Removed `$navigate` filter. Use `$navigate` service instead. Reason: This puts too much logic in the html page and leads
+  to errors if `$q` is not used correctly.
+- Removed the `fadein` directive, as there are better ways to do this (see the corresponding jquery mobile plugin...)
+
 
 1.0.7rc1
 -------------

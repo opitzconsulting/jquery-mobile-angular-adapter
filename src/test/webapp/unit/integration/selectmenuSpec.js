@@ -1,12 +1,17 @@
 describe("selectmenu", function () {
     it("should stamp the widget using the jqm widget", function () {
-        spyOn($.fn, 'selectmenu');
+        var createCount = 0;
+        spyOn($.fn, 'selectmenu').andCallFake(function () {
+            if (arguments.length === 0) {
+                createCount++;
+            }
+        });
         var c = testutils.compileInPage('<select ng-repeat="l in list"><option value="v1">v1</option></select>');
-        expect($.fn.selectmenu.callCount).toBe(0);
+        expect(createCount).toBe(0);
         var scope = c.page.scope();
         scope.list = [1, 2];
         scope.$root.$digest();
-        expect($.fn.selectmenu.callCount).toBe(2);
+        expect(createCount).toBe(2);
     });
 
     describe('non native menus', function () {
@@ -77,36 +82,205 @@ describe("selectmenu", function () {
         expect(content.children('div').length).toEqual(0);
     });
 
-    it("should refresh only once when child entries are changed by angular using <option> elements", function () {
-        var c = testutils.compileInPage(
-            '<select data-native-menu="false"><option ng-repeat="l in list" value="{{l}}">{{l}}</option></select>');
-        var select = c.element;
-        var options = select.children("option");
-        expect(options.length).toBe(0);
-        var scope = c.element.scope();
-        var selectmenu = select.data("selectmenu");
-        spyOn(selectmenu, 'refresh').andCallThrough();
-        scope.list = [1, 2];
-        scope.$digest();
-        expect(selectmenu.refresh.callCount).toBe(1);
-        var options = select.children("option");
-        expect(options.length).toBe(2);
+    describe('options with ng-repeat', function () {
+        var c, select, selectmenu, scope;
+        beforeEach(function () {
+            c = testutils.compileInPage(
+                '<select data-native-menu="false"><option ng-repeat="l in list" value="{{l}}">{{l}}</option></select>');
+            select = c.element;
+            selectmenu = select.data("selectmenu");
+            spyOn(selectmenu, 'refresh').andCallThrough();
+            scope = c.element.scope();
+        });
+        it("should refresh only once when child entries are changed by angular", function () {
+            var options = select.children("option");
+            expect(options.length).toBe(0);
+            scope.list = [1, 2];
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(1);
+            var options = select.children("option");
+            expect(options.length).toBe(2);
+        });
+
+        it("should not refresh if nothing changes", function () {
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(0);
+        });
     });
 
-    it("should refresh only once when child entries are changed by angular using ng-options directive", function () {
-        var c = testutils.compileInPage(
-            '<select ng-init="data=1" list="1" ng-model="data" data-native-menu="false" ng-options="l for l in list"></select>');
-        var select = c.element;
-        var options = select.children("option");
-        expect(options.length).toBe(1);
-        var scope = c.element.scope();
-        var selectmenu = select.data("selectmenu");
-        spyOn(selectmenu, 'refresh').andCallThrough();
-        scope.list = [1, 2, 3];
-        scope.$digest();
-        expect(selectmenu.refresh.callCount).toBe(1);
-        var options = select.children("option");
-        expect(options.length).toBe(3);
+    describe('options without ng-repeat and interpolation', function () {
+        var c, select, selectmenu, scope;
+        beforeEach(function () {
+            c = testutils.compileInPage(
+                '<select data-native-menu="false"><option value="{{v}}">{{l}}</option></select>');
+            select = c.element;
+            selectmenu = select.data("selectmenu");
+            spyOn(selectmenu, 'refresh').andCallThrough();
+            scope = c.element.scope();
+        });
+
+        it("should refresh when the value changes", function () {
+            var option = select.children("option");
+            scope.v = 'v1';
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(1);
+            expect(option.val()).toBe('v1');
+        });
+
+        it("should refresh when the text changes", function () {
+            var option = select.children("option");
+            scope.l = 'l1';
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(1);
+            expect(option.text()).toBe('l1');
+        });
+
+        it("should not refresh if nothing changes", function () {
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(0);
+        });
     });
+
+    describe('options with ng-options for list datasource', function () {
+        var c, select, selectmenu, scope;
+        beforeEach(function () {
+            c = testutils.compileInPage(
+                '<select ng-init="data=1" list="1" ng-model="data" data-native-menu="false" ng-options="value.v as value.l group by value.g for value in list"></select>');
+            select = c.element;
+            selectmenu = select.data("selectmenu");
+            scope = c.element.scope();
+            spyOn(selectmenu, 'refresh').andCallThrough();
+        });
+        it("should refresh only once when child entries are added", function () {
+            var options = select.children("option");
+            scope.list = [{l:1, v:1, g:1}, {l:2, v:2, g:2}, {l:3, v:3, g:3}];
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(1);
+            var options = select.find("option");
+            expect(options.length).toBe(3);
+        });
+        it("should refresh only once when child entries are removed", function () {
+            var options = select.children("option");
+            scope.list = [{l:1, v:1, g:1}, {l:2, v:2, g:2}, {l:3, v:3, g:3}];
+            scope.$digest();
+            selectmenu.refresh.reset();
+            scope.list.pop();
+            scope.list.pop();
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(1);
+            var options = select.find("option");
+            expect(options.length).toBe(1);
+        });
+        it("should refresh only once if child entries are reordered", function () {
+            var options = select.children("option");
+            scope.list = [{l:1, v:1, g:1}, {l:2, v:2, g:2}, {l:3, v:3, g:3}];
+            scope.$digest();
+            selectmenu.refresh.reset();
+            var e1 = scope.list[0];
+            scope.list[0] = scope.list[1];
+            scope.list[1] = e1;
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(1);
+            var options = select.find("option");
+            expect(options.length).toBe(3);
+        });
+        it("should refresh if the option label changes", function() {
+            scope.list = [{l:1, v:1, g:1}];
+            scope.$digest();
+            selectmenu.refresh.reset();
+            scope.list[0].l = 2;
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(1);
+        });
+        it("should refresh if the option group changes", function() {
+            scope.list = [{l:1, v:1, g:1}];
+            scope.$digest();
+            selectmenu.refresh.reset();
+            scope.list[0].g = 2;
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(1);
+        });
+        it("should not refresh if the option value changes", function() {
+            scope.list = [{l:1, v:1, g:1}];
+            scope.$digest();
+            selectmenu.refresh.reset();
+            scope.list[0].v = 2;
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(0);
+        });
+        it("should not refresh if nothing changes", function () {
+            scope.list = [{l:1, v:1, g:1}, {l:2, v:2, g:2}, {l:3, v:3, g:3}];
+            scope.$digest();
+            selectmenu.refresh.reset();
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(0);
+        });
+
+    });
+
+    describe('options with ng-options for object datasource', function () {
+        var c, select, selectmenu, scope;
+        beforeEach(function () {
+            c = testutils.compileInPage(
+                '<select ng-init="data=1" list="1" ng-model="data" data-native-menu="false" ng-options="value.v as value.l group by value.g for (key,value) in list"></select>');
+            select = c.element;
+            selectmenu = select.data("selectmenu");
+            scope = c.element.scope();
+            spyOn(selectmenu, 'refresh').andCallThrough();
+        });
+        it("should refresh only once when child entries are added", function () {
+            var options = select.children("option");
+            scope.list = {a:{l:1, v:1, g:1}, b:{l:2, v:2, g:2}, c:{l:3, v:3, g:3}};
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(1);
+            var options = select.find("option");
+            expect(options.length).toBe(3);
+        });
+        it("should refresh only once when child entries are removed", function () {
+            var options = select.children("option");
+            scope.list = {a:{l:1, v:1, g:1}, b:{l:2, v:2, g:2}, c:{l:3, v:3, g:3}};
+            scope.$digest();
+            selectmenu.refresh.reset();
+            delete scope.list.b;
+            delete scope.list.c;
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(1);
+            var options = select.find("option");
+            expect(options.length).toBe(1);
+        });
+        it("should refresh if the option label changes", function() {
+            scope.list = {a: {l:1, v:1, g:1}};
+            scope.$digest();
+            selectmenu.refresh.reset();
+            scope.list.a.l = 2;
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(1);
+        });
+        it("should refresh if the option group changes", function() {
+            scope.list = {a: {l:1, v:1, g:1}};
+            scope.$digest();
+            selectmenu.refresh.reset();
+            scope.list.a.g = 2;
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(1);
+        });
+        it("should not refresh if the option value changes", function() {
+            scope.list = {a: {l:1, v:1, g:1}};
+            scope.$digest();
+            selectmenu.refresh.reset();
+            scope.list.a.v = 2;
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(0);
+        });
+        it("should not refresh if nothing changes", function () {
+            scope.list = {a: {l:1, v:1, g:1}};
+            scope.$digest();
+            selectmenu.refresh.reset();
+            scope.$digest();
+            expect(selectmenu.refresh.callCount).toBe(0);
+        });
+
+    });
+
 
 });

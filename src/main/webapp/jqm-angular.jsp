@@ -6,11 +6,10 @@
 * Licensed under the MIT license.
 */
 <jsp:include page="integration/jqmDestroyFix.js"/>
-<jsp:include page="integration/scopeEvents.js"/>
 <jsp:include page="integration/scopeReconnect.js"/>
 <jsp:include page="integration/scopeReentrance.js"/>
 <jsp:include page="integration/pageCompile.js"/>
-<jsp:include page="integration/jqmWidgets.js"/>
+<jsp:include page="integration/jqmAngularWidgets.js"/>
 <jsp:include page="integration/deactivateNgLocationChange.js"/>
 <jsp:include page="integration/angularRepeat.js"/>
 <jsp:include page="integration/angularNgOptions.js"/>

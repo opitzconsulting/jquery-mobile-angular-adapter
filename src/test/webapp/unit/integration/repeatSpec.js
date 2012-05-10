@@ -20,30 +20,102 @@ describe('ng-repeat', function () {
         expect(c.element.children('div').length).toBe(2);
     });
 
-    it("should fire a $childrenChanged event when children are added, removed or reordered", function () {
-        var c = testutils.compileInPage('<div><span ng-repeat="l in list"></span></div>');
-        var scope = c.element.scope();
-        var eventSpy = jasmine.createSpy("$childrenChanged");
-        scope.$on("$childrenChanged", eventSpy);
+    describe("fire $childrenChanged for array datasource", function() {
+        var c, scope, eventSpy;
+        beforeEach(function() {
+            c = testutils.compileInPage('<div><span ng-repeat="l in list"></span></div>');
+            scope = c.element.scope();
+            eventSpy = jasmine.createSpy("$childrenChanged");
+            scope.$on("$childrenChanged", eventSpy);
+        });
 
-        // add
-        scope.list = [1, 2];
-        scope.$root.$digest();
-        expect(eventSpy.callCount).toBe(4);
+        it("should fire the event when children are added", function() {
+            scope.list = [1, 2];
+            scope.$root.$digest();
+            expect(eventSpy.callCount).toBe(1);
+        });
 
-        // remove
-        eventSpy.reset();
-        scope.list = [1];
-        scope.$root.$digest();
-        expect(eventSpy.callCount).toBe(1);
+        it("should fire the event when children are removed", function() {
+            scope.list = [1, 2, 3];
+            scope.$root.$digest();
+            eventSpy.reset();
 
-        // change
-        scope.list = [1,2,3];
-        scope.$root.$digest();
-        eventSpy.reset();
-        scope.list = [2,1,3];
-        scope.$root.$digest();
-        expect(eventSpy.callCount).toBe(3);
+            scope.list.pop();
+            scope.list.pop();
+            scope.$root.$digest();
+            expect(eventSpy.callCount).toBe(1);
+        });
+
+        it("should fire the event when the order of children change", function() {
+            scope.list = [1,2,3];
+            scope.$root.$digest();
+            eventSpy.reset();
+            var e1 = scope.list[0];
+            scope.list[1] = scope.list[0];
+            scope.list[0] = e1;
+            scope.$root.$digest();
+            expect(eventSpy.callCount).toBe(1);
+        });
+
+        it("should not fire the event when nothing changes", function() {
+            scope.list = [1,2,3];
+            scope.$root.$digest();
+            eventSpy.reset();
+            scope.$root.$digest();
+            expect(eventSpy.callCount).toBe(0);
+        });
+
+        it("should not fire the event when the object values change", function() {
+            scope.list = [{a:1}];
+            scope.$root.$digest();
+            eventSpy.reset();
+            scope.list[0].a = 2;
+            scope.$root.$digest();
+            expect(eventSpy.callCount).toBe(0);
+        });
+    });
+
+    describe("fire $childrenChanged for object datasource", function() {
+        var c, scope, eventSpy;
+        beforeEach(function() {
+            c = testutils.compileInPage('<div><span ng-repeat="(k,v) in list"></span></div>');
+            scope = c.element.scope();
+            eventSpy = jasmine.createSpy("$childrenChanged");
+            scope.$on("$childrenChanged", eventSpy);
+        });
+
+        it("should fire the event when children are added", function() {
+            scope.list = {a:1, b:2};
+            scope.$root.$digest();
+            expect(eventSpy.callCount).toBe(1);
+        });
+
+        it("should fire the event when children are removed", function() {
+            scope.list = {a:1, b:2};
+            scope.$root.$digest();
+            eventSpy.reset();
+
+            delete scope.list.a;
+            scope.$root.$digest();
+            expect(eventSpy.callCount).toBe(1);
+        });
+
+        it("should not fire the event when nothing changes", function() {
+            scope.list = {a:1, b:2};
+            scope.$root.$digest();
+            eventSpy.reset();
+            scope.$root.$digest();
+            expect(eventSpy.callCount).toBe(0);
+        });
+
+        it("should not fire the event when the object values change", function() {
+            scope.list = {a:{c:1}, b:{c:2}};
+            scope.$root.$digest();
+            eventSpy.reset();
+            scope.list.a.c = 3;
+            scope.$root.$digest();
+            expect(eventSpy.callCount).toBe(0);
+        });
     });
 });
 

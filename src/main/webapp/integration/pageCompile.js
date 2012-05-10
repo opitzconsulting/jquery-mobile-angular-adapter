@@ -66,7 +66,7 @@
         return {
             restrict:'A',
             scope:true,
-            compile:function compile(tElement, tAttrs) {
+            compile:function(tElement, tAttrs) {
                 var old = preventJqmWidgetCreation;
                 preventJqmWidgetCreation = true;
                 if (!jqmInitialized) {

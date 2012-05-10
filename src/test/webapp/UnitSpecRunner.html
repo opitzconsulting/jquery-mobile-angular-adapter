@@ -16,7 +16,6 @@
     <script src="unit/integration/compileIntegrationUnitSpec.js" type="text/javascript"></script>
     <script src="unit/integration/scopeReconnectSpec.js" type="text/javascript"></script>
     <script src="unit/integration/scopeReentranceSpec.js" type="text/javascript"></script>
-    <script src="unit/integration/scopeEventsSpec.js" type="text/javascript"></script>
     <script src="unit/integration/buttonSpec.js" type="text/javascript"></script>
     <script src="unit/integration/inputButtonSpec.js" type="text/javascript"></script>
     <script src="unit/integration/collapsibleSpec.js" type="text/javascript"></script>
@@ -46,7 +45,11 @@
 
     <script>
         $(function(doc) {
-            jasmine.getEnv().addReporter(new jasmine.TrivialReporter());
+            var reporter = new jasmine.TrivialReporter();
+            jasmine.getEnv().addReporter(reporter);
+            jasmine.getEnv().specFilter = function(spec) {
+                return reporter.specFilter(spec);
+            };
             jasmine.getEnv().execute();
         });
     </script>

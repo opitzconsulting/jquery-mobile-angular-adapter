@@ -19,12 +19,12 @@
 
         $compileProvider.parseSelectorAndRegisterJqmWidget('checkboxradio', function (scope, iElement, iAttrs, ctrls) {
             disabledHandling('checkboxradio', scope, iElement, iAttrs);
-            refreshOnNgModelRender('checkboxradio', iElement, ctrls);
+            refreshOnNgModelRender('checkboxradio', scope, iElement, ctrls);
 
         });
         $compileProvider.parseSelectorAndRegisterJqmWidget('slider', function (scope, iElement, iAttrs, ctrls) {
             disabledHandling('slider', scope, iElement, iAttrs);
-            refreshOnNgModelRender('slider', iElement, ctrls);
+            refreshOnNgModelRender('slider', scope, iElement, ctrls);
 
         });
 
@@ -38,9 +38,27 @@
 
         $compileProvider.parseSelectorAndRegisterJqmWidget('selectmenu', function (scope, iElement, iAttrs, ctrls) {
             disabledHandling('selectmenu', scope, iElement, iAttrs);
-            refreshOnNgModelRender('selectmenu', iElement, ctrls);
+            refreshOnNgModelRender('selectmenu', scope, iElement, ctrls);
             refreshOnChildrenChange('selectmenu', scope, iElement);
         });
+    }]);
+
+    ng.directive('option', ['$interpolate', function($interpolate) {
+        return {
+            restrict: 'E',
+            compile: function(tElement, tAttrs) {
+                var textInterpolateFn = $interpolate(tElement.text(), true);
+                var valueInterpolateFn = $interpolate(tElement.attr('value'), true);
+                return function(scope, iElement, iAttrs) {
+                    scope.$watch(textInterpolateFn, function() {
+                        scope.$emit("$childrenChanged");
+                    });
+                    scope.$watch(valueInterpolateFn, function() {
+                        scope.$emit("$childrenChanged");
+                    });
+                }
+            }
+        };
     }]);
 
     function disabledHandling(widget, scope, iElement, iAttrs) {
@@ -69,41 +87,27 @@
         ctrl[listenersName].push(fn);
     }
 
-    function refreshOnNgModelRender(widget, iElement, ctrls) {
+    function refreshOnNgModelRender(widget, scope, iElement, ctrls) {
         var ngModelCtrl = ctrls[0];
         if (ngModelCtrl) {
             addCtrlFunctionListener(ngModelCtrl, "$render", function() {
-                iElement[widget]("refresh");
+                triggerAsyncRefresh(widget, scope, iElement);
             });
         }
     }
 
     function refreshOnChildrenChange(widget, scope, iElement) {
         scope.$on("$childrenChanged", function() {
-            triggerRefresh(widget, scope, iElement);
+            triggerAsyncRefresh(widget, scope, iElement);
         });
     }
 
-    function evalAsync(scope, callback) {
-        // Note: We cannot use scope.$evalAsync here due to a bug:
-        // See https://github.com/angular/angular.js/issues/947
-        if (!scope._patchedEvalAsync) {
-            var state = scope._patchedEvalAsync = {changeCount: 0, queue: []};
-            scope.$watch('_patchedEvalAsync.changeCount', function() {
-                while (state.queue.length) {
-                    state.queue.pop()();
-                }
-            });
-        }
-        scope._patchedEvalAsync.queue.push(callback);
-        scope._patchedEvalAsync.changeCount++;
-    }
-
-    function triggerRefresh(widget, scope, iElement) {
-        scope.refreshCount = scope.refreshCount+1 || 1;
-        evalAsync(scope, function() {
-            scope.refreshCount--;
-            if (scope.refreshCount===0) {
+    function triggerAsyncRefresh(widget, scope, iElement) {
+        var prop = "_refresh"+widget;
+        scope[prop] = scope[prop]+1 || 1;
+        scope.$evalAsync(function() {
+            scope[prop]--;
+            if (scope[prop]===0) {
                 iElement[widget]("refresh");
             }
         });

@@ -17,9 +17,11 @@ Test page during development.
 <body>
 <div data-role="page" ng-controller="Ctrl">
     <div data-role="content">
+        {{city}}
+        {{cities}}
         <a href="devSnippetPage2.html">Page2</a>
-        <select id="rental1Page_city" ng-model="rental.city" ng-options="c.name for c in cities" data-native-menu="true"
-                data-theme="b" class="selectedCity">
+        <select id="rental1Page_city" ng-model="city" ng-options="c.name for c in cities" data-native-menu="true"
+                >
         </select>
     </div>
 </div>

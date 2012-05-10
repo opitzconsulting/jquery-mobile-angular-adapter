@@ -1,7 +1,9 @@
 <div data-role="page" ng-controller="Ctrl" id="page2">
     <div data-role="content">
-        <select id="rental1Page_city" ng-model="rental.city" ng-options="c.name for c in cities" data-native-menu="true"
-                data-theme="b" class="selectedCity">
+        {{city}}
+        {{cities}}
+
+        <select id="rental1Page_city" ng-model="city" ng-options="c.name for c in cities">
         </select>
     </div>
 </div>

@@ -238,9 +238,9 @@
     // If jqm loads a page from an external source, angular needs to compile it too!
     ng.run(['$rootScope', '$compile', function ($rootScope, $compile) {
         patchJq('page', function () {
-            if (!preventJqmWidgetCreation) {
+            if (!preventJqmWidgetCreation && !this.data("page")) {
                 if (this.attr("data-" + $.mobile.ns + "external-page")) {
-                    $compile(this)($rootScope.$new());
+                    $compile(this)($rootScope);
                 }
             }
             return $.fn.orig.page.apply(this, arguments);

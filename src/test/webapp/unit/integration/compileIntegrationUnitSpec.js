@@ -46,13 +46,25 @@ describe('compileIntegrationUnit', function () {
 
     it("should not angular compile pages created manually calling the page plugin", function () {
         var container = testutils.compile("<div></div>");
-        var page = $('<div id="externalPage" data-role="page">{{1+2}}</div>');
+        var page = $('<div data-role="page">{{1+2}}</div>');
         container.append(page);
         page.page();
+        $.mobile.activePage = page;
+        page.scope().$root.$digest();
         expect(page.text()).toBe('{{1+2}}');
         expect(page.scope()).toBe(container.scope());
-        page.remove();
+    });
 
+    it("should angular compile pages loaded by jquery from external sources", function() {
+        var container = testutils.compile("<div></div>");
+        var page = $('<div data-role="page">{{1+2}}</div>');
+        page.attr("data-" + $.mobile.ns + "external-page", "someUrl");
+        container.append(page);
+        page.page();
+        $.mobile.activePage = page;
+        page.scope().$root.$digest();
+        expect(page.text()).toBe('3');
+        expect(page.scope().$parent).toBe(container.scope());
     });
 
     describe("partials loaded by angular", function() {

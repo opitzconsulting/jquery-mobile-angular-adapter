@@ -1,13 +1,13 @@
 describe("collapsible", function () {
 
     it("should stamp the widget using the jqm widget", function() {
-        spyOn($.fn, 'collapsible');
+        var spy = testutils.spyOnJq('collapsible');
         var c = testutils.compileInPage('<div data-role="collapsible" ng-repeat="l in list"></div>');
-        expect($.fn.collapsible.callCount).toBe(0);
+        expect(spy.callCount).toBe(0);
         var scope = c.page.scope();
         scope.list = [1,2];
         scope.$root.$digest();
-        expect($.fn.collapsible.callCount).toBe(2);
+        expect(spy.callCount).toBe(2);
     });
 
     it('should collapse the content by a click', function () {

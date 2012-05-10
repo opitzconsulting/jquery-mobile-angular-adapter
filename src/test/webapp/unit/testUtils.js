@@ -3,7 +3,6 @@
     beforeEach(function() {
         $.mobile.pageContainer = $("body");
         $.mobile.firstPage = [];
-
     });
 
     afterEach(function() {
@@ -14,6 +13,13 @@
         return $.apply(this, arguments);
     }
 
+    function spyOnJq(fnName) {
+        if ($.fn.orig[fnName]) {
+            return spyOn($.fn.orig, fnName);
+        }
+        return spyOn($.fn, fnName);
+    }
+
     function compileInPage(html, pageControllerName) {
         var elements = test$("<div>"+html+"</div>").children().addClass("result", "true");
         var page = test$('<div id="start" data-role="page" data-url="start"><div data-role="content"></div></div>');
@@ -22,16 +28,14 @@
             page.attr('ng-controller', pageControllerName);
         }
         page.find(":jqmData(role='content')").append(elements);
-        var injector = angular.injector(['ng']);
-        injector.invoke(function($compile, $rootScope) {
+        inject(function($compile, $rootScope) {
             $compile(page)($rootScope);
             $.mobile.activePage = page;
             $rootScope.$apply();
         });
         return {
             page: page,
-            element: $(".result").removeClass("result"),
-            injector: injector
+            element: $(".result").removeClass("result")
         }
     }
 
@@ -40,7 +44,7 @@
         wrapperElement.children().addClass("result", "true");
         $("body").append(wrapperElement);
         var rootScope;
-        angular.injector(['ng']).invoke(function($compile, $rootScope) {
+        inject(function($compile, $rootScope) {
             rootScope = $rootScope;
             $compile(wrapperElement)($rootScope);
             $rootScope.$apply();
@@ -59,6 +63,7 @@
     window.testutils = {
         compile: compile,
         compileInPage: compileInPage,
-        triggerInputEvent: triggerInputEvent
+        triggerInputEvent: triggerInputEvent,
+        spyOnJq: spyOnJq
     };
 })(window.jQuery, window.angular, window);

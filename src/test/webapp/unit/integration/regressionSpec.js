@@ -27,5 +27,19 @@ describe('regression', function () {
         });
     });
 
+    describe("ngm-if", function() {
+        it('should work with select options', function () {
+            var element = testutils.compile('<div><select name="test"><option ngm-if="test" value="v1">V1</option></select></div>');
+            var scope = element.scope();
+            var select = element.find('select');
+            var options = select.children('option');
+            expect(options.length).toEqual(0);
+            scope.test = true;
+            scope.$root.$digest();
+            var options = select.children('option');
+            expect(options.length).toEqual(1);
+        });
+    });
+
 });
 

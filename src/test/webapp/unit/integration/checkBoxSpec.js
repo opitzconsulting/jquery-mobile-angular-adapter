@@ -1,12 +1,12 @@
 describe("checkbox", function () {
     it("should stamp the widget using the jqm widget", function() {
-        spyOn($.fn, 'checkboxradio');
+        var spy = testutils.spyOnJq('checkboxradio');
         var c = testutils.compileInPage('<input type="checkbox" ng-repeat="l in list">');
-        expect($.fn.checkboxradio.callCount).toBe(0);
+        expect(spy.callCount).toBe(0);
         var scope = c.page.scope();
         scope.list = [1,2];
         scope.$root.$digest();
-        expect($.fn.checkboxradio.callCount).toBe(2);
+        expect(spy.callCount).toBe(2);
     });
 
     it('should save the ui value into the model', function () {

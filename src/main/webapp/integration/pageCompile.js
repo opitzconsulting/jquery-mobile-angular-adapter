@@ -87,34 +87,32 @@
         };
     }]);
 
+    $.fn.orig = {};
+
+    function patchJq(fnName, callback) {
+        $.fn.orig[fnName] = $.fn.orig[fnName] || $.fn[fnName];
+        $.fn[fnName] = callback;
+    }
+
     // If jqm loads a page from an external source, angular needs to compile it too!
     ng.run(['$rootScope', '$compile', function ($rootScope, $compile) {
-        var _page = $.fn.page;
-        $.fn.page = function () {
+        patchJq('page', function () {
             if (!preventJqmWidgetCreation) {
                 if (this.attr("data-" + $.mobile.ns + "external-page")) {
                     $compile(this)($rootScope.$new());
                 }
             }
-            return _page.apply(this, arguments);
-        };
+            return $.fn.orig.page.apply(this, arguments);
+        });
     }]);
 
-    var jqmWidgetDeactivate = {};
-
     function deactivateJqmWidgetEnhanceDuringPageCompile(widgetName) {
-        if (jqmWidgetDeactivate[widgetName]) {
-            return;
-        }
-        jqmWidgetDeactivate[widgetName] = true;
-        var jqmWidgetProto = $.mobile[widgetName].prototype;
-        var _enhance = jqmWidgetProto.enhance;
-        jqmWidgetProto.enhance = function () {
+        patchJq(widgetName, function() {
             if (preventJqmWidgetCreation) {
-                return;
+                return false;
             }
-            return _enhance.apply(this, arguments);
-        };
+            return $.fn.orig[widgetName].apply(this, arguments);
+        });
     }
 
     ng.config(["$compileProvider", function ($compileProvider) {
@@ -180,8 +178,8 @@
         // [type='button']
         var jqmDataRE = /:jqmData\(([^)]*)\)/g;
 
-        function getSelectorParts(jqmWidgetName) {
-            var parts = $.mobile[jqmWidgetName].prototype.options.initSelector.split(',');
+        function getSelectorParts(selector) {
+            var parts = selector.split(',');
             for (var i = 0; i < parts.length; i++) {
                 var part = parts[i];
                 part = $.trim(part);
@@ -199,10 +197,11 @@
          * <p>
          * Only use this for "real" jqm widgets, i.e. widgets that are not only markup, and also contain listeners.
          * @param widgetName
+         * @param selector The jquery selector to register the widget with.
          * @param linkFn An additional angular linking function (optional)
          */
-        function parseSelectorAndRegisterJqmWidget(widgetName, linkFn) {
-            var selectorParts = getSelectorParts(widgetName);
+        function registerJqmWidget(widgetName, selector, linkFn) {
+            var selectorParts = getSelectorParts(selector);
             for (var i = 0; i < selectorParts.length; i++) {
                 var part = selectorParts[i];
                 var match = selectorRegex.exec(part);
@@ -220,6 +219,6 @@
             }
         }
 
-        $compileProvider.parseSelectorAndRegisterJqmWidget = parseSelectorAndRegisterJqmWidget;
+        $compileProvider.registerJqmWidget = registerJqmWidget;
     }]);
 })(window.jQuery, window.angular);

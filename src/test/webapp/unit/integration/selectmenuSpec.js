@@ -1,7 +1,7 @@
 describe("selectmenu", function () {
     it("should stamp the widget using the jqm widget", function () {
         var createCount = 0;
-        spyOn($.fn, 'selectmenu').andCallFake(function () {
+        var spy = testutils.spyOnJq('selectmenu').andCallFake(function () {
             if (arguments.length === 0) {
                 createCount++;
             }

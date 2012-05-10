@@ -13,27 +13,27 @@ describe('compileIntegrationUnit', function () {
 
     it("should stamp non widget markup without calling jqm", function () {
         // Note: buttonMarkup is a non widget markup
-        spyOn($.fn, 'buttonMarkup').andCallThrough();
+        var spy = testutils.spyOnJq('buttonMarkup').andCallThrough();
         var c = testutils.compileInPage('<div><a href="" data-role="button" ng-repeat="l in list"></a></div>');
-        expect($.fn.buttonMarkup.callCount).toBe(1);
-        $.fn.buttonMarkup.reset();
+        expect(spy.callCount).toBe(1);
+        spy.reset();
         var scope = c.element.scope();
         scope.list = [1, 2];
         scope.$digest();
-        expect($.fn.buttonMarkup.callCount).toBe(0);
+        expect(spy.callCount).toBe(0);
         var childLinks = c.element.children(".ui-btn");
         expect(childLinks.length).toBe(2);
     });
 
     it("should stamp jqm widgets using the jqm widgets", function () {
         // Note: button is a widget
-        spyOn($.fn, 'button').andCallThrough();
+        var spy = testutils.spyOnJq('button').andCallThrough();
         var c = testutils.compileInPage('<div><button ng-repeat="l in list"></button></div>');
-        expect($.fn.button.callCount).toBe(0);
+        expect(spy.callCount).toBe(0);
         var scope = c.element.scope();
         scope.list = [1, 2];
         scope.$digest();
-        expect($.fn.button.callCount).toBe(2);
+        expect(spy.callCount).toBe(2);
         var childWrapper = c.element.children("div.ui-btn");
         expect(childWrapper.length).toBe(2);
         var childButtons = c.element.find("button");
@@ -57,8 +57,9 @@ describe('compileIntegrationUnit', function () {
             var scope = container.scope();
             var childScope = scope.$new();
             container.html(html);
-            var $compile = c.injector.get("$compile");
-            $compile(container.contents())(childScope);
+            inject(function($compile) {
+                $compile(container.contents())(childScope);
+            });
             return {
                 page:c.page,
                 container: container
@@ -67,27 +68,27 @@ describe('compileIntegrationUnit', function () {
 
         it("should stamp non widget markup without calling jqm", function () {
             // Note: buttonMarkup is a non widget markup
-            spyOn($.fn, 'buttonMarkup').andCallThrough();
+            var spy = testutils.spyOnJq('buttonMarkup').andCallThrough();
             var c = compileInPartialInPage('<a href="" data-role="button" ng-repeat="l in list"></a>');
-            expect($.fn.buttonMarkup.callCount).toBe(1);
-            $.fn.buttonMarkup.reset();
+            expect(spy.callCount).toBe(1);
+            spy.reset();
             var scope = c.container.scope();
             scope.list = [1, 2];
             scope.$digest();
-            expect($.fn.buttonMarkup.callCount).toBe(0);
+            expect(spy.callCount).toBe(0);
             var childLinks = c.container.children(".ui-btn");
             expect(childLinks.length).toBe(2);
         });
 
         it("should stamp jqm widgets using the jqm widgets", function () {
             // Note: button is a widget
-            spyOn($.fn, 'button').andCallThrough();
+            var spy = testutils.spyOnJq('button').andCallThrough();
             var c = compileInPartialInPage('<button ng-repeat="l in list"></button>');
-            expect($.fn.button.callCount).toBe(0);
+            expect(spy.callCount).toBe(0);
             var scope = c.container.scope();
             scope.list = [1, 2];
             scope.$digest();
-            expect($.fn.button.callCount).toBe(2);
+            expect(spy.callCount).toBe(2);
             var childWrapper = c.container.children("div.ui-btn");
             expect(childWrapper.length).toBe(2);
             var childButtons = c.container.find("button");

@@ -1,12 +1,12 @@
 describe("button", function () {
     it("should stamp the widget using the jqm widget", function() {
-        spyOn($.fn, 'button');
+        var spy = testutils.spyOnJq('button');
         var c = testutils.compileInPage('<button ng-repeat="l in list"></button>');
-        expect($.fn.button.callCount).toBe(0);
+        expect(spy.callCount).toBe(0);
         var scope = c.page.scope();
         scope.list = [1,2];
         scope.$root.$digest();
-        expect($.fn.button.callCount).toBe(2);
+        expect(spy.callCount).toBe(2);
     });
 
     it('should allow clicks via ng-click', function () {

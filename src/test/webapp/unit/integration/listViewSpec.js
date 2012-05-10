@@ -1,12 +1,12 @@
 describe("listview", function () {
     it("should stamp the widget using the jqm widget", function() {
-        spyOn($.fn, 'listview');
+        var spy = testutils.spyOnJq('listview');
         var c = testutils.compileInPage('<ul data-role="listview" ng-repeat="l in list"></ul>');
-        expect($.fn.listview.callCount).toBe(0);
+        expect(spy.callCount).toBe(0);
         var scope = c.page.scope();
         scope.list = [1,2];
         scope.$root.$digest();
-        expect($.fn.listview.callCount).toBe(2);
+        expect(spy.callCount).toBe(2);
     });
 
     it("should refresh only once when child entries are added by angular", function() {
@@ -34,7 +34,6 @@ describe("listview", function () {
         var d = testutils.compileInPage(
             '<ul data-role="listview" data-inset="true" ng-init="list = [1,2,3]">' +
             '<li ng-repeat="l in list">{{l}}</li></ul>');
-        // d.element.scope().$digest();
         var list = d.element;
         var lis = list.children("li");
         expect(lis.length).toBe(3);

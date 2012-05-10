@@ -10,7 +10,6 @@ describe("ngm-if", function () {
     beforeEach(function () {
         scope = null;
         element = null;
-
     });
 
     it('should add the element if the expression is true', function () {
@@ -29,14 +28,33 @@ describe("ngm-if", function () {
         expect(element.children('span').scope().test).toBeTruthy();
     });
 
-    it('should work with select options', function () {
-        compile('<div><select name="test"><option ngm-if="test" value="v1">V1</option></select></div>');
-        var select = element.find('select');
-        var options = select.children('option');
-        expect(options.length).toEqual(0);
-        scope.test = true;
-        scope.$root.$digest();
-        var options = select.children('option');
-        expect(options.length).toEqual(1);
+    describe("fire $childrenChanged", function() {
+        var eventSpy;
+        beforeEach(function() {
+            compile('<div><span ngm-if="show"></span></div>');
+            eventSpy = jasmine.createSpy("$childrenChanged");
+            scope.$on("$childrenChanged", eventSpy);
+        });
+
+        it("should fire the event when the content is added", function() {
+            scope.show = true;
+            scope.$root.$digest();
+            expect(eventSpy.callCount).toBe(1);
+        });
+
+        it("should fire the event when the content is hidden", function() {
+            scope.show = true;
+            scope.$root.$digest();
+            eventSpy.reset();
+
+            scope.show = false;
+            scope.$root.$digest();
+            expect(eventSpy.callCount).toBe(1);
+        });
+
+        it("should not fire if nothing changes", function() {
+            scope.$root.$digest();
+            expect(eventSpy.callCount).toBe(0);
+        });
     });
 });

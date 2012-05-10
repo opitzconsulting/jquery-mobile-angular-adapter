@@ -1,12 +1,12 @@
 describe("inputSlider", function () {
     it("should stamp the widget using the jqm widget", function() {
-        spyOn($.fn, 'slider').andCallThrough();
+        var spy = testutils.spyOnJq('slider').andCallThrough();
         var c = testutils.compileInPage('<input type="number" data-type="range" ng-repeat="l in list">');
-        expect($.fn.slider.callCount).toBe(0);
+        expect(spy.callCount).toBe(0);
         var scope = c.page.scope();
         scope.list = [1,2];
         scope.$root.$digest();
-        expect($.fn.slider.callCount).toBe(2);
+        expect(spy.callCount).toBe(2);
     });
 
     it('should save the ui text value into the model', function () {

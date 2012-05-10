@@ -11,8 +11,10 @@
 <jsp:include page="integration/pageCompile.js"/>
 <jsp:include page="integration/jqmAngularWidgets.js"/>
 <jsp:include page="integration/deactivateNgLocationChange.js"/>
-<jsp:include page="integration/angularRepeat.js"/>
+<jsp:include page="integration/angularNgRepeat.js"/>
 <jsp:include page="integration/angularNgOptions.js"/>
+<jsp:include page="integration/angularOption.js"/>
+<jsp:include page="integration/angularNgSwitch.js"/>
 <jsp:include page="integration/angularInput.js"/>
 <%--
 

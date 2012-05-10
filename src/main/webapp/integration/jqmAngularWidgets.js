@@ -43,24 +43,6 @@
         });
     }]);
 
-    ng.directive('option', ['$interpolate', function($interpolate) {
-        return {
-            restrict: 'E',
-            compile: function(tElement, tAttrs) {
-                var textInterpolateFn = $interpolate(tElement.text(), true);
-                var valueInterpolateFn = $interpolate(tElement.attr('value'), true);
-                return function(scope, iElement, iAttrs) {
-                    scope.$watch(textInterpolateFn, function() {
-                        scope.$emit("$childrenChanged");
-                    });
-                    scope.$watch(valueInterpolateFn, function() {
-                        scope.$emit("$childrenChanged");
-                    });
-                }
-            }
-        };
-    }]);
-
     function disabledHandling(widget, scope, iElement, iAttrs) {
         iAttrs.$observe("disabled", function (value) {
             if (value) {
@@ -98,6 +80,9 @@
 
     function refreshOnChildrenChange(widget, scope, iElement) {
         scope.$on("$childrenChanged", function() {
+            triggerAsyncRefresh(widget, scope, iElement);
+        });
+        scope.$on("$includeContentLoaded", function() {
             triggerAsyncRefresh(widget, scope, iElement);
         });
     }

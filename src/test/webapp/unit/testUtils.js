@@ -6,7 +6,7 @@
     });
 
     afterEach(function() {
-        $(":jqmData(role='page')").remove();
+        $(".temp").remove();
     });
 
     function test$() {
@@ -33,6 +33,7 @@
             $.mobile.activePage = page;
             $rootScope.$apply();
         });
+        page.addClass("temp", "true");
         return {
             page: page,
             element: $(".result").removeClass("result")
@@ -49,7 +50,7 @@
             $compile(wrapperElement)($rootScope);
             $rootScope.$apply();
         });
-        return $(".result").removeClass("result");
+        return $(".result").removeClass("result").addClass("temp", "true");
     }
 
     function triggerInputEvent(element) {

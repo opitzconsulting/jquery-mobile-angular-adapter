@@ -15,7 +15,7 @@ describe('compileIntegrationUnit', function () {
         // Note: buttonMarkup is a non widget markup
         var spy = testutils.spyOnJq('buttonMarkup').andCallThrough();
         var c = testutils.compileInPage('<div><a href="" data-role="button" ng-repeat="l in list"></a></div>');
-        expect(spy.callCount).toBe(1);
+        expect(spy.callCount).toBeGreaterThan(0);
         spy.reset();
         var scope = c.element.scope();
         scope.list = [1, 2];

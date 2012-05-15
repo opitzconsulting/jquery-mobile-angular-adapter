@@ -30852,34 +30852,80 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         }]);
     }]);
 
+    var _execFlags = {};
+
+    function execWithFlag(flag, fn) {
+        if (!fn) {
+            return _execFlags[flag];
+        }
+        var old = _execFlags[flag];
+        _execFlags[flag] = true;
+        var res = fn();
+        _execFlags[flag] = old;
+        return res;
+    }
+
+    function preventJqmWidgetCreation(fn) {
+        return execWithFlag('preventJqmWidgetCreation', fn);
+    }
+
+    function markJqmWidgetCreation(fn) {
+        return execWithFlag('markJqmWidgetCreation', fn);
+    }
+
+    function createPagesWithoutPageCreateEvent(pages) {
+        preventJqmWidgetCreation(function () {
+            var oldPrefix = $.mobile.page.prototype.widgetEventPrefix;
+            $.mobile.page.prototype.widgetEventPrefix = 'noop';
+            pages.page();
+            $.mobile.page.prototype.widgetEventPrefix = oldPrefix;
+        });
+    }
+
+
     $.mobile.autoInitializePage = false;
     var jqmInitialized = false;
 
-    // We want to create a special directive that matches data-role="page" and data-role="dialog",
-    // but none of the other data-role="..." elements of jquery mobile. As we want to create a new
-    // scope for those elements (but not for the others), this is only possible, if we preprocess the dom and add a new attribute
-    // that is unique for pages and dialogs, for which we can register an angular directive.
     ng.config(['$provide', function ($provide) {
         $provide.decorator('$compile', ['$delegate', function ($delegate) {
             var selector = ':jqmData(role="page"), :jqmData(role="dialog")';
             var rolePageAttr = 'jqm-page';
             return function (element) {
-                var parentPage = element.parents(selector);
-                if (parentPage.length > 0) {
-                    // within a parent page: enhance non-widgets markup.
-                    var old = preventJqmWidgetCreation;
-                    preventJqmWidgetCreation = true;
-                    element.parent().trigger("create");
-                    preventJqmWidgetCreation = old;
-                } else {
-                    element.filter(selector).add(element.find(selector)).attr(rolePageAttr, true);
-                }
+                // Find page elements
+                var pages = element.filter(selector).add(element.find(selector));
+                // create temporary pages for the non widget markup, that we destroy afterwards.
+                // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
+
+                createPagesWithoutPageCreateEvent(pages);
+
+                // enhance non-widgets markup.
+                markJqmWidgetCreation(function () {
+                    preventJqmWidgetCreation(function () {
+                        if (pages.length > 0) {
+                            // TODO testcase?
+                            // element contains pages.
+                            pages.trigger("create");
+                        } else {
+                            // TODO testcase?
+                            // Within a page...
+                            element.parent().trigger("create");
+                        }
+                    });
+                });
+
+                // Destroy the temporary pages again
+                pages.page("destroy");
+
+                // Mark jqm pages for our directive.
+                // We want to create a special directive that matches data-role="page" and data-role="dialog",
+                // but none of the other data-role="..." elements of jquery mobile. As we want to create a new
+                // scope for those elements (but not for the others), this is only possible, if we preprocess the dom and add a new attribute
+                // that is unique for pages and dialogs, for which we can register an angular directive.
+                pages.attr(rolePageAttr, true);
                 return $delegate.apply(this, arguments);
             }
         }]);
     }]);
-
-    var preventJqmWidgetCreation = false;
 
     // Directive for jquery mobile pages. Refreshes the jquery mobile widgets
     // when the page changes.
@@ -30887,21 +30933,28 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         return {
             restrict:'A',
             scope:true,
-            compile:function(tElement, tAttrs) {
-                var old = preventJqmWidgetCreation;
-                preventJqmWidgetCreation = true;
-                if (!jqmInitialized) {
-                    jqmInitialized = true;
-                    $.mobile.initializePage();
-                }
-                tElement.page();
-                preventJqmWidgetCreation = old;
+            compile:function (tElement, tAttrs) {
                 return {
                     pre:function preLink(scope, iElement, iAttrs) {
+                        // Create the page widget without the pagecreate-Event.
+                        // This does no dom transformation, so it's safe to call this in the prelink function.
+                        createPagesWithoutPageCreateEvent(iElement);
+                        if (!jqmInitialized) {
+                            jqmInitialized = true;
+                            $.mobile.initializePage();
+                        }
+
                         // Detach the scope from the normal $digest cycle.
                         // Needed so that only $.mobile.activePage gets digested when rootScope.$digest
                         // is called.
                         scope.$disconnect();
+                    }, post:function (scope, iElement, iAttrs) {
+                        // Now trigger the pagecreate-Event to enhance all missing parts of jquery mobile
+                        // that depend on the page (e.g. header and footer).
+                        preventJqmWidgetCreation(function () {
+                            var page = iElement.data("page");
+                            page._trigger("create");
+                        });
                     }
                 }
             }
@@ -30918,7 +30971,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
     // If jqm loads a page from an external source, angular needs to compile it too!
     ng.run(['$rootScope', '$compile', function ($rootScope, $compile) {
         patchJq('page', function () {
-            if (!preventJqmWidgetCreation && !this.data("page")) {
+            if (!preventJqmWidgetCreation() && !this.data("page")) {
                 if (this.attr("data-" + $.mobile.ns + "external-page")) {
                     $compile(this)($rootScope);
                 }
@@ -30927,178 +30980,81 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         });
     }]);
 
-    function deactivateJqmWidgetEnhanceDuringPageCompile(widgetName) {
-        patchJq(widgetName, function() {
-            if (preventJqmWidgetCreation) {
+    function patchJqmWidget(widgetName) {
+        patchJq(widgetName, function () {
+            if (markJqmWidgetCreation()) {
+                this.attr("jqm-widget", widgetName);
+            }
+            if (preventJqmWidgetCreation()) {
                 return false;
             }
             return $.fn.orig[widgetName].apply(this, arguments);
         });
     }
 
-    ng.config(["$compileProvider", function ($compileProvider) {
-        var jqmNgBindings = {};
-
-        var SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g;
-
-        /**
-         * Converts snake_case to camelCase.
-         * Also there is special case for Moz prefix starting with upper case letter.
-         * @param name Name to normalize
-         */
-        function normalizeDirectiveName(name) {
-            if (name.indexOf('data-') === 0) {
-                name = name.substring(5);
-            }
-            // camelCase
-            return name.
-                replace(SPECIAL_CHARS_REGEXP, function (_, separator, letter, offset) {
-                return offset ? letter.toUpperCase() : letter;
-            });
-        }
-
-        function bindJqmWidgetToAngularWidget(jqmWidgetName, directiveName, directiveType, filter, linkfn) {
-            var bindings = jqmNgBindings[directiveName];
-            if (!bindings) {
-                bindings = [];
-                jqmNgBindings[directiveName] = bindings;
-                $compileProvider.directive(normalizeDirectiveName(directiveName), function () {
-                    return {
-                        restrict:directiveType,
-                        require:['?ngModel'],
-                        compile:function () {
-                            return {
-                                post:function (scope, iElement, iAttrs, ctrls) {
-                                    for (var i = 0; i < bindings.length; i++) {
-                                        var localJqmWidgetName = bindings[i].widgetName;
-                                        if (!iElement.data(localJqmWidgetName)) {
-                                            var localFilter = bindings[i].filter;
-                                            if (!localFilter || iElement.filter(localFilter).length > 0) {
-                                                iElement[localJqmWidgetName]();
-                                                if (bindings[i].link) {
-                                                    bindings[i].link.apply(this, arguments);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+    var jqmWidgetLinker = {};
+    ng.directive('jqmWidget', function () {
+        return {
+            require:['?ngModel'],
+            compile:function () {
+                return {
+                    post:function (scope, iElement, iAttrs, ctrls) {
+                        var widgetName = iAttrs.jqmWidget;
+                        if (!iElement.data(widgetName)) {
+                            iElement[widgetName]();
+                        }
+                        var linker = jqmWidgetLinker[widgetName];
+                        for (var i = 0; i < linker.length; i++) {
+                            linker[i].apply(this, arguments);
                         }
                     }
-                });
-            }
-            bindings.push({widgetName:jqmWidgetName, filter:filter, link:linkfn});
-
-            deactivateJqmWidgetEnhanceDuringPageCompile(jqmWidgetName);
-        }
-
-        // Supported Syntax:
-        // button
-        // input[type="name"]
-        // :jqmData(type='search') -> Replace with [data-type="search"]
-        // [type='button']
-        var jqmDataRE = /:jqmData\(([^)]*)\)/g;
-
-        function getSelectorParts(selector) {
-            var parts = selector.split(',');
-            for (var i = 0; i < parts.length; i++) {
-                var part = parts[i];
-                part = $.trim(part);
-                // see jquery mobile
-                parts[i] = part.replace(jqmDataRE, "[data-" + ( $.mobile.ns || "" ) + "$1]");
-            }
-            return parts;
-        }
-
-        var selectorRegex = /(\[)?([A-Za-z0-9\-]+)(.*)/;
-
-        /**
-         * Registers a jqm widget at the angular compiler, so that angular creates the right widget at the right place.
-         * For this, this function will parse the jqm selectors and create the needed angular widgets.
-         * <p>
-         * Only use this for "real" jqm widgets, i.e. widgets that are not only markup, and also contain listeners.
-         * @param widgetName
-         * @param selector The jquery selector to register the widget with.
-         * @param linkFn An additional angular linking function (optional)
-         */
-        function registerJqmWidget(widgetName, selector, linkFn) {
-            var selectorParts = getSelectorParts(selector);
-            for (var i = 0; i < selectorParts.length; i++) {
-                var part = selectorParts[i];
-                var match = selectorRegex.exec(part);
-                if (!match) {
-                    throw new Error("Could not parse the selector " + part);
-                }
-                var attrDirective = match[1];
-                var directiveName = match[2];
-                if (attrDirective) {
-                    bindJqmWidgetToAngularWidget(widgetName, directiveName, 'A', part, linkFn);
-                } else {
-                    var filter = match[3];
-                    bindJqmWidgetToAngularWidget(widgetName, directiveName, 'E', filter, linkFn);
                 }
             }
         }
+    });
 
-        $compileProvider.registerJqmWidget = registerJqmWidget;
-    }]);
+
+    $.mobile.registerJqmNgWidget = function (widgetName, linkFn) {
+        var linkFns = linkFn?[linkFn]:[];
+        jqmWidgetLinker[widgetName] = linkFns;
+        patchJqmWidget(widgetName);
+    }
 })(window.jQuery, window.angular);
 (function (angular) {
     var widgetConfig = {
         button:{
-            selector:true,
             handlers:[disabledHandler]
         },
         collapsible:{
-            selector:true,
             handlers:[disabledHandler]
         },
         textinput:{
-            selector:true,
             handlers:[disabledHandler]
         },
         checkboxradio:{
-            selector:true,
             handlers:[disabledHandler, refreshOnNgModelRender]
         },
         slider:{
-            selector:true,
             handlers:[disabledHandler, refreshOnNgModelRender]
         },
         listview:{
-            selector:true,
             handlers:[refreshOnChildrenChange]
         },
         collapsibleset:{
-            selector:true,
             handlers:[refreshOnChildrenChange]
         },
         selectmenu:{
-            selector:true,
             handlers:[disabledHandler, refreshOnNgModelRender, refreshOnChildrenChange]
         },
         controlgroup:{
-            selector:":jqmData(role='controlgroup')",
             handlers:[refreshOnChildrenChange]
         }
     };
 
-    var ng = angular.module("ng");
-    ng.config(["$compileProvider", function ($compileProvider) {
-        var config, selector;
-        for (var widgetName in widgetConfig) {
-            config = widgetConfig[widgetName];
-            if (config.selector === true) {
-                selector = getJqmWidgetSelector(widgetName);
-            } else {
-                selector = config.selector;
-            }
-            $compileProvider.registerJqmWidget(widgetName, selector, mergeHandlers(widgetName, config.handlers));
-        }
-    }]);
-
-    function getJqmWidgetSelector(widgetName) {
-        return $.mobile[widgetName].prototype.options.initSelector;
+    var config;
+    for (var widgetName in widgetConfig) {
+        config = widgetConfig[widgetName];
+        $.mobile.registerJqmNgWidget(widgetName, mergeHandlers(widgetName, config.handlers));
     }
 
     function mergeHandlers(widgetName, handlers) {

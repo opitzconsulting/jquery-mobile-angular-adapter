@@ -1,59 +1,38 @@
 (function (angular) {
     var widgetConfig = {
         button:{
-            selector:true,
             handlers:[disabledHandler]
         },
         collapsible:{
-            selector:true,
             handlers:[disabledHandler]
         },
         textinput:{
-            selector:true,
             handlers:[disabledHandler]
         },
         checkboxradio:{
-            selector:true,
             handlers:[disabledHandler, refreshOnNgModelRender]
         },
         slider:{
-            selector:true,
             handlers:[disabledHandler, refreshOnNgModelRender]
         },
         listview:{
-            selector:true,
             handlers:[refreshOnChildrenChange]
         },
         collapsibleset:{
-            selector:true,
             handlers:[refreshOnChildrenChange]
         },
         selectmenu:{
-            selector:true,
             handlers:[disabledHandler, refreshOnNgModelRender, refreshOnChildrenChange]
         },
         controlgroup:{
-            selector:":jqmData(role='controlgroup')",
             handlers:[refreshOnChildrenChange]
         }
     };
 
-    var ng = angular.module("ng");
-    ng.config(["$compileProvider", function ($compileProvider) {
-        var config, selector;
-        for (var widgetName in widgetConfig) {
-            config = widgetConfig[widgetName];
-            if (config.selector === true) {
-                selector = getJqmWidgetSelector(widgetName);
-            } else {
-                selector = config.selector;
-            }
-            $compileProvider.registerJqmWidget(widgetName, selector, mergeHandlers(widgetName, config.handlers));
-        }
-    }]);
-
-    function getJqmWidgetSelector(widgetName) {
-        return $.mobile[widgetName].prototype.options.initSelector;
+    var config;
+    for (var widgetName in widgetConfig) {
+        config = widgetConfig[widgetName];
+        $.mobile.registerJqmNgWidget(widgetName, mergeHandlers(widgetName, config.handlers));
     }
 
     function mergeHandlers(widgetName, handlers) {

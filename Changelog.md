@@ -1,9 +1,9 @@
 Changelog
 =====================
 
-1.0.7rc1
+1.0.7rc2
 -------------
-- Update to angular 1.0rc8
+- Update to angular 1.0 rc9
 - refactoring for performance improvements.
 - Removed `$navigate` filter. Use `$navigate` service instead. Reason: This puts too much logic in the html page and leads
   to errors if `$q` is not used correctly.

@@ -26,6 +26,15 @@
         },
         controlgroup:{
             handlers:[refreshOnChildrenChange]
+        },
+        navbar: {
+            handlers:[]
+        },
+        dialog: {
+            handlers:[]
+        },
+        fixedtoolbar: {
+            handlers:[]
         }
     };
 

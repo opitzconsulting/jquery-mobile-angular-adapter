@@ -72,10 +72,6 @@
             return function (element) {
                 // Find page elements
                 var pages = element.filter(selector).add(element.find(selector));
-                // create temporary pages for the non widget markup, that we destroy afterwards.
-                // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
-
-                createPagesWithoutPageCreateEvent(pages);
 
                 // enhance non-widgets markup.
                 markJqmWidgetCreation(function () {
@@ -83,7 +79,9 @@
                         if (pages.length > 0) {
                             // TODO testcase?
                             // element contains pages.
-                            pages.trigger("create");
+                            // create temporary pages for the non widget markup, that we destroy afterwards.
+                            // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
+                            pages.page();
                         } else {
                             // TODO testcase?
                             // Within a page...
@@ -127,13 +125,6 @@
                         // Needed so that only $.mobile.activePage gets digested when rootScope.$digest
                         // is called.
                         scope.$disconnect();
-                    }, post:function (scope, iElement, iAttrs) {
-                        // Now trigger the pagecreate-Event to enhance all missing parts of jquery mobile
-                        // that depend on the page (e.g. header and footer).
-                        preventJqmWidgetCreation(function () {
-                            var page = iElement.data("page");
-                            page._trigger("create");
-                        });
                     }
                 }
             }

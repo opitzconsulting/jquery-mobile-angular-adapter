@@ -11,12 +11,12 @@
 <jsp:include page="integration/pageCompile.js"/>
 <jsp:include page="integration/jqmAngularWidgets.js"/>
 <jsp:include page="integration/deactivateNgLocationChange.js"/>
-<jsp:include page="integration/angularNgRepeat.js"/>
-<jsp:include page="integration/angularNgOptions.js"/>
-<jsp:include page="integration/angularOption.js"/>
-<jsp:include page="integration/angularNgSwitch.js"/>
-<jsp:include page="integration/angularNgInclude.js"/>
-<jsp:include page="integration/angularInput.js"/>
+<jsp:include page="integration/ngRepeatPatch.js"/>
+<jsp:include page="integration/ngOptionsPatch.js"/>
+<jsp:include page="integration/ngOptionPatch.js"/>
+<jsp:include page="integration/ngSwitchPatch.js"/>
+<jsp:include page="integration/ngIncludePatch.js"/>
+<jsp:include page="integration/ngInputPatch.js"/>
 
 <jsp:include page="utils/if.js"/>
 <jsp:include page="utils/event.js"/>

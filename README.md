@@ -15,35 +15,32 @@ Integration strategy
 
 Jquery mobile has two kinds of markup:
 
-- Non widget markup: Markup, that does not hold state or event listeners, and just adds css classes to the dom.
+- Stateless markup/widgets: Markup, that does not hold state or event listeners, and just adds css classes to the dom.
   E.g. `$.fn.buttonMarkup`, which is created using `<a href="..." data-role="button">`
-- Widget markup: Markup that holds state (e.g. event listeners, ...). This markup uses the jquery ui widget factory.
+- Stateful markup/widgets: Markup that holds state (e.g. event listeners, ...). This markup uses the jquery ui widget factory.
   E.g. `$.mobile.button`, which is created using `<button>`.
 
 Integration strategy:
 
-1. We enhance `$compile` to trigger the jquery mobile `create` event before the real compilation.
-   Before this, we instrument all jqm widgets that hold state (see above), so they do not
-   really call the jqm widget, but only add the attribute `jqm-widget=<widgetName>` to the corresponding element.
-   By this, all non widget markup can be used by angular for stamping (e.g. in ng-repeat),
+1. We enhance `$compile` to trigger the jqm `create` and `pagecreate` event before the real compilation.
+   Before this, we instrument all stateful jqm widgets (see above), so they do not
+   really create the jqm widget, but only add the attribute `jqm-widget=<widgetName>` to the corresponding element.
+   By this, all stateless  markup can be used by angular for stamping (e.g. in ng-repeat),
    without calling a jqm method again, so we are fast. Furthermore, we have a simple
-   attribute by which we can detect elements that contain jqm widgets that hold state.
+   attribute by which we can detect elements that contain stateful jqm widgets.
 
 2. We have an angular directive for data-role="page" and data-role="dialog".
    This widget will call element.page() in the pre link phase, however without the
    `pagecreate` event. By this, we only create the page instance, but do not modify the dom
    (as this is not allowed in the pre link phase).
 
-3. We have an angular widget for the attribute `jqm-widget` (see above) which creates the jqm widgets
-   that hold state. Here we also listen for changes in the model and refresh the jqm widgets when needed.
+3. We have an angular directive for the attribute `jqm-widget` (see above) which creates the stateful jqm widgets.
+   Here we also listen for changes in the model and refresh the jqm widgets when needed.
    By this, the jqm widgets also work nicely with angular stamping (e.g. in ng-repeat).
 
-4. The page directive (see 2.) has a post-link function that triggers the `pagecreate` event.
-   By this, the jqm page gets it's navigation and toolbars.
+4. All together: This minimizes the DOM traversals and DOM changes
 
-5. All together: This minimized the DOM traversals and DOM changes
-
-   * We use angular's stamping for non widget markup, i.e. we call the jqm functions only once,
+   * We use angular's stamping for stateless widget markup, i.e. we call the jqm functions only once,
      and let angular do the rest.
    * We do not use the `create` event for refreshing widgets,
      but angular's directives. By this, we prevent unneeded executions of jquery selectors.

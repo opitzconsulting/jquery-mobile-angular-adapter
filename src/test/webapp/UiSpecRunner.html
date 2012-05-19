@@ -17,7 +17,11 @@
 </head>
 <body>
     <script>
-        jasmine.getEnv().addReporter(new jasmine.TrivialReporter());
+        var reporter = new jasmine.TrivialReporter();
+        jasmine.getEnv().addReporter(reporter);
+        jasmine.getEnv().specFilter = function(spec) {
+            return reporter.specFilter(spec);
+        };
         jasmine.getEnv().execute();
     </script>
 </body>

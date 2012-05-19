@@ -30846,7 +30846,24 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
                         activeScope.$reconnect();
                     }
                 }
-                return _$digest.apply(this, arguments);
+                var res = _$digest.apply(this, arguments);
+                if (this === $rootScope) {
+                    while (lastCreatedPages.length) {
+                        var pageScope = lastCreatedPages.shift();
+                        // Detach the scope of the created pages from the normal $digest cycle.
+                        // Needed so that only $.mobile.activePage gets digested when rootScope.$digest
+                        // is called.
+                        // However, allow one digest to process every page
+                        // so that we can use ng-repeat also for jqm pages!
+                        pageScope.$disconnect();
+                    }
+                    if (!jqmInitialized) {
+                        jqmInitialized = true;
+                        $.mobile.initializePage();
+                    }
+                }
+
+                return res;
             };
             return $rootScope;
         }]);
@@ -30925,6 +30942,8 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         }]);
     }]);
 
+    var lastCreatedPages = [];
+
     // Directive for jquery mobile pages. Refreshes the jquery mobile widgets
     // when the page changes.
     ng.directive('jqmPage', ['$compile', function ($compile) {
@@ -30933,19 +30952,11 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
             scope:true,
             compile:function (tElement, tAttrs) {
                 return {
-                    pre:function preLink(scope, iElement, iAttrs) {
+                    pre:function (scope, iElement, iAttrs) {
                         // Create the page widget without the pagecreate-Event.
                         // This does no dom transformation, so it's safe to call this in the prelink function.
                         createPagesWithoutPageCreateEvent(iElement);
-                        if (!jqmInitialized) {
-                            jqmInitialized = true;
-                            $.mobile.initializePage();
-                        }
-
-                        // Detach the scope from the normal $digest cycle.
-                        // Needed so that only $.mobile.activePage gets digested when rootScope.$digest
-                        // is called.
-                        scope.$disconnect();
+                        lastCreatedPages.push(scope);
                     }
                 }
             }
@@ -31006,12 +31017,12 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
 
 
     $.mobile.registerJqmNgWidget = function (widgetName, linkFn) {
-        var linkFns = linkFn?[linkFn]:[];
+        var linkFns = linkFn ? [linkFn] : [];
         jqmWidgetLinker[widgetName] = linkFns;
         patchJqmWidget(widgetName);
     }
 })(window.jQuery, window.angular);
-(function (angular) {
+(function (angular, $) {
     var widgetConfig = {
         button:{
             handlers:[disabledHandler]
@@ -31118,8 +31129,8 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
     }
 
 
-})(window.angular);
-(function (angular) {
+})(window.angular, window.jQuery);
+(function (angular, $) {
     /**
      * Deactivate the url changing capabilities
      * of angular, so we do not get into trouble with
@@ -31151,7 +31162,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
 
     deactivateAngularLocationService.$inject = ['$browser'];
     ng.run(deactivateAngularLocationService);
-})(window.angular);
+})(window.angular, window.jQuery);
 (function ($, angular) {
     /**
      * Modify the original repeat: Make sure that all elements are added under the same parent.

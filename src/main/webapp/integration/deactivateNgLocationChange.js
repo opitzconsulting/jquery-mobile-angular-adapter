@@ -1,4 +1,4 @@
-(function (angular) {
+(function (angular, $) {
     /**
      * Deactivate the url changing capabilities
      * of angular, so we do not get into trouble with
@@ -30,4 +30,4 @@
 
     deactivateAngularLocationService.$inject = ['$browser'];
     ng.run(deactivateAngularLocationService);
-})(window.angular);
+})(window.angular, window.jQuery);

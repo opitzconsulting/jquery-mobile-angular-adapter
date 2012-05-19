@@ -1,4 +1,4 @@
-(function (angular) {
+(function (angular, $) {
     var widgetConfig = {
         button:{
             handlers:[disabledHandler]
@@ -105,4 +105,4 @@
     }
 
 
-})(window.angular);
+})(window.angular, window.jQuery);

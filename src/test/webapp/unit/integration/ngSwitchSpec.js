@@ -18,7 +18,7 @@ describe('ng-switch', function () {
             var scope = c.element.scope();
             scope.value = 'case1';
             var eventSpy = jasmine.createSpy("$childrenChanged");
-            scope.$on("$childrenChanged", eventSpy);
+            c.element.bind("$childrenChanged", eventSpy);
             scope.$root.$digest();
             expect(eventSpy.callCount).toBe(1);
 
@@ -35,7 +35,7 @@ describe('ng-switch', function () {
             var scope = c.element.scope();
             scope.value = 'case1';
             var eventSpy = jasmine.createSpy("$childrenChanged");
-            scope.$on("$childrenChanged", eventSpy);
+            c.element.bind("$childrenChanged", eventSpy);
             scope.$root.$digest();
             expect(eventSpy.callCount).toBe(1);
 
@@ -45,6 +45,35 @@ describe('ng-switch', function () {
             expect(eventSpy.callCount).toBe(1);
         });
 
+    });
+
+    describe('with elements that wrap themselves into new elements', function () {
+        beforeEach(function () {
+            module("ngMock", function ($compileProvider) {
+                $compileProvider.directive('wrapper', function () {
+                    return {
+                        restrict:'A',
+                        link:function (scope, iElement) {
+                            iElement.wrap("<div class='wrapper'></div>");
+                        }
+                    }
+                });
+            });
+        });
+
+        it("should remove the wrapper elements with the elements", function() {
+            var c = testutils.compileInPage('<ng-switch on="value">' +
+                '<span ng-switch-when="case1" wrapper="true"></span>' +
+                '</ng-switch>');
+            var scope = c.element.scope();
+            scope.value = "case1";
+            scope.$root.$digest();
+            expect(c.element.children('div').length).toBe(1);
+
+            scope.value = "";
+            scope.$root.$digest();
+            expect(c.element.children('div').length).toBe(0);
+        });
     });
 
 });

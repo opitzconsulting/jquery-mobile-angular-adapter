@@ -69,15 +69,17 @@ describe("selectmenu", function () {
 
         it('should be removable', function () {
             var c = testutils.compileInPage(
-                '<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+                '<select ng-repeat="l in list" ng-model="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
             var page = c.page;
             var scope = page.scope();
+            scope.list = [1,2];
+            scope.$root.$digest();
             // ui select creates a new parent for itself
             var content = page.find(":jqmData(role='content')");
+            expect(content.children('div').length).toEqual(2);
+            scope.list = [1];
+            scope.$root.$digest();
             expect(content.children('div').length).toEqual(1);
-            // select creates a parent div. This should be removed when the select is removed.
-            content.find('select').eq(0).remove();
-            expect(content.children('div').length).toEqual(0);
         });
 
 
@@ -126,15 +128,17 @@ describe("selectmenu", function () {
 
         it('should be removable', function () {
             var c = testutils.compileInPage(
-                '<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="true"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+                '<select ng-repeat="l in list" ng-model="mysel" data-native-menu="true"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
             var page = c.page;
             var scope = page.scope();
+            scope.list = [1,2];
+            scope.$root.$digest();
             // ui select creates a new parent for itself
             var content = page.find(":jqmData(role='content')");
+            expect(content.children('div').length).toEqual(2);
+            scope.list = [1];
+            scope.$root.$digest();
             expect(content.children('div').length).toEqual(1);
-            // select creates a parent div. This should be removed when the select is removed.
-            content.find('select').eq(0).remove();
-            expect(content.children('div').length).toEqual(0);
         });
 
 

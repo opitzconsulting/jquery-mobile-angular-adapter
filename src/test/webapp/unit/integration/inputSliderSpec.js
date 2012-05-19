@@ -73,15 +73,14 @@ describe("inputSlider", function () {
     });
 
     it('should be removable', function () {
-        var d = testutils.compileInPage('<div>' +
-            '<input type="number" data-type="range" value="150" min="0" max="300">' +
-            '<input type="number" data-type="range" value="150" min="0" max="300">' +
+        var d = testutils.compileInPage('<div ng-init="list=[1,2]">' +
+            '<input type="number" data-type="range" value="150" min="0" max="300" ng-repeat="l in list">' +
             '</div>');
         var container = d.element;
         var scope = container.scope();
         expect(container.children('div').length).toEqual(2);
-        // removal of the slider should also remove the parent div
-        container.find('input').eq(0).remove();
+        scope.list = [1];
+        scope.$root.$digest();
         expect(container.children('div').length).toEqual(1);
     });
 });

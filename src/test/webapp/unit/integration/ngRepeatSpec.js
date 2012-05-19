@@ -8,34 +8,63 @@ describe('ng-repeat', function () {
         expect(c.element.children().hasClass("ui-btn")).toBe(true);
     });
 
-    it('should append new elements at the same level even when they wrap themselves in new parents', function () {
-        var c = testutils.compileInPage('<div><button ng-repeat="l in list"></button></div>');
-        var scope = c.element.scope();
-        scope.list = [1];
-        scope.$root.$digest();
-        // Button should add a parent
-        expect(c.element.children('div').length).toBe(1);
-        scope.list = [1, 2];
-        scope.$root.$digest();
-        expect(c.element.children('div').length).toBe(2);
+    describe('with elements that wrap themselves into new elements', function () {
+        beforeEach(function () {
+            module("ngMock", function ($compileProvider) {
+                $compileProvider.directive('wrapper', function () {
+                    return {
+                        restrict:'A',
+                        link:function (scope, iElement) {
+                            iElement.wrap("<div class='wrapper'></div>");
+                        }
+                    }
+                });
+            });
+        });
+
+        it('should append new elements at the same level', function () {
+            var c = testutils.compileInPage('<div><span ng-repeat="l in list" wrapper="true"></span></div>');
+            var scope = c.element.scope();
+            scope.list = [1];
+            scope.$root.$digest();
+            expect(c.element.children('div').length).toBe(1);
+
+            scope.list = [1, 2];
+            scope.$root.$digest();
+            expect(c.element.children('div').length).toBe(2);
+        });
+
+        it("should remove the wrapper elements with the elements", function() {
+            var c = testutils.compileInPage('<div><span ng-repeat="l in list" wrapper="true"></span></div>');
+            var scope = c.element.scope();
+            scope.list = [1,2];
+            scope.$root.$digest();
+            expect(c.element.children('div').length).toBe(2);
+
+            scope.list = [];
+            scope.$root.$digest();
+            expect(c.element.children('div').length).toBe(0);
+        });
+
+
     });
 
-    describe("fire $childrenChanged for array datasource", function() {
+    describe("fire $childrenChanged for array datasource", function () {
         var c, scope, eventSpy;
-        beforeEach(function() {
+        beforeEach(function () {
             c = testutils.compileInPage('<div><span ng-repeat="l in list"></span></div>');
             scope = c.element.scope();
             eventSpy = jasmine.createSpy("$childrenChanged");
-            scope.$on("$childrenChanged", eventSpy);
+            c.element.bind("$childrenChanged", eventSpy);
         });
 
-        it("should fire the event when children are added", function() {
+        it("should fire the event when children are added", function () {
             scope.list = [1, 2];
             scope.$root.$digest();
             expect(eventSpy.callCount).toBe(1);
         });
 
-        it("should fire the event when children are removed", function() {
+        it("should fire the event when children are removed", function () {
             scope.list = [1, 2, 3];
             scope.$root.$digest();
             eventSpy.reset();
@@ -46,8 +75,8 @@ describe('ng-repeat', function () {
             expect(eventSpy.callCount).toBe(1);
         });
 
-        it("should fire the event when the order of children change", function() {
-            scope.list = [1,2,3];
+        it("should fire the event when the order of children change", function () {
+            scope.list = [1, 2, 3];
             scope.$root.$digest();
             eventSpy.reset();
             var e1 = scope.list[0];
@@ -57,16 +86,18 @@ describe('ng-repeat', function () {
             expect(eventSpy.callCount).toBe(1);
         });
 
-        it("should not fire the event when nothing changes", function() {
-            scope.list = [1,2,3];
+        it("should not fire the event when nothing changes", function () {
+            scope.list = [1, 2, 3];
             scope.$root.$digest();
             eventSpy.reset();
             scope.$root.$digest();
             expect(eventSpy.callCount).toBe(0);
         });
 
-        it("should not fire the event when the object values change", function() {
-            scope.list = [{a:1}];
+        it("should not fire the event when the object values change", function () {
+            scope.list = [
+                {a:1}
+            ];
             scope.$root.$digest();
             eventSpy.reset();
             scope.list[0].a = 2;
@@ -75,22 +106,22 @@ describe('ng-repeat', function () {
         });
     });
 
-    describe("fire $childrenChanged for object datasource", function() {
+    describe("fire $childrenChanged for object datasource", function () {
         var c, scope, eventSpy;
-        beforeEach(function() {
+        beforeEach(function () {
             c = testutils.compileInPage('<div><span ng-repeat="(k,v) in list"></span></div>');
             scope = c.element.scope();
             eventSpy = jasmine.createSpy("$childrenChanged");
-            scope.$on("$childrenChanged", eventSpy);
+            c.element.bind("$childrenChanged", eventSpy);
         });
 
-        it("should fire the event when children are added", function() {
+        it("should fire the event when children are added", function () {
             scope.list = {a:1, b:2};
             scope.$root.$digest();
             expect(eventSpy.callCount).toBe(1);
         });
 
-        it("should fire the event when children are removed", function() {
+        it("should fire the event when children are removed", function () {
             scope.list = {a:1, b:2};
             scope.$root.$digest();
             eventSpy.reset();
@@ -100,7 +131,7 @@ describe('ng-repeat', function () {
             expect(eventSpy.callCount).toBe(1);
         });
 
-        it("should not fire the event when nothing changes", function() {
+        it("should not fire the event when nothing changes", function () {
             scope.list = {a:1, b:2};
             scope.$root.$digest();
             eventSpy.reset();
@@ -108,7 +139,7 @@ describe('ng-repeat', function () {
             expect(eventSpy.callCount).toBe(0);
         });
 
-        it("should not fire the event when the object values change", function() {
+        it("should not fire the event when the object values change", function () {
             scope.list = {a:{c:1}, b:{c:2}};
             scope.$root.$digest();
             eventSpy.reset();
@@ -117,5 +148,6 @@ describe('ng-repeat', function () {
             expect(eventSpy.callCount).toBe(0);
         });
     });
-});
+})
+;
 

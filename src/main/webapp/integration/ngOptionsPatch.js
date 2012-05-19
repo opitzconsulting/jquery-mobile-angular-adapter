@@ -39,7 +39,7 @@
                     valuesFn = $parse(match[7]);
 
                 scope.$watch(optionsModel, function() {
-                    scope.$emit("$childrenChanged");
+                    element.trigger("$childrenChanged");
                 }, true);
 
                 function optionsModel() {

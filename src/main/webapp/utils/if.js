@@ -1,4 +1,16 @@
 (function (angular) {
+    function findElementWithSameParent(referenceElement, node) {
+        var target = node[0];
+        var parent = referenceElement[0].parentNode;
+        while (target.parentNode != parent) {
+            target = target.parentNode
+            if (!target) {
+                throw new Error("could not find element in parent", origElement, parent);
+            }
+        }
+        return angular.element(target);
+    }
+
     /*
      * Defines the ng:if tag. This is useful if jquery mobile does not allow
      * an ng-switch element in the dom, e.g. between ul and li.
@@ -9,8 +21,8 @@
         terminal:true,
         compile:function (element, attr, linker) {
             return function (scope, iterStartElement, attr) {
+                iterStartElement[0].doNotMove = true;
                 var expression = attr.ngmIf;
-
                 var lastElement;
                 var lastScope;
                 scope.$watch(expression, function (newValue) {
@@ -21,10 +33,16 @@
                             iterStartElement.after(clone);
                         });
                     } else {
-                        lastElement && lastElement.remove();
+                        if (lastElement) {
+                            lastElement = findElementWithSameParent(iterStartElement, lastElement);
+                            lastElement.remove();
+                            lastElement = null;
+                        }
                         lastScope && lastScope.$destroy();
                     }
-                    scope.$emit("$childrenChanged");
+                    // Note: need to be parent() as jquery cannot trigger events on comments
+                    // (angular creates a comment node when using transclusion, as ng-repeat does).
+                    iterStartElement.parent().trigger("$childrenChanged");
                 });
             };
         }

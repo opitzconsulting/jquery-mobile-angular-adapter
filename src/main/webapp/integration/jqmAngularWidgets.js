@@ -88,7 +88,7 @@
     }
 
     function refreshOnChildrenChange(widgetName, scope, iElement, iAttrs, ctrls) {
-        scope.$on("$childrenChanged", function () {
+        iElement.bind("$childrenChanged", function () {
             triggerAsyncRefresh(widgetName, scope, iElement);
         });
     }

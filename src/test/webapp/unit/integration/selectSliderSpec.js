@@ -72,15 +72,14 @@ describe("selectSlider", function () {
     });
 
     it('should be removable', function () {
-        var d = testutils.compileInPage('<div>' +
-            '<select data-role="slider"><option value="v1" default="true">v1</option></select>' +
-            '<select data-role="slider"><option value="v1" default="true">v1</option></select>' +
+        var d = testutils.compileInPage('<div ng-init="list=[1,2]">' +
+            '<select data-role="slider" ng-repeat="l in list"><option value="v1" default="true">v1</option></select>' +
             '</div>');
         var container = d.element;
         var scope = container.scope();
         expect(container.children('div').length).toEqual(2);
-        // removal of the slider should also remove the parent div
-        container.find("select").eq(0).remove();
+        scope.list = [1];
+        scope.$root.$digest();
         expect(container.children('div').length).toEqual(1);
     });
 });

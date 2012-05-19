@@ -5,20 +5,31 @@
      * and angular just uses element.after().
      * See angular issue 831
      */
-    function instrumentNodeForNgRepeat(scope, parent, node, fnName) {
-        var _old = node[fnName];
-        node[fnName] = function (otherNode) {
-            var target = this;
-            while (target.parent()[0] !== parent) {
-                target = target.parent();
-                if (target.length === 0) {
+    function instrumentNodeForNgRepeat(referenceElement, node) {
+        function correctDomNode(jqElement) {
+            var target = jqElement[0];
+            var parent = referenceElement[0].parentNode;
+            while (target.parentNode !== parent) {
+                target = target.parentNode;
+                if (!target) {
                     throw new Error("Could not find the expected parent in the node path", this, parent);
                 }
             }
-            instrumentNodeForNgRepeat(scope, parent, otherNode, fnName);
-            var res = _old.call(target, otherNode);
-            return res;
+            jqElement[0] = target;
+        }
+
+        var _oldAfter = node.after;
+        node.after = function (otherNode) {
+            correctDomNode(this);
+            instrumentNodeForNgRepeat(referenceElement, otherNode);
+            return _oldAfter.apply(this, arguments);
         };
+
+        var _oldRemove = node.remove;
+        node.remove = function() {
+            correctDomNode(this);
+            return _oldRemove.apply(this, arguments);
+        }
     }
 
     function shallowEquals(collection1, collection2) {
@@ -61,7 +72,7 @@
             compile:function (element, attr, linker) {
                 return {
                     pre:function (scope, iterStartElement, attr) {
-                        instrumentNodeForNgRepeat(scope, iterStartElement.parent()[0], iterStartElement, 'after');
+                        instrumentNodeForNgRepeat(iterStartElement, iterStartElement);
                         var expression = attr.ngRepeat;
                         var match = expression.match(/^.+in\s+(.*)\s*$/);
                         if (!match) {
@@ -79,7 +90,9 @@
                             }
                             return changeCounter;
                         }, function () {
-                            scope.$emit("$childrenChanged");
+                            // Note: need to be parent() as jquery cannot trigger events on comments
+                            // (angular creates a comment node when using transclusion, as ng-repeat does).
+                            iterStartElement.parent().trigger("$childrenChanged");
                         });
                     }
                 };

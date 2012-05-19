@@ -34,13 +34,14 @@ describe("button", function () {
     });
 
     it('should be removable', function () {
-        var d = testutils.compileInPage('<div><button>1</button><button>2</button></div>');
+        // button wraps itself into a parent div
+        var d = testutils.compileInPage('<div ng-init="list=[1,2]"><button ng-repeat="l in list">{{l}}</button></div>');
         var page = d.page;
         var container = d.element;
         var scope = container.scope();
         expect(container.children('div').length).toEqual(2);
-        // removal of the button should also remove the parent div
-        container.find('button').eq(0).remove();
+        scope.list = [1];
+        scope.$root.$digest();
         expect(container.children('div').length).toEqual(1);
     });
 });

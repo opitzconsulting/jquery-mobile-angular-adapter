@@ -13,7 +13,8 @@
 <jsp:include page="integration/deactivateNgLocationChange.js"/>
 <jsp:include page="integration/ngRepeatPatch.js"/>
 <jsp:include page="integration/ngOptionsPatch.js"/>
-<jsp:include page="integration/ngOptionPatch.js"/>
+<jsp:include page="integration/option.js"/>
+<jsp:include page="integration/li.js"/>
 <jsp:include page="integration/ngSwitchPatch.js"/>
 <jsp:include page="integration/ngIncludePatch.js"/>
 <jsp:include page="integration/ngInputPatch.js"/>

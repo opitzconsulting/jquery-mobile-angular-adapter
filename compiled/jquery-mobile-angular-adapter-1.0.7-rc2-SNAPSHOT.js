@@ -6,46 +6,34 @@
 * Licensed under the MIT license.
 */
 (function($) {
-    // selectmenu may create parent element and extra pages
-    var fn = $.mobile.selectmenu.prototype;
-    var oldDestroy = fn.destroy;
-    fn.destroy = function () {
-        // Destroy the widget instance first to prevent
-        // a stack overflow.
-        var parent = this.element.closest(".ui-select");
-        var menuPage = this.menuPage;
-        var screen = this.screen;
-        var listbox = this.listbox;
-        oldDestroy.apply(this, arguments);
-        parent && parent.remove();
+    function patch(obj, fnName, callback) {
+        var _old = obj[fnName];
+        obj[fnName] = function() {
+            return callback(_old, this, arguments);
+        }
+    }
+
+    // selectmenu may create parent elements and extra pages
+    patch($.mobile.selectmenu.prototype, 'destroy', function(old, self, args) {
+        old.apply(self, args);
+        var menuPage = self.menuPage;
+        var screen = self.screen;
+        var listbox = self.listbox;
         menuPage && menuPage.remove();
         screen && screen.remove();
         listbox && listbox.remove();
-    };
-
-    // Button wraps the actual button into another div that is stored in the
-    // "button" property.
-    var fn = $.mobile.button.prototype;
-    var oldDestroy = fn.destroy;
-    fn.destroy = function() {
-        // Destroy the widget instance first to prevent
-        // a stack overflow.
-        oldDestroy.apply(this, arguments);
-        this.button.remove();
-    };
+    });
 
     // Listview may create subpages that need to be removed when the widget is destroyed.
-    var fn = $.mobile.listview.prototype;
-    var oldDestroy = fn.destroy;
-    fn.destroy = function() {
+    patch($.mobile.listview.prototype, "destroy", function(old, self, args) {
         // Destroy the widget instance first to prevent
         // a stack overflow.
         // Note: If there are more than 1 listview on the page, childPages will return
         // the child pages of all listviews.
-        var id = this.element.attr('id');
+        var id = self.element.attr('id');
         var childPageRegex = new RegExp($.mobile.subPageUrlKey + "=" +id+"-");
-        var childPages = this.childPages();
-        oldDestroy.apply(this, arguments);
+        var childPages = self.childPages();
+        old.apply(self, args);
         for (var i=0; i<childPages.length; i++) {
             var childPage = $(childPages[i]);
             var dataUrl = childPage.attr('data-url');
@@ -53,30 +41,21 @@
                 childPage.remove();
             }
         }
-    };
+    });
 
     // Slider appends a new element after the input/select element for which it was created.
     // The angular compiler does not like this, so we wrap the two elements into a new parent node.
-    var fn = $.mobile.slider.prototype;
-    var oldCreate = fn._create;
-    fn._create = function() {
-        var res = oldCreate.apply(this, arguments);
+    patch($.mobile.slider.prototype, "_create", function(old, self, args) {
+        var res = old.apply(self, args);
         // var list = $().add(this.element).add(this.slider);
-        var parent = this.element[0].parentNode;
+        var parent = self.element[0].parentNode;
         var div = document.createElement("div");
-        parent.insertBefore(div, this.element[0]);
-        div.appendChild(this.element[0]);
-        div.appendChild(this.slider[0]);
-        this.wrapper = $(div);
+        parent.insertBefore(div, self.element[0]);
+        div.appendChild(self.element[0]);
+        div.appendChild(self.slider[0]);
+        self.wrapper = $(div);
         return res;
-    };
-
-    var oldDestroy = fn.destroy;
-    fn.destroy = function() {
-        // Destroy the parent node that we created in _create.
-        oldDestroy.apply(this, arguments);
-        this.wrapper.remove();
-    };
+    });
 })(window.jQuery);
 (function (angular) {
 
@@ -432,7 +411,7 @@
     }
 
     function refreshOnChildrenChange(widgetName, scope, iElement, iAttrs, ctrls) {
-        scope.$on("$childrenChanged", function () {
+        iElement.bind("$childrenChanged", function () {
             triggerAsyncRefresh(widgetName, scope, iElement);
         });
     }
@@ -490,20 +469,31 @@
      * and angular just uses element.after().
      * See angular issue 831
      */
-    function instrumentNodeForNgRepeat(scope, parent, node, fnName) {
-        var _old = node[fnName];
-        node[fnName] = function (otherNode) {
-            var target = this;
-            while (target.parent()[0] !== parent) {
-                target = target.parent();
-                if (target.length === 0) {
+    function instrumentNodeForNgRepeat(referenceElement, node) {
+        function correctDomNode(jqElement) {
+            var target = jqElement[0];
+            var parent = referenceElement[0].parentNode;
+            while (target.parentNode !== parent) {
+                target = target.parentNode;
+                if (!target) {
                     throw new Error("Could not find the expected parent in the node path", this, parent);
                 }
             }
-            instrumentNodeForNgRepeat(scope, parent, otherNode, fnName);
-            var res = _old.call(target, otherNode);
-            return res;
+            jqElement[0] = target;
+        }
+
+        var _oldAfter = node.after;
+        node.after = function (otherNode) {
+            correctDomNode(this);
+            instrumentNodeForNgRepeat(referenceElement, otherNode);
+            return _oldAfter.apply(this, arguments);
         };
+
+        var _oldRemove = node.remove;
+        node.remove = function() {
+            correctDomNode(this);
+            return _oldRemove.apply(this, arguments);
+        }
     }
 
     function shallowEquals(collection1, collection2) {
@@ -546,7 +536,7 @@
             compile:function (element, attr, linker) {
                 return {
                     pre:function (scope, iterStartElement, attr) {
-                        instrumentNodeForNgRepeat(scope, iterStartElement.parent()[0], iterStartElement, 'after');
+                        instrumentNodeForNgRepeat(iterStartElement, iterStartElement);
                         var expression = attr.ngRepeat;
                         var match = expression.match(/^.+in\s+(.*)\s*$/);
                         if (!match) {
@@ -564,7 +554,9 @@
                             }
                             return changeCounter;
                         }, function () {
-                            scope.$emit("$childrenChanged");
+                            // Note: need to be parent() as jquery cannot trigger events on comments
+                            // (angular creates a comment node when using transclusion, as ng-repeat does).
+                            iterStartElement.parent().trigger("$childrenChanged");
                         });
                     }
                 };
@@ -613,7 +605,7 @@
                     valuesFn = $parse(match[7]);
 
                 scope.$watch(optionsModel, function() {
-                    scope.$emit("$childrenChanged");
+                    element.trigger("$childrenChanged");
                 }, true);
 
                 function optionsModel() {
@@ -654,10 +646,10 @@
                 var valueInterpolateFn = $interpolate(tElement.attr('value'), true);
                 return function (scope, iElement, iAttrs) {
                     scope.$watch(textInterpolateFn, function () {
-                        scope.$emit("$childrenChanged");
+                        iElement.trigger("$childrenChanged");
                     });
                     scope.$watch(valueInterpolateFn, function () {
-                        scope.$emit("$childrenChanged");
+                        iElement.trigger("$childrenChanged");
                     });
                 }
             }
@@ -666,6 +658,60 @@
 })(window.angular);
 (function (angular) {
     var ng = angular.module("ng");
+    ng.directive('li', function() {
+        return {
+            restrict:'E',
+            compile:function (tElement, tAttrs) {
+                return function (scope, iElement, iAttrs) {
+                    iElement.bind("$childrenChanged", function () {
+                        iElement.removeClass("ui-li");
+                        var buttonElements = iElement.data("buttonElements");
+                        if (buttonElements) {
+                            var text = buttonElements.text;
+                            while (text.firstChild) {
+                                iElement[0].appendChild(text.firstChild);
+                            }
+                            $(buttonElements.inner).remove();
+                        }
+                        iElement.removeData("buttonElements");
+                    });
+                }
+            }
+        };
+    });
+})(window.angular);
+(function (angular) {
+    /**
+     * Modify the original switch: Make sure that all elements are removed, even if they
+     * wrap themselves into new elements.
+     * See angular issue 831
+     */
+    function instrumentNodeForNgSwitch(parent, node) {
+        function correctDomNode(jqElement) {
+            var target = jqElement[0];
+            while (target.parentNode !== parent[0]) {
+                target = target.parentNode;
+                if (!target) {
+                    throw new Error("Could not find the expected parent in the node path", this, parent);
+                }
+            }
+            jqElement[0] = target;
+        }
+
+        var _oldAppend = node.append;
+        node.append = function (childNode) {
+            var _oldRemove = childNode.remove;
+            childNode.remove = function() {
+                correctDomNode(this);
+                return _oldRemove.apply(this, arguments);
+            };
+
+            return _oldAppend.apply(this, arguments);
+        };
+
+    }
+
+    var ng = angular.module("ng");
     ng.directive("ngSwitch",
         function () {
             return {
@@ -673,8 +719,9 @@
                 compile:function (element, attr) {
                     var watchExpr = attr.ngSwitch || attr.on;
                     return function (scope, element) {
+                        instrumentNodeForNgSwitch(element, element);
                         scope.$watch(watchExpr, function (value) {
-                            scope.$emit("$childrenChanged");
+                            element.trigger("$childrenChanged");
                         });
                     }
                 }
@@ -691,10 +738,10 @@
                     var srcExp = attr.ngInclude || attr.src;
                     return function (scope, element) {
                         scope.$watch(srcExp, function (src) {
-                            scope.$emit("$childrenChanged");
+                            element.trigger("$childrenChanged");
                         });
                         scope.$on("$includeContentLoaded", function() {
-                            scope.$emit("$childrenChanged");
+                            element.trigger("$childrenChanged");
                         });
                     }
                 }
@@ -747,6 +794,18 @@
 
 
 (function (angular) {
+    function findElementWithSameParent(referenceElement, node) {
+        var target = node[0];
+        var parent = referenceElement[0].parentNode;
+        while (target.parentNode != parent) {
+            target = target.parentNode
+            if (!target) {
+                throw new Error("could not find element in parent", origElement, parent);
+            }
+        }
+        return angular.element(target);
+    }
+
     /*
      * Defines the ng:if tag. This is useful if jquery mobile does not allow
      * an ng-switch element in the dom, e.g. between ul and li.
@@ -757,8 +816,8 @@
         terminal:true,
         compile:function (element, attr, linker) {
             return function (scope, iterStartElement, attr) {
+                iterStartElement[0].doNotMove = true;
                 var expression = attr.ngmIf;
-
                 var lastElement;
                 var lastScope;
                 scope.$watch(expression, function (newValue) {
@@ -769,10 +828,16 @@
                             iterStartElement.after(clone);
                         });
                     } else {
-                        lastElement && lastElement.remove();
+                        if (lastElement) {
+                            lastElement = findElementWithSameParent(iterStartElement, lastElement);
+                            lastElement.remove();
+                            lastElement = null;
+                        }
                         lastScope && lastScope.$destroy();
                     }
-                    scope.$emit("$childrenChanged");
+                    // Note: need to be parent() as jquery cannot trigger events on comments
+                    // (angular creates a comment node when using transclusion, as ng-repeat does).
+                    iterStartElement.parent().trigger("$childrenChanged");
                 });
             };
         }

@@ -8,10 +8,10 @@
                 var valueInterpolateFn = $interpolate(tElement.attr('value'), true);
                 return function (scope, iElement, iAttrs) {
                     scope.$watch(textInterpolateFn, function () {
-                        scope.$emit("$childrenChanged");
+                        iElement.trigger("$childrenChanged");
                     });
                     scope.$watch(valueInterpolateFn, function () {
-                        scope.$emit("$childrenChanged");
+                        iElement.trigger("$childrenChanged");
                     });
                 }
             }

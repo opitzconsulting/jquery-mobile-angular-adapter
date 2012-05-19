@@ -28,12 +28,39 @@ describe("ngm-if", function () {
         expect(element.children('span').scope().test).toBeTruthy();
     });
 
+    describe('with elements that wrap themselves into new elements', function () {
+        beforeEach(function () {
+            module("ngMock", function ($compileProvider) {
+                $compileProvider.directive('wrapper', function () {
+                    return {
+                        restrict:'A',
+                        link:function (scope, iElement) {
+                            iElement.wrap("<div class='wrapper'></div>");
+                        }
+                    }
+                });
+            });
+        });
+
+        it("should remove the wrapper elements with the elements", function() {
+            var c = testutils.compileInPage('<div><span ngm-if="value" wrapper="true"></span></div>');
+            var scope = c.element.scope();
+            scope.value = true;
+            scope.$root.$digest();
+            expect(c.element.children('div').length).toBe(1);
+
+            scope.value = false;
+            scope.$root.$digest();
+            expect(c.element.children('div').length).toBe(0);
+        });
+    });
+
     describe("fire $childrenChanged", function() {
         var eventSpy;
         beforeEach(function() {
             compile('<div><span ngm-if="show"></span></div>');
             eventSpy = jasmine.createSpy("$childrenChanged");
-            scope.$on("$childrenChanged", eventSpy);
+            element.bind("$childrenChanged", eventSpy);
         });
 
         it("should fire the event when the content is added", function() {

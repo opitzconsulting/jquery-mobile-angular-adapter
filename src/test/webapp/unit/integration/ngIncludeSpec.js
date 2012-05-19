@@ -11,7 +11,7 @@ describe('ng-include', function () {
             }
             scope = element.scope();
             eventSpy = jasmine.createSpy("$childrenChanged");
-            scope.$on("$childrenChanged", eventSpy);
+            element.bind("$childrenChanged", eventSpy);
         });
     }
 

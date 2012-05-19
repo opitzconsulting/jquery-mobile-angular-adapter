@@ -123,7 +123,7 @@ describe('compileIntegrationUnit', function () {
         });
     });
 
-    it("should allow binding to input fields that got degraded by jqm", function () {
+    it("should allow binding to input fields that got degraded by jqm as jqm replaces those input fields with new elements", function () {
         var oldDegrade = $.mobile.page.prototype.options.degradeInputs.number;
         $.mobile.page.prototype.options.degradeInputs.number = "text";
         var c = testutils.compileInPage('<input type="number" ng-model="name">');
@@ -133,6 +133,25 @@ describe('compileIntegrationUnit', function () {
         scope.$digest();
         expect(c.element.val()).toBe('123');
         $.mobile.page.prototype.options.degradeInputs.number = oldDegrade;
+    });
+
+    describe("page stamping", function() {
+        it("should allow to use jqm pages with ng-repeat", function() {
+            var e = testutils.compile('<div><div id="{{page.name}}" data-role="page" ng-repeat="page in pages"></div></div>');
+            expect(e.children().length).toBe(0);
+            var scope = e.scope();
+            scope.pages = [{name: 'page1'}, {name: 'page2'}];
+            scope.$root.$digest();
+            var pages = e.children('div');
+            expect(pages.length).toBe(2);
+            var page1 = pages.eq(0);
+            expect(page1.attr("id")).toBe("page1");
+            expect(page1.data("page")).toBeTruthy();
+            var page2 = pages.eq(1);
+            expect(page2.attr("id")).toBe("page2");
+            expect(page2.data("page")).toBeTruthy();
+
+        });
     });
 
     describe("scopes", function () {

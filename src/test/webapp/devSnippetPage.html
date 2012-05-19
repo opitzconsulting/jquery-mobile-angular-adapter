@@ -13,25 +13,33 @@ Test page during development.
     <script src="lib/jquery.mobile.js"></script>
     <script src="lib/angular.js"></script>
     <script src="jqm-angular.jsp"></script>
+
+    <script>
+        function PageController($scope) {
+            $scope.pages = [
+                { name: "page-1", title: "Page 1", content: "Page One Content", next: "page-2" },
+                { name: "page-2", title: "Page 2", content: "Page Two Content", next: "page-3" },
+                { name: "page-3", title: "Page 3", content: 'Page Three Content', next: "page-1" },
+            ];
+            $scope.addPage = function() {
+                $scope.pages.push({ name: "page-4", title: "Page 4", content: "Page Four Content", next: "page-1" });
+                $scope.pages[2].next = "page-4";
+            }
+        }
+
+    </script>
 </head>
-<body>
-<div data-role="page" ng-controller="Ctrl">
+<body ng-controller="PageController">
+<div id="{{page.name}}" data-role="page" ng-repeat="page in pages">
+    <div data-role="header">
+        <h1>{{page.title}}</h1>
+    </div>
     <div data-role="content">
-        {{city}}
-        {{cities}}
-        <a href="devSnippetPage2.html">Page2</a>
-        <select id="rental1Page_city" ng-model="city" ng-options="c.name for c in cities" data-native-menu="true"
-                >
-        </select>
+        {{page.content}}
+        <a href="" ng-click="addPage()">Add page</a>
+        <a href="#{{page.next}}">Next page</a>
     </div>
 </div>
-
-<script>
-    function Ctrl($scope) {
-        $scope.cities = [{name: 'a'}, {name: 'b'}];
-    }
-
-</script>
-
 </body>
+
 </html>

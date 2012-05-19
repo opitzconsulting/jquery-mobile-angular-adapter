@@ -30893,10 +30893,6 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
             return function (element) {
                 // Find page elements
                 var pages = element.filter(selector).add(element.find(selector));
-                // create temporary pages for the non widget markup, that we destroy afterwards.
-                // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
-
-                createPagesWithoutPageCreateEvent(pages);
 
                 // enhance non-widgets markup.
                 markJqmWidgetCreation(function () {
@@ -30904,7 +30900,9 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
                         if (pages.length > 0) {
                             // TODO testcase?
                             // element contains pages.
-                            pages.trigger("create");
+                            // create temporary pages for the non widget markup, that we destroy afterwards.
+                            // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
+                            pages.page();
                         } else {
                             // TODO testcase?
                             // Within a page...
@@ -30948,13 +30946,6 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
                         // Needed so that only $.mobile.activePage gets digested when rootScope.$digest
                         // is called.
                         scope.$disconnect();
-                    }, post:function (scope, iElement, iAttrs) {
-                        // Now trigger the pagecreate-Event to enhance all missing parts of jquery mobile
-                        // that depend on the page (e.g. header and footer).
-                        preventJqmWidgetCreation(function () {
-                            var page = iElement.data("page");
-                            page._trigger("create");
-                        });
                     }
                 }
             }
@@ -31048,6 +31039,15 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         },
         controlgroup:{
             handlers:[refreshOnChildrenChange]
+        },
+        navbar: {
+            handlers:[]
+        },
+        dialog: {
+            handlers:[]
+        },
+        fixedtoolbar: {
+            handlers:[]
         }
     };
 
@@ -31414,6 +31414,546 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
     });
 })(window.jQuery, window.angular);
 
+
+(function (angular) {
+    /*
+     * Defines the ng:if tag. This is useful if jquery mobile does not allow
+     * an ng-switch element in the dom, e.g. between ul and li.
+     */
+    var ngIfDirective = {
+        transclude:'element',
+        priority:1000,
+        terminal:true,
+        compile:function (element, attr, linker) {
+            return function (scope, iterStartElement, attr) {
+                var expression = attr.ngmIf;
+
+                var lastElement;
+                var lastScope;
+                scope.$watch(expression, function (newValue) {
+                    if (newValue) {
+                        lastScope = scope.$new();
+                        linker(lastScope, function (clone) {
+                            lastElement = clone;
+                            iterStartElement.after(clone);
+                        });
+                    } else {
+                        lastElement && lastElement.remove();
+                        lastScope && lastScope.$destroy();
+                    }
+                    scope.$emit("$childrenChanged");
+                });
+            };
+        }
+    };
+    var ng = angular.module('ng');
+    ng.directive('ngmIf', function () {
+        return ngIfDirective;
+    });
+})(window.angular);
+
+(function (angular) {
+    var mod = angular.module('ng');
+
+    /**
+     * A widget to bind general events like touches, ....
+     */
+    mod.directive("ngmEvent", function () {
+        return {
+            compile:function (element, attrs) {
+                var eventHandlers = angular.fromJson(attrs.ngmEvent);
+                return function (scope, element, attrs) {
+                    for (var eventType in eventHandlers) {
+                        registerEventHandler(scope, element, eventType, eventHandlers[eventType]);
+                    }
+                }
+            }
+        }
+    });
+
+    function registerEventHandler(scope, element, eventType, handler) {
+        element.bind(eventType, function (event) {
+            var res = scope.$apply(handler, element);
+            if (eventType.charAt(0) == 'v') {
+                // This is required to prevent a second
+                // click event, see
+                // https://github.com/jquery/jquery-mobile/issues/1787
+                event.preventDefault();
+            }
+        });
+    }
+
+    function createEventDirective(directive, eventType) {
+        mod.directive(directive, function () {
+            return function (scope, element,attrs) {
+                var eventHandler = attrs[directive];
+                registerEventHandler(scope, element, eventType, eventHandler);
+            };
+        });
+    }
+
+    var eventDirectives = {ngmTaphold:'taphold', ngmSwipe:'swipe', ngmSwiperight:'swiperight',
+        ngmSwipeleft:'swipeleft',
+        ngmPagebeforeshow:'pagebeforeshow',
+        ngmPagebeforehide:'pagebeforehide',
+        ngmPageshow:'pageshow',
+        ngmPagehide:'pagehide',
+        ngmClick:'vclick'
+    };
+    for (var directive in eventDirectives) {
+        createEventDirective(directive, eventDirectives[directive])
+    }
+
+})(window.angular);
+(function($, angular) {
+    function splitAtFirstColon(value) {
+        var pos = value.indexOf(':');
+        if (pos===-1) {
+            return [value];
+        }
+        return [
+            value.substring(0, pos),
+            value.substring(pos+1)
+        ];
+    }
+
+    function callActivateFnOnPageChange(fnName, params) {
+        if (fnName) {
+            $(document).one("pagebeforechange", function(event, data) {
+                var toPageUrl = $.mobile.path.parseUrl( data.toPage );
+                var page = $("#"+toPageUrl.hash.substring(1));
+                function executeCall() {
+                    var scope = page.scope();
+                    scope[fnName].apply(scope, params);
+                }
+                if (!page.data("page")) {
+                    page.one("pagecreate", executeCall);
+                    return;
+                }
+                executeCall();
+            });
+        }
+    }
+
+    /*
+     * Service for page navigation.
+     * @param target has the syntax: [<transition>:]pageId
+     * @param activateFunctionName Function to call in the target scope.
+     * @param further params Parameters for the function that should be called in the target scope.
+     */
+    function navigate(target, activateFunctionName) {
+        var activateParams = Array.prototype.slice.call(arguments, 2);
+        var navigateOptions, pageId;
+        callActivateFnOnPageChange(activateFunctionName, activateParams);
+        if (typeof target === 'object') {
+            navigateOptions = target;
+            pageId = navigateOptions.target;
+        } else {
+            var parts = splitAtFirstColon(target);
+            if (parts.length === 2 && parts[0] === 'back') {
+                var pageId = parts[1];
+                var relativeIndex = getIndexInStack(pageId);
+                if (relativeIndex === undefined) {
+                    pageId = jqmChangePage(pageId, {reverse: true});
+                } else {
+                    window.history.go(relativeIndex);
+                }
+                return;
+            } else if (parts.length === 2) {
+                navigateOptions = { transition: parts[0] };
+                pageId = parts[1];
+            } else {
+                pageId = parts[0];
+                navigateOptions = undefined;
+            }
+        }
+        if (pageId === 'back') {
+            window.history.go(-1);
+        } else {
+            jqmChangePage(pageId, navigateOptions);
+        }
+    }
+
+    function jqmChangePage(pageId, navigateOptions) {
+        var callArgs = [pageId];
+        if (navigateOptions) {
+            callArgs.push(navigateOptions);
+        }
+        $.mobile.changePage.apply($.mobile, callArgs);
+        return pageId;
+    }
+
+
+    var mod = angular.module('ng');
+    mod.factory('$navigate', function() {
+        return navigate;
+    });
+
+    function getIndexInStack(pageId) {
+        var stack = $.mobile.urlHistory.stack;
+        var res = 0;
+        var pageUrl;
+        for (var i = stack.length - 2; i >= 0; i--) {
+            pageUrl = stack[i].pageUrl;
+            if (pageUrl === pageId) {
+                return i - stack.length + 1;
+            }
+        }
+        return undefined;
+    }
+
+    return navigate;
+
+})(window.jQuery, window.angular);
+(function(angular) {
+    var storageName = '$$sharedControllers';
+
+    function storage(rootScope) {
+        return rootScope[storageName] = rootScope[storageName] || {};
+    }
+
+    function sharedCtrl(rootScope, controllerName, $controller, usedInPage) {
+        var store = storage(rootScope);
+        var scopeInstance = store[controllerName];
+        if (!scopeInstance) {
+            scopeInstance = rootScope.$new();
+            $controller(controllerName, {$scope: scopeInstance});
+            store[controllerName] = scopeInstance;
+            scopeInstance.$$referenceCount = 0;
+        }
+        scopeInstance.$$referenceCount++;
+        usedInPage.bind("$destroy", function() {
+            scopeInstance.$$referenceCount--;
+            if (scopeInstance.$$referenceCount===0) {
+                scopeInstance.$destroy();
+                delete store[controllerName];
+            }
+        });
+        return scopeInstance;
+    }
+
+    function parseSharedControllersExpression(expression) {
+        var pattern = /([^\s,:]+)\s*:\s*([^\s,:]+)/g;
+        var match;
+        var hasData = false;
+        var controllers = {};
+        while (match = pattern.exec(expression)) {
+            hasData = true;
+            controllers[match[1]] = match[2];
+        }
+        if (!hasData) {
+            throw "Expression " + expression + " needs to have the syntax <name>:<controller>,...";
+        }
+        return controllers;
+    }
+
+    var mod = angular.module('ng');
+    mod.directive('ngmSharedController', ['$controller', function($controller) {
+        return {
+            scope: true,
+            compile: function(element, attrs) {
+                var expression = attrs.ngmSharedController;
+                var controllers = parseSharedControllersExpression(expression);
+                var preLink = function(scope) {
+                    for (var name in controllers) {
+                        scope[name] = sharedCtrl(scope.$root, controllers[name], $controller, element);
+                    }
+                };
+                return {
+                    pre: preLink
+                }
+            }
+        };
+    }]);
+})(window.angular);
+(function($, angular) {
+    var showCalls = [];
+
+    function onClick(event) {
+        var lastCall = showCalls[showCalls.length - 1];
+        if (lastCall.callback) {
+            rootScope.$apply(function() {
+                lastCall.callback.apply(this, arguments);
+            });
+        }
+        // This is required to prevent a second
+        // click event, see
+        // https://github.com/jquery/jquery-mobile/issues/1787
+        event.preventDefault();
+    }
+
+    var loadDialog;
+
+    function initIfNeeded() {
+        if (!loadDialog || loadDialog.length == 0) {
+            loadDialog = $(".ui-loader");
+            loadDialog.bind('vclick', onClick);
+        }
+    }
+
+    if (!$.mobile.loadingMessageWithCancel) {
+        $.mobile.loadingMessageWithCancel = 'Loading. Click to cancel.';
+    }
+
+    function updateUi() {
+        initIfNeeded();
+        if (showCalls.length > 0) {
+            var lastCall = showCalls[showCalls.length - 1];
+            var msg = lastCall.msg;
+            var oldMessage = $.mobile.loadingMessage;
+            var oldTextVisible = $.mobile.loadingMessageTextVisible;
+            if (msg) {
+                $.mobile.loadingMessage = msg;
+                $.mobile.loadingMessageTextVisible = true;
+            }
+            $.mobile.showPageLoadingMsg();
+            $.mobile.loadingMessageTextVisible = oldTextVisible;
+            $.mobile.loadingMessage = oldMessage;
+        } else {
+            $.mobile.hidePageLoadingMsg();
+        }
+    }
+
+    /**
+     * jquery mobile hides the wait dialog when pages are transitioned.
+     * This immediately closes wait dialogs that are opened in the pagebeforeshow event.
+     */
+    $('div').live('pageshow', function(event, ui) {
+        updateUi();
+    });
+
+    /**
+     *
+     * @param msg (optional)
+     * @param tapCallback (optional)
+     */
+    function show() {
+        var msg, tapCallback;
+        if (typeof arguments[0] == 'string') {
+            msg = arguments[0];
+        }
+        if (typeof arguments[0] == 'function') {
+            tapCallback = arguments[0];
+        }
+        if (typeof arguments[1] == 'function') {
+            tapCallback = arguments[1];
+        }
+
+        showCalls.push({msg: msg, callback: tapCallback});
+        updateUi();
+    }
+
+    function hide() {
+        showCalls.pop();
+        updateUi();
+    }
+
+    function always(promise, callback) {
+        promise.then(callback, callback);
+    }
+
+    /**
+     *
+     * @param promise
+     * @param msg (optional)
+     */
+    function waitFor(promise, msg) {
+        show(msg);
+        always(promise, function() {
+            hide();
+        });
+    }
+
+    /**
+     *
+     * @param deferred
+     * @param cancelData
+     * @param msg (optional)
+     */
+    function waitForWithCancel(deferred, cancelData, msg) {
+        if (!msg) {
+            msg = $.mobile.loadingMessageWithCancel;
+        }
+        show(msg, function() {
+            deferred.reject(cancelData);
+        });
+        always(deferred.promise, function() {
+            hide();
+        });
+    }
+
+    var res = {
+        show: show,
+        hide: hide,
+        waitFor: waitFor,
+        waitForWithCancel:waitForWithCancel
+    };
+
+    var mod = angular.module('ng');
+    var rootScope;
+    mod.factory('$waitDialog', ['$rootScope', function($rootScope) {
+        rootScope = $rootScope;
+        return res;
+    }]);
+
+    return res;
+})(window.jQuery, window.angular);
+(function ($, angular) {
+
+    function pagedListFilterFactory(defaultListPageSize, filterFilter, orderByFilter) {
+
+        function createPagedList(list) {
+            var enhanceFunctions = {
+                refreshIfNeeded:refreshIfNeeded,
+                setFilter:setFilter,
+                setOrderBy:setOrderBy,
+                setPageSize:setPageSize,
+                loadNextPage:loadNextPage,
+                hasMorePages:hasMorePages,
+                reset:reset,
+                refreshCount:0
+            };
+
+            var pagedList = [];
+            var pageSize, originalList, originalListClone, refreshNeeded, filter, orderBy, loadedCount, availableCount;
+
+            for (var fnName in enhanceFunctions) {
+                pagedList[fnName] = enhanceFunctions[fnName];
+            }
+            init(list);
+            var oldHasOwnProperty = pagedList.hasOwnProperty;
+            pagedList.hasOwnProperty = function (propName) {
+                if (propName in enhanceFunctions) {
+                    return false;
+                }
+                return oldHasOwnProperty.apply(this, arguments);
+            };
+            return pagedList;
+
+            function init(list) {
+                setPageSize(-1);
+                originalList = list;
+                originalListClone = [];
+                refreshNeeded = true;
+                reset();
+            }
+
+            function refresh() {
+                var list = originalList;
+                originalListClone = [].concat(list);
+                if (filter) {
+                    list = filterFilter(list, filter);
+                }
+                if (orderBy) {
+                    list = orderByFilter(list, orderBy);
+                }
+                if (loadedCount < pageSize) {
+                    loadedCount = pageSize;
+                }
+                if (loadedCount > list.length) {
+                    loadedCount = list.length;
+                }
+                availableCount = list.length;
+                var newData = list.slice(0, loadedCount);
+                var spliceArgs = [0, pagedList.length].concat(newData);
+                pagedList.splice.apply(pagedList, spliceArgs);
+                pagedList.refreshCount++;
+            }
+
+            function refreshIfNeeded() {
+                if (originalList.length != originalListClone.length) {
+                    refreshNeeded = true;
+                } else {
+                    for (var i = 0; i < originalList.length; i++) {
+                        if (originalList[i] !== originalListClone[i]) {
+                            refreshNeeded = true;
+                            break;
+                        }
+                    }
+                }
+                if (refreshNeeded) {
+                    refresh();
+                    refreshNeeded = false;
+                }
+                return pagedList;
+            }
+
+            function setPageSize(newPageSize) {
+                if (!newPageSize || newPageSize < 0) {
+                    newPageSize = defaultListPageSize;
+                }
+                if (newPageSize !== pageSize) {
+                    pageSize = newPageSize;
+                    refreshNeeded = true;
+                }
+            }
+
+            function setFilter(newFilter) {
+                if (!angular.equals(filter, newFilter)) {
+                    filter = newFilter;
+                    refreshNeeded = true;
+                }
+            }
+
+            function setOrderBy(newOrderBy) {
+                if (!angular.equals(orderBy, newOrderBy)) {
+                    orderBy = newOrderBy;
+                    refreshNeeded = true;
+                }
+            }
+
+            function loadNextPage() {
+                loadedCount = loadedCount + pageSize;
+                refreshNeeded = true;
+            }
+
+            function hasMorePages() {
+                refreshIfNeeded();
+                return loadedCount < availableCount;
+            }
+
+            function reset() {
+                loadedCount = 0;
+                refreshNeeded = true;
+            }
+        }
+
+        return function (list, param) {
+            if (!list) {
+                return list;
+            }
+            var pagedList = list.pagedList;
+            if (typeof param === 'string') {
+                if (!pagedList) {
+                    return;
+                }
+                // commands do not create a new paged list nor do they change the attributes of the list.
+                if (param === 'loadMore') {
+                    pagedList.loadNextPage();
+                } else if (param === 'hasMore') {
+                    return pagedList.hasMorePages();
+                }
+                return;
+            }
+            if (!pagedList) {
+                pagedList = createPagedList(list);
+                list.pagedList = pagedList;
+            }
+            if (param) {
+                pagedList.setPageSize(param.pageSize);
+                pagedList.setFilter(param.filter);
+                pagedList.setOrderBy(param.orderBy);
+            }
+            pagedList.refreshIfNeeded();
+            return pagedList;
+        };
+    }
+
+    pagedListFilterFactory.$inject = ['defaultListPageSize', 'filterFilter', 'orderByFilter'];
+    var mod = angular.module(['ng']);
+    mod.constant('defaultListPageSize', 10);
+    mod.filter('paged', pagedListFilterFactory);
+})(window.jQuery, window.angular);
 
 (function (angular) {
     /*

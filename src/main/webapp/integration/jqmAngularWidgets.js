@@ -10,10 +10,10 @@
             handlers:[disabledHandler]
         },
         checkboxradio:{
-            handlers:[disabledHandler, refreshOnNgModelRender]
+            handlers:[disabledHandler, refreshAfterNgModelRender]
         },
         slider:{
-            handlers:[disabledHandler, refreshOnNgModelRender]
+            handlers:[disabledHandler, refreshAfterNgModelRender]
         },
         listview:{
             handlers:[refreshOnChildrenChange]
@@ -22,7 +22,7 @@
             handlers:[refreshOnChildrenChange]
         },
         selectmenu:{
-            handlers:[disabledHandler, refreshOnNgModelRender, refreshOnChildrenChange]
+            handlers:[disabledHandler, refreshAfterNgModelRender, refreshOnChildrenChange]
         },
         controlgroup:{
             handlers:[refreshOnChildrenChange]
@@ -78,7 +78,7 @@
         ctrl[listenersName].push(fn);
     }
 
-    function refreshOnNgModelRender(widgetName, scope, iElement, iAttrs, ctrls) {
+    function refreshAfterNgModelRender(widgetName, scope, iElement, iAttrs, ctrls) {
         var ngModelCtrl = ctrls[0];
         if (ngModelCtrl) {
             addCtrlFunctionListener(ngModelCtrl, "$render", function () {

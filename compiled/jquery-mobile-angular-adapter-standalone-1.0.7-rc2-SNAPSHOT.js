@@ -30882,65 +30882,135 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
     $.mobile.autoInitializePage = false;
     var jqmInitialized = false;
 
-    ng.config(['$provide', function ($provide) {
-        $provide.decorator('$compile', ['$delegate', function ($delegate) {
-            var selector = ':jqmData(role="page"), :jqmData(role="dialog")';
-            var rolePageAttr = 'jqm-page';
-            return function (element) {
-                // Find page elements
-                var pages = element.filter(selector).add(element.find(selector));
-
-                // enhance non-widgets markup.
-                markJqmWidgetCreation(function () {
-                    preventJqmWidgetCreation(function () {
-                        if (pages.length > 0) {
-                            // TODO testcase?
-                            // element contains pages.
-                            // create temporary pages for the non widget markup, that we destroy afterwards.
-                            // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
-                            pages.page();
-                        } else {
-                            // TODO testcase?
-                            // Within a page...
-                            element.parent().trigger("create");
-                        }
-                    });
-                });
-
-                // Destroy the temporary pages again
-                pages.page("destroy");
-
-                // Mark jqm pages for our directive.
-                // We want to create a special directive that matches data-role="page" and data-role="dialog",
-                // but none of the other data-role="..." elements of jquery mobile. As we want to create a new
-                // scope for those elements (but not for the others), this is only possible, if we preprocess the dom and add a new attribute
-                // that is unique for pages and dialogs, for which we can register an angular directive.
-                pages.attr(rolePageAttr, true);
-                return $delegate.apply(this, arguments);
-            }
-        }]);
-    }]);
-
     var lastCreatedPages = [];
 
-    // Directive for jquery mobile pages. Refreshes the jquery mobile widgets
-    // when the page changes.
-    ng.directive('jqmPage', ['$compile', function ($compile) {
-        return {
-            restrict:'A',
-            scope:true,
-            compile:function (tElement, tAttrs) {
-                return {
-                    pre:function (scope, iElement, iAttrs) {
+    /**
+     * This directive will preprocess the dom during compile.
+     * For this, the directive needs to have the highest priority possible,
+     * so that it is used even before ng-repeat.
+     */
+    var preProcessDirective = {
+        restrict:'EA',
+        priority: 100000,
+        compile:function (tElement, tAttrs) {
+            if (tAttrs.preProcessDirective) {
+                return;
+            }
+            tAttrs.preProcessDirective = true;
+
+            // For page elements:
+            var roleAttr = tAttrs.role;
+            var isPage = roleAttr == 'page' || roleAttr == 'dialog';
+
+            // enhance non-widgets markup.
+            markJqmWidgetCreation(function () {
+                preventJqmWidgetCreation(function () {
+
+                    if (isPage) {
+                        // element contains pages.
+                        // create temporary pages for the non widget markup, that we destroy afterwards.
+                        // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
+                        tElement.page();
+                    } else {
+                        if (!tElement.data("jqmEnhanced")) {
+                            tElement.parent().trigger("create");
+                        }
+                    }
+                    // Note: The page plugin also enhances child elements,
+                    // so we tag the child elements also in that case.
+                    angular.element(tElement[0].getElementsByTagName("*")).data("jqmEnhanced", "true");
+                });
+            });
+
+            // Destroy the temporary pages again
+            if (isPage) {
+                tElement.page("destroy");
+            }
+        }
+    };
+
+
+    /**
+     * This directive creates the jqm widgets.
+     */
+    var widgetDirective = {
+        restrict:'EA',
+        // after the normal angular widgets like input, ngModel, ...
+        priority: 0,
+        // This will be changed by the setWidgetScopeDirective...
+        scope: false,
+        require: ['?ngModel'],
+        compile:function (tElement, tAttrs) {
+            if (tAttrs.widgetDirective) {
+                return;
+            }
+            tAttrs.widgetDirective = true;
+
+            // For page elements:
+            var roleAttr = tAttrs["role"];
+            var isPage = roleAttr == 'page' || roleAttr == 'dialog';
+            var widgetName = tElement.attr("jqm-widget");
+            return {
+                pre:function (scope, iElement, iAttrs) {
+                    if (isPage) {
                         // Create the page widget without the pagecreate-Event.
                         // This does no dom transformation, so it's safe to call this in the prelink function.
                         createPagesWithoutPageCreateEvent(iElement);
                         lastCreatedPages.push(scope);
                     }
+                },
+                post:function(scope, iElement, iAttrs, ctrls) {
+                    if (widgetName) {
+                        if (!iElement.data(widgetName)) {
+                            iElement[widgetName]();
+                        }
+                        var linker = jqmWidgetLinker[widgetName];
+                        for (var i = 0; i < linker.length; i++) {
+                            linker[i].apply(this, arguments);
+                        }
+                    }
                 }
-            }
-        };
-    }]);
+            };
+        }
+    };
+
+    /**
+     * This widget sets or resets the properties of the actual widgetDirective.
+     * This is especially required for the scope property.
+     * We need this as angular does not (yet) allow us to create a widget for e.g. data-role="page",
+     * but not for data-role="content".
+     */
+    var setWidgetScopeDirective = {
+        restrict: widgetDirective.restrict,
+        priority: widgetDirective.priority+1,
+        compile:function (tElement, tAttrs) {
+            widgetDirective.scope = (tAttrs.role == 'page' || tAttrs.role== 'dialog');
+        }
+    };
+
+    /**
+     * Register our directives for all possible elements with jqm markup.
+     * Note: We cannot just create a widget for the jqm-widget attribute, that we create,
+     * as this would not work for the jqm widgets on the root element of the compile
+     * (angular calculates the directives to apply before calling the compile function of
+     * any of those directives).
+     * @param tagList
+     */
+    function registerDirective(tagList) {
+        for (var i=0; i<tagList.length; i++) {
+            ng.directive(tagList[i], function() {
+                return preProcessDirective;
+            });
+            ng.directive(tagList[i], function() {
+                return setWidgetScopeDirective;
+            });
+            ng.directive(tagList[i], function() {
+                return widgetDirective;
+            });
+        }
+    }
+
+    registerDirective(['role', 'input', 'select', 'button', 'textarea']);
 
     $.fn.orig = {};
 
@@ -30974,26 +31044,6 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
     }
 
     var jqmWidgetLinker = {};
-    ng.directive('jqmWidget', function () {
-        return {
-            require:['?ngModel'],
-            compile:function () {
-                return {
-                    post:function (scope, iElement, iAttrs, ctrls) {
-                        var widgetName = iAttrs.jqmWidget;
-                        if (!iElement.data(widgetName)) {
-                            iElement[widgetName]();
-                        }
-                        var linker = jqmWidgetLinker[widgetName];
-                        for (var i = 0; i < linker.length; i++) {
-                            linker[i].apply(this, arguments);
-                        }
-                    }
-                }
-            }
-        }
-    });
-
 
     $.mobile.registerJqmNgWidget = function (widgetName, linkFn) {
         var linkFns = linkFn ? [linkFn] : [];
@@ -31013,10 +31063,10 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
             handlers:[disabledHandler]
         },
         checkboxradio:{
-            handlers:[disabledHandler, refreshOnNgModelRender]
+            handlers:[disabledHandler, refreshAfterNgModelRender]
         },
         slider:{
-            handlers:[disabledHandler, refreshOnNgModelRender]
+            handlers:[disabledHandler, refreshAfterNgModelRender]
         },
         listview:{
             handlers:[refreshOnChildrenChange]
@@ -31025,7 +31075,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
             handlers:[refreshOnChildrenChange]
         },
         selectmenu:{
-            handlers:[disabledHandler, refreshOnNgModelRender, refreshOnChildrenChange]
+            handlers:[disabledHandler, refreshAfterNgModelRender, refreshOnChildrenChange]
         },
         controlgroup:{
             handlers:[refreshOnChildrenChange]
@@ -31081,7 +31131,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         ctrl[listenersName].push(fn);
     }
 
-    function refreshOnNgModelRender(widgetName, scope, iElement, iAttrs, ctrls) {
+    function refreshAfterNgModelRender(widgetName, scope, iElement, iAttrs, ctrls) {
         var ngModelCtrl = ctrls[0];
         if (ngModelCtrl) {
             addCtrlFunctionListener(ngModelCtrl, "$render", function () {

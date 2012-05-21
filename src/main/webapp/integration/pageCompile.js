@@ -89,17 +89,17 @@
      * For this, the directive needs to have the highest priority possible,
      * so that it is used even before ng-repeat.
      */
-    var preprocessDirective = {
+    var preProcessDirective = {
         restrict:'EA',
-        priority: Number.MAX_VALUE,
+        priority: 100000,
         compile:function (tElement, tAttrs) {
-            if (tAttrs.preprocessDirective) {
+            if (tAttrs.preProcessDirective) {
                 return;
             }
-            tAttrs.preprocessDirective = true;
+            tAttrs.preProcessDirective = true;
 
             // For page elements:
-            var roleAttr = tAttrs["role"];
+            var roleAttr = tAttrs.role;
             var isPage = roleAttr == 'page' || roleAttr == 'dialog';
 
             // enhance non-widgets markup.
@@ -107,19 +107,17 @@
                 preventJqmWidgetCreation(function () {
 
                     if (isPage) {
-                        // TODO testcase?
                         // element contains pages.
                         // create temporary pages for the non widget markup, that we destroy afterwards.
                         // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
                         tElement.page();
                     } else {
-                        // TODO testcase?
-                        // Within a page...
-                        // TODO testcases so we trigger create as little as possible!
                         if (!tElement.data("jqmEnhanced")) {
                             tElement.parent().trigger("create");
                         }
                     }
+                    // Note: The page plugin also enhances child elements,
+                    // so we tag the child elements also in that case.
                     angular.element(tElement[0].getElementsByTagName("*")).data("jqmEnhanced", "true");
                 });
             });
@@ -131,26 +129,13 @@
         }
     };
 
-    /**
-     * This widget sets or resets the properties of the actual widgetDirective.
-     * This is especially required for the scope property.
-     * We need this as angular does not (yet) allow us to create a widget for e.g. data-role="page",
-     * but not for data-role="content".
-     */
-    var setWidgetScopeDirective = {
-        restrict:'EA',
-        priority: 1,
-        compile:function (tElement, tAttrs) {
-            widgetDirective.scope = (tAttrs.role == 'page' || tAttrs.role== 'dialog');
-        }
-    };
 
     /**
      * This directive creates the jqm widgets.
-     * @type {Object}
      */
     var widgetDirective = {
         restrict:'EA',
+        // after the normal angular widgets like input, ngModel, ...
         priority: 0,
         // This will be changed by the setWidgetScopeDirective...
         scope: false,
@@ -189,10 +174,32 @@
         }
     };
 
+    /**
+     * This widget sets or resets the properties of the actual widgetDirective.
+     * This is especially required for the scope property.
+     * We need this as angular does not (yet) allow us to create a widget for e.g. data-role="page",
+     * but not for data-role="content".
+     */
+    var setWidgetScopeDirective = {
+        restrict: widgetDirective.restrict,
+        priority: widgetDirective.priority+1,
+        compile:function (tElement, tAttrs) {
+            widgetDirective.scope = (tAttrs.role == 'page' || tAttrs.role== 'dialog');
+        }
+    };
+
+    /**
+     * Register our directives for all possible elements with jqm markup.
+     * Note: We cannot just create a widget for the jqm-widget attribute, that we create,
+     * as this would not work for the jqm widgets on the root element of the compile
+     * (angular calculates the directives to apply before calling the compile function of
+     * any of those directives).
+     * @param tagList
+     */
     function registerDirective(tagList) {
         for (var i=0; i<tagList.length; i++) {
             ng.directive(tagList[i], function() {
-                return preprocessDirective;
+                return preProcessDirective;
             });
             ng.directive(tagList[i], function() {
                 return setWidgetScopeDirective;
@@ -203,8 +210,7 @@
         }
     }
 
-    // TODO add all other tags / attributes that jqm enhances!
-    registerDirective(['role', 'input', 'select', 'button']);
+    registerDirective(['role', 'input', 'select', 'button', 'textarea']);
 
     $.fn.orig = {};
 

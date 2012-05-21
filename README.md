@@ -22,7 +22,8 @@ Jquery mobile has two kinds of markup:
 
 Integration strategy:
 
-1. We enhance `$compile` to trigger the jqm `create` and `pagecreate` event before the real compilation.
+1. We have angular widgets for all possible jqm markup.
+2. In the `compile` function, we trigger the jqm `create` and `pagecreate` event.
    Before this, we instrument all stateful jqm widgets (see above), so they do not
    really create the jqm widget, but only add the attribute `jqm-widget=<widgetName>` to the corresponding element.
    By this, all stateless  markup can be used by angular for stamping (e.g. in ng-repeat),

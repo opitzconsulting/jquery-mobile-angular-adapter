@@ -11,8 +11,8 @@ describe('compileIntegrationUnit', function () {
         expect(c.hasClass('ui-page')).toBe(true);
     });
 
-    it("should stamp non widget markup without calling jqm", function () {
-        // Note: buttonMarkup is a non widget markup
+    it("should stamp stateless markup without calling jqm", function () {
+        // Note: buttonMarkup is a stateless widget
         var spy = testutils.spyOnJq('buttonMarkup').andCallThrough();
         var c = testutils.compileInPage('<div><a href="" data-role="button" ng-repeat="l in list"></a></div>');
         expect(spy.callCount).toBeGreaterThan(0);
@@ -25,8 +25,14 @@ describe('compileIntegrationUnit', function () {
         expect(childLinks.length).toBe(2);
     });
 
-    it("should stamp jqm widgets using the jqm widgets", function () {
-        // Note: button is a widget
+    it("should call stateless jqm widgets as few as possible", function () {
+        var spy = testutils.spyOnJq('buttonMarkup').andCallThrough();
+        var c = testutils.compileInPage('<a href="" data-role="button"></a>');
+        expect(spy.callCount).toBe(1);
+    });
+
+    it("should stamp stateful jqm widgets using the jqm widgets", function () {
+        // Note: button is a stateful widget
         var spy = testutils.spyOnJq('button').andCallThrough();
         var c = testutils.compileInPage('<div><button ng-repeat="l in list"></button></div>');
         expect(spy.callCount).toBe(0);
@@ -89,8 +95,8 @@ describe('compileIntegrationUnit', function () {
             }
         }
 
-        it("should stamp non widget markup without calling jqm", function () {
-            // Note: buttonMarkup is a non widget markup
+        it("should stamp stateless markup without calling jqm", function () {
+            // Note: buttonMarkup is a stateless widget
             var spy = testutils.spyOnJq('buttonMarkup').andCallThrough();
             var c = compileInPartialInPage('<a href="" data-role="button" ng-repeat="l in list"></a>');
             expect(spy.callCount).toBe(1);
@@ -103,7 +109,7 @@ describe('compileIntegrationUnit', function () {
             expect(childLinks.length).toBe(2);
         });
 
-        it("should stamp jqm widgets using the jqm widgets", function () {
+        it("should stamp stateful jqm widgets using the jqm widgets", function () {
             // Note: button is a widget
             var spy = testutils.spyOnJq('button').andCallThrough();
             var c = compileInPartialInPage('<button ng-repeat="l in list"></button>');

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app>
+<html ng-app="myApp">
 <!--
 Test page during development.
 -->
@@ -15,55 +15,34 @@ Test page during development.
     <script src="jqm-angular.jsp"></script>
 
     <script>
-        function TestController($scope) {
-            $scope.ItemCollection = [{ID:1, Name:"Entry1"}, {ID:2, Name:"Entry2"}];
-            $scope.IDItemEditable = null;
+        /* <![CDATA[ */
+        angular.module('myApp', [])
+                .directive('testDirective', function () {
+                    return {
+                        controller: 'TestCtrl',
+                        replace: true,
+                        restrict:'E',
+                        templateUrl:'template.html'
+                    }
+                })
+        ;
 
-            $scope.SetEditable = function(id) {
-                $scope.IDItemEditable = id;
-            };
-
-            $scope.SaveEdit = function(item) {
-                //Do something and leave edit mode
-                $scope.IDItemEditable = null;
-            };
+        ButtonCtrl.$inject = [ '$scope' ];
+        function ButtonCtrl( $scope ) {
+            $scope.buttonLabel = 'Button';
         }
+
+        function TestCtrl( $scope ) {
+        }
+        /* ]]> */
     </script>
 </head>
 <body>
-
-<div data-role="page" id="jur" ng:controller="TestController">
-    <div data-role="content" data-theme="d">
-
-        <ul id="grid" data-role="listview" data-inset="false">
-            <li data-theme="a">
-                <a href="#">Lights & Devices Details</a>
-                <a style="display:none" href="#"></a>
-            </li>
-
-            <li data-theme="c" ng:repeat="item in ItemCollection">
-                <a href="#" ngm-if="item.ID != IDItemEditable" ngm-click="SetEditable(item.ID)">
-                    <h3>{{item.Name}}</h3>
-                </a>
-                <a href="#" data-theme="c" data-icon="delete" ngm-if="item.ID != IDItemEditable"></a>
-
-                <a href="#" ngm-if="item.ID == IDItemEditable">
-                    <div data-role="fieldcontain">
-                        <label>Name</label>
-                        <input type="text" ng-model="item.Name" />
-                    </div>
-
-                </a>
-                <a href="#" data-theme="c" data-icon="check"
-                   ngm-click="SaveEdit(item)"
-                   ngm-if="item.ID == IDItemEditable">save</a>
-            </li>
-        </ul>
-
-
+<div data-role="page" ng-controller="ButtonCtrl">
+    <div data-role="content" ng-init="filterSet = [{label: 'test'}]">
+        <test-directive></test-directive>
     </div>
 </div>
-
 </body>
 
 </html>

@@ -232,13 +232,20 @@
                         // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
                         tElement.page();
                     } else {
-                        if (!tElement.data("jqmEnhanced")) {
+                        if (!tElement[0].jqmEnhanced) {
                             tElement.parent().trigger("create");
                         }
                     }
                     // Note: The page plugin also enhances child elements,
                     // so we tag the child elements also in that case.
-                    angular.element(tElement[0].getElementsByTagName("*")).data("jqmEnhanced", "true");
+                    // Note: We cannot use $.fn.data here, as this is also copied when
+                    // angular uses a directive with the template-property.
+                    var children = tElement[0].getElementsByTagName("*");
+                    for (var i=0; i<children.length; i++) {
+                        children.item(i).jqmEnhanced = true;
+                    }
+                    tElement[0].jqmEnhanced = true;
+
                 });
             });
 

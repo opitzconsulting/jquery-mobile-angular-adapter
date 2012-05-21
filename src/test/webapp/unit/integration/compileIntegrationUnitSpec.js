@@ -129,6 +129,90 @@ describe('compileIntegrationUnit', function () {
         });
     });
 
+    describe('template directives', function() {
+        it("should enhance markup created by directives with template property and replace mode", function() {
+            module("ngMock", function ($compileProvider) {
+                $compileProvider.directive('sample', function () {
+                    return {
+                        restrict:'A',
+                        replace: true,
+                        template: '<a href="" data-role="button"></a>'
+                    }
+                });
+            });
+            var c = testutils.compileInPage('<div sample="true"></div>');
+            expect(c.element.hasClass("ui-btn")).toBe(true);
+            expect(c.element[0].nodeName.toUpperCase()).toBe('A');
+        });
+
+        it("should enhance markup created by directives with template property and append mode", function() {
+            module("ngMock", function ($compileProvider) {
+                $compileProvider.directive('sample', function () {
+                    return {
+                        restrict:'A',
+                        replace: false,
+                        template: '<a href="" data-role="button"></a>'
+                    }
+                });
+            });
+            var c = testutils.compileInPage('<div sample="true"></div>');
+            var link = c.element.children("a");
+            expect(link.hasClass("ui-btn")).toBe(true);
+            expect(link[0].nodeName.toUpperCase()).toBe('A');
+        });
+
+        it("should enhance markup created by directives with templateUrl property and replace mode", function() {
+            var _$httpBackend;
+
+            module("ngMock", function ($compileProvider) {
+                $compileProvider.directive('sampleUrl', function () {
+                    return {
+                        restrict:'A',
+                        replace: true,
+                        templateUrl: 'sampleUrl'
+                    }
+                });
+
+            });
+            inject(function ($httpBackend) {
+                $httpBackend.when('GET', /.*sampleUrl*/).respond('<a href="" data-role="button" class="sampleUrl"></a>');
+                _$httpBackend = $httpBackend;
+            });
+            var c = testutils.compileInPage('<div sample-url="true"></div>');
+            _$httpBackend.flush();
+            var element = c.page.find("a");
+            expect(element.hasClass("ui-btn")).toBe(true);
+            expect(element[0].nodeName.toUpperCase()).toBe('A');
+            expect(element.hasClass("sampleUrl")).toBe(true);
+        });
+
+        it("should enhance markup created by directives with templateUrl property and append mode", function() {
+            var _$httpBackend;
+
+            module("ngMock", function ($compileProvider) {
+                $compileProvider.directive('sampleUrl', function () {
+                    return {
+                        restrict:'A',
+                        replace: false,
+                        templateUrl: 'sampleUrl'
+                    }
+                });
+
+            });
+            inject(function ($httpBackend) {
+                $httpBackend.when('GET', /.*sampleUrl*/).respond('<a href="" data-role="button" class="sampleUrl"></a>');
+                _$httpBackend = $httpBackend;
+            });
+            var c = testutils.compileInPage('<div sample-url="true"></div>');
+            _$httpBackend.flush();
+            var link = c.element.children("a");
+            expect(link.hasClass("ui-btn")).toBe(true);
+            expect(link[0].nodeName.toUpperCase()).toBe('A');
+            expect(link.hasClass("sampleUrl")).toBe(true);
+        });
+
+    });
+
     it("should allow binding to input fields that got degraded by jqm as jqm replaces those input fields with new elements", function () {
         var oldDegrade = $.mobile.page.prototype.options.degradeInputs.number;
         $.mobile.page.prototype.options.degradeInputs.number = "text";

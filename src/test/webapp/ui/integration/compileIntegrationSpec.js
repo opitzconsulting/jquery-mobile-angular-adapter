@@ -34,30 +34,6 @@ describe('compileIntegration', function () {
         });
     });
 
-    it("should evaluate the widget.prototype.options.initSelector and register corresponding angular directives", function() {
-        loadHtml('/jqmng/ui/test-fixture.html', function (win) {
-            var $ = win.$;
-            $.mobile.button.prototype.options.initSelector = 'type1, type2.someClass, [type3="button"], :jqmData(type4="button")';
-            var page1 = $("#start");
-            page1.append('<div id="btn1plain"></div><type1 id="btn1"></type1>');
-            page1.append('<type2 id="btn2plain"></type2><type2 class="someClass" id="btn2"></type2>');
-            page1.append('<div type3="plain" id="btn3plain1"></div><div data-type3="button" id="btn3plain2"></div><div type3="button" id="btn3"></div>');
-            page1.append('<div data-type4="plain" id="btn4plain"></div><div data-type4="button" id="btn4"></div>');
-        });
-        runs(function () {
-            var $ = testframe().$;
-            expect($("#btn1plain").data("button")).toBeFalsy();
-            expect($("#btn1").data("button")).toBeTruthy();
-            expect($("#btn2plain").data("button")).toBeFalsy();
-            expect($("#btn2").data("button")).toBeTruthy();
-            expect($("#btn3plain1").data("button")).toBeFalsy();
-            expect($("#btn3plain2").data("button")).toBeFalsy();
-            expect($("#btn3").data("button")).toBeTruthy();
-            expect($("#btn4plain").data("button")).toBeFalsy();
-            expect($("#btn4").data("button")).toBeTruthy();
-        });
-    });
-
     describe("page stamping", function() {
         it("should allow to use jqm pages with ng-repeat", function() {
             loadHtml('/jqmng/ui/empty-fixture.html', function (win) {

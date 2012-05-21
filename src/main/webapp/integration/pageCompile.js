@@ -82,65 +82,129 @@
     $.mobile.autoInitializePage = false;
     var jqmInitialized = false;
 
-    ng.config(['$provide', function ($provide) {
-        $provide.decorator('$compile', ['$delegate', function ($delegate) {
-            var selector = ':jqmData(role="page"), :jqmData(role="dialog")';
-            var rolePageAttr = 'jqm-page';
-            return function (element) {
-                // Find page elements
-                var pages = element.filter(selector).add(element.find(selector));
-
-                // enhance non-widgets markup.
-                markJqmWidgetCreation(function () {
-                    preventJqmWidgetCreation(function () {
-                        if (pages.length > 0) {
-                            // TODO testcase?
-                            // element contains pages.
-                            // create temporary pages for the non widget markup, that we destroy afterwards.
-                            // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
-                            pages.page();
-                        } else {
-                            // TODO testcase?
-                            // Within a page...
-                            element.parent().trigger("create");
-                        }
-                    });
-                });
-
-                // Destroy the temporary pages again
-                pages.page("destroy");
-
-                // Mark jqm pages for our directive.
-                // We want to create a special directive that matches data-role="page" and data-role="dialog",
-                // but none of the other data-role="..." elements of jquery mobile. As we want to create a new
-                // scope for those elements (but not for the others), this is only possible, if we preprocess the dom and add a new attribute
-                // that is unique for pages and dialogs, for which we can register an angular directive.
-                pages.attr(rolePageAttr, true);
-                return $delegate.apply(this, arguments);
-            }
-        }]);
-    }]);
-
     var lastCreatedPages = [];
 
-    // Directive for jquery mobile pages. Refreshes the jquery mobile widgets
-    // when the page changes.
-    ng.directive('jqmPage', ['$compile', function ($compile) {
-        return {
-            restrict:'A',
-            scope:true,
-            compile:function (tElement, tAttrs) {
-                return {
-                    pre:function (scope, iElement, iAttrs) {
+    /**
+     * This directive will preprocess the dom during compile.
+     * For this, the directive needs to have the highest priority possible,
+     * so that it is used even before ng-repeat.
+     */
+    var preprocessDirective = {
+        restrict:'EA',
+        priority: Number.MAX_VALUE,
+        compile:function (tElement, tAttrs) {
+            if (tAttrs.preprocessDirective) {
+                return;
+            }
+            tAttrs.preprocessDirective = true;
+
+            // For page elements:
+            var roleAttr = tAttrs["role"];
+            var isPage = roleAttr == 'page' || roleAttr == 'dialog';
+
+            // enhance non-widgets markup.
+            markJqmWidgetCreation(function () {
+                preventJqmWidgetCreation(function () {
+
+                    if (isPage) {
+                        // TODO testcase?
+                        // element contains pages.
+                        // create temporary pages for the non widget markup, that we destroy afterwards.
+                        // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
+                        tElement.page();
+                    } else {
+                        // TODO testcase?
+                        // Within a page...
+                        // TODO testcases so we trigger create as little as possible!
+                        if (!tElement.data("jqmEnhanced")) {
+                            tElement.parent().trigger("create");
+                        }
+                    }
+                    angular.element(tElement[0].getElementsByTagName("*")).data("jqmEnhanced", "true");
+                });
+            });
+
+            // Destroy the temporary pages again
+            if (isPage) {
+                tElement.page("destroy");
+            }
+        }
+    };
+
+    /**
+     * This widget sets or resets the properties of the actual widgetDirective.
+     * This is especially required for the scope property.
+     * We need this as angular does not (yet) allow us to create a widget for e.g. data-role="page",
+     * but not for data-role="content".
+     */
+    var setWidgetScopeDirective = {
+        restrict:'EA',
+        priority: 1,
+        compile:function (tElement, tAttrs) {
+            widgetDirective.scope = (tAttrs.role == 'page' || tAttrs.role== 'dialog');
+        }
+    };
+
+    /**
+     * This directive creates the jqm widgets.
+     * @type {Object}
+     */
+    var widgetDirective = {
+        restrict:'EA',
+        priority: 0,
+        // This will be changed by the setWidgetScopeDirective...
+        scope: false,
+        require: ['?ngModel'],
+        compile:function (tElement, tAttrs) {
+            if (tAttrs.widgetDirective) {
+                return;
+            }
+            tAttrs.widgetDirective = true;
+
+            // For page elements:
+            var roleAttr = tAttrs["role"];
+            var isPage = roleAttr == 'page' || roleAttr == 'dialog';
+            var widgetName = tElement.attr("jqm-widget");
+            return {
+                pre:function (scope, iElement, iAttrs) {
+                    if (isPage) {
                         // Create the page widget without the pagecreate-Event.
                         // This does no dom transformation, so it's safe to call this in the prelink function.
                         createPagesWithoutPageCreateEvent(iElement);
                         lastCreatedPages.push(scope);
                     }
+                },
+                post:function(scope, iElement, iAttrs, ctrls) {
+                    if (widgetName) {
+                        if (!iElement.data(widgetName)) {
+                            iElement[widgetName]();
+                        }
+                        var linker = jqmWidgetLinker[widgetName];
+                        for (var i = 0; i < linker.length; i++) {
+                            linker[i].apply(this, arguments);
+                        }
+                    }
                 }
-            }
-        };
-    }]);
+            };
+        }
+    };
+
+    function registerDirective(tagList) {
+        for (var i=0; i<tagList.length; i++) {
+            ng.directive(tagList[i], function() {
+                return preprocessDirective;
+            });
+            ng.directive(tagList[i], function() {
+                return setWidgetScopeDirective;
+            });
+            ng.directive(tagList[i], function() {
+                return widgetDirective;
+            });
+        }
+    }
+
+    // TODO add all other tags / attributes that jqm enhances!
+    registerDirective(['role', 'input', 'select', 'button']);
 
     $.fn.orig = {};
 
@@ -174,26 +238,6 @@
     }
 
     var jqmWidgetLinker = {};
-    ng.directive('jqmWidget', function () {
-        return {
-            require:['?ngModel'],
-            compile:function () {
-                return {
-                    post:function (scope, iElement, iAttrs, ctrls) {
-                        var widgetName = iAttrs.jqmWidget;
-                        if (!iElement.data(widgetName)) {
-                            iElement[widgetName]();
-                        }
-                        var linker = jqmWidgetLinker[widgetName];
-                        for (var i = 0; i < linker.length; i++) {
-                            linker[i].apply(this, arguments);
-                        }
-                    }
-                }
-            }
-        }
-    });
-
 
     $.mobile.registerJqmNgWidget = function (widgetName, linkFn) {
         var linkFns = linkFn ? [linkFn] : [];

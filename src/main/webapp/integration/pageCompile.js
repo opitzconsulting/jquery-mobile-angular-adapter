@@ -27,6 +27,7 @@
                 }
                 var res = _$digest.apply(this, arguments);
                 if (this === $rootScope) {
+                    var hasPages = lastCreatedPages.length;
                     while (lastCreatedPages.length) {
                         var pageScope = lastCreatedPages.shift();
                         // Detach the scope of the created pages from the normal $digest cycle.
@@ -36,7 +37,7 @@
                         // so that we can use ng-repeat also for jqm pages!
                         pageScope.$disconnect();
                     }
-                    if (!jqmInitialized) {
+                    if (hasPages && !jqmInitialized) {
                         jqmInitialized = true;
                         $.mobile.initializePage();
                     }
@@ -156,7 +157,7 @@
             // For page elements:
             var roleAttr = tAttrs["role"];
             var isPage = roleAttr == 'page' || roleAttr == 'dialog';
-            var widgetName = tElement.attr("jqm-widget");
+            var widgets = tElement.data("jqm-widgets");
             return {
                 pre:function (scope, iElement, iAttrs) {
                     if (isPage) {
@@ -167,13 +168,17 @@
                     }
                 },
                 post:function(scope, iElement, iAttrs, ctrls) {
-                    if (widgetName) {
-                        if (!iElement.data(widgetName)) {
-                            iElement[widgetName]();
-                        }
-                        var linker = jqmWidgetLinker[widgetName];
-                        for (var i = 0; i < linker.length; i++) {
-                            linker[i].apply(this, arguments);
+                    if (widgets && widgets.length) {
+                        var widget;
+                        for (var i=0; i<widgets.length; i++) {
+                            widget = widgets[i];
+                            if (!iElement.data(widget.name)) {
+                                iElement[widget.name].apply(iElement, widget.args);
+                                var linker = jqmWidgetLinker[widget.name];
+                                for (var j = 0; j < linker.length; j++) {
+                                    linker[j].apply(this, arguments);
+                                }
+                            }
                         }
                     }
                 }
@@ -241,7 +246,21 @@
     function patchJqmWidget(widgetName) {
         patchJq(widgetName, function () {
             if (markJqmWidgetCreation()) {
-                this.attr("jqm-widget", widgetName);
+                var jqmWidgets = this.data("jqm-widgets");
+                if (!jqmWidgets) {
+                    jqmWidgets = [];
+                    this.data("jqm-widgets", jqmWidgets);
+                }
+                var widgetExists = false;
+                for (var i=0; i<jqmWidgets.length; i++) {
+                    if (jqmWidgets[i].name == widgetName) {
+                        widgetExists = true;
+                        break;
+                    }
+                }
+                if (!widgetExists) {
+                    jqmWidgets.push({name: widgetName, args: Array.prototype.slice.call(arguments)});
+                }
             }
             if (preventJqmWidgetCreation()) {
                 return false;

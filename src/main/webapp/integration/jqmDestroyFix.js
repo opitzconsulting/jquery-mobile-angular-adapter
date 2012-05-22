@@ -40,7 +40,6 @@
     // The angular compiler does not like this, so we wrap the two elements into a new parent node.
     patch($.mobile.slider.prototype, "_create", function(old, self, args) {
         var res = old.apply(self, args);
-        // var list = $().add(this.element).add(this.slider);
         var parent = self.element[0].parentNode;
         var div = document.createElement("div");
         parent.insertBefore(div, self.element[0]);
@@ -49,4 +48,16 @@
         self.wrapper = $(div);
         return res;
     });
+
+    // Copy of the initialization code from jquery mobile for controlgroup.
+    // Needed in jqm 1.1, as we want to do a manual initialization.
+    // See the open task in jqm 1.1 for controlgroup.
+    if ( $.fn.controlgroup ) {
+        $( document ).bind( "pagecreate create", function( e ){
+            $( ":jqmData(role='controlgroup')", e.target )
+                .jqmEnhanceable()
+                .controlgroup({ excludeInvisible: false });
+        });
+    }
+
 })(window.jQuery);

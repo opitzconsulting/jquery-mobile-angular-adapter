@@ -9,6 +9,14 @@ describe("inputSlider", function () {
         expect(spy.callCount).toBe(2);
     });
 
+    it("should create an textinput and slider widget for the element", function() {
+        var sliderSpy = testutils.spyOnJq('slider').andCallThrough();
+        var textinputSpy = testutils.spyOnJq('textinput').andCallThrough();
+        testutils.compileInPage('<input type="number" data-type="range">');
+        expect(sliderSpy).toHaveBeenCalled();
+        expect(textinputSpy).toHaveBeenCalled();
+    });
+
     it('should save the ui text value into the model', function () {
         var d = testutils.compileInPage('<input type="number" data-type="range"  ng-model="mysel" min="0" max="300">');
         var input = d.element;

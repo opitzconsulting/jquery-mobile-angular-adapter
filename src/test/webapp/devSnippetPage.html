@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app="myApp">
+<html ng-app>
 <!--
 Test page during development.
 -->
@@ -13,36 +13,14 @@ Test page during development.
     <script src="lib/jquery.mobile.js"></script>
     <script src="lib/angular.js"></script>
     <script src="jqm-angular.jsp"></script>
-
-    <script>
-        /* <![CDATA[ */
-        angular.module('myApp', [])
-                .directive('testDirective', function () {
-                    return {
-                        controller: 'TestCtrl',
-                        replace: true,
-                        restrict:'E',
-                        templateUrl:'template.html'
-                    }
-                })
-        ;
-
-        ButtonCtrl.$inject = [ '$scope' ];
-        function ButtonCtrl( $scope ) {
-            $scope.buttonLabel = 'Button';
-        }
-
-        function TestCtrl( $scope ) {
-        }
-        /* ]]> */
-    </script>
 </head>
 <body>
-<div data-role="page" ng-controller="ButtonCtrl">
-    <div data-role="content" ng-init="filterSet = [{label: 'test'}]">
-        <test-directive></test-directive>
+    <div data-role="page" data-theme="a">
+        <div data-role="content">
+            <input type="number" data-type="range" ng-model="mysel" min="0" max="300" class="ng-valid ui-slider-input ng-dirty" jqm-widget="slider">​
+        </div>
+
     </div>
-</div>
 </body>
 
 </html>

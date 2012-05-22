@@ -1,4 +1,4 @@
-describe("usecases", function () {
+describe("regression", function () {
     describe("lists", function () {
         it("should refresh lists with ng-repeat", function () {
             var scope, dialog, dialogOpen;
@@ -32,6 +32,29 @@ describe("usecases", function () {
             });
         });
 
+    });
+
+    describe("controlgroup", function () {
+        it("should update the corners of children during creation", function () {
+            loadHtml('/jqmng/ui/test-fixture.html', function (frame) {
+                var page = frame.$('#start');
+                page.append(
+                    '<div data-role="content">' +
+                        '<div data-role="controlgroup" id="group1">' +
+                        '<a href="" data-role="button">1</a><a href="" data-role="button">2</a>' +
+                        '</div>' +
+                        '</div>');
+            });
+            runs(function () {
+                var $ = testframe().$;
+                var btns = $("#group1").children("a");
+                expect(btns.eq(0).hasClass("ui-corner-top")).toBe(true);
+                expect(btns.eq(0).hasClass("ui-corner-bottom")).toBe(false);
+                expect(btns.eq(1).hasClass("ui-corner-top")).toBe(false);
+                expect(btns.eq(1).hasClass("ui-corner-bottom")).toBe(true);
+
+            });
+        });
     });
 
 });

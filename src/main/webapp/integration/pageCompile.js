@@ -246,20 +246,23 @@
     function patchJqmWidget(widgetName) {
         patchJq(widgetName, function () {
             if (markJqmWidgetCreation()) {
-                var jqmWidgets = this.data("jqm-widgets");
-                if (!jqmWidgets) {
-                    jqmWidgets = [];
-                    this.data("jqm-widgets", jqmWidgets);
-                }
-                var widgetExists = false;
-                for (var i=0; i<jqmWidgets.length; i++) {
-                    if (jqmWidgets[i].name == widgetName) {
-                        widgetExists = true;
-                        break;
+                for (var k=0; k<this.length; k++) {
+                    var element = this.eq(k);
+                    var jqmWidgets = element.data("jqm-widgets");
+                    if (!jqmWidgets) {
+                        jqmWidgets = [];
+                        element.data("jqm-widgets", jqmWidgets);
                     }
-                }
-                if (!widgetExists) {
-                    jqmWidgets.push({name: widgetName, args: Array.prototype.slice.call(arguments)});
+                    var widgetExists = false;
+                    for (var i=0; i<jqmWidgets.length; i++) {
+                        if (jqmWidgets[i].name == widgetName) {
+                            widgetExists = true;
+                            break;
+                        }
+                    }
+                    if (!widgetExists) {
+                        jqmWidgets.push({name: widgetName, args: Array.prototype.slice.call(arguments)});
+                    }
                 }
             }
             if (preventJqmWidgetCreation()) {

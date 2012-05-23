@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app>
+<html ng-app="myApp">
 <!--
 Test page during development.
 -->
@@ -14,33 +14,28 @@ Test page during development.
     <script src="lib/angular.js"></script>
     <script src="jqm-angular.jsp"></script>
     <script>
-        window.PageController = function($scope, $navigate) {
-            console.log("goging to ");
-            $scope.goTo = function(target) {
-                console.log("goging to "+target);
-                $navigate(target);
-            }
-        }
-
+        angular.module('myApp', [])
+                .directive( 'buttonGroup', function() {
+                    return {
+                        restrict: 'E'
+                        ,   replace: true
+                        ,   templateUrl: 'template.html'
+                    }
+                });
     </script>
 </head>
-<body ng-controller="PageController">
+<body >
 
-    <div data-role="page" data-theme="a" id="page1">
-        <div data-role="content">
-            <a href="" ngm-click="goTo('#page2')">Page2</a>
+<div data-role="page" data-theme="a">
+    <div data-role="content">
+        <h1>Horizontal Grouped Buttons: In-page Test</h1>
+        <div data-role="controlgroup" data-type="horizontal">
+            <a data-role="button">hello1</a>
+            <a data-role="button">goodbye1</a>
         </div>
-
+        <button-group></button-group>
     </div>
-
-    <div data-role="page" data-theme="a" id="page2">
-        <div data-role="content">
-            <a href="" ngm-click="goTo('back:#page1')">Page1</a>
-
-        </div>
-
-    </div>
-
+</div>
 </body>
 
 </html>

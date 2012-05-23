@@ -41,5 +41,32 @@ describe('regression', function () {
         });
     });
 
+    describe("controlgroup", function() {
+        it("should allow to add another controlgoup using templateUrl", function() {
+            var _$httpBackend;
+
+            module("ngMock", function ($compileProvider) {
+                $compileProvider.directive('sampleUrl', function () {
+                    return {
+                        restrict:'A',
+                        replace: true,
+                        templateUrl: 'sampleUrl'
+                    }
+                });
+
+            });
+            inject(function ($httpBackend) {
+                $httpBackend.when('GET', /.*sampleUrl*/).respond('<div data-role="controlgroup"></div>');
+                _$httpBackend = $httpBackend;
+            });
+            var c = testutils.compileInPage('<div><div data-role="controlgroup"></div><div sample-url="true"></div></div>');
+            _$httpBackend.flush();
+            var groups = c.element.children("div");
+            expect(groups.length).toBe(2);
+            expect(groups.eq(0).hasClass("ui-controlgroup")).toBe(true);
+            expect(groups.eq(1).hasClass("ui-controlgroup")).toBe(true);
+        });
+    })
+
 });
 

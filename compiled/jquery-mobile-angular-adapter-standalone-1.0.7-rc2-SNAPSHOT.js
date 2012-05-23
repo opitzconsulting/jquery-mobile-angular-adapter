@@ -31728,24 +31728,6 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         }
     }
 
-    var preventPageLoad = false;
-    $(document).bind("pagebeforeload", function(e) {
-        if (preventPageLoad) {
-            e.preventDefault();
-        }
-    });
-
-    function getLoadedPage(url) {
-        var res;
-        preventPageLoad = true;
-        // As the page is already loaded, the deferred should return in sync!
-        $.mobile.loadPage(url).then(function(url, options, newPage) {
-            res = newPage;
-        });
-        preventPageLoad = false;
-        return res;
-    }
-
     /*
      * Service for page navigation.
      * @param target has the syntax: [<transition>:]pageId
@@ -31774,13 +31756,16 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
             return;
         }
         if (isBack) {
-            var page = getLoadedPage(target);
-            var relativeIndex = getNavigateIndexInHistory(page.attr("id"));
-            if (relativeIndex!==undefined) {
-                window.history.go(relativeIndex);
-            } else {
-                jqmChangePage(target, {reverse: true});
-            }
+            // The page may be removed from the DOM by the cache handling
+            // of jquery mobile.
+            $.mobile.loadPage(target, {showLoadMsg: true}).then(function(_,_,page) {
+                var relativeIndex = getNavigateIndexInHistory(page.attr("id"));
+                if (relativeIndex!==undefined) {
+                    window.history.go(relativeIndex);
+                } else {
+                    jqmChangePage(target, {reverse: true});
+                }
+            });
         } else {
             jqmChangePage(target, navigateOptions);
         }
@@ -32323,24 +32308,6 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         }
     }
 
-    var preventPageLoad = false;
-    $(document).bind("pagebeforeload", function(e) {
-        if (preventPageLoad) {
-            e.preventDefault();
-        }
-    });
-
-    function getLoadedPage(url) {
-        var res;
-        preventPageLoad = true;
-        // As the page is already loaded, the deferred should return in sync!
-        $.mobile.loadPage(url).then(function(url, options, newPage) {
-            res = newPage;
-        });
-        preventPageLoad = false;
-        return res;
-    }
-
     /*
      * Service for page navigation.
      * @param target has the syntax: [<transition>:]pageId
@@ -32369,13 +32336,16 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
             return;
         }
         if (isBack) {
-            var page = getLoadedPage(target);
-            var relativeIndex = getNavigateIndexInHistory(page.attr("id"));
-            if (relativeIndex!==undefined) {
-                window.history.go(relativeIndex);
-            } else {
-                jqmChangePage(target, {reverse: true});
-            }
+            // The page may be removed from the DOM by the cache handling
+            // of jquery mobile.
+            $.mobile.loadPage(target, {showLoadMsg: true}).then(function(_,_,page) {
+                var relativeIndex = getNavigateIndexInHistory(page.attr("id"));
+                if (relativeIndex!==undefined) {
+                    window.history.go(relativeIndex);
+                } else {
+                    jqmChangePage(target, {reverse: true});
+                }
+            });
         } else {
             jqmChangePage(target, navigateOptions);
         }

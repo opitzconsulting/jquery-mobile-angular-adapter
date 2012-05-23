@@ -7,6 +7,8 @@ describe("navigate", function () {
             navigate = angular.injector(["ng"]).get('$navigate');
 
             oldUrlHistory = $.mobile.urlHistory.stack;
+            $.mobile.urlHistory.stack = [
+            ];
         });
         afterEach(function () {
             $.mobile.urlHistory.stack = oldUrlHistory;
@@ -33,26 +35,46 @@ describe("navigate", function () {
             expect(changePageSpy).not.toHaveBeenCalled();
         });
 
+        it("should add the pageId during changePage to new history entries", function() {
+            var page = $('<div id="page1"></div>');
+            $(document).trigger("pagebeforechange", {toPage: page});
+            var urlHistory = $.mobile.urlHistory;
+            urlHistory.addNew();
+            expect(urlHistory.stack.length).toBe(1);
+            expect(urlHistory.stack[0].pageId).toBe("page1");
+        });
+
         it('should be able to go back to a page', function () {
             $.mobile.urlHistory.stack = [
-                {pageUrl:'page1'},
-                {pageUrl:'page2'},
-                {pageUrl:'page3'}
+                {pageId:'page1'},
+                {pageId:'page2'},
+                {pageId:'page3'}
             ];
+            $.mobile.urlHistory.activeIndex = 2;
+            var page = $('<div id="page1"></div>');
+            var res = $.Deferred();
+            res.resolve(null, null, page);
+            spyOn($.mobile, "loadPage").andReturn(res);
             navigate('back:page1');
             expect(goSpy).toHaveBeenCalledWith(-2);
             expect(changePageSpy).not.toHaveBeenCalled();
         });
 
-        it('should be able to go back to a page that is not in the history with using the reverse transition', function () {
+        it('should be able to go back to a page that is not in the history using changePage with reverse transition', function () {
             $.mobile.urlHistory.stack = [
-                {pageUrl:'page1'},
-                {pageUrl:'page2'},
-                {pageUrl:'page3'}
+                {pageId:'page1'},
+                {pageId:'page2'},
+                {pageId:'page3'}
             ];
-            navigate('back:#page4');
+            $.mobile.urlHistory.activeIndex = 2;
+            var page = $('<div id="page4"></div>');
+            var res = $.Deferred();
+            res.resolve(null, null, page);
+            spyOn($.mobile, "loadPage").andReturn(res);
+            navigate('back:page4');
+
             expect(goSpy).not.toHaveBeenCalled();
-            expect(changePageSpy).toHaveBeenCalledWith('#page4', {reverse:true});
+            expect(changePageSpy).toHaveBeenCalledWith('page4', {reverse:true});
         });
     });
 });

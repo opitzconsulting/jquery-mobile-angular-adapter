@@ -13,14 +13,34 @@ Test page during development.
     <script src="lib/jquery.mobile.js"></script>
     <script src="lib/angular.js"></script>
     <script src="jqm-angular.jsp"></script>
+    <script>
+        window.PageController = function($scope, $navigate) {
+            console.log("goging to ");
+            $scope.goTo = function(target) {
+                console.log("goging to "+target);
+                $navigate(target);
+            }
+        }
+
+    </script>
 </head>
-<body>
-    <div data-role="page" data-theme="a">
+<body ng-controller="PageController">
+
+    <div data-role="page" data-theme="a" id="page1">
         <div data-role="content">
-            <input type="number" data-type="range" ng-model="mysel" min="0" max="300" class="ng-valid ui-slider-input ng-dirty" jqm-widget="slider">​
+            <a href="" ngm-click="goTo('#page2')">Page2</a>
         </div>
 
     </div>
+
+    <div data-role="page" data-theme="a" id="page2">
+        <div data-role="content">
+            <a href="" ngm-click="goTo('back:#page1')">Page1</a>
+
+        </div>
+
+    </div>
+
 </body>
 
 </html>

@@ -90,6 +90,32 @@ describe("navigate", function () {
             expect(onActivateArguments).toBeTruthy();
         });
     });
+
+    it("should be able to go back using a pageId", function() {
+        visitPage("page2", function() {
+
+        });
+        runs(function () {
+            var $ = testframe().$;
+            expect($.mobile.activePage.attr("id")).toBe("page2");
+            navigate("#start");
+        });
+        waitsForAsync();
+        runs(function () {
+            var $ = testframe().$;
+            expect($.mobile.activePage.attr("id")).toBe("start");
+            spyOn($.mobile, 'changePage').andCallThrough();
+            navigate("back:#page2");
+            expect($.mobile.changePage).not.toHaveBeenCalled();
+        });
+        waitsForAsync();
+        runs(function () {
+            var $ = testframe().$;
+            expect($.mobile.activePage.attr("id")).toBe("page2");
+        });
+
+    });
+
     it("should call the given function on the target page before the pagebeforeshow event", function () {
         var onActivateArguments, onActivateArgumentsOnBeforeShow
         var beforeShowCallCount = 0;

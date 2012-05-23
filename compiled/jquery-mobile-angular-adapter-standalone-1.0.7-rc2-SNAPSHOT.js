@@ -31680,6 +31680,36 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         ];
     }
 
+    function instrumentUrlHistoryToSavePageId() {
+        var lastToPage;
+        $(document).on("pagebeforechange", function(event, data) {
+            if (typeof data.toPage === "object") {
+                lastToPage = data.toPage;
+            }
+        });
+        var urlHistory = $.mobile.urlHistory;
+        var _addNew = urlHistory.addNew;
+        urlHistory.addNew = function() {
+            var res = _addNew.apply(this, arguments);
+            var lastEntry = urlHistory.stack[urlHistory.stack.length-1];
+            lastEntry.pageId = lastToPage.attr("id");
+            return res;
+        }
+    }
+    instrumentUrlHistoryToSavePageId();
+
+    function getNavigateIndexInHistory(pageId) {
+        var urlHistory = $.mobile.urlHistory;
+        var activeIndex = urlHistory.activeIndex;
+        var stack = $.mobile.urlHistory.stack;
+        for (var i = stack.length - 1; i >= 0; i--) {
+            if (i!==activeIndex && stack[i].pageId === pageId) {
+                return i - activeIndex;
+            }
+        }
+        return undefined;
+    }
+
     function callActivateFnOnPageChange(fnName, params) {
         if (fnName) {
             $(document).one("pagebeforechange", function(event, data) {
@@ -31698,6 +31728,24 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         }
     }
 
+    var preventPageLoad = false;
+    $(document).bind("pagebeforeload", function(e) {
+        if (preventPageLoad) {
+            e.preventDefault();
+        }
+    });
+
+    function getLoadedPage(url) {
+        var res;
+        preventPageLoad = true;
+        // As the page is already loaded, the deferred should return in sync!
+        $.mobile.loadPage(url).then(function(url, options, newPage) {
+            res = newPage;
+        });
+        preventPageLoad = false;
+        return res;
+    }
+
     /*
      * Service for page navigation.
      * @param target has the syntax: [<transition>:]pageId
@@ -31706,44 +31754,44 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
      */
     function navigate(target, activateFunctionName) {
         var activateParams = Array.prototype.slice.call(arguments, 2);
-        var navigateOptions, pageId;
         callActivateFnOnPageChange(activateFunctionName, activateParams);
+        var navigateOptions;
         if (typeof target === 'object') {
             navigateOptions = target;
-            pageId = navigateOptions.target;
-        } else {
-            var parts = splitAtFirstColon(target);
-            if (parts.length === 2 && parts[0] === 'back') {
-                var pageId = parts[1];
-                var relativeIndex = getIndexInStack(pageId);
-                if (relativeIndex === undefined) {
-                    pageId = jqmChangePage(pageId, {reverse: true});
-                } else {
-                    window.history.go(relativeIndex);
-                }
-                return;
-            } else if (parts.length === 2) {
-                navigateOptions = { transition: parts[0] };
-                pageId = parts[1];
-            } else {
-                pageId = parts[0];
-                navigateOptions = undefined;
-            }
+            target = navigateOptions.target;
         }
-        if (pageId === 'back') {
+        var parts = splitAtFirstColon(target);
+        var isBack = false;
+        if (parts.length === 2 && parts[0] === 'back') {
+            isBack = true;
+            target = parts[1];
+        } else if (parts.length === 2) {
+            navigateOptions = { transition: parts[0] };
+            target = parts[1];
+        }
+        if (target === 'back') {
             window.history.go(-1);
+            return;
+        }
+        if (isBack) {
+            var page = getLoadedPage(target);
+            var relativeIndex = getNavigateIndexInHistory(page.attr("id"));
+            if (relativeIndex!==undefined) {
+                window.history.go(relativeIndex);
+            } else {
+                jqmChangePage(target, {reverse: true});
+            }
         } else {
-            jqmChangePage(pageId, navigateOptions);
+            jqmChangePage(target, navigateOptions);
         }
     }
 
-    function jqmChangePage(pageId, navigateOptions) {
-        var callArgs = [pageId];
+    function jqmChangePage(target, navigateOptions) {
         if (navigateOptions) {
-            callArgs.push(navigateOptions);
+            $.mobile.changePage(target, navigateOptions);
+        } else {
+            $.mobile.changePage(target);
         }
-        $.mobile.changePage.apply($.mobile, callArgs);
-        return pageId;
     }
 
 
@@ -31752,18 +31800,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         return navigate;
     });
 
-    function getIndexInStack(pageId) {
-        var stack = $.mobile.urlHistory.stack;
-        var res = 0;
-        var pageUrl;
-        for (var i = stack.length - 2; i >= 0; i--) {
-            pageUrl = stack[i].pageUrl;
-            if (pageUrl === pageId) {
-                return i - stack.length + 1;
-            }
-        }
-        return undefined;
-    }
+
 
     return navigate;
 
@@ -32238,6 +32275,36 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         ];
     }
 
+    function instrumentUrlHistoryToSavePageId() {
+        var lastToPage;
+        $(document).on("pagebeforechange", function(event, data) {
+            if (typeof data.toPage === "object") {
+                lastToPage = data.toPage;
+            }
+        });
+        var urlHistory = $.mobile.urlHistory;
+        var _addNew = urlHistory.addNew;
+        urlHistory.addNew = function() {
+            var res = _addNew.apply(this, arguments);
+            var lastEntry = urlHistory.stack[urlHistory.stack.length-1];
+            lastEntry.pageId = lastToPage.attr("id");
+            return res;
+        }
+    }
+    instrumentUrlHistoryToSavePageId();
+
+    function getNavigateIndexInHistory(pageId) {
+        var urlHistory = $.mobile.urlHistory;
+        var activeIndex = urlHistory.activeIndex;
+        var stack = $.mobile.urlHistory.stack;
+        for (var i = stack.length - 1; i >= 0; i--) {
+            if (i!==activeIndex && stack[i].pageId === pageId) {
+                return i - activeIndex;
+            }
+        }
+        return undefined;
+    }
+
     function callActivateFnOnPageChange(fnName, params) {
         if (fnName) {
             $(document).one("pagebeforechange", function(event, data) {
@@ -32256,6 +32323,24 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         }
     }
 
+    var preventPageLoad = false;
+    $(document).bind("pagebeforeload", function(e) {
+        if (preventPageLoad) {
+            e.preventDefault();
+        }
+    });
+
+    function getLoadedPage(url) {
+        var res;
+        preventPageLoad = true;
+        // As the page is already loaded, the deferred should return in sync!
+        $.mobile.loadPage(url).then(function(url, options, newPage) {
+            res = newPage;
+        });
+        preventPageLoad = false;
+        return res;
+    }
+
     /*
      * Service for page navigation.
      * @param target has the syntax: [<transition>:]pageId
@@ -32264,44 +32349,44 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
      */
     function navigate(target, activateFunctionName) {
         var activateParams = Array.prototype.slice.call(arguments, 2);
-        var navigateOptions, pageId;
         callActivateFnOnPageChange(activateFunctionName, activateParams);
+        var navigateOptions;
         if (typeof target === 'object') {
             navigateOptions = target;
-            pageId = navigateOptions.target;
-        } else {
-            var parts = splitAtFirstColon(target);
-            if (parts.length === 2 && parts[0] === 'back') {
-                var pageId = parts[1];
-                var relativeIndex = getIndexInStack(pageId);
-                if (relativeIndex === undefined) {
-                    pageId = jqmChangePage(pageId, {reverse: true});
-                } else {
-                    window.history.go(relativeIndex);
-                }
-                return;
-            } else if (parts.length === 2) {
-                navigateOptions = { transition: parts[0] };
-                pageId = parts[1];
-            } else {
-                pageId = parts[0];
-                navigateOptions = undefined;
-            }
+            target = navigateOptions.target;
         }
-        if (pageId === 'back') {
+        var parts = splitAtFirstColon(target);
+        var isBack = false;
+        if (parts.length === 2 && parts[0] === 'back') {
+            isBack = true;
+            target = parts[1];
+        } else if (parts.length === 2) {
+            navigateOptions = { transition: parts[0] };
+            target = parts[1];
+        }
+        if (target === 'back') {
             window.history.go(-1);
+            return;
+        }
+        if (isBack) {
+            var page = getLoadedPage(target);
+            var relativeIndex = getNavigateIndexInHistory(page.attr("id"));
+            if (relativeIndex!==undefined) {
+                window.history.go(relativeIndex);
+            } else {
+                jqmChangePage(target, {reverse: true});
+            }
         } else {
-            jqmChangePage(pageId, navigateOptions);
+            jqmChangePage(target, navigateOptions);
         }
     }
 
-    function jqmChangePage(pageId, navigateOptions) {
-        var callArgs = [pageId];
+    function jqmChangePage(target, navigateOptions) {
         if (navigateOptions) {
-            callArgs.push(navigateOptions);
+            $.mobile.changePage(target, navigateOptions);
+        } else {
+            $.mobile.changePage(target);
         }
-        $.mobile.changePage.apply($.mobile, callArgs);
-        return pageId;
     }
 
 
@@ -32310,18 +32395,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         return navigate;
     });
 
-    function getIndexInStack(pageId) {
-        var stack = $.mobile.urlHistory.stack;
-        var res = 0;
-        var pageUrl;
-        for (var i = stack.length - 2; i >= 0; i--) {
-            pageUrl = stack[i].pageUrl;
-            if (pageUrl === pageId) {
-                return i - stack.length + 1;
-            }
-        }
-        return undefined;
-    }
+
 
     return navigate;
 

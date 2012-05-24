@@ -26,14 +26,9 @@ Test page during development.
 <body>
 <div data-role="page" data-theme="a" ng-controller="PageCtrl">
     <div data-role="content" ng-init="list=[1,2]">
-        <input type="checkbox" id="check">
-        <label for="check">hello</label>
-
-
-        <select>
-            <option>T</option>
-
-        </select>
+        <ul data-role="controlgroup" data-type="horizontal" ng-init="test=['one','two','three','four']">
+            <li data-role="button"ng-repeat="item in test">{{item}}</li>
+        </ul>
     </div>
 
 </body>

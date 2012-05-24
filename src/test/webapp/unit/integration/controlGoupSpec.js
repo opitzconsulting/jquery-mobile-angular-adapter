@@ -1,15 +1,15 @@
 describe("controlgroup", function () {
-    it("should stamp the widget using the jqm widget", function() {
+    it("should stamp the widget using the jqm widget", function () {
         var spy = testutils.spyOnJq('controlgroup');
         var c = testutils.compileInPage('<div data-role="controlgroup" ng-repeat="l in list"></div>');
         expect(spy.callCount).toBe(0);
         var scope = c.page.scope();
-        scope.list = [1,2];
+        scope.list = [1, 2];
         scope.$root.$digest();
         expect(spy.callCount).toBe(2);
     });
 
-    it("should refresh only once when child entries are added by angular", function() {
+    it("should refresh only once when child entries are added by angular", function () {
         var d = testutils.compileInPage(
             '<div data-role="controlgroup">' +
                 '<a href="" data-role="button" ng-repeat="l in list">{{l}}</a></div>');
@@ -18,7 +18,7 @@ describe("controlgroup", function () {
         expect(buttons.length).toBe(0);
         var scope = d.element.scope();
         var spy = testutils.spyOnJq('controlgroup').andCallThrough();
-        scope.list = [1,2];
+        scope.list = [1, 2];
         scope.$digest();
         expect(spy.callCount).toBe(1);
         var buttons = list.children("a");
@@ -29,7 +29,7 @@ describe("controlgroup", function () {
         expect(buttons.eq(1).hasClass("ui-corner-bottom")).toBe(true);
     });
 
-    it("should refresh only once when child entries are removed by angular", function() {
+    it("should refresh only once when child entries are removed by angular", function () {
         var d = testutils.compileInPage(
             '<div data-role="controlgroup" ng-init="list=[1,2,3]">' +
                 '<a href="" data-role="button" ng-repeat="l in list">{{l}}</a></div>');

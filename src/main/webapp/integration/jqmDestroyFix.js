@@ -47,4 +47,15 @@
         });
     }
 
+    // controlgroup should not exclude invisible children
+    // as long as it is not visible itself!
+    patch($.fn, "controlgroup", function(old, self, args) {
+        if (self.filter(":visible").length===0) {
+            var options = args[0] || {};
+            options.excludeInvisible = false;
+            return old.call(self, options);
+        }
+        return old.apply(self, args);
+    });
+
 })(window.jQuery);

@@ -30872,6 +30872,17 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         });
     }
 
+    // controlgroup should not exclude invisible children
+    // as long as it is not visible itself!
+    patch($.fn, "controlgroup", function(old, self, args) {
+        if (self.filter(":visible").length===0) {
+            var options = args[0] || {};
+            options.excludeInvisible = false;
+            return old.call(self, options);
+        }
+        return old.apply(self, args);
+    });
+
 })(window.jQuery);
 (function (angular) {
 
@@ -31274,7 +31285,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
             precompile:selectmenuPrecompile
         },
         controlgroup:{
-            handlers:[refreshOnChildrenChange]
+            handlers:[refreshControlgroupOnChildrenChange]
         },
         navbar:{
             handlers:[]
@@ -31506,24 +31517,31 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         var ngModelCtrl = ctrls[0];
         if (ngModelCtrl) {
             addCtrlFunctionListener(ngModelCtrl, "$render", function () {
-                triggerAsyncRefresh(widgetName, scope, iElement);
+                triggerAsyncRefresh(widgetName, scope, iElement, "refresh");
             });
         }
     }
 
-    function refreshOnChildrenChange(widgetName, scope, iElement, iAttrs, ctrls) {
+    function refreshControlgroupOnChildrenChange(widgetName, scope, iElement, iAttrs, ctrls) {
         iElement.bind("$childrenChanged", function () {
-            triggerAsyncRefresh(widgetName, scope, iElement);
+            triggerAsyncRefresh(widgetName, scope, iElement, {});
         });
     }
 
-    function triggerAsyncRefresh(widgetName, scope, iElement, iAttrs, ctrls) {
+
+    function refreshOnChildrenChange(widgetName, scope, iElement, iAttrs, ctrls) {
+        iElement.bind("$childrenChanged", function () {
+            triggerAsyncRefresh(widgetName, scope, iElement, "refresh");
+        });
+    }
+
+    function triggerAsyncRefresh(widgetName, scope, iElement, options) {
         var prop = "_refresh" + widgetName;
         scope[prop] = scope[prop] + 1 || 1;
         scope.$evalAsync(function () {
             scope[prop]--;
             if (scope[prop] === 0) {
-                iElement[widgetName]("refresh");
+                iElement[widgetName](options);
             }
         });
     }

@@ -55,6 +55,26 @@ describe("regression", function () {
 
             });
         });
+
+        it("should refresh non visible children as long as the controlgroup itself is not visible", function() {
+            loadHtml('/jqmng/ui/test-fixture.html', function (frame) {
+                var page = frame.$('#start');
+                page.append(
+                    '<div data-role="content">' +
+                        '<div data-role="controlgroup" ng-init="list = [1,2]" id="group1">' +
+                        '<a href="" data-role="button" ng-repeat="l in list">{{l}}</a></div>'+
+                        '</div>');
+            });
+            runs(function () {
+                var $ = testframe().$;
+                var btns = $("#group1").children("a");
+                expect(btns.eq(0).hasClass("ui-corner-top")).toBe(true);
+                expect(btns.eq(0).hasClass("ui-corner-bottom")).toBe(false);
+                expect(btns.eq(1).hasClass("ui-corner-top")).toBe(false);
+                expect(btns.eq(1).hasClass("ui-corner-bottom")).toBe(true);
+
+            });
+        });
     });
 
 });

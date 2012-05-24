@@ -14,28 +14,27 @@ Test page during development.
     <script src="lib/angular.js"></script>
     <script src="jqm-angular.jsp"></script>
     <script>
-        angular.module('myApp', [])
-                .directive( 'buttonGroup', function() {
-                    return {
-                        restrict: 'E'
-                        ,   replace: true
-                        ,   templateUrl: 'template.html'
-                    }
-                });
+        angular.module('myApp', []);
+
+        function PageCtrl($scope) {
+            $scope.toggleVisible = false;
+        }
     </script>
 </head>
-<body >
-
-<div data-role="page" data-theme="a">
+<body>
+<div data-role="page" data-theme="a" ng-controller="PageCtrl">
     <div data-role="content">
-        <h1>Horizontal Grouped Buttons: In-page Test</h1>
-        <div data-role="controlgroup" data-type="horizontal">
-            <a data-role="button">hello1</a>
-            <a data-role="button">goodbye1</a>
+        <fieldset>
+            {{toggleVisible}}
+            <input id="toggler" type="checkbox" ng-model="toggleVisible"/>
+            <label for="toggler">Show conditional elements: {{toggleVisible}}</label>
+        </fieldset>
+        <div ng-show="toggleVisible">
+            <p>This is a conditional element that is hidden/shown based a ng-show evaluation</p>
         </div>
-        <button-group></button-group>
     </div>
 </div>
+
 </body>
 
 </html>

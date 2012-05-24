@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.0.0rc8
+ * @license AngularJS v1.0.0rc10
  * (c) 2010-2012 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -1243,11 +1243,11 @@ function setupModuleLoader(window) {
  * - `codeName` – `{string}` – Code name of the release, such as "jiggling-armfat".
  */
 var version = {
-  full: '1.0.0rc8',    // all of these placeholder strings will be replaced by rake's
+  full: '1.0.0rc10',    // all of these placeholder strings will be replaced by rake's
   major: 1,    // compile task
   minor: 0,
   dot: 0,
-  codeName: 'blooming-touch'
+  codeName: 'tesseract-giftwrapping'
 };
 
 
@@ -1354,6 +1354,7 @@ function publishExternalAPI(angular){
         $q: $QProvider,
         $sniffer: $SnifferProvider,
         $templateCache: $TemplateCacheProvider,
+        $timeout: $TimeoutProvider,
         $window: $WindowProvider
       });
     }
@@ -1434,7 +1435,7 @@ function publishExternalAPI(angular){
  * @returns {Object} jQuery object.
  */
 
-var jqCache = {},
+var jqCache = JQLite.cache = {},
     jqName = JQLite.expando = 'ng-' + new Date().getTime(),
     jqId = 1,
     addEventListenerFn = (window.document.addEventListener
@@ -1482,15 +1483,15 @@ function JQLitePatchJQueryRemove(name, dispatchThis) {
         fireEvent = dispatchThis,
         set, setIndex, setLength,
         element, childIndex, childLength, children,
-        fns, data;
+        fns, events;
 
     while(list.length) {
       set = list.shift();
       for(setIndex = 0, setLength = set.length; setIndex < setLength; setIndex++) {
         element = jqLite(set[setIndex]);
         if (fireEvent) {
-          data = element.data('events');
-          if ( (fns = data && data.$destroy) ) {
+          events = element.data('events');
+          if ( (fns = events && events.$destroy) ) {
             forEach(fns, function(fn){
               fn.handler();
             });
@@ -1545,50 +1546,78 @@ function JQLiteDealoc(element){
   }
 }
 
-function JQLiteRemoveData(element) {
-  var cacheId = element[jqName],
-      cache = jqCache[cacheId];
+function JQLiteUnbind(element, type, fn) {
+  var events = JQLiteExpandoStore(element, 'events'),
+      handle = JQLiteExpandoStore(element, 'handle');
 
-  if (cache) {
-    if (cache.bind) {
-      forEach(cache.bind, function(fn, type){
-        if (type == '$destroy') {
-          fn({});
-        } else {
-          removeEventListenerFn(element, type, fn);
-        }
-      });
+  if (!handle) return; //no listeners registered
+
+  if (isUndefined(type)) {
+    forEach(events, function(eventHandler, type) {
+      removeEventListenerFn(element, type, eventHandler);
+      delete events[type];
+    });
+  } else {
+    if (isUndefined(fn)) {
+      removeEventListenerFn(element, type, events[type]);
+      delete events[type];
+    } else {
+      arrayRemove(events[type], fn);
     }
-    delete jqCache[cacheId];
+  }
+}
+
+function JQLiteRemoveData(element) {
+  var expandoId = element[jqName],
+      expandoStore = jqCache[expandoId];
+
+  if (expandoStore) {
+    if (expandoStore.handle) {
+      expandoStore.events.$destroy && expandoStore.handle({}, '$destroy');
+      JQLiteUnbind(element);
+    }
+    delete jqCache[expandoId];
     element[jqName] = undefined; // ie does not allow deletion of attributes on elements.
   }
 }
 
-function JQLiteData(element, key, value) {
-  var cacheId = element[jqName],
-      cache = jqCache[cacheId || -1];
+function JQLiteExpandoStore(element, key, value) {
+  var expandoId = element[jqName],
+      expandoStore = jqCache[expandoId || -1];
 
   if (isDefined(value)) {
-    if (!cache) {
-      element[jqName] = cacheId = jqNextId();
-      cache = jqCache[cacheId] = {};
+    if (!expandoStore) {
+      element[jqName] = expandoId = jqNextId();
+      expandoStore = jqCache[expandoId] = {};
     }
-    cache[key] = value;
+    expandoStore[key] = value;
   } else {
-    if (isDefined(key)) {
-      if (isObject(key)) {
-        if (!cacheId) element[jqName] = cacheId = jqNextId();
-        jqCache[cacheId] = cache = (jqCache[cacheId] || {});
-        extend(cache, key);
+    return expandoStore && expandoStore[key];
+  }
+}
+
+function JQLiteData(element, key, value) {
+  var data = JQLiteExpandoStore(element, 'data'),
+      isSetter = isDefined(value),
+      keyDefined = !isSetter && isDefined(key),
+      isSimpleGetter = keyDefined && !isObject(key);
+
+  if (!data && !isSimpleGetter) {
+    JQLiteExpandoStore(element, 'data', data = {});
+  }
+
+  if (isSetter) {
+    data[key] = value;
+  } else {
+    if (keyDefined) {
+      if (isSimpleGetter) {
+        // don't create data in this case.
+        return data && data[key];
       } else {
-        return cache ? cache[key] : undefined;
+        extend(data, key);
       }
     } else {
-      if (!cacheId) element[jqName] = cacheId = jqNextId();
-
-      return cache
-          ? cache
-          : cache = jqCache[cacheId] = {};
+      return data;
     }
   }
 }
@@ -1859,8 +1888,8 @@ forEach({
   };
 });
 
-function createEventHandler(element) {
-  var eventHandler = function (event) {
+function createEventHandler(element, events) {
+  var eventHandler = function (event, type) {
     if (!event.preventDefault) {
       event.preventDefault = function() {
         event.returnValue = false; //ie
@@ -1890,8 +1919,12 @@ function createEventHandler(element) {
       return event.defaultPrevented;
     };
 
-    forEach(eventHandler.fns, function(fn){
-      fn.call(element, event);
+    forEach(events[type || event.type], function(fn) {
+      try {
+        fn.call(element, event);
+      } catch (e) {
+        // Not much to do here since jQuery ignores these anyway
+      }
     });
 
     // Remove monkey-patched methods (IE),
@@ -1908,7 +1941,7 @@ function createEventHandler(element) {
       delete event.isDefaultPrevented;
     }
   };
-  eventHandler.fns = [];
+  eventHandler.elem = element;
   return eventHandler;
 }
 
@@ -1923,61 +1956,45 @@ forEach({
   dealoc: JQLiteDealoc,
 
   bind: function bindFn(element, type, fn){
-    var bind = JQLiteData(element, 'bind');
+    var events = JQLiteExpandoStore(element, 'events'),
+        handle = JQLiteExpandoStore(element, 'handle');
 
+    if (!events) JQLiteExpandoStore(element, 'events', events = {});
+    if (!handle) JQLiteExpandoStore(element, 'handle', handle = createEventHandler(element, events));
 
-    if (!bind) JQLiteData(element, 'bind', bind = {});
     forEach(type.split(' '), function(type){
-      var eventHandler = bind[type];
+      var eventFns = events[type];
 
-
-      if (!eventHandler) {
+      if (!eventFns) {
         if (type == 'mouseenter' || type == 'mouseleave') {
-          var mouseenter = bind.mouseenter = createEventHandler(element);
-          var mouseleave = bind.mouseleave = createEventHandler(element);
           var counter = 0;
 
+          events.mouseenter = [];
+          events.mouseleave = [];
 
           bindFn(element, 'mouseover', function(event) {
             counter++;
             if (counter == 1) {
-              mouseenter(event);
+              handle(event, 'mouseenter');
             }
           });
           bindFn(element, 'mouseout', function(event) {
             counter --;
             if (counter == 0) {
-              mouseleave(event);
+              handle(event, 'mouseleave');
             }
           });
-          eventHandler = bind[type];
         } else {
-          eventHandler = bind[type] = createEventHandler(element);
-          addEventListenerFn(element, type, eventHandler);
+          addEventListenerFn(element, type, handle);
+          events[type] = [];
         }
+        eventFns = events[type]
       }
-      eventHandler.fns.push(fn);
+      eventFns.push(fn);
     });
   },
 
-  unbind: function(element, type, fn) {
-    var bind = JQLiteData(element, 'bind');
-    if (!bind) return; //no listeners registered
-
-    if (isUndefined(type)) {
-      forEach(bind, function(eventHandler, type) {
-        removeEventListenerFn(element, type, eventHandler);
-        delete bind[type];
-      });
-    } else {
-      if (isUndefined(fn)) {
-        removeEventListenerFn(element, type, bind[type]);
-        delete bind[type];
-      } else {
-        arrayRemove(bind[type].fns, fn);
-      }
-    }
-  },
+  unbind: JQLiteUnbind,
 
   replaceWith: function(element, replaceNode) {
     var index, parent = element.parentNode;
@@ -2896,7 +2913,8 @@ function Browser(window, document, $log, $sniffer) {
   // URL API
   //////////////////////////////////////////////////////////////
 
-  var lastBrowserUrl = location.href;
+  var lastBrowserUrl = location.href,
+      baseElement = document.find('base');
 
   /**
    * @ngdoc method
@@ -2925,7 +2943,11 @@ function Browser(window, document, $log, $sniffer) {
       lastBrowserUrl = url;
       if ($sniffer.history) {
         if (replace) history.replaceState(null, '', url);
-        else history.pushState(null, '', url);
+        else {
+          history.pushState(null, '', url);
+          // Crazy Opera Bug: http://my.opera.com/community/forums/topic.dml?id=1185462
+          baseElement.attr('href', baseElement.attr('href'));
+        }
       } else {
         if (replace) location.replace(url);
         else location.href = url;
@@ -2933,7 +2955,8 @@ function Browser(window, document, $log, $sniffer) {
       return self;
     // getter
     } else {
-      return location.href;
+      // the replacement is a workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=407172
+      return location.href.replace(/%27/g,"'");
     }
   };
 
@@ -3004,7 +3027,7 @@ function Browser(window, document, $log, $sniffer) {
    * @returns {string=}
    */
   self.baseHref = function() {
-    var href = document.find('base').attr('href');
+    var href = baseElement.attr('href');
     return href ? href.replace(/^https?\:\/\/[^\/]*/, '') : href;
   };
 
@@ -4441,6 +4464,8 @@ function $ControllerProvider() {
 /**
  * @ngdoc function
  * @name angular.module.ng.$defer
+ * @deprecated Made obsolete by $timeout service. Please migrate your code. This service will be
+ *   removed with 1.0 final.
  * @requires $browser
  *
  * @description
@@ -4467,7 +4492,9 @@ function $ControllerProvider() {
  * @returns {boolean} Returns `true` if the task hasn't executed yet and was successfuly canceled.
  */
 function $DeferProvider(){
-  this.$get = ['$rootScope', '$browser', function($rootScope, $browser) {
+  this.$get = ['$rootScope', '$browser', '$log', function($rootScope, $browser, $log) {
+    $log.warn('$defer service has been deprecated, migrate to $timeout');
+
     function defer(fn, delay) {
       return $browser.defer(function() {
         $rootScope.$apply(fn);
@@ -4665,7 +4692,7 @@ function $InterpolateProvider() {
   }];
 }
 
-var URL_MATCH = /^(file|ftp|http|https):\/\/(\w+:{0,1}\w*@)?([\w\.-]*)(:([0-9]+))?(\/[^\?#]*)?(\?([^#]*))?(#(.*))?$/,
+var URL_MATCH = /^([^:]+):\/\/(\w+:{0,1}\w*@)?([\w\.-]*)(:([0-9]+))?(\/[^\?#]*)?(\?([^#]*))?(#(.*))?$/,
     PATH_MATCH = /^([^\?#]*)?(\?([^#]*))?(#(.*))?$/,
     HASH_MATCH = PATH_MATCH,
     DEFAULT_PORTS = {'http': 80, 'https': 443, 'ftp': 21};
@@ -7279,7 +7306,7 @@ function $RootScopeProvider(){
            scope.counter = 0;
 
            expect(scope.counter).toEqual(0);
-           scope.$watch('name', function(scope, newValue, oldValue) {
+           scope.$watch('name', function(newValue, oldValue) {
              counter = counter + 1;
            });
            expect(scope.counter).toEqual(0);
@@ -7304,7 +7331,7 @@ function $RootScopeProvider(){
             watchLog = [],
             logIdx, logMsg;
 
-        flagPhase(target, '$digest');
+        beginPhase('$digest');
 
         do {
           dirty = false;
@@ -7361,12 +7388,13 @@ function $RootScopeProvider(){
           } while ((current = next));
 
           if(dirty && !(ttl--)) {
+            clearPhase();
             throw Error(TTL + ' $digest() iterations reached. Aborting!\n' +
                 'Watchers fired in the last 5 iterations: ' + toJson(watchLog));
           }
         } while (dirty || asyncQueue.length);
 
-        this.$root.$$phase = null;
+        clearPhase();
       },
 
 
@@ -7401,7 +7429,7 @@ function $RootScopeProvider(){
        * perform any necessary cleanup.
        */
       $destroy: function() {
-        if (this.$root == this) return; // we can't remove the root node;
+        if ($rootScope == this) return; // we can't remove the root node;
         var parent = this.$parent;
 
         this.$broadcast('$destroy');
@@ -7518,13 +7546,18 @@ function $RootScopeProvider(){
        */
       $apply: function(expr) {
         try {
-          flagPhase(this, '$apply');
+          beginPhase('$apply');
           return this.$eval(expr);
         } catch (e) {
           $exceptionHandler(e);
         } finally {
-          this.$root.$$phase = null;
-          this.$root.$digest();
+          clearPhase();
+          try {
+            $rootScope.$digest();
+          } catch (e) {
+            $exceptionHandler(e);
+            throw e;
+          }
         }
       },
 
@@ -7548,9 +7581,10 @@ function $RootScopeProvider(){
        *   - `targetScope` - {Scope}: the scope on which the event was `$emit`-ed or `$broadcast`-ed.
        *   - `currentScope` - {Scope}: the current scope which is handling the event.
        *   - `name` - {string}: Name of the event.
-       *   - `cancel` - {function=}: calling `cancel` function will cancel further event propagation
+       *   - `stopPropagation` - {function=}: calling `stopPropagation` function will cancel further event propagation
        *     (available only for events that were `$emit`-ed).
-       *   - `cancelled` - {boolean}: Whether the event was cancelled.
+       *   - `preventDefault` - {function}: calling `preventDefault` sets `defaultPrevented` flag to true.
+       *   - `defaultPrevented` - {boolean}: true if `preventDefault` was called.
        */
       $on: function(name, listener) {
         var namedListeners = this.$$listeners[name];
@@ -7591,11 +7625,15 @@ function $RootScopeProvider(){
         var empty = [],
             namedListeners,
             scope = this,
+            stopPropagation = false,
             event = {
               name: name,
               targetScope: scope,
-              cancel: function() {event.cancelled = true;},
-              cancelled: false
+              stopPropagation: function() {stopPropagation = true;},
+              preventDefault: function() {
+                event.defaultPrevented = true;
+              },
+              defaultPrevented: false
             },
             listenerArgs = concat([event], arguments, 1),
             i, length;
@@ -7606,7 +7644,7 @@ function $RootScopeProvider(){
           for (i=0, length=namedListeners.length; i<length; i++) {
             try {
               namedListeners[i].apply(null, listenerArgs);
-              if (event.cancelled) return event;
+              if (stopPropagation) return event;
             } catch (e) {
               $exceptionHandler(e);
             }
@@ -7645,8 +7683,14 @@ function $RootScopeProvider(){
         var target = this,
             current = target,
             next = target,
-            event = { name: name,
-                      targetScope: target },
+            event = {
+              name: name,
+              targetScope: target,
+              preventDefault: function() {
+                event.defaultPrevented = true;
+              },
+              defaultPrevented: false
+            },
             listenerArgs = concat([event], arguments, 1);
 
         //down while you can, then up and next sibling or up and next sibling until back at root
@@ -7675,18 +7719,22 @@ function $RootScopeProvider(){
       }
     };
 
+    var $rootScope = new Scope();
 
-    function flagPhase(scope, phase) {
-      var root = scope.$root;
+    return $rootScope;
 
-      if (root.$$phase) {
-        throw Error(root.$$phase + ' already in progress');
+
+    function beginPhase(phase) {
+      if ($rootScope.$$phase) {
+        throw Error($rootScope.$$phase + ' already in progress');
       }
 
-      root.$$phase = phase;
+      $rootScope.$$phase = phase;
     }
 
-    return new Scope();
+    function clearPhase() {
+      $rootScope.$$phase = null;
+    }
 
     function compileToFn(exp, name) {
       var fn = $parse(exp);
@@ -7716,10 +7764,15 @@ function $RootScopeProvider(){
  */
 function $SnifferProvider() {
   this.$get = ['$window', function($window) {
-    var eventSupport = {};
+    var eventSupport = {},
+        android = int((/android (\d+)/.exec(lowercase($window.navigator.userAgent)) || [])[1]);
 
     return {
-      history: !!($window.history && $window.history.pushState),
+      // Android has history.pushState, but it does not update location correctly
+      // so let's not use the history API at all.
+      // http://code.google.com/p/android/issues/detail?id=17471
+      // https://github.com/angular/angular.js/issues/904
+      history: !!($window.history && $window.history.pushState && !(android < 4)),
       hashchange: 'onhashchange' in $window &&
                   // IE8 compatible mode lies
                   (!$window.document.documentMode || $window.document.documentMode > 7),
@@ -8730,6 +8783,91 @@ function $LocaleProvider(){
   };
 }
 
+function $TimeoutProvider() {
+  this.$get = ['$rootScope', '$browser', '$q', '$exceptionHandler',
+       function($rootScope,   $browser,   $q,   $exceptionHandler) {
+    var deferreds = {};
+
+
+     /**
+      * @ngdoc function
+      * @name angular.module.ng.$timeout
+      * @requires $browser
+      *
+      * @description
+      * Angular's wrapper for `window.setTimeout`. The `fn` function is wrapped into a try/catch
+      * block and delegates any exceptions to
+      * {@link angular.module.ng.$exceptionHandler $exceptionHandler} service.
+      *
+      * The return value of registering a timeout function is a promise which will be resolved when
+      * the timeout is reached and the timeout function is executed.
+      *
+      * To cancel a the timeout request, call `$timeout.cancel(promise)`.
+      *
+      * In tests you can use {@link angular.module.ngMock.$timeout `$timeout.flush()`} to
+      * synchronously flush the queue of deferred functions.
+      *
+      * @param {function()} fn A function, who's execution should be delayed.
+      * @param {number=} [delay=0] Delay in milliseconds.
+      * @param {boolean=} [invokeApply=true] If set to false skips model dirty checking, otherwise
+      *   will invoke `fn` within the {@link angular.module.ng.$rootScope.Scope#$apply $apply} block.
+      * @returns {*} Promise that will be resolved when the timeout is reached. The value this
+      *   promise will be resolved with is the return value of the `fn` function.
+      */
+    function timeout(fn, delay, invokeApply) {
+      var deferred = $q.defer(),
+          promise = deferred.promise,
+          skipApply = (isDefined(invokeApply) && !invokeApply),
+          timeoutId, cleanup;
+
+      timeoutId = $browser.defer(function() {
+        try {
+          deferred.resolve(fn());
+        } catch(e) {
+          deferred.reject(e);
+          $exceptionHandler(e);
+        }
+
+        if (!skipApply) $rootScope.$apply();
+      }, delay);
+
+      cleanup = function() {
+        delete deferreds[promise.$$timeoutId];
+      };
+
+      promise.$$timeoutId = timeoutId;
+      deferreds[timeoutId] = deferred;
+      promise.then(cleanup, cleanup);
+
+      return promise;
+    }
+
+
+     /**
+      * @ngdoc function
+      * @name angular.module.ng.$timeout#cancel
+      * @methodOf angular.module.ng.$timeout
+      *
+      * @description
+      * Cancels a task associated with the `promise`. As a result of this the promise will be
+      * resolved with a rejection.
+      *
+      * @param {Promise} promise Promise returned by the `$timeout` function.
+      * @returns {boolean} Returns `true` if the task hasn't executed yet and was successfully
+      *   canceled.
+      */
+    timeout.cancel = function(promise) {
+      if (promise.$$timeoutId in deferreds) {
+        deferreds[promise.$$timeoutId].reject('canceled');
+        return $browser.defer.cancel(promise.$$timeoutId);
+      }
+      return false;
+    };
+
+    return timeout;
+  }];
+}
+
 /**
  * @ngdoc object
  * @name angular.module.ng.$filterProvider
@@ -8744,7 +8882,7 @@ function $LocaleProvider(){
  *   function MyModule($provide, $filterProvider) {
  *     // create a service to demonstrate injection (not always needed)
  *     $provide.value('greet', function(name){
- *       return 'Hello ' + name + '!':
+ *       return 'Hello ' + name + '!';
  *     });
  *
  *     // register a filter factory which uses the
@@ -8756,7 +8894,7 @@ function $LocaleProvider(){
  *         // filters need to be forgiving so check input validity
  *         return text && greet(text) || text;
  *       };
- *     };
+ *     });
  *   }
  * </pre>
  *
@@ -12570,10 +12708,9 @@ var ngPluralizeDirective = ['$locale', '$interpolate', function($locale, $interp
  * Special properties are exposed on the local scope of each template instance, including:
  *
  *   * `$index` – `{number}` – iterator offset of the repeated element (0..length-1)
- *   * `$position` – `{string}` – position of the repeated element in the iterator. One of:
- *        * `'first'`,
- *        * `'middle'`
- *        * `'last'`
+ *   * `$first` – `{boolean}` – true if the repeated element is first in the iterator.
+ *   * `$middle` – `{boolean}` – true if the repeated element is between the first and last in the iterator.
+ *   * `$last` – `{boolean}` – true if the repeated element is last in the iterator.
  *
  *
  * @element ANY
@@ -12703,9 +12840,10 @@ var ngRepeatDirective = ngDirective({
           childScope[valueIdent] = value;
           if (keyIdent) childScope[keyIdent] = key;
           childScope.$index = index;
-          childScope.$position = index === 0 ?
-              'first' :
-              (index == collectionLength - 1 ? 'last' : 'middle');
+
+          childScope.$first = (index === 0);
+          childScope.$last = (index === (collectionLength - 1));
+          childScope.$middle = !(childScope.$first || childScope.$last);
 
           if (!last) {
             linker(childScope, function(clone){

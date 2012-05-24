@@ -223,12 +223,14 @@
      */
     var preProcessDirective = {
         restrict:'EA',
-        priority: 100000,
+        priority:100000,
         compile:function (tElement, tAttrs) {
-            if (tAttrs.preProcessDirective) {
+            // Note: We cannot use tAttrs here, as this is also copied when
+            // angular uses a directive with the template-property and replace-mode.
+            if (tElement[0].preProcessDirective) {
                 return;
             }
-            tAttrs.preProcessDirective = true;
+            tElement[0].preProcessDirective = true;
 
             // For page elements:
             var roleAttr = tAttrs.role;
@@ -253,7 +255,7 @@
                     // Note: We cannot use $.fn.data here, as this is also copied when
                     // angular uses a directive with the template-property.
                     var children = tElement[0].getElementsByTagName("*");
-                    for (var i=0; i<children.length; i++) {
+                    for (var i = 0; i < children.length; i++) {
                         children.item(i).jqmEnhanced = true;
                     }
                     tElement[0].jqmEnhanced = true;
@@ -275,20 +277,23 @@
     var widgetDirective = {
         restrict:'EA',
         // after the normal angular widgets like input, ngModel, ...
-        priority: 0,
+        priority:0,
         // This will be changed by the setWidgetScopeDirective...
-        scope: false,
-        require: ['?ngModel'],
+        scope:false,
+        require:['?ngModel'],
         compile:function (tElement, tAttrs) {
-            if (tAttrs.widgetDirective) {
+            // Note: We cannot use tAttrs here, as this is also copied when
+            // angular uses a directive with the template-property and replace-mode.
+            if (tElement[0].widgetDirective) {
                 return;
             }
-            tAttrs.widgetDirective = true;
+            tElement[0].widgetDirective = true;
 
             // For page elements:
             var roleAttr = tAttrs["role"];
             var isPage = roleAttr == 'page' || roleAttr == 'dialog';
             var widgets = tElement.data("jqm-widgets");
+            var linkers = tElement.data("jqm-linkers");
             return {
                 pre:function (scope, iElement, iAttrs) {
                     if (isPage) {
@@ -298,18 +303,17 @@
                         lastCreatedPages.push(scope);
                     }
                 },
-                post:function(scope, iElement, iAttrs, ctrls) {
+                post:function (scope, iElement, iAttrs, ctrls) {
                     if (widgets && widgets.length) {
                         var widget;
-                        for (var i=0; i<widgets.length; i++) {
+                        for (var i = 0; i < widgets.length; i++) {
                             widget = widgets[i];
-                            if (!iElement.data(widget.name)) {
-                                iElement[widget.name].apply(iElement, widget.args);
-                                var linker = jqmWidgetLinker[widget.name];
-                                for (var j = 0; j < linker.length; j++) {
-                                    linker[j].apply(this, arguments);
-                                }
-                            }
+                            widget.create.apply(iElement, widget.args);
+                        }
+                    }
+                    if (linkers) {
+                        for (var i=0; i<linkers.length; i++) {
+                            linkers[i].apply(this, arguments);
                         }
                     }
                 }
@@ -324,10 +328,10 @@
      * but not for data-role="content".
      */
     var setWidgetScopeDirective = {
-        restrict: widgetDirective.restrict,
-        priority: widgetDirective.priority+1,
+        restrict:widgetDirective.restrict,
+        priority:widgetDirective.priority + 1,
         compile:function (tElement, tAttrs) {
-            widgetDirective.scope = (tAttrs.role == 'page' || tAttrs.role== 'dialog');
+            widgetDirective.scope = (tAttrs.role == 'page' || tAttrs.role == 'dialog');
         }
     };
 
@@ -340,20 +344,20 @@
      * @param tagList
      */
     function registerDirective(tagList) {
-        for (var i=0; i<tagList.length; i++) {
-            ng.directive(tagList[i], function() {
+        for (var i = 0; i < tagList.length; i++) {
+            ng.directive(tagList[i], function () {
                 return preProcessDirective;
             });
-            ng.directive(tagList[i], function() {
+            ng.directive(tagList[i], function () {
                 return setWidgetScopeDirective;
             });
-            ng.directive(tagList[i], function() {
+            ng.directive(tagList[i], function () {
                 return widgetDirective;
             });
         }
     }
 
-    registerDirective(['role', 'input', 'select', 'button', 'textarea']);
+    registerDirective(['div', 'role', 'input', 'select', 'button', 'textarea']);
 
     $.fn.orig = {};
 
@@ -377,22 +381,43 @@
     function patchJqmWidget(widgetName) {
         patchJq(widgetName, function () {
             if (markJqmWidgetCreation()) {
-                for (var k=0; k<this.length; k++) {
+                for (var k = 0; k < this.length; k++) {
                     var element = this.eq(k);
-                    var jqmWidgets = element.data("jqm-widgets");
+                    var widgetElement = element;
+                    var linkElement = element;
+                    var createData = {
+                        widgetElement:widgetElement,
+                        linkElement:linkElement,
+                        create:$.fn.orig[widgetName]
+                    };
+                    if ($.fn.orig[widgetName].precompile) {
+                        $.fn.orig[widgetName].precompile(createData);
+                        // allow the precompile to change the element to which
+                        // we add the data.
+                        widgetElement = createData.widgetElement;
+                        linkElement = createData.linkElement;
+                    }
+                    var jqmWidgets = widgetElement.data("jqm-widgets");
                     if (!jqmWidgets) {
                         jqmWidgets = [];
-                        element.data("jqm-widgets", jqmWidgets);
+                        widgetElement.data("jqm-widgets", jqmWidgets);
                     }
+                    var linkers = linkElement.data("jqm-linkers");
+                    if (!linkers) {
+                        linkers = [];
+                        linkElement.data("jqm-linkers", linkers);
+                    }
+
                     var widgetExists = false;
-                    for (var i=0; i<jqmWidgets.length; i++) {
+                    for (var i = 0; i < jqmWidgets.length; i++) {
                         if (jqmWidgets[i].name == widgetName) {
                             widgetExists = true;
                             break;
                         }
                     }
                     if (!widgetExists) {
-                        jqmWidgets.push({name: widgetName, args: Array.prototype.slice.call(arguments)});
+                        jqmWidgets.push({name:widgetName, args:Array.prototype.slice.call(arguments), create:createData.create});
+                        linkers.push(jqmNgWidgets[widgetName].link);
                     }
                 }
             }
@@ -403,11 +428,12 @@
         });
     }
 
-    var jqmWidgetLinker = {};
+    var jqmNgWidgets = {};
 
     $.mobile.registerJqmNgWidget = function (widgetName, linkFn) {
-        var linkFns = linkFn ? [linkFn] : [];
-        jqmWidgetLinker[widgetName] = linkFns;
+        jqmNgWidgets[widgetName] = {
+            link:linkFn
+        };
         patchJqmWidget(widgetName);
     }
 })(window.jQuery, window.angular);
@@ -440,16 +466,26 @@
         controlgroup:{
             handlers:[refreshOnChildrenChange]
         },
-        navbar: {
+        navbar:{
             handlers:[]
         },
-        dialog: {
+        dialog:{
             handlers:[]
         },
-        fixedtoolbar: {
+        fixedtoolbar:{
             handlers:[]
         }
     };
+
+    function mergeHandlers(widgetName, list) {
+        return function() {
+            var args = Array.prototype.slice.call(arguments);
+            args.unshift(widgetName);
+            for (var i=0; i<list.length; i++) {
+                list[i].apply(this, args);
+            }
+        }
+    }
 
     var config;
     for (var widgetName in widgetConfig) {
@@ -457,14 +493,31 @@
         $.mobile.registerJqmNgWidget(widgetName, mergeHandlers(widgetName, config.handlers));
     }
 
-    function mergeHandlers(widgetName, handlers) {
-        return function (scope, iElement, iAttrs, ctrls) {
-            for (var i = 0; i < handlers.length; i++) {
-                handlers[i](widgetName, scope, iElement, iAttrs, ctrls);
-            }
-        }
-    }
+    var noop = function() { };
 
+    $.fn.orig.checkboxradio.precompile = function (createData) {
+        var iElement = createData.widgetElement;
+        // Selectors: See the checkboxradio-Plugin in jqm.
+        var parentLabel = $(iElement).closest("label");
+        var label = parentLabel.length ? parentLabel : $(iElement).closest("form,fieldset,:jqmData(role='page'),:jqmData(role='dialog')").find("label").filter("[for='" + iElement[0].id + "']");
+        var wrapper = document.createElement('div');
+        var inputtype = iElement[0].type;
+        wrapper.className = 'ui-' + inputtype;
+        var $wrapper = $(wrapper);
+        iElement.add(label).wrapAll(wrapper);
+        createData.widgetElement = iElement.parent();
+
+        createData.create = function() {
+            var _oldWrapAll = $.fn.wrapAll;
+            $.fn.wrapAll = noop;
+            var res = $.fn.orig.checkboxradio.apply(this.children("input"), arguments);
+            $.fn.wrapAll = _oldWrapAll;
+            return res;
+        }
+    };
+
+    // -------------------
+    // link handlers
     function disabledHandler(widgetName, scope, iElement, iAttrs, ctrls) {
         iAttrs.$observe("disabled", function (value) {
             if (value) {

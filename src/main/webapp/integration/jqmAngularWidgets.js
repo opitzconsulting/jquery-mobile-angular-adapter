@@ -27,16 +27,26 @@
         controlgroup:{
             handlers:[refreshOnChildrenChange]
         },
-        navbar: {
+        navbar:{
             handlers:[]
         },
-        dialog: {
+        dialog:{
             handlers:[]
         },
-        fixedtoolbar: {
+        fixedtoolbar:{
             handlers:[]
         }
     };
+
+    function mergeHandlers(widgetName, list) {
+        return function() {
+            var args = Array.prototype.slice.call(arguments);
+            args.unshift(widgetName);
+            for (var i=0; i<list.length; i++) {
+                list[i].apply(this, args);
+            }
+        }
+    }
 
     var config;
     for (var widgetName in widgetConfig) {
@@ -44,14 +54,31 @@
         $.mobile.registerJqmNgWidget(widgetName, mergeHandlers(widgetName, config.handlers));
     }
 
-    function mergeHandlers(widgetName, handlers) {
-        return function (scope, iElement, iAttrs, ctrls) {
-            for (var i = 0; i < handlers.length; i++) {
-                handlers[i](widgetName, scope, iElement, iAttrs, ctrls);
-            }
-        }
-    }
+    var noop = function() { };
 
+    $.fn.orig.checkboxradio.precompile = function (createData) {
+        var iElement = createData.widgetElement;
+        // Selectors: See the checkboxradio-Plugin in jqm.
+        var parentLabel = $(iElement).closest("label");
+        var label = parentLabel.length ? parentLabel : $(iElement).closest("form,fieldset,:jqmData(role='page'),:jqmData(role='dialog')").find("label").filter("[for='" + iElement[0].id + "']");
+        var wrapper = document.createElement('div');
+        var inputtype = iElement[0].type;
+        wrapper.className = 'ui-' + inputtype;
+        var $wrapper = $(wrapper);
+        iElement.add(label).wrapAll(wrapper);
+        createData.widgetElement = iElement.parent();
+
+        createData.create = function() {
+            var _oldWrapAll = $.fn.wrapAll;
+            $.fn.wrapAll = noop;
+            var res = $.fn.orig.checkboxradio.apply(this.children("input"), arguments);
+            $.fn.wrapAll = _oldWrapAll;
+            return res;
+        }
+    };
+
+    // -------------------
+    // link handlers
     function disabledHandler(widgetName, scope, iElement, iAttrs, ctrls) {
         iAttrs.$observe("disabled", function (value) {
             if (value) {

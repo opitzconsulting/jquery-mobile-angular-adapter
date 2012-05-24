@@ -1,6 +1,6 @@
 
 /**
- * @license AngularJS v1.0.0rc8
+ * @license AngularJS v1.0.0rc10
  * (c) 2010-2012 Google, Inc. http://angularjs.org
  * License: MIT
  *
@@ -1328,6 +1328,25 @@ function MockXhr() {
   this.abort = angular.noop;
 }
 
+
+/**
+ * @ngdoc function
+ * @name angular.module.ngMock.$timeout
+ * @description
+ *
+ * This service is just a simple decorator for {@link angular.module.ng.$timeout $timeout} service
+ * that adds a "flush" method.
+ */
+
+/**
+ * @ngdoc method
+ * @name angular.module.ngMock.$timeout#flush
+ * @methodOf angular.module.ngMock.$timeout
+ * @description
+ *
+ * Flushes the queue of pending tasks.
+ */
+
 /**
  * @ngdoc overview
  * @name angular.module.ngMock
@@ -1341,6 +1360,13 @@ angular.module('ngMock', ['ng']).provider({
   $exceptionHandler: angular.mock.$ExceptionHandlerProvider,
   $log: angular.mock.$LogProvider,
   $httpBackend: angular.mock.$HttpBackendProvider
+}).config(function($provide) {
+  $provide.decorator('$timeout', function($delegate, $browser) {
+    $delegate.flush = function() {
+      $browser.defer.flush();
+    };
+    return $delegate;
+  });
 });
 
 
@@ -1526,6 +1552,23 @@ angular.mock.e2e = {};
 angular.mock.e2e.$httpBackendDecorator = ['$delegate', '$browser', createHttpBackendMock];
 
 
+angular.mock.clearDataCache = function() {
+  // TODO jquery mobile unit tests need the handlers!
+  /*
+    var key,
+      cache = angular.element.cache;
+
+  for(key in cache) {
+    if (cache.hasOwnProperty(key)) {
+      var handle = cache[key].handle;
+
+      handle && angular.element(handle.elem).unbind();
+      delete cache[key];
+    }
+  }
+  */
+};
+
 
 window.jstestdriver && (function(window) {
   /**
@@ -1545,6 +1588,13 @@ window.jstestdriver && (function(window) {
 
 
 window.jasmine && (function(window) {
+
+  afterEach(function() {
+    var spec = getCurrentSpec();
+    spec.$injector = null;
+    spec.$modules = null;
+    angular.mock.clearDataCache();
+  });
 
   function getCurrentSpec() {
     return jasmine.getEnv().currentSpec;

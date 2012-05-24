@@ -11,7 +11,7 @@ describe("checkbox", function () {
 
     it('should save the ui value into the model', function () {
         var d = testutils.compileInPage('<div>' +
-            '<input ng-model="mysel" id="mysel" type="checkbox">{{mysel}}<label for="mysel" id="mylab">Entry</label>' +
+            '<input ng-model="mysel" id="mysel" type="checkbox"><label for="mysel" id="mylab">Entry</label>' +
             '</div>');
         var page = d.page;
         var input = page.find("#mysel");
@@ -23,6 +23,19 @@ describe("checkbox", function () {
         label.trigger('vclick');
         expect(scope.mysel).toBeTruthy();
 
+    });
+
+    it("should allow to bind the label to an expression", function() {
+        var d = testutils.compileInPage('<div>' +
+            '<input ng-model="mysel" id="mysel" type="checkbox"><label for="mysel" id="mylab">{{label}}</label>' +
+            '</div>');
+        var page = d.page;
+        var input = page.find("#mysel");
+        var scope = input.scope();
+        expect($.trim(d.element.text())).toBe('');
+        scope.label = 'someLabel';
+        scope.$root.$digest();
+        expect($.trim(d.element.text())).toEqual('someLabel');
     });
 
     it('should save the model value into the ui and refresh', function () {

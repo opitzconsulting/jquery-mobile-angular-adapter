@@ -11,7 +11,9 @@ Test page during development.
 
     <script src="lib/jquery.js"></script>
     <script src="lib/jquery.mobile.js"></script>
+
     <script src="lib/angular.js"></script>
+
     <script src="jqm-angular.jsp"></script>
     <script>
         angular.module('myApp', []);
@@ -23,17 +25,16 @@ Test page during development.
 </head>
 <body>
 <div data-role="page" data-theme="a" ng-controller="PageCtrl">
-    <div data-role="content">
-        <fieldset>
-            {{toggleVisible}}
-            <input id="toggler" type="checkbox" ng-model="toggleVisible"/>
-            <label for="toggler">Show conditional elements: {{toggleVisible}}</label>
-        </fieldset>
-        <div ng-show="toggleVisible">
-            <p>This is a conditional element that is hidden/shown based a ng-show evaluation</p>
-        </div>
+    <div data-role="content" ng-init="list=[1,2]">
+        <input type="checkbox" id="check">
+        <label for="check">hello</label>
+
+
+        <select>
+            <option>T</option>
+
+        </select>
     </div>
-</div>
 
 </body>
 

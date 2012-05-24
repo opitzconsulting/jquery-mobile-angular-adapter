@@ -1,4 +1,6 @@
 (function (angular) {
+    // Patch for ng-include to fire an event whenever the children change.
+
     var ng = angular.module("ng");
     ng.directive("ngInclude",
         function () {

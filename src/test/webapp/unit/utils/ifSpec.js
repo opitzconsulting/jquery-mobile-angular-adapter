@@ -29,21 +29,8 @@ describe("ngm-if", function () {
     });
 
     describe('with elements that wrap themselves into new elements', function () {
-        beforeEach(function () {
-            module("ngMock", function ($compileProvider) {
-                $compileProvider.directive('wrapper', function () {
-                    return {
-                        restrict:'A',
-                        link:function (scope, iElement) {
-                            iElement.wrap("<div class='wrapper'></div>");
-                        }
-                    }
-                });
-            });
-        });
-
         it("should remove the wrapper elements with the elements", function() {
-            var c = testutils.compileInPage('<div><span ngm-if="value" wrapper="true"></span></div>');
+            var c = testutils.compileInPage('<div><button ngm-if="value" wrapper="true"></button></div>');
             var scope = c.element.scope();
             scope.value = true;
             scope.$root.$digest();

@@ -9,21 +9,8 @@ describe('ng-repeat', function () {
     });
 
     describe('with elements that wrap themselves into new elements', function () {
-        beforeEach(function () {
-            module("ngMock", function ($compileProvider) {
-                $compileProvider.directive('wrapper', function () {
-                    return {
-                        restrict:'A',
-                        link:function (scope, iElement) {
-                            iElement.wrap("<div class='wrapper'></div>");
-                        }
-                    }
-                });
-            });
-        });
-
         it('should append new elements at the same level', function () {
-            var c = testutils.compileInPage('<div><span ng-repeat="l in list" wrapper="true"></span></div>');
+            var c = testutils.compileInPage('<div><button ng-repeat="l in list" wrapper="true"></button></div>');
             var scope = c.element.scope();
             scope.list = [1];
             scope.$root.$digest();
@@ -35,7 +22,7 @@ describe('ng-repeat', function () {
         });
 
         it("should remove the wrapper elements with the elements", function() {
-            var c = testutils.compileInPage('<div><span ng-repeat="l in list" wrapper="true"></span></div>');
+            var c = testutils.compileInPage('<div><button ng-repeat="l in list" wrapper="true"></button></div>');
             var scope = c.element.scope();
             scope.list = [1,2];
             scope.$root.$digest();
@@ -45,8 +32,6 @@ describe('ng-repeat', function () {
             scope.$root.$digest();
             expect(c.element.children('div').length).toBe(0);
         });
-
-
     });
 
     describe("fire $childrenChanged for array datasource", function () {

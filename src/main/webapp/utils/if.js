@@ -1,16 +1,4 @@
 (function (angular) {
-    function findElementWithSameParent(referenceElement, node) {
-        var target = node[0];
-        var parent = referenceElement[0].parentNode;
-        while (target.parentNode != parent) {
-            target = target.parentNode
-            if (!target) {
-                throw new Error("could not find element in parent", origElement, parent);
-            }
-        }
-        return angular.element(target);
-    }
-
     /*
      * Defines the ng:if tag. This is useful if jquery mobile does not allow
      * an ng-switch element in the dom, e.g. between ul and li.
@@ -34,7 +22,6 @@
                         });
                     } else {
                         if (lastElement) {
-                            lastElement = findElementWithSameParent(iterStartElement, lastElement);
                             lastElement.remove();
                             lastElement = null;
                         }

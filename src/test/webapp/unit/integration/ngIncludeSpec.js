@@ -25,13 +25,13 @@ describe('ng-include', function () {
     }));
 
     it("should enhance loaded widget markup", inject(function ($httpBackend) {
-        init('<button></button>', true);
+        init('<div><button></button></div>', true);
 
         scope.src = 'someUri';
         scope.$root.$digest();
         $httpBackend.flush();
 
-        expect(element.children('div').hasClass('ui-btn')).toBe(true);
+        expect(element.children('div').children('div').hasClass('ui-btn')).toBe(true);
     }));
 
     it("should compile included jqm page", inject(function($httpBackend) {

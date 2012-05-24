@@ -259,8 +259,8 @@
                         linkElement:linkElement,
                         create:$.fn.orig[widgetName]
                     };
-                    if ($.fn.orig[widgetName].precompile) {
-                        $.fn.orig[widgetName].precompile(createData);
+                    if (jqmNgWidgets[widgetName].precompile) {
+                        jqmNgWidgets[widgetName].precompile(createData);
                         // allow the precompile to change the element to which
                         // we add the data.
                         widgetElement = createData.widgetElement;
@@ -299,8 +299,9 @@
 
     var jqmNgWidgets = {};
 
-    $.mobile.registerJqmNgWidget = function (widgetName, linkFn) {
+    $.mobile.registerJqmNgWidget = function (widgetName, precompileFn, linkFn) {
         jqmNgWidgets[widgetName] = {
+            precompile: precompileFn,
             link:linkFn
         };
         patchJqmWidget(widgetName);

@@ -48,22 +48,9 @@ describe('ng-switch', function () {
     });
 
     describe('with elements that wrap themselves into new elements', function () {
-        beforeEach(function () {
-            module("ngMock", function ($compileProvider) {
-                $compileProvider.directive('wrapper', function () {
-                    return {
-                        restrict:'A',
-                        link:function (scope, iElement) {
-                            iElement.wrap("<div class='wrapper'></div>");
-                        }
-                    }
-                });
-            });
-        });
-
         it("should remove the wrapper elements with the elements", function() {
             var c = testutils.compileInPage('<ng-switch on="value">' +
-                '<span ng-switch-when="case1" wrapper="true"></span>' +
+                '<button ng-switch-when="case1" wrapper="true"></button>' +
                 '</ng-switch>');
             var scope = c.element.scope();
             scope.value = "case1";

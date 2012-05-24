@@ -1,36 +1,7 @@
 (function ($, angular) {
-    /**
-     * Modify the original repeat: Make sure that all elements are added under the same parent.
-     * This is important, as some jquery mobile widgets wrap the elements into new elements,
-     * and angular just uses element.after().
-     * See angular issue 831
-     */
-    function instrumentNodeForNgRepeat(referenceElement, node) {
-        function correctDomNode(jqElement) {
-            var target = jqElement[0];
-            var parent = referenceElement[0].parentNode;
-            while (target.parentNode !== parent) {
-                target = target.parentNode;
-                if (!target) {
-                    throw new Error("Could not find the expected parent in the node path", this, parent);
-                }
-            }
-            jqElement[0] = target;
-        }
-
-        var _oldAfter = node.after;
-        node.after = function (otherNode) {
-            correctDomNode(this);
-            instrumentNodeForNgRepeat(referenceElement, otherNode);
-            return _oldAfter.apply(this, arguments);
-        };
-
-        var _oldRemove = node.remove;
-        node.remove = function() {
-            correctDomNode(this);
-            return _oldRemove.apply(this, arguments);
-        }
-    }
+    // Patch for ng-repeat to fire an event whenever the children change.
+    // Only watching Scope create/destroy is not enough here, as ng-repeat
+    // caches the scopes during reordering.
 
     function shallowEquals(collection1, collection2) {
         if (!!collection1 ^ !!collection2) {
@@ -72,7 +43,6 @@
             compile:function (element, attr, linker) {
                 return {
                     pre:function (scope, iterStartElement, attr) {
-                        instrumentNodeForNgRepeat(iterStartElement, iterStartElement);
                         var expression = attr.ngRepeat;
                         var match = expression.match(/^.+in\s+(.*)\s*$/);
                         if (!match) {

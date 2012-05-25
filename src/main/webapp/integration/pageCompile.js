@@ -226,7 +226,8 @@
         }
     }
 
-    registerDirective(['div', 'role', 'input', 'select', 'button', 'textarea']);
+    // TODO register for ALL elements!
+    registerDirective(['div', 'role', 'input', 'select', 'button', 'textarea', 'fieldset']);
 
     $.fn.orig = {};
 

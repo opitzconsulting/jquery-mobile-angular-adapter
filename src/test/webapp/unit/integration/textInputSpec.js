@@ -76,4 +76,20 @@ describe("textInput", function () {
         input.trigger('blur');
         expect(scope.mysel).toEqual('1999-10-09');
     });
+
+    describe("search input", function() {
+        it('should be removable', function () {
+            // search input wraps itself into a parent div
+            var d = testutils.compileInPage('<div ng-init="list=[1,2]"><input type="search" ng-repeat="l in list"></div>');
+            var page = d.page;
+            var container = d.element;
+            var scope = container.scope();
+            expect(container.children('div').length).toEqual(2);
+            scope.list = [1];
+            scope.$root.$digest();
+            expect(container.children('div').length).toEqual(1);
+        });
+
+    });
+
 });

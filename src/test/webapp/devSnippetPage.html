@@ -16,19 +16,18 @@ Test page during development.
 
     <script src="jqm-angular.jsp"></script>
     <script>
-        angular.module('myApp', []);
-
-        function PageCtrl($scope) {
-            $scope.toggleVisible = false;
-        }
+        angular.module('myApp', [])
+                .directive('buttonGroup', function () {
+                    return {
+                        restrict:'E', replace:true, templateUrl:'template.html'
+                    }
+                });
     </script>
 </head>
 <body>
-<div data-role="page" data-theme="a" ng-controller="PageCtrl">
+<div data-role="page" data-theme="a" >
     <div data-role="content" ng-init="list=[1,2]">
-        <ul data-role="controlgroup" data-type="horizontal" ng-init="test=['one','two','three','four']">
-            <li data-role="button"ng-repeat="item in test">{{item}}</li>
-        </ul>
+        <button-group></button-group>
     </div>
 
 </body>

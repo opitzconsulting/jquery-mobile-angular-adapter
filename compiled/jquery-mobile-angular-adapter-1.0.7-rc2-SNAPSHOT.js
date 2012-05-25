@@ -355,7 +355,8 @@
         }
     }
 
-    registerDirective(['div', 'role', 'input', 'select', 'button', 'textarea']);
+    // TODO register for ALL elements!
+    registerDirective(['div', 'role', 'input', 'select', 'button', 'textarea', 'fieldset']);
 
     $.fn.orig = {};
 
@@ -446,7 +447,8 @@
             handlers:[disabledHandler]
         },
         textinput:{
-            handlers:[disabledHandler]
+            handlers:[disabledHandler],
+            precompile:textinputPrecompile
         },
         checkboxradio:{
             handlers:[disabledHandler, refreshAfterNgModelRender],
@@ -547,46 +549,38 @@
     // Angular does not like this, so we do it in advance.
     function buttonPrecompile(createData) {
         var origElement = createData.widgetElement;
-        var wrapper = $("<div></div>").insertBefore(origElement).append(origElement);
+        var wrapper = $( "<div></div>" )
+            .text( origElement.text() || origElement.val() )
+            .insertBefore(origElement)
+            .append(origElement);
         moveCloningDirectives(origElement, wrapper);
         createData.widgetElement = wrapper;
         createData.create = function () {
             var wrapper = this;
             var button = this.children().eq(0);
 
-            var _init = $.fn.init;
-            $.fn.init = function (selector) {
-                if (selector === "<div></div>") {
-                    // Only catch the first call
-                    $.fn.init = _init;
-                    arguments[0] = wrapper;
-                    return $.fn.init.apply(this, arguments);
+            var _text = $.fn.text;
+            $.fn.text = function () {
+                if (arguments.length>0) {
+                    // Only catch the first setter call
+                    $.fn.text = _text;
+                    return wrapper;
                 }
-                return _init.apply(this, arguments);
+                return _text.apply(this, arguments);
             };
-            $.fn.init.prototype = _init.prototype;
 
             var _insertBefore = $.fn.insertBefore;
             $.fn.insertBefore = function (element) {
                 if (this[0] === wrapper[0] && element[0] === button[0]) {
-                    return this;
+                    return wrapper;
                 }
                 return _insertBefore.apply(this, arguments);
             };
 
-            var _empty = $.fn.empty;
-            $.fn.empty = function() {
-                if (this[0]===wrapper[0]) {
-                    return this;
-                }
-                return _empty.apply(this, arguments);
-            };
-
             var res = $.fn.orig.button.apply(button, arguments);
 
-            $.fn.init = _init;
+            $.fn.text = _text;
             $.fn.insertBefore = _insertBefore;
-            $.fn.empty = _empty;
             return res;
         };
 
@@ -621,6 +615,38 @@
             return res;
         };
 
+    }
+
+    // textinput for input-type "search" wraps itself into a new element
+    function textinputPrecompile(createData) {
+        var origElement = createData.widgetElement;
+        if ( !origElement.is( "[type='search'],:jqmData(type='search')" ) ) {
+            return;
+        }
+        var wrapper = $("<div></div>").insertBefore(origElement).append(origElement);
+        moveCloningDirectives(origElement, wrapper);
+        createData.widgetElement = wrapper;
+        createData.create = function () {
+            var wrapper = this;
+            var select = this.children().eq(0);
+
+            var _wrap = $.fn.wrap;
+            $.fn.wrap = function(container) {
+                if (this[0] === select[0]) {
+                    $.fn.wrap = _wrap;
+                    var tempContainer = $(container);
+                    wrapper[0].className = tempContainer[0].className;
+
+                    return select;
+                }
+                return _wrap.apply(this, arguments);
+            };
+
+            var res = $.fn.orig.textinput.apply(select, arguments);
+
+            $.fn.wrap = _wrap;
+            return res;
+        };
     }
 
     var CLONING_DIRECTIVE_REGEXP = /(^|[\W])(repeat|switch-when|if)($|[\W])/;

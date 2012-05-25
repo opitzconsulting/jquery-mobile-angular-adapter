@@ -66,7 +66,32 @@ describe('regression', function () {
             expect(groups.eq(0).hasClass("ui-controlgroup")).toBe(true);
             expect(groups.eq(1).hasClass("ui-controlgroup")).toBe(true);
         });
-    })
+    });
+
+    describe("fieldset", function() {
+        it("should allow to compile directive with a templateUrl that contains a fieldset with a search input", function() {
+            var _$httpBackend;
+
+            module("ngMock", function ($compileProvider) {
+                $compileProvider.directive('sampleUrl', function () {
+                    return {
+                        restrict:'A',
+                        replace: true,
+                        templateUrl: 'sampleUrl'
+                    }
+                });
+
+            });
+            inject(function ($httpBackend) {
+                $httpBackend.when('GET', /.*sampleUrl*/).respond('<fieldset><input type="search"></fieldset>');
+                _$httpBackend = $httpBackend;
+            });
+            var c = testutils.compileInPage('<div><div sample-url="true"></div></div>');
+            _$httpBackend.flush();
+            var fieldset = c.element.children("fieldset");
+            expect(fieldset.children("div.ui-input-search").length).toBe(1);
+        });
+    });
 
 });
 

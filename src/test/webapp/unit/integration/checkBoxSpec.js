@@ -73,4 +73,22 @@ describe("checkbox", function () {
         scope.$root.$digest();
         expect(parentDiv.hasClass('ui-disabled')).toBeTruthy();
     });
+
+    it('should be removable', function () {
+        var c = testutils.compileInPage(
+            '<fieldset ng-repeat="l in list"><input type="checkbox" id="check1"><label for="check1">{{l}}</label></fieldset>');
+        var page = c.page;
+        var scope = page.scope();
+        scope.list = [1,2];
+        scope.$root.$digest();
+        // checkbox creates a new parent for itself
+        var content = page.find("fieldset");
+        expect(content.children('div.ui-checkbox').length).toEqual(2);
+        expect(content.children('label').length).toEqual(0);
+        expect(content.children('input').length).toEqual(0);
+        scope.list = [1];
+        scope.$root.$digest();
+        content = page.find("fieldset");
+        expect(content.children('div.ui-checkbox').length).toEqual(1);
+    });
 });

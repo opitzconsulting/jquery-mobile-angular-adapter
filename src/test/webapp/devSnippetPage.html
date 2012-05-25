@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app="myApp">
+<html ng-app>
 <!--
 Test page during development.
 -->
@@ -15,19 +15,16 @@ Test page during development.
     <script src="lib/angular.js"></script>
 
     <script src="jqm-angular.jsp"></script>
-    <script>
-        angular.module('myApp', [])
-                .directive('buttonGroup', function () {
-                    return {
-                        restrict:'E', replace:true, templateUrl:'template.html'
-                    }
-                });
-    </script>
 </head>
 <body>
-<div data-role="page" data-theme="a" >
-    <div data-role="content" ng-init="list=[1,2]">
-        <button-group></button-group>
+<div data-role="page" data-theme="a" ng-init="todos = [{done: false, name:'hello'},{done: false, name:'hello2'}]">
+    <div data-role="content">
+        <div data-role="controlgroup">
+            <fieldset ng-repeat="todo in todos | paged:{pageSize:5}">
+                <input type="checkbox" ng-model="todo.done" id="todo1">
+                <label for="todo1">{{todo.name}}</label>
+            </fieldset>
+        </div>
     </div>
 
 </body>

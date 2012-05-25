@@ -76,8 +76,10 @@
 
         createData.create = function () {
             var _wrapAll = $.fn.wrapAll;
+            var input = this.children("input");
+            var wrapper = this;
             $.fn.wrapAll = function(container) {
-                if (this[0] === origElement[0]) {
+                if (this[0] === input[0]) {
                     $.fn.wrapAll = _wrapAll;
                     var tempContainer = $(container);
                     wrapper[0].className = tempContainer[0].className;
@@ -86,7 +88,7 @@
                 return _wrapAll.apply(this, arguments);
             };
 
-            var res = $.fn.orig.checkboxradio.apply(this.children("input"), arguments);
+            var res = $.fn.orig.checkboxradio.apply(input, arguments);
             $.fn.wrapAll = _wrapAll;
             return res;
         }

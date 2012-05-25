@@ -3,8 +3,8 @@ Changelog
 
 1.0.7rc2
 -------------
-- Update to angular 1.0 rc9
-- refactoring for performance improvements.
+- Update to angular 1.0 rc10
+- complete refactoring for performance improvements, and to allow directive with template and templateUrl.
 - Removed `$navigate` filter. Use `$navigate` service instead. Reason: This puts too much logic in the html page and leads
   to errors if `$q` is not used correctly.
 - Removed the `fadein` directive, as there are better ways to do this (see the corresponding jquery mobile plugin...)

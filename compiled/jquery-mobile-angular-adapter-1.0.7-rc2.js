@@ -1,5 +1,5 @@
 /**
-* jQuery Mobile angularJS adaper v1.0.7-rc2-SNAPSHOT
+* jQuery Mobile angularJS adaper v1.0.7-rc2
 * http://github.com/tigbro/jquery-mobile-angular-adapter
 *
 * Copyright 2011, Tobias Bosch (OPITZ CONSULTING GmbH)
@@ -355,7 +355,6 @@
         }
     }
 
-    // TODO register for ALL elements!
     registerDirective(['div', 'role', 'input', 'select', 'button', 'textarea', 'fieldset']);
 
     $.fn.orig = {};

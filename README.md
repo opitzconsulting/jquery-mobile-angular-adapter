@@ -23,27 +23,30 @@ Jquery mobile has two kinds of markup:
 Integration strategy:
 
 1. We have angular widgets for all possible jqm markup.
+
 2. In the `compile` function, we trigger the jqm `create` and `pagecreate` event.
    Before this, we instrument all stateful jqm widgets (see above), so they do not
    really create the jqm widget, but only add the attribute `jqm-widget=<widgetName>` to the corresponding element.
    By this, all stateless  markup can be used by angular for stamping (e.g. in ng-repeat),
    without calling a jqm method again, so we are fast. Furthermore, we have a simple
    attribute by which we can detect elements that contain stateful jqm widgets.
+   Furthermore, we do a precompile for those jqm widgets that wrap themselves into new elements
+   (checkboxradio, slider, button, selectmenu, search input), as the angular compiler does not like this.
 
-2. We have an angular directive for data-role="page" and data-role="dialog".
-   This widget will call element.page() in the pre link phase, however without the
+2. For jqm pages, we do the following:
+   Call element.page() in the pre link phase, however without the
    `pagecreate` event. By this, we only create the page instance, but do not modify the dom
    (as this is not allowed in the pre link phase).
 
-3. We have an angular directive for the attribute `jqm-widget` (see above) which creates the stateful jqm widgets.
+3. For stateful jqm widgets: We create them in the post link phase.
    Here we also listen for changes in the model and refresh the jqm widgets when needed.
-   By this, the jqm widgets also work nicely with angular stamping (e.g. in ng-repeat).
+   By this, the jqm widgets also work nicely with angular stamping (e.g. in ng-repeat, ng-switch, ...).
 
-4. All together: This minimizes the DOM traversals and DOM changes
+4. All together: This minimizes the number DOM traversals and DOM changes
 
    * We use angular's stamping for stateless widget markup, i.e. we call the jqm functions only once,
      and let angular do the rest.
-   * We do not use the `create` event for refreshing widgets,
+   * We do not use the jqm `create` event for refreshing widgets,
      but angular's directives. By this, we prevent unneeded executions of jquery selectors.
 
 Ohter possibilities not chosen:
@@ -51,8 +54,6 @@ Ohter possibilities not chosen:
 - Calling the jqm "create"-Event whenever the DOM changes (see the jqm docs). However,
   this is very slow, as this would lead to many DOM traversals by the different jqm listeners
   for the "create"-Event.
-- Implement all jqm Markup in Angular. This is tricky, as not all markup of jqm can be triggered
-  without using the "create" or "pagecreate"-Event.
 
 Dependencies
 ----------------

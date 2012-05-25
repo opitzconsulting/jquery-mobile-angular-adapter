@@ -37,7 +37,7 @@
 <jsp:include page="integration/jqmDestroyFix.js"/>
 <jsp:include page="integration/scopeReconnect.js"/>
 <jsp:include page="integration/scopeReentrance.js"/>
-<jsp:include page="integration/pageCompile.js"/>
+<jsp:include page="integration/compileIntegration.js"/>
 <jsp:include page="integration/jqmAngularWidgets.js"/>
 <jsp:include page="integration/deactivateNgLocationChange.js"/>
 <jsp:include page="integration/ngRepeatPatch.js"/>

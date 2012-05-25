@@ -1,5 +1,5 @@
 /**
-* jQuery Mobile angularJS adaper standalone v1.0.7-rc2-SNAPSHOT
+* jQuery Mobile angularJS adaper standalone v1.0.7-rc2
 * http://github.com/tigbro/jquery-mobile-angular-adapter
 *
 * Copyright 2011, Tobias Bosch (OPITZ CONSULTING GmbH)
@@ -31173,7 +31173,6 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         }
     }
 
-    // TODO register for ALL elements!
     registerDirective(['div', 'role', 'input', 'select', 'button', 'textarea', 'fieldset']);
 
     $.fn.orig = {};

@@ -145,15 +145,6 @@ If the controller is used on more than one page, the instance of the controller 
 Note that the shared controller have the full scope functionality, e.g. for dependecy injection
 or using `$watch`.
 
-### Directive `ngm-event`
-
-Syntax: `<div ngm-event="{event1:'handler1',event2:'handler2',...}">`
-
-General event handler that integrates with jquery events, and also with jquery mobile events.
-The value of the attribute is json and defines the event - handler mapping.
-
-Usage: E.g. `<a href="#" ngm-event="{swiperight:'myFn()'}">`
-
 ### Event-Directives
 
 The following event directives are supported:

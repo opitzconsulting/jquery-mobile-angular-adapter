@@ -1,22 +1,6 @@
 (function (angular) {
     var mod = angular.module('ng');
 
-    /**
-     * A widget to bind general events like touches, ....
-     */
-    mod.directive("ngmEvent", function () {
-        return {
-            compile:function (element, attrs) {
-                var eventHandlers = angular.fromJson(attrs.ngmEvent);
-                return function (scope, element, attrs) {
-                    for (var eventType in eventHandlers) {
-                        registerEventHandler(scope, element, eventType, eventHandlers[eventType]);
-                    }
-                }
-            }
-        }
-    });
-
     function registerEventHandler(scope, element, eventType, handler) {
         element.bind(eventType, function (event) {
             var res = scope.$apply(handler, element);

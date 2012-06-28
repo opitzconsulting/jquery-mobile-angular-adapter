@@ -1,11 +1,13 @@
 describe("navigate", function () {
-    function visitPage(page, Page2Controller, events) {
+    function visitPage(page, Page2Controller, attrs) {
         loadHtml('/jqmng/ui/test-fixture.html#' + page, function (frame) {
             var page = frame.$('#page2');
             page.attr("ng-controller", "Page2Controller");
             frame.Page2Controller = Page2Controller;
-            if (events) {
-                page.attr("ngm-event", frame.angular.toJson(events));
+            if (attrs) {
+                for (var attr in attrs) {
+                    page.attr(attr, attrs[attr]);
+                }
             }
         });
     }
@@ -91,8 +93,8 @@ describe("navigate", function () {
         });
     });
 
-    it("should be able to go back using a pageId", function() {
-        visitPage("page2", function() {
+    it("should be able to go back using a pageId", function () {
+        visitPage("page2", function () {
 
         });
         runs(function () {
@@ -127,13 +129,13 @@ describe("navigate", function () {
                 beforeShowCallCount++;
                 onActivateArgumentsOnBeforeShow = onActivateArguments;
             }
-        }, {pagebeforeshow:"onBeforeShow()"});
+        }, {'ngm-pagebeforeshow':"onBeforeShow()"});
         runs(function () {
             beforeShowCallCount = 0;
             onActivateArgumentsOnBeforeShow = undefined;
             expect(onActivateArguments).toBeUndefined();
             expect(onActivateArgumentsOnBeforeShow).toBeUndefined();
-            navigate("#page2", "onActivate");
+            navigate("#page2", "onActivate", "someParam");
         });
         waitsForAsync();
         runs(function () {

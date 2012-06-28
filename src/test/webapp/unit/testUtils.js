@@ -3,6 +3,9 @@
     beforeEach(function() {
         $.mobile.pageContainer = $("body");
         $.mobile.firstPage = [];
+        module("ng", function($provide) {
+            $provide.value('$rootElement', $("body"));
+        });
     });
 
     afterEach(function() {
@@ -28,6 +31,7 @@
             page.attr('ng-controller', pageControllerName);
         }
         page.find(":jqmData(role='content')").append(elements);
+
         inject(function($compile, $rootScope) {
             $compile(page)($rootScope);
             $.mobile.activePage = page;

@@ -1,12 +1,17 @@
 describe("inputSlider", function () {
     it("should stamp the widget using the jqm widget", function() {
-        var spy = testutils.spyOnJq('slider').andCallThrough();
+        var createCount = 0;
+        var spy = testutils.spyOnJq('slider').andCallFake(function() {
+            if (arguments.length===0) {
+                createCount++;
+            }
+        });
         var c = testutils.compileInPage('<input type="number" data-type="range" ng-repeat="l in list">');
         expect(spy.callCount).toBe(0);
         var scope = c.page.scope();
         scope.list = [1,2];
         scope.$root.$digest();
-        expect(spy.callCount).toBe(2);
+        expect(createCount).toBe(2);
     });
 
     it("should create an textinput and slider widget for the element", function() {

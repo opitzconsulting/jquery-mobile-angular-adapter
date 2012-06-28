@@ -57,7 +57,7 @@ Ohter possibilities not chosen:
 
 Dependencies
 ----------------
-- angular 1.0.0
+- angular 1.0.1
 - jquery 1.7.1
 - jquery mobile 1.1.0 Final
 

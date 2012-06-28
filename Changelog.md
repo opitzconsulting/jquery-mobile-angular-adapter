@@ -3,6 +3,7 @@ Changelog
 
 1.0.7rc3
 -------------
+- Updated to angular 1.0.1
 - Dropped ngm-event directives. Please use the event specific directives like ngm-click, ...
 
 1.0.7rc2

@@ -1,13 +1,18 @@
 describe("textInput", function () {
 
     it("should stamp the widget using the jqm widget", function() {
-        var spy = testutils.spyOnJq('textinput');
+        var createCount = 0;
+        var spy = testutils.spyOnJq('textinput').andCallFake(function() {
+            if (arguments.length===0) {
+                createCount++;
+            }
+        });
         var c = testutils.compileInPage('<input ng-repeat="l in list" type="text">');
         expect(spy.callCount).toBe(0);
         var scope = c.page.scope();
         scope.list = [1,2];
         scope.$root.$digest();
-        expect(spy.callCount).toBe(2);
+        expect(createCount).toBe(2);
     });
 
     it('should save the ui value into the model', function () {

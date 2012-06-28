@@ -1,12 +1,17 @@
 describe("selectSlider", function () {
     it("should stamp the widget using the jqm widget", function() {
-        var spy = testutils.spyOnJq('slider').andCallThrough();
+        var createCount = 0;
+        var spy = testutils.spyOnJq('slider').andCallFake(function() {
+            if (arguments.length===0) {
+                createCount++;
+            }
+        });
         var c = testutils.compileInPage('<select data-role="slider" ng-repeat="l in list"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
         expect(spy.callCount).toBe(0);
         var scope = c.page.scope();
         scope.list = [1,2];
         scope.$root.$digest();
-        expect(spy.callCount).toBe(2);
+        expect(createCount).toBe(2);
     });
 
     it('should save the ui value into the model', function () {

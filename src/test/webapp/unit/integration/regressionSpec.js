@@ -27,7 +27,7 @@ describe('regression', function () {
         });
     });
 
-    describe("ngm-if", function() {
+    describe("ngm-if", function () {
         it('should work with select options', function () {
             var element = testutils.compile('<div><select name="test"><option ngm-if="test" value="v1">V1</option></select></div>');
             var scope = element.scope();
@@ -41,16 +41,16 @@ describe('regression', function () {
         });
     });
 
-    describe("controlgroup", function() {
-        it("should allow to add another controlgoup using templateUrl", function() {
+    describe("controlgroup", function () {
+        it("should allow to add another controlgoup using templateUrl", function () {
             var _$httpBackend;
 
             module("ngMock", function ($compileProvider) {
                 $compileProvider.directive('sampleUrl', function () {
                     return {
                         restrict:'A',
-                        replace: true,
-                        templateUrl: 'sampleUrl'
+                        replace:true,
+                        templateUrl:'sampleUrl'
                     }
                 });
 
@@ -68,16 +68,16 @@ describe('regression', function () {
         });
     });
 
-    describe("fieldset", function() {
-        it("should allow to compile directive with a templateUrl that contains a fieldset with a search input", function() {
+    describe("fieldset", function () {
+        it("should allow to compile directive with a templateUrl that contains a fieldset with a search input", function () {
             var _$httpBackend;
 
             module("ngMock", function ($compileProvider) {
                 $compileProvider.directive('sampleUrl', function () {
                     return {
                         restrict:'A',
-                        replace: true,
-                        templateUrl: 'sampleUrl'
+                        replace:true,
+                        templateUrl:'sampleUrl'
                     }
                 });
 
@@ -90,6 +90,28 @@ describe('regression', function () {
             _$httpBackend.flush();
             var fieldset = c.element.children("fieldset");
             expect(fieldset.children("div.ui-input-search").length).toBe(1);
+        });
+    });
+
+    describe('checkboxes', function () {
+        it("should update the ui for two checkboxes from the model", function () {
+            var c = testutils.compileInPage(
+                '<div><input type="checkbox" ng-model="model1" id="chk1"><label for="chk1">Chk1</label>'
+                    + '<input type="checkbox" ng-model="model2" id="chk2"><label for="chk2">Chk2</label></div>'
+            );
+            var element = c.element;
+            var chk1Label = element.children("div").eq(0).children("label");
+            var chk2Label = element.children("div").eq(1).children("label");
+            expect(chk1Label.hasClass('ui-checkbox-on')).toBeFalsy();
+            expect(chk2Label.hasClass('ui-checkbox-on')).toBeFalsy();
+
+            var scope = element.scope();
+            scope.model1 = scope.model2 = true;
+            scope.$digest();
+
+            expect(chk1Label.hasClass('ui-checkbox-on')).toBeTruthy();
+            expect(chk2Label.hasClass('ui-checkbox-on')).toBeTruthy();
+
         });
     });
 

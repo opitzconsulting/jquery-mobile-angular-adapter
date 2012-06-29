@@ -50,6 +50,25 @@ describe("radio", function () {
         expect(iconSpan.hasClass('ui-icon-radio-on')).toBeTruthy();
     });
 
+    it('should save the ng-checked value into the ui and refresh', function () {
+        var d = testutils.compileInPage(
+            '<div>' +
+                '<input ng-checked="mysel" id="mysel" type="radio" value="v1"><label for="mysel" id="mylab">Entry</label>' +
+                '</div>');
+        var page = d.page;
+        var input = page.find("#mysel");
+        var scope = input.scope();
+        expect(input[0].checked).toBeFalsy();
+        // jquery mobile creates a new span
+        // that displays the actual value of the selection.
+        var iconSpan = page.find(".ui-icon");
+        expect(iconSpan.hasClass('ui-icon-checkbox-on')).toBeFalsy();
+        scope.mysel = 'v1';
+        scope.$root.$digest();
+        expect(input[0].checked).toBeTruthy();
+        expect(iconSpan.hasClass('ui-icon-radio-on')).toBeTruthy();
+    });
+
     it('should use the disabled attribute', function () {
         var d = testutils.compileInPage(
             '<div>' +

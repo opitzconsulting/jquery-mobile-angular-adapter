@@ -12,7 +12,7 @@
             precompile:textinputPrecompile
         },
         checkboxradio:{
-            handlers:[disabledHandler, refreshAfterNgModelRender],
+            handlers:[disabledHandler, refreshAfterNgModelRender, checkedHandler],
             precompile:checkboxRadioPrecompile
         },
         slider:{
@@ -268,6 +268,12 @@
         });
     }
 
+    function checkedHandler(widgetName, scope, iElement, iAttrs, ctrls) {
+        iAttrs.$observe("checked", function (value) {
+            triggerAsyncRefresh(widgetName, scope, iElement, "refresh");
+        });
+    }
+
     function addCtrlFunctionListener(ctrl, ctrlFnName, fn) {
         var listenersName = "_listeners" + ctrlFnName;
         if (!ctrl[listenersName]) {
@@ -308,10 +314,10 @@
 
     function triggerAsyncRefresh(widgetName, scope, iElement, options) {
         var prop = "_refresh" + widgetName;
-        scope[prop] = scope[prop] + 1 || 1;
+        var refreshId = (iElement.data(prop) || 0)+1;
+        iElement.data(prop, refreshId);
         scope.$evalAsync(function () {
-            scope[prop]--;
-            if (scope[prop] === 0) {
+            if (iElement.data(prop) === refreshId) {
                 iElement[widgetName](options);
             }
         });

@@ -17,58 +17,23 @@ Test page during development.
     <script src="jqm-angular.jsp"></script>
 
     <script>
-        angular.module('myApp',[]);
+        var mod = angular.module('myApp', []);
 
-        function RecipesCtrl($scope) {
-            $scope.recipes = [];
-            $scope.filters = [
-                {name: 'Soup', checked: false},
-                {name: 'Salad', checked: true},
-                {name: 'Sandwich', checked: true},
-                {name: 'Casserole'},
-                {name: 'Pastas', checked: false}
-            ];
-            $scope.viewAll = true;// Start with all viewed by default
-
-            $scope.setAllFilters = function(newValue) {
-                console.log('setAllFilters',newValue);
-                angular.forEach($scope.filters, function(f) {
-                    f.checked = newValue;
-                });
-            };
-
-            $scope.areAllFiltersOn = function() {
-                var allFiltersAreOn = true;
-                angular.forEach($scope.filters, function(f) {
-                    if (f.checked===false) allFiltersAreOn=false;
-                });
-                return allFiltersAreOn;
-            };
-        }
     </script>
 </head>
 <body>
-<div ng-controller="RecipesCtrl" ng-app="myApp">
+<div ng-app="myApp">
     <div id="main" data-role="page">
-        <fieldset class="ui-block-a">
-            <input type="checkbox" id="checked"
-                   ng-checked="areAllFiltersOn()"
-                   ng-click="setAllFilters(viewAll)">
-            <label for="checked">View All-{{areAllFiltersOn()}}</label>
-        </fieldset>
-        <fieldset ng-repeat="filter in filters">
-            <input type="checkbox" id="checked2" ng-model="filter.checked" name="test">
-            <label for="checked2">{{filter.name}}-{{filter.checked}}</label>
-        </fieldset>
-
-        <pre>
-            {{filters}}
-
-        </pre>
+        <div data-role="content">
+            <input type="checkbox" ng-model="check" value="tbo" id="check1">
+            <label for="check1">test {{check}}</label>
+            {{check}}
+        </div>
     </div>
 
 </div>
 
-​</body>
+​
+</body>
 
 </html>

@@ -130,7 +130,7 @@ describe('compileIntegrationUnit', function () {
     });
 
     describe('template directives', function() {
-        it("should enhance markup created by directives with template property and replace mode", function() {
+        it("should enhance non widget markup created by directives with template property and replace mode", function() {
             module("ngMock", function ($compileProvider) {
                 $compileProvider.directive('sample', function () {
                     return {
@@ -143,6 +143,22 @@ describe('compileIntegrationUnit', function () {
             var c = testutils.compileInPage('<div sample="true"></div>');
             expect(c.element.hasClass("ui-btn")).toBe(true);
             expect(c.element[0].nodeName.toUpperCase()).toBe('A');
+        });
+
+        it("should enhance widget markup created by directives with template property and replace mode", function() {
+            module("ngMock", function ($compileProvider) {
+                $compileProvider.directive('sample', function () {
+                    return {
+                        restrict:'A',
+                        replace: true,
+                        template: '<button>test</button>'
+                    }
+                });
+            });
+            var c = testutils.compileInPage('<div sample="true"></div>');
+            expect(c.element.hasClass("ui-btn")).toBe(true);
+            // special case: button wraps itself into a new element
+            expect(c.element.children("button").length).toBe(1);
         });
 
         it("should enhance markup created by directives with template property and append mode", function() {

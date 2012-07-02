@@ -1,23 +1,27 @@
 (function (angular, $) {
     var widgetConfig = {
+        checkboxradio:{
+            handlers:[disabledHandler, refreshAfterNgModelRender, checkedHandler],
+            precompile:checkboxRadioPrecompile,
+            create:checkboxRadioCreate
+        },
         button:{
             handlers:[disabledHandler],
-            precompile:buttonPrecompile
+            precompile:buttonPrecompile,
+            create:buttonCreate
         },
         collapsible:{
             handlers:[disabledHandler]
         },
         textinput:{
             handlers:[disabledHandler],
-            precompile:textinputPrecompile
-        },
-        checkboxradio:{
-            handlers:[disabledHandler, refreshAfterNgModelRender, checkedHandler],
-            precompile:checkboxRadioPrecompile
+            precompile:textinputPrecompile,
+            create:textinputCreate
         },
         slider:{
             handlers:[disabledHandler, refreshAfterNgModelRender],
-            precompile:sliderPrecompile
+            precompile:sliderPrecompile,
+            create:sliderCreate
         },
         listview:{
             handlers:[refreshOnChildrenChange]
@@ -27,7 +31,8 @@
         },
         selectmenu:{
             handlers:[disabledHandler, refreshAfterNgModelRender, refreshOnChildrenChange],
-            precompile:selectmenuPrecompile
+            precompile:selectmenuPrecompile,
+            create:selectmenuCreate
         },
         controlgroup:{
             handlers:[refreshControlgroupOnChildrenChange]
@@ -56,7 +61,8 @@
     var config;
     for (var widgetName in widgetConfig) {
         config = widgetConfig[widgetName];
-        $.mobile.registerJqmNgWidget(widgetName, config.precompile, mergeHandlers(widgetName, config.handlers));
+        config.link = mergeHandlers(widgetName, config.handlers);
+        $.mobile.registerJqmNgWidget(widgetName, config);
     }
 
     // -------------------
@@ -65,151 +71,151 @@
     // Checkboxradio wraps the input and label into a new element.
     // The angular compiler does not like this, as it changes elements that are not
     // in the subtree of the input element that is currently linked.
-    function checkboxRadioPrecompile(createData) {
-        var origElement = createData.widgetElement;
+    function checkboxRadioPrecompile(origElement, initArgs) {
         // Selectors: See the checkboxradio-Plugin in jqm.
         var parentLabel = $(origElement).closest("label");
         var label = parentLabel.length ? parentLabel : $(origElement).closest("form,fieldset,:jqmData(role='page'),:jqmData(role='dialog')").find("label").filter("[for='" + origElement[0].id + "']");
         var wrapper = $("<div></div>").insertBefore(origElement).append(origElement).append(label);
-        createData.widgetElement = origElement.parent();
-        moveCloningDirectives(origElement, createData.widgetElement);
-
-        createData.create = function () {
-            var _wrapAll = $.fn.wrapAll;
-            var input = this.children("input");
-            var wrapper = this;
-            $.fn.wrapAll = function(container) {
-                if (this[0] === input[0]) {
-                    $.fn.wrapAll = _wrapAll;
-                    var tempContainer = $(container);
-                    wrapper[0].className = tempContainer[0].className;
-                    return origElement;
-                }
-                return _wrapAll.apply(this, arguments);
-            };
-
-            var res = $.fn.orig.checkboxradio.apply(input, arguments);
-            $.fn.wrapAll = _wrapAll;
-            return res;
-        }
+        moveCloningDirectives(origElement, origElement.parent());
+        return wrapper;
     }
 
+    function checkboxRadioCreate(origCreate, element, initArgs) {
+        var _wrapAll = $.fn.wrapAll;
+        var input = element.children("input");
+        var wrapper = element;
+        $.fn.wrapAll = function (container) {
+            if (this[0] === input[0]) {
+                $.fn.wrapAll = _wrapAll;
+                var tempContainer = $(container);
+                wrapper[0].className = tempContainer[0].className;
+                return input;
+            }
+            return _wrapAll.apply(this, arguments);
+        };
+        var res = origCreate.apply(input, initArgs);
+        $.fn.wrapAll = _wrapAll;
+        return res;
+    }
 
     // Slider appends a new element after the input/select element for which it was created.
     // The angular compiler does not like this, so we wrap the two elements into a new parent node.
-    function sliderPrecompile(createData) {
-        var origElement = createData.widgetElement;
+    function sliderPrecompile(origElement, initArgs) {
         origElement.wrapAll("<div></div>");
-        var wrapper = createData.widgetElement = createData.widgetElement.parent();
+        var wrapper = origElement.parent();
         moveCloningDirectives(origElement, wrapper);
+        return wrapper;
+    }
 
-        createData.create = function () {
-            return $.fn.orig.slider.apply(this.children().eq(0), arguments);
-        };
+    function sliderCreate(origCreate, element, initArgs) {
+        var slider = element.children().eq(0);
+        origCreate.apply(slider, initArgs);
     }
 
     // Button wraps itself into a new element.
     // Angular does not like this, so we do it in advance.
-    function buttonPrecompile(createData) {
-        var origElement = createData.widgetElement;
-        var wrapper = $( "<div></div>" )
-            .text( origElement.text() || origElement.val() )
+    function buttonPrecompile(origElement, initArgs) {
+        var wrapper = $("<div></div>")
+            .text(origElement.text() || origElement.val())
             .insertBefore(origElement)
             .append(origElement);
         moveCloningDirectives(origElement, wrapper);
-        createData.widgetElement = wrapper;
-        createData.create = function () {
-            var wrapper = this;
-            var button = this.children().eq(0);
+        return wrapper;
+    }
 
-            var _text = $.fn.text;
-            $.fn.text = function () {
-                if (arguments.length>0) {
-                    // Only catch the first setter call
-                    $.fn.text = _text;
-                    return wrapper;
-                }
-                return _text.apply(this, arguments);
-            };
+    function buttonCreate(origCreate, element, initArgs) {
+        var wrapper = element;
+        var button = element.children().eq(0);
 
-            var _insertBefore = $.fn.insertBefore;
-            $.fn.insertBefore = function (element) {
-                if (this[0] === wrapper[0] && element[0] === button[0]) {
-                    return wrapper;
-                }
-                return _insertBefore.apply(this, arguments);
-            };
-
-            var res = $.fn.orig.button.apply(button, arguments);
-
-            $.fn.text = _text;
-            $.fn.insertBefore = _insertBefore;
-            return res;
+        var _text = $.fn.text;
+        $.fn.text = function () {
+            if (arguments.length > 0) {
+                // Only catch the first setter call
+                $.fn.text = _text;
+                return wrapper;
+            }
+            return _text.apply(this, arguments);
         };
 
+        var _insertBefore = $.fn.insertBefore;
+        $.fn.insertBefore = function (element) {
+            if (this[0] === wrapper[0] && element[0] === button[0]) {
+                return wrapper;
+            }
+            return _insertBefore.apply(this, arguments);
+        };
+
+        var res = origCreate.apply(button, initArgs);
+
+        $.fn.text = _text;
+        $.fn.insertBefore = _insertBefore;
+        return res;
     }
 
     // selectmenu wraps itself into a new element.
     // Angular does not like this, so we do it in advance.
-    function selectmenuPrecompile(createData) {
-        var origElement = createData.widgetElement;
+    function selectmenuPrecompile(origElement, initArgs) {
         var wrapper = $("<div></div>").insertBefore(origElement).append(origElement);
         moveCloningDirectives(origElement, wrapper);
-        createData.widgetElement = wrapper;
-        createData.create = function () {
-            var wrapper = this;
-            var select = this.children().eq(0);
+        return wrapper;
+    }
 
-            var _wrap = $.fn.wrap;
-            $.fn.wrap = function(container) {
-                if (this[0] === select[0]) {
-                    $.fn.wrap = _wrap;
-                    var tempContainer = $(container);
-                    wrapper[0].className = tempContainer[0].className;
+    function selectmenuCreate(origCreate, element, initArgs) {
+        var wrapper = element;
+        var select = element.children().eq(0);
 
-                    return select;
-                }
-                return _wrap.apply(this, arguments);
-            };
+        var _wrap = $.fn.wrap;
+        $.fn.wrap = function (container) {
+            if (this[0] === select[0]) {
+                $.fn.wrap = _wrap;
+                var tempContainer = $(container);
+                wrapper[0].className = tempContainer[0].className;
 
-            var res = $.fn.orig.selectmenu.apply(select, arguments);
-
-            $.fn.wrap = _wrap;
-            return res;
+                return select;
+            }
+            return _wrap.apply(this, arguments);
         };
 
+        var res = origCreate.apply(select, initArgs);
+
+        $.fn.wrap = _wrap;
+        return res;
     }
 
     // textinput for input-type "search" wraps itself into a new element
-    function textinputPrecompile(createData) {
-        var origElement = createData.widgetElement;
-        if ( !origElement.is( "[type='search'],:jqmData(type='search')" ) ) {
-            return;
+    function textinputPrecompile(origElement, initArgs) {
+        if (!origElement.is("[type='search'],:jqmData(type='search')")) {
+            return origElement;
         }
         var wrapper = $("<div></div>").insertBefore(origElement).append(origElement);
         moveCloningDirectives(origElement, wrapper);
-        createData.widgetElement = wrapper;
-        createData.create = function () {
-            var wrapper = this;
-            var select = this.children().eq(0);
+        return wrapper;
+    }
 
-            var _wrap = $.fn.wrap;
-            $.fn.wrap = function(container) {
-                if (this[0] === select[0]) {
-                    $.fn.wrap = _wrap;
-                    var tempContainer = $(container);
-                    wrapper[0].className = tempContainer[0].className;
+    function textinputCreate(origCreate, element, initArgs) {
+        if (element[0].nodeName.toUpperCase()==="INPUT") {
+            // no wrapper
+            return origCreate.apply(element, initArgs);
+        }
+        var wrapper = element;
+        var input = element.children().eq(0);
 
-                    return select;
-                }
-                return _wrap.apply(this, arguments);
-            };
+        var _wrap = $.fn.wrap;
+        $.fn.wrap = function (container) {
+            if (this[0] === input[0]) {
+                $.fn.wrap = _wrap;
+                var tempContainer = $(container);
+                wrapper[0].className = tempContainer[0].className;
 
-            var res = $.fn.orig.textinput.apply(select, arguments);
-
-            $.fn.wrap = _wrap;
-            return res;
+                return input;
+            }
+            return _wrap.apply(this, arguments);
         };
+
+        var res = origCreate.apply(input, initArgs);
+
+        $.fn.wrap = _wrap;
+        return res;
     }
 
     var CLONING_DIRECTIVE_REGEXP = /(^|[\W])(repeat|switch-when|if)($|[\W])/;
@@ -314,7 +320,7 @@
 
     function triggerAsyncRefresh(widgetName, scope, iElement, options) {
         var prop = "_refresh" + widgetName;
-        var refreshId = (iElement.data(prop) || 0)+1;
+        var refreshId = (iElement.data(prop) || 0) + 1;
         iElement.data(prop, refreshId);
         scope.$evalAsync(function () {
             if (iElement.data(prop) === refreshId) {

@@ -88,7 +88,7 @@
         if (isBack) {
             // The page may be removed from the DOM by the cache handling
             // of jquery mobile.
-            $.mobile.loadPage(target, {showLoadMsg: true}).then(function(_,_,page) {
+            $.mobile.loadPage(target, {showLoadMsg: true}).then(function(_a,_b,page) {
                 var relativeIndex = getNavigateIndexInHistory(page.attr("id"));
                 if (relativeIndex!==undefined) {
                     window.history.go(relativeIndex);

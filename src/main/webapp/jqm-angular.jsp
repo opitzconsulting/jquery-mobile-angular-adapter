@@ -6,6 +6,7 @@
 * Licensed under the MIT license.
 */
 <jsp:include page="integration/jqmDestroyFix.js"/>
+<jsp:include page="integration/precompileSupport.js"/>
 <jsp:include page="integration/scopeReconnect.js"/>
 <jsp:include page="integration/scopeReentrance.js"/>
 <jsp:include page="integration/compileIntegration.js"/>

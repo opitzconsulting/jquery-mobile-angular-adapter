@@ -76,6 +76,79 @@
     });
 
 })(window.jQuery);
+/**
+ * Helper that introduces the concept of precompilation: Preprocess the dom before
+ * angular processes it.
+ * <p>
+ * Usage: Create a decorator or a factory for the $precompile service.
+ */
+(function ($, angular) {
+    var ng = angular.module('ng');
+    ng.factory("$precompile", function() {
+        return function(element) {
+            // This is empty and can be decorated using $provide.decorator.
+            return element;
+        }
+    });
+
+    ng.config(['$provide', function ($provide) {
+        $provide.decorator('$compile', ['$precompile', '$delegate', function ($precompile, $compile) {
+            return function () {
+                arguments[0] = $precompile(arguments[0]);
+                return $compile.apply(this, arguments);
+            }
+        }]);
+    }]);
+
+    function precompileHtmlString(html, $precompile) {
+        var $template = $('<div>' + html + '</div>');
+        $template = $precompile($template);
+        return $template.html();
+    }
+
+    ng.config(['$compileProvider', '$provide', function ($compileProvider, $provide) {
+        var directiveTemplateUrls = {};
+
+        // Hook into the registration of directives to:
+        // - preprocess template html
+        // - mark urls from templateUrls so we can preprocess it later in $http
+        var _directive = $compileProvider.directive;
+        $compileProvider.directive = function (name, factory) {
+            var newFactory = function ($precompile, $injector) {
+                var res = $injector.invoke(factory);
+                if (res.template) {
+                    res.template = precompileHtmlString(res.template, $precompile);
+                } else if (res.templateUrl) {
+                    directiveTemplateUrls[res.templateUrl] = true;
+                }
+                return res;
+            };
+            return _directive.call(this, name, ['$precompile', '$injector', newFactory]);
+        };
+
+        // preprocess $http results for templateUrls.
+        $provide.decorator('$http', ['$q', '$delegate', '$precompile', function ($q, $http, $precompile) {
+            var _get = $http.get;
+            $http.get = function (url) {
+                var res = _get.apply(this, arguments);
+                if (directiveTemplateUrls[url]) {
+                    var _success = res.success;
+                    res.success = function(callback) {
+                        var newCallback = function() {
+                            var content = arguments[0];
+                            arguments[0] = precompileHtmlString(content, $precompile);
+                            return callback.apply(this, arguments);
+                        };
+                        return _success(newCallback);
+                    };
+                }
+                return res;
+            };
+            return $http;
+        }]);
+    }]);
+
+})(window.jQuery, window.angular);
 (function (angular) {
 
     var ng = angular.module('ng');
@@ -148,6 +221,10 @@
         }
     });
 
+    $.mobile.autoInitializePage = false;
+    var lastCreatedPages = [];
+    var jqmInitialized = false;
+
     ng.config(['$provide', function ($provide) {
         $provide.decorator('$rootScope', ['$delegate', function ($rootScope) {
             var _$digest = $rootScope.$digest;
@@ -188,6 +265,202 @@
         }]);
     }]);
 
+    function connectToDocument(node, callback) {
+        // search the top most element for node.
+        while (node.parentNode && node.parentNode.nodeType === 1) {
+            node = node.parentNode;
+        }
+        var oldParentNode = node.parentNode;
+        if (oldParentNode !== document) {
+            document.documentElement.appendChild(node);
+        }
+        try {
+            return callback();
+        } finally {
+            if (oldParentNode !== document) {
+                oldParentNode.appendChild(node);
+            }
+        }
+    }
+
+    /**
+     * This directive will enhance the dom during compile
+     * with non widget markup. This will also mark elements that contain
+     * jqm widgets.
+     */
+    ng.factory('$precompile', function () {
+        var pageSelector = ':jqmData(role="page"), :jqmData(role="dialog")';
+
+        return function (element) {
+            // save the old parent
+            var oldParentNode = element[0].parentNode;
+
+            // if the element is not connected with the document element,
+            // the enhancements of jquery mobile do not work (uses event listeners for the document).
+            // So temporarily connect it...
+            connectToDocument(element[0], function () {
+
+                var pages = element.find(pageSelector).add(element.filter(pageSelector));
+                pages.attr("ngm-page", "true");
+
+                // enhance non-widgets markup.
+                markJqmWidgetCreation(function () {
+                    preventJqmWidgetCreation(function () {
+                        if (pages.length > 0) {
+                            // element contains pages.
+                            // create temporary pages for the non widget markup, that we destroy afterwards.
+                            // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
+                            pages.page();
+                        } else {
+                            element.parent().trigger("create");
+                        }
+                    });
+                });
+
+                // Destroy the temporary pages again
+                pages.page("destroy");
+            });
+
+            // If the element wrapped itself into a new element,
+            // return the element that is under the same original parent
+            while (element[0].parentNode !== oldParentNode) {
+                element = element.parent();
+            }
+
+            return element;
+        }
+    });
+
+    /**
+     * Special directive for pages, as they need an own scope.
+     */
+    ng.directive('ngmPage', function () {
+        return {
+            restrict:'A',
+            scope:true,
+            compile:function (tElement, tAttrs) {
+                tElement.removeAttr("ngm-page");
+                return {
+                    pre:function (scope, iElement, iAttrs) {
+                        // Create the page widget without the pagecreate-Event.
+                        // This does no dom transformation, so it's safe to call this in the prelink function.
+                        createPagesWithoutPageCreateEvent(iElement);
+                        lastCreatedPages.push(scope);
+                    }
+                };
+            }
+        };
+    });
+
+    // If jqm loads a page from an external source, angular needs to compile it too!
+    ng.run(['$rootScope', '$compile', function ($rootScope, $compile) {
+        patchJq('page', function () {
+            if (!preventJqmWidgetCreation() && !this.data("page")) {
+                if (this.attr("data-" + $.mobile.ns + "external-page")) {
+                    $compile(this)($rootScope);
+                }
+            }
+            return $.fn.orig.page.apply(this, arguments);
+        });
+    }]);
+
+    $.mobile.registerJqmNgWidget = function (widgetName, widgetSpec) {
+        jqmWidgets[widgetName] = widgetSpec;
+        patchJqmWidget(widgetName, widgetSpec.precompile);
+    };
+
+    var jqmWidgets = {};
+    /**
+     * Directive for calling the create function of a jqm widget.
+     * For elements that wrap themselves into new elements (like `<input type="checked">`) ngmCreate will be called
+     * on the wrapper element for the input and the label, which is created during precompile.
+     * ngmLink will be called on the actual input element, so we have access to the ngModel and attrs for $observe calls.
+     */
+    ng.directive("ngmCreate", function () {
+        return {
+            restrict:'A',
+            // after the normal angular widgets like input, ngModel, ...
+            priority:0,
+            compile:function (tElement, tAttrs) {
+                var widgets = JSON.parse(tAttrs.ngmCreate);
+                return {
+                    post:function (scope, iElement, iAttrs, ctrls) {
+                        var widgetName, widgetSpec, initArgs, origCreate;
+                        for (widgetName in widgets) {
+                            widgetSpec = jqmWidgets[widgetName];
+                            initArgs = widgets[widgetName];
+                            origCreate = $.fn.orig[widgetName];
+                            if (widgetSpec.create) {
+                                widgetSpec.create(origCreate, iElement, initArgs);
+                            } else {
+                                origCreate.apply(iElement, initArgs);
+                            }
+                        }
+                    }
+                };
+            }
+        }
+    });
+
+    /**
+     * Directive for connecting widgets with angular. See ngmCreate.
+     */
+    ng.directive("ngmLink", function () {
+        return {
+            restrict:'A',
+            priority:0,
+            require:['?ngModel'],
+            compile:function (tElement, tAttrs) {
+                var widgets = JSON.parse(tAttrs.ngmLink);
+                return {
+                    post:function (scope, iElement, iAttrs, ctrls) {
+                        var widgetName, widgetSpec;
+                        for (widgetName in widgets) {
+                            widgetSpec = jqmWidgets[widgetName];
+                            widgetSpec.link(scope, iElement, iAttrs, ctrls);
+                        }
+                    }
+                };
+            }
+        }
+    });
+
+    function patchJqmWidget(widgetName, precompileFn) {
+        patchJq(widgetName, function () {
+            if (markJqmWidgetCreation()) {
+                var args = Array.prototype.slice.call(arguments);
+                var self = this;
+                for (var k = 0; k < self.length; k++) {
+                    var element = self.eq(k);
+                    var createElement = element;
+                    if (precompileFn) {
+                        createElement = precompileFn(element, args) || createElement;
+                    }
+                    var ngmCreateStr = createElement.attr("ngm-create") || '{}';
+                    var ngmCreate = JSON.parse(ngmCreateStr);
+                    ngmCreate[widgetName] = args;
+                    createElement.attr("ngm-create", JSON.stringify(ngmCreate));
+                    // attribute needs to be after the ngm-create attribute!
+                    var ngmLinkStr = element.attr("ngm-link") || '{}';
+                    var ngmLink = JSON.parse(ngmLinkStr);
+                    ngmLink[widgetName] = true;
+                    element.attr("ngm-link", JSON.stringify(ngmLink));
+                }
+            }
+            if (preventJqmWidgetCreation()) {
+                return false;
+            }
+            return $.fn.orig[widgetName].apply(this, arguments);
+        });
+    }
+
+    $.fn.orig = {};
+
+    function patchJq(fnName, callback) {
+        $.fn.orig[fnName] = $.fn.orig[fnName] || $.fn[fnName];
+        $.fn[fnName] = callback;
+    }
+
     var _execFlags = {};
 
     function execWithFlag(flag, fn) {
@@ -218,254 +491,31 @@
         });
     }
 
-
-    $.mobile.autoInitializePage = false;
-    var jqmInitialized = false;
-
-    var lastCreatedPages = [];
-
-    /**
-     * This directive will preprocess the dom during compile.
-     * For this, the directive needs to have the highest priority possible,
-     * so that it is used even before ng-repeat.
-     */
-    var preProcessDirective = {
-        restrict:'EA',
-        priority:100000,
-        compile:function (tElement, tAttrs) {
-            // Note: We cannot use tAttrs here, as this is also copied when
-            // angular uses a directive with the template-property and replace-mode.
-            if (tElement[0].preProcessDirective) {
-                return;
-            }
-            tElement[0].preProcessDirective = true;
-
-            // For page elements:
-            var roleAttr = tAttrs.role;
-            var isPage = roleAttr == 'page' || roleAttr == 'dialog';
-
-            // enhance non-widgets markup.
-            markJqmWidgetCreation(function () {
-                preventJqmWidgetCreation(function () {
-
-                    if (isPage) {
-                        // element contains pages.
-                        // create temporary pages for the non widget markup, that we destroy afterwards.
-                        // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
-                        tElement.page();
-                    } else {
-                        if (!tElement[0].jqmEnhanced) {
-                            tElement.parent().trigger("create");
-                        }
-                    }
-                    // Note: The page plugin also enhances child elements,
-                    // so we tag the child elements also in that case.
-                    // Note: We cannot use $.fn.data here, as this is also copied when
-                    // angular uses a directive with the template-property.
-                    var children = tElement[0].getElementsByTagName("*");
-                    for (var i = 0; i < children.length; i++) {
-                        children.item(i).jqmEnhanced = true;
-                    }
-                    tElement[0].jqmEnhanced = true;
-
-                });
-            });
-
-            // Destroy the temporary pages again
-            if (isPage) {
-                tElement.page("destroy");
-            }
-        }
-    };
-
-
-    /**
-     * This directive creates the jqm widgets.
-     */
-    var widgetDirective = {
-        restrict:'EA',
-        // after the normal angular widgets like input, ngModel, ...
-        priority:0,
-        // This will be changed by the setWidgetScopeDirective...
-        scope:false,
-        require:['?ngModel'],
-        compile:function (tElement, tAttrs) {
-            // Note: We cannot use tAttrs here, as this is also copied when
-            // angular uses a directive with the template-property and replace-mode.
-            if (tElement[0].widgetDirective) {
-                return;
-            }
-            tElement[0].widgetDirective = true;
-
-            // For page elements:
-            var roleAttr = tAttrs["role"];
-            var isPage = roleAttr == 'page' || roleAttr == 'dialog';
-            var widgets = tElement.data("jqm-widgets");
-            var linkers = tElement.data("jqm-linkers");
-            return {
-                pre:function (scope, iElement, iAttrs) {
-                    if (isPage) {
-                        // Create the page widget without the pagecreate-Event.
-                        // This does no dom transformation, so it's safe to call this in the prelink function.
-                        createPagesWithoutPageCreateEvent(iElement);
-                        lastCreatedPages.push(scope);
-                    }
-                },
-                post:function (scope, iElement, iAttrs, ctrls) {
-                    if (widgets && widgets.length) {
-                        var widget;
-                        for (var i = 0; i < widgets.length; i++) {
-                            widget = widgets[i];
-                            widget.create.apply(iElement, widget.args);
-                        }
-                    }
-                    if (linkers) {
-                        for (var i=0; i<linkers.length; i++) {
-                            linkers[i].apply(this, arguments);
-                        }
-                    }
-                }
-            };
-        }
-    };
-
-    /**
-     * This widget sets or resets the properties of the actual widgetDirective.
-     * This is especially required for the scope property.
-     * We need this as angular does not (yet) allow us to create a widget for e.g. data-role="page",
-     * but not for data-role="content".
-     */
-    var setWidgetScopeDirective = {
-        restrict:widgetDirective.restrict,
-        priority:widgetDirective.priority + 1,
-        compile:function (tElement, tAttrs) {
-            widgetDirective.scope = (tAttrs.role == 'page' || tAttrs.role == 'dialog');
-        }
-    };
-
-    /**
-     * Register our directives for all possible elements with jqm markup.
-     * Note: We cannot just create a widget for the jqm-widget attribute, that we create,
-     * as this would not work for the jqm widgets on the root element of the compile
-     * (angular calculates the directives to apply before calling the compile function of
-     * any of those directives).
-     * @param tagList
-     */
-    function registerDirective(tagList) {
-        for (var i = 0; i < tagList.length; i++) {
-            ng.directive(tagList[i], function () {
-                return preProcessDirective;
-            });
-            ng.directive(tagList[i], function () {
-                return setWidgetScopeDirective;
-            });
-            ng.directive(tagList[i], function () {
-                return widgetDirective;
-            });
-        }
-    }
-
-    registerDirective(['div', 'role', 'input', 'select', 'button', 'textarea', 'fieldset']);
-
-    $.fn.orig = {};
-
-    function patchJq(fnName, callback) {
-        $.fn.orig[fnName] = $.fn.orig[fnName] || $.fn[fnName];
-        $.fn[fnName] = callback;
-    }
-
-    // If jqm loads a page from an external source, angular needs to compile it too!
-    ng.run(['$rootScope', '$compile', function ($rootScope, $compile) {
-        patchJq('page', function () {
-            if (!preventJqmWidgetCreation() && !this.data("page")) {
-                if (this.attr("data-" + $.mobile.ns + "external-page")) {
-                    $compile(this)($rootScope);
-                }
-            }
-            return $.fn.orig.page.apply(this, arguments);
-        });
-    }]);
-
-    function patchJqmWidget(widgetName) {
-        patchJq(widgetName, function () {
-            if (markJqmWidgetCreation()) {
-                for (var k = 0; k < this.length; k++) {
-                    var element = this.eq(k);
-                    var widgetElement = element;
-                    var linkElement = element;
-                    var createData = {
-                        widgetElement:widgetElement,
-                        linkElement:linkElement,
-                        create:$.fn.orig[widgetName]
-                    };
-                    if (jqmNgWidgets[widgetName].precompile) {
-                        jqmNgWidgets[widgetName].precompile(createData);
-                        // allow the precompile to change the element to which
-                        // we add the data.
-                        widgetElement = createData.widgetElement;
-                        linkElement = createData.linkElement;
-                    }
-                    var jqmWidgets = widgetElement.data("jqm-widgets");
-                    if (!jqmWidgets) {
-                        jqmWidgets = [];
-                        widgetElement.data("jqm-widgets", jqmWidgets);
-                    }
-                    var linkers = linkElement.data("jqm-linkers");
-                    if (!linkers) {
-                        linkers = [];
-                        linkElement.data("jqm-linkers", linkers);
-                    }
-
-                    var widgetExists = false;
-                    for (var i = 0; i < jqmWidgets.length; i++) {
-                        if (jqmWidgets[i].name == widgetName) {
-                            widgetExists = true;
-                            break;
-                        }
-                    }
-                    if (!widgetExists) {
-                        jqmWidgets.push({name:widgetName, args:Array.prototype.slice.call(arguments), create:createData.create});
-                        linkers.push(jqmNgWidgets[widgetName].link);
-                    }
-                }
-            }
-            if (preventJqmWidgetCreation()) {
-                return false;
-            }
-            return $.fn.orig[widgetName].apply(this, arguments);
-        });
-    }
-
-    var jqmNgWidgets = {};
-
-    $.mobile.registerJqmNgWidget = function (widgetName, precompileFn, linkFn) {
-        jqmNgWidgets[widgetName] = {
-            precompile: precompileFn,
-            link:linkFn
-        };
-        patchJqmWidget(widgetName);
-    }
 })(window.jQuery, window.angular);
 (function (angular, $) {
     var widgetConfig = {
+        checkboxradio:{
+            handlers:[disabledHandler, refreshAfterNgModelRender, checkedHandler],
+            precompile:checkboxRadioPrecompile,
+            create:checkboxRadioCreate
+        },
         button:{
             handlers:[disabledHandler],
-            precompile:buttonPrecompile
+            precompile:buttonPrecompile,
+            create:buttonCreate
         },
         collapsible:{
             handlers:[disabledHandler]
         },
         textinput:{
             handlers:[disabledHandler],
-            precompile:textinputPrecompile
-        },
-        checkboxradio:{
-            handlers:[disabledHandler, refreshAfterNgModelRender, checkedHandler],
-            precompile:checkboxRadioPrecompile
+            precompile:textinputPrecompile,
+            create:textinputCreate
         },
         slider:{
             handlers:[disabledHandler, refreshAfterNgModelRender],
-            precompile:sliderPrecompile
+            precompile:sliderPrecompile,
+            create:sliderCreate
         },
         listview:{
             handlers:[refreshOnChildrenChange]
@@ -475,7 +525,8 @@
         },
         selectmenu:{
             handlers:[disabledHandler, refreshAfterNgModelRender, refreshOnChildrenChange],
-            precompile:selectmenuPrecompile
+            precompile:selectmenuPrecompile,
+            create:selectmenuCreate
         },
         controlgroup:{
             handlers:[refreshControlgroupOnChildrenChange]
@@ -504,7 +555,8 @@
     var config;
     for (var widgetName in widgetConfig) {
         config = widgetConfig[widgetName];
-        $.mobile.registerJqmNgWidget(widgetName, config.precompile, mergeHandlers(widgetName, config.handlers));
+        config.link = mergeHandlers(widgetName, config.handlers);
+        $.mobile.registerJqmNgWidget(widgetName, config);
     }
 
     // -------------------
@@ -513,151 +565,151 @@
     // Checkboxradio wraps the input and label into a new element.
     // The angular compiler does not like this, as it changes elements that are not
     // in the subtree of the input element that is currently linked.
-    function checkboxRadioPrecompile(createData) {
-        var origElement = createData.widgetElement;
+    function checkboxRadioPrecompile(origElement, initArgs) {
         // Selectors: See the checkboxradio-Plugin in jqm.
         var parentLabel = $(origElement).closest("label");
         var label = parentLabel.length ? parentLabel : $(origElement).closest("form,fieldset,:jqmData(role='page'),:jqmData(role='dialog')").find("label").filter("[for='" + origElement[0].id + "']");
         var wrapper = $("<div></div>").insertBefore(origElement).append(origElement).append(label);
-        createData.widgetElement = origElement.parent();
-        moveCloningDirectives(origElement, createData.widgetElement);
-
-        createData.create = function () {
-            var _wrapAll = $.fn.wrapAll;
-            var input = this.children("input");
-            var wrapper = this;
-            $.fn.wrapAll = function(container) {
-                if (this[0] === input[0]) {
-                    $.fn.wrapAll = _wrapAll;
-                    var tempContainer = $(container);
-                    wrapper[0].className = tempContainer[0].className;
-                    return origElement;
-                }
-                return _wrapAll.apply(this, arguments);
-            };
-
-            var res = $.fn.orig.checkboxradio.apply(input, arguments);
-            $.fn.wrapAll = _wrapAll;
-            return res;
-        }
+        moveCloningDirectives(origElement, origElement.parent());
+        return wrapper;
     }
 
+    function checkboxRadioCreate(origCreate, element, initArgs) {
+        var _wrapAll = $.fn.wrapAll;
+        var input = element.children("input");
+        var wrapper = element;
+        $.fn.wrapAll = function (container) {
+            if (this[0] === input[0]) {
+                $.fn.wrapAll = _wrapAll;
+                var tempContainer = $(container);
+                wrapper[0].className = tempContainer[0].className;
+                return input;
+            }
+            return _wrapAll.apply(this, arguments);
+        };
+        var res = origCreate.apply(input, initArgs);
+        $.fn.wrapAll = _wrapAll;
+        return res;
+    }
 
     // Slider appends a new element after the input/select element for which it was created.
     // The angular compiler does not like this, so we wrap the two elements into a new parent node.
-    function sliderPrecompile(createData) {
-        var origElement = createData.widgetElement;
+    function sliderPrecompile(origElement, initArgs) {
         origElement.wrapAll("<div></div>");
-        var wrapper = createData.widgetElement = createData.widgetElement.parent();
+        var wrapper = origElement.parent();
         moveCloningDirectives(origElement, wrapper);
+        return wrapper;
+    }
 
-        createData.create = function () {
-            return $.fn.orig.slider.apply(this.children().eq(0), arguments);
-        };
+    function sliderCreate(origCreate, element, initArgs) {
+        var slider = element.children().eq(0);
+        origCreate.apply(slider, initArgs);
     }
 
     // Button wraps itself into a new element.
     // Angular does not like this, so we do it in advance.
-    function buttonPrecompile(createData) {
-        var origElement = createData.widgetElement;
-        var wrapper = $( "<div></div>" )
-            .text( origElement.text() || origElement.val() )
+    function buttonPrecompile(origElement, initArgs) {
+        var wrapper = $("<div></div>")
+            .text(origElement.text() || origElement.val())
             .insertBefore(origElement)
             .append(origElement);
         moveCloningDirectives(origElement, wrapper);
-        createData.widgetElement = wrapper;
-        createData.create = function () {
-            var wrapper = this;
-            var button = this.children().eq(0);
+        return wrapper;
+    }
 
-            var _text = $.fn.text;
-            $.fn.text = function () {
-                if (arguments.length>0) {
-                    // Only catch the first setter call
-                    $.fn.text = _text;
-                    return wrapper;
-                }
-                return _text.apply(this, arguments);
-            };
+    function buttonCreate(origCreate, element, initArgs) {
+        var wrapper = element;
+        var button = element.children().eq(0);
 
-            var _insertBefore = $.fn.insertBefore;
-            $.fn.insertBefore = function (element) {
-                if (this[0] === wrapper[0] && element[0] === button[0]) {
-                    return wrapper;
-                }
-                return _insertBefore.apply(this, arguments);
-            };
-
-            var res = $.fn.orig.button.apply(button, arguments);
-
-            $.fn.text = _text;
-            $.fn.insertBefore = _insertBefore;
-            return res;
+        var _text = $.fn.text;
+        $.fn.text = function () {
+            if (arguments.length > 0) {
+                // Only catch the first setter call
+                $.fn.text = _text;
+                return wrapper;
+            }
+            return _text.apply(this, arguments);
         };
 
+        var _insertBefore = $.fn.insertBefore;
+        $.fn.insertBefore = function (element) {
+            if (this[0] === wrapper[0] && element[0] === button[0]) {
+                return wrapper;
+            }
+            return _insertBefore.apply(this, arguments);
+        };
+
+        var res = origCreate.apply(button, initArgs);
+
+        $.fn.text = _text;
+        $.fn.insertBefore = _insertBefore;
+        return res;
     }
 
     // selectmenu wraps itself into a new element.
     // Angular does not like this, so we do it in advance.
-    function selectmenuPrecompile(createData) {
-        var origElement = createData.widgetElement;
+    function selectmenuPrecompile(origElement, initArgs) {
         var wrapper = $("<div></div>").insertBefore(origElement).append(origElement);
         moveCloningDirectives(origElement, wrapper);
-        createData.widgetElement = wrapper;
-        createData.create = function () {
-            var wrapper = this;
-            var select = this.children().eq(0);
+        return wrapper;
+    }
 
-            var _wrap = $.fn.wrap;
-            $.fn.wrap = function(container) {
-                if (this[0] === select[0]) {
-                    $.fn.wrap = _wrap;
-                    var tempContainer = $(container);
-                    wrapper[0].className = tempContainer[0].className;
+    function selectmenuCreate(origCreate, element, initArgs) {
+        var wrapper = element;
+        var select = element.children().eq(0);
 
-                    return select;
-                }
-                return _wrap.apply(this, arguments);
-            };
+        var _wrap = $.fn.wrap;
+        $.fn.wrap = function (container) {
+            if (this[0] === select[0]) {
+                $.fn.wrap = _wrap;
+                var tempContainer = $(container);
+                wrapper[0].className = tempContainer[0].className;
 
-            var res = $.fn.orig.selectmenu.apply(select, arguments);
-
-            $.fn.wrap = _wrap;
-            return res;
+                return select;
+            }
+            return _wrap.apply(this, arguments);
         };
 
+        var res = origCreate.apply(select, initArgs);
+
+        $.fn.wrap = _wrap;
+        return res;
     }
 
     // textinput for input-type "search" wraps itself into a new element
-    function textinputPrecompile(createData) {
-        var origElement = createData.widgetElement;
-        if ( !origElement.is( "[type='search'],:jqmData(type='search')" ) ) {
-            return;
+    function textinputPrecompile(origElement, initArgs) {
+        if (!origElement.is("[type='search'],:jqmData(type='search')")) {
+            return origElement;
         }
         var wrapper = $("<div></div>").insertBefore(origElement).append(origElement);
         moveCloningDirectives(origElement, wrapper);
-        createData.widgetElement = wrapper;
-        createData.create = function () {
-            var wrapper = this;
-            var select = this.children().eq(0);
+        return wrapper;
+    }
 
-            var _wrap = $.fn.wrap;
-            $.fn.wrap = function(container) {
-                if (this[0] === select[0]) {
-                    $.fn.wrap = _wrap;
-                    var tempContainer = $(container);
-                    wrapper[0].className = tempContainer[0].className;
+    function textinputCreate(origCreate, element, initArgs) {
+        if (element[0].nodeName.toUpperCase()==="INPUT") {
+            // no wrapper
+            return origCreate.apply(element, initArgs);
+        }
+        var wrapper = element;
+        var input = element.children().eq(0);
 
-                    return select;
-                }
-                return _wrap.apply(this, arguments);
-            };
+        var _wrap = $.fn.wrap;
+        $.fn.wrap = function (container) {
+            if (this[0] === input[0]) {
+                $.fn.wrap = _wrap;
+                var tempContainer = $(container);
+                wrapper[0].className = tempContainer[0].className;
 
-            var res = $.fn.orig.textinput.apply(select, arguments);
-
-            $.fn.wrap = _wrap;
-            return res;
+                return input;
+            }
+            return _wrap.apply(this, arguments);
         };
+
+        var res = origCreate.apply(input, initArgs);
+
+        $.fn.wrap = _wrap;
+        return res;
     }
 
     var CLONING_DIRECTIVE_REGEXP = /(^|[\W])(repeat|switch-when|if)($|[\W])/;
@@ -762,7 +814,7 @@
 
     function triggerAsyncRefresh(widgetName, scope, iElement, options) {
         var prop = "_refresh" + widgetName;
-        var refreshId = (iElement.data(prop) || 0)+1;
+        var refreshId = (iElement.data(prop) || 0) + 1;
         iElement.data(prop, refreshId);
         scope.$evalAsync(function () {
             if (iElement.data(prop) === refreshId) {
@@ -1249,7 +1301,7 @@
         if (isBack) {
             // The page may be removed from the DOM by the cache handling
             // of jquery mobile.
-            $.mobile.loadPage(target, {showLoadMsg: true}).then(function(_,_,page) {
+            $.mobile.loadPage(target, {showLoadMsg: true}).then(function(_a,_b,page) {
                 var relativeIndex = getNavigateIndexInHistory(page.attr("id"));
                 if (relativeIndex!==undefined) {
                     window.history.go(relativeIndex);

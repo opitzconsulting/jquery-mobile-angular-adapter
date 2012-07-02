@@ -22,25 +22,38 @@ Jquery mobile has two kinds of markup:
 
 Integration strategy:
 
-1. We have angular widgets for all possible jqm markup.
-
-2. In the `compile` function, we trigger the jqm `create` and `pagecreate` event.
+1. We have a `precompile` phase: This is called before the angular compiles does it's work, i.e. before
+   `$compile` is called, and before `directive.template` and `directive.templateUrl` is evaluated.
+   Here, we trigger the jqm `create` and `pagecreate` event.
    Before this, we instrument all stateful jqm widgets (see above), so they do not
-   really create the jqm widget, but only add the attribute `jqm-widget=<widgetName>` to the corresponding element.
-   By this, all stateless  markup can be used by angular for stamping (e.g. in ng-repeat),
-   without calling a jqm method again, so we are fast. Furthermore, we have a simple
-   attribute by which we can detect elements that contain stateful jqm widgets.
-   Furthermore, we do a precompile for those jqm widgets that wrap themselves into new elements
+   really create the jqm widget, but only add the attribute `jqm-create=<widgetName>` and `jqm-link=<widgetname>`
+   to the corresponding element. By this, all stateless  markup can be used by angular for stamping (e.g. in ng-repeat),
+   without calling a jqm method again, so we are fast.
+   Furthermore, we have special handlers in the precompile phase for those jqm widgets that wrap themselves into new elements
    (checkboxradio, slider, button, selectmenu, search input), as the angular compiler does not like this.
+   Finally, we also mark all jqm pages with the `jqm-page` attribute. This is needed as jqm pages are
+   represented as `data-role=page` in the dom and angular does not allow to create directives that only match
+   pages but not other jqm widgets.
 
-2. For jqm pages, we do the following:
-   Call element.page() in the pre link phase, however without the
+2. We have the directive `ngmPage`:
+   This creates an own scope for every page. By this, we are able to disconnect the scope of the pages that
+   are not visible right now. This is important for optimizing performance.
+   This creates the jqm pages by calling `element.page()` in the pre link phase, however without the
    `pagecreate` event. By this, we only create the page instance, but do not modify the dom
-   (as this is not allowed in the pre link phase).
+   (as this is not allowed in the pre link phase). Furthermore, the `page` jqm widget instance is already
+    available for the other widgets, which are created in the post link phase.
 
-3. For stateful jqm widgets: We create them in the post link phase.
-   Here we also listen for changes in the model and refresh the jqm widgets when needed.
-   By this, the jqm widgets also work nicely with angular stamping (e.g. in ng-repeat, ng-switch, ...).
+3. We have the directive `ngmCreate`:
+   This will create the jqm widgets in the post link phase. For widgets that wrap themselves into new elements this
+   needs to be called for the wrapper, that was already created in the precompile phase. This is important as
+   the jqm widgets do more DOM transformations during creations that the angular compiler does not like
+   (e.g. the jqm widget `<input type="checkbox>"` enhances the sibling `<label>` element and wraps that element).
+   By calling the widget during the post link phase of the wrapper element those DOM modifications are ok with angular.
+
+4. We have the directive `ngmLink`:
+   Here we listen for changes in the model and refresh the jqm widgets when needed and vice versa.
+   For elements that wrap themselves into new elements this will be called on the original element
+   (e.g. the `<input>` for `<input type="checkbox">` elements), in contrast to the `ngmCreate` directive.
 
 4. All together: This minimizes the number DOM traversals and DOM changes
 
@@ -48,6 +61,7 @@ Integration strategy:
      and let angular do the rest.
    * We do not use the jqm `create` event for refreshing widgets,
      but angular's directives. By this, we prevent unneeded executions of jquery selectors.
+   * We reuse the selectors in jqm for detecting which elements should be enhanced with which jqm widgets.
 
 Ohter possibilities not chosen:
 

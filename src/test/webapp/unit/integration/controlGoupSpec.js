@@ -29,6 +29,12 @@ describe("controlgroup", function () {
         expect(buttons.eq(1).hasClass("ui-corner-bottom")).toBe(true);
     });
 
+    it("should use the default jqm init parameter (excludeInvisible) during initialization", function() {
+        var spy = testutils.spyOnJq('controlgroup');
+        var c = testutils.compileInPage('<div data-role="controlgroup"></div>');
+        expect(spy).toHaveBeenCalledWith({ excludeInvisible : false });
+    });
+
     it("should refresh only once when child entries are removed by angular", function () {
         var d = testutils.compileInPage(
             '<div data-role="controlgroup" ng-init="list=[1,2,3]">' +

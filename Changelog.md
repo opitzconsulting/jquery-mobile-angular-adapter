@@ -5,6 +5,8 @@ Changelog
 -------------
 - Updated to angular 1.0.1
 - Dropped ngm-event directives. Please use the event specific directives like ngm-click, ...
+- Added jsfiddle template for reporting issues (see Readme)
+- Better support for angular directives with template and templateUrl.
 
 1.0.7rc2
 -------------

@@ -80,6 +80,13 @@ Sample
 - Js fiddle [Todo mobile](http://jsfiddle.net/tigbro/Du2DY/).
 - Single source app for jquery-mobile and sencha touch: [https://github.com/tigbro/todo-mobile](https://github.com/tigbro/todo-mobile)
 
+
+Reporting Issues
+-------------
+- Issues can be reported at the Github project.
+- Please provide a jsfiddle, using the following template: http://jsfiddle.net/tigbro/ZHKBA/
+
+
 Limitations
 ------------
 This deactivates angular's feature to change urls via the `$browser` or `$location` services.

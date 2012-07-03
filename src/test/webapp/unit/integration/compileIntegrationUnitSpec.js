@@ -161,6 +161,23 @@ describe('compileIntegrationUnit', function () {
             expect(c.element.children("button").length).toBe(1);
         });
 
+        it("should not enhance other elements outside of the template", function() {
+            module("ngMock", function ($compileProvider) {
+                $compileProvider.directive('sample', function () {
+                    return {
+                        restrict:'A',
+                        replace: true,
+                        template: '<a href="" data-role="button"></a>'
+                    }
+                });
+            });
+            var element = $("<a href='' data-role='button' class='temp'></a>");
+            $("body").append(element);
+            testutils.compileInPage('<div sample="true"></div>');
+            expect(element.hasClass("ui-btn")).toBe(false);
+
+        });
+
         it("should enhance markup created by directives with template property and append mode", function() {
             module("ngMock", function ($compileProvider) {
                 $compileProvider.directive('sample', function () {

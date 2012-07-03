@@ -24,7 +24,7 @@
 
     function precompileHtmlString(html, $precompile) {
         var $template = $('<div>' + html + '</div>');
-        $template = $precompile($template);
+        $precompile($template.contents());
         return $template.html();
     }
 

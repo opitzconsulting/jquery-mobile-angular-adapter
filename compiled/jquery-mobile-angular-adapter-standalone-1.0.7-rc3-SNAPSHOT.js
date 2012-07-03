@@ -31286,7 +31286,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
 
     function precompileHtmlString(html, $precompile) {
         var $template = $('<div>' + html + '</div>');
-        $template = $precompile($template);
+        $precompile($template.contents());
         return $template.html();
     }
 

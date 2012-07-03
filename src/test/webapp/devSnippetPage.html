@@ -10,74 +10,34 @@ Test page during development.
     <link rel="stylesheet" href="lib/jquery.mobile.css"/>
 
     <script src="lib/jquery.js"></script>
-    <script src="lib/jquery.mobile.js"></script>
-
-    <script src="lib/angular.js"></script>
-
-    <script src="jqm-angular.jsp"></script>
 
     <script>
         // <![CDATA[
-        var mod = angular.module("cb", []);
+        $(document).on('mobileinit', function () {
 
-        mod.directive('cxbx', function() {
-            return {
-                restrict: 'C',
-                replace: true,
-                template: "<input id='a' ng-model='cb.value' type='checkbox'><label for='a'>{{cb.label}}</label>"
-            };
+            // Configure jQuery mobile
+            $.mobile.ns = 'jqm-';
+            console.log("now");
         });
 
-        function orderCtrl($scope) {
-            $scope.total = 100;
-
-            $scope.checkboxes = [{
-                tv: 7,
-                fv: -7,
-                value: 0,
-                label: 'a'},
-                {
-                    tv: 8,
-                    fv: -8,
-                    value: 0,
-                    label: 'b'},
-                {
-                    tv: 9,
-                    fv: -9,
-                    value: 0,
-                    label: 'c'}];
-
-            $scope.total = function( ) {
-                var sum = 0;
-                for (var i=0; i<this.checkboxes.length; i++) {
-                    sum += this.checkboxes[i].value;
-                }
-                return sum;
-            };
-        }
         // ]]>
     </script>
+    <script src="lib/jquery.mobile.js"></script>
+
+    <script src="lib/angular.js"></script>
+    <script src="jqm-angular.jsp"></script>
+
 </head>
 <body>
-    <div ng-controller="orderCtrl" ng-app="cb">
-        <div id="main" data-role="page">
-            <div data-role="header">
-                <h1>{{total()}}</h1>
-            </div>
-
-            <div data-role="content">
-
-                <fieldset data-role="controlgroup" data-type="vertical" ng-repeat="cb in checkboxes">
-
-                    <div class="cxbx"/>
-
-                </fieldset>
-                {{checkboxes}}
-            </div>
-        </div>
+<div id="main" data-jqm-role="page" ng-app>
+    <div data-jqm-role="header">
+        Hello
     </div>
 
-​
+    <div data-jqm-role="content">
+        <button>test</button>
+    </div>
+</div>
 </body>
 
 </html>

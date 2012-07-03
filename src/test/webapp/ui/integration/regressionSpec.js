@@ -97,4 +97,21 @@ describe("regression", function () {
         });
     });
 
+    describe('namespace', function() {
+        it("should allow to use a different jquery mobile namespace", function() {
+            loadHtml('/jqmng/ui/empty-fixture.html', function (frame) {
+                var $ = frame.$;
+                $.mobile.ns = "jqm-";
+                $("body").append('<div data-jqm-role="page" id="page"><div data-jqm-role="header"><h1>hello</h1></div></div>');
+            });
+            runs(function () {
+                var page = testframe().$("#page");
+                expect(page.hasClass("ui-page")).toBe(true);
+                expect(page.children("div").hasClass("ui-header")).toBe(true);
+            });
+
+        });
+
+    });
+
 });

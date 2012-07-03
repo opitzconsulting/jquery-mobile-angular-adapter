@@ -112,7 +112,7 @@
             // If the element wrapped itself into a new element,
             // return the element that is under the same original parent
             while (element[0].parentNode !== oldParentNode) {
-                element = element.parent();
+                element = element.eq(0).parent();
             }
 
             return element;

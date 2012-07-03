@@ -31508,7 +31508,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
             // If the element wrapped itself into a new element,
             // return the element that is under the same original parent
             while (element[0].parentNode !== oldParentNode) {
-                element = element.parent();
+                element = element.eq(0).parent();
             }
 
             return element;
@@ -31752,7 +31752,11 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
     function checkboxRadioPrecompile(origElement, initArgs) {
         // Selectors: See the checkboxradio-Plugin in jqm.
         var parentLabel = $(origElement).closest("label");
-        var label = parentLabel.length ? parentLabel : $(origElement).closest("form,fieldset,:jqmData(role='page'),:jqmData(role='dialog')").find("label").filter("[for='" + origElement[0].id + "']");
+        var container = $(origElement).closest("form,fieldset,:jqmData(role='page'),:jqmData(role='dialog')");
+        if (container.length===0) {
+            container = origElement.parent();
+        }
+        var label = parentLabel.length ? parentLabel : container.find("label").filter("[for='" + origElement[0].id + "']");
         var wrapper = $("<div></div>").insertBefore(origElement).append(origElement).append(label);
         moveCloningDirectives(origElement, origElement.parent());
         return wrapper;

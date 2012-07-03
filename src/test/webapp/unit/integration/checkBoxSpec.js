@@ -14,6 +14,23 @@ describe("checkbox", function () {
         expect(createCount).toBe(2);
     });
 
+    it('should work in templates', function() {
+        module("ngMock", function ($compileProvider) {
+            $compileProvider.directive('sample', function () {
+                return {
+                    restrict:'A',
+                    replace: false,
+                    template: '<input ng-model="mysel" id="a" type="checkbox"><label for="a" id="mylab">Entry</label>'
+                }
+            });
+        });
+        var c = testutils.compileInPage('<div sample="true"></div>');
+        // checkbox wraps itself into a div...
+        expect(c.element.children("div").children("input").length).toBe(1);
+        expect(c.element.children("div").children("label").length).toBe(1);
+
+    });
+
     it('should save the ui value into the model', function () {
         var d = testutils.compileInPage('<div>' +
             '<input ng-model="mysel" id="mysel" type="checkbox"><label for="mysel" id="mylab">Entry</label>' +

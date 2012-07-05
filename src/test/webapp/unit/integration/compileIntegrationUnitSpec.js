@@ -74,26 +74,34 @@ describe('compileIntegrationUnit', function () {
     });
 
     describe("partials loaded by angular", function() {
-        var containerCompile;
+        var containerCompile, _$httpBackend;
 
         beforeEach(function() {
-            containerCompile = testutils.compileInPage('<div id="container"></div>');
+            containerCompile = testutils.compileInPage('<div id="container" ng-include="templateUrl"></div>');
         });
 
         function compileInPartialInPage(html) {
             var c = containerCompile;
             var container = c.element;
             var scope = container.scope();
-            var childScope = scope.$new();
-            container.html(html);
-            inject(function($compile) {
-                $compile(container.contents())(childScope);
+            scope.templateUrl = "someUrl";
+            inject(function ($httpBackend) {
+                $httpBackend.when('GET', /.*someUrl*/).respond(html);
+                scope.$digest();
+                $httpBackend.flush();
+                _$httpBackend = $httpBackend;
             });
             return {
                 page:c.page,
                 container: container
             }
         }
+
+        it("should enhance the partial content", function() {
+            var c = compileInPartialInPage('<a href="" data-role="button">Test</a>');
+            expect(c.container.children(".ui-btn").length).toBe(1);
+
+        });
 
         it("should stamp stateless markup without calling jqm", function () {
             // Note: buttonMarkup is a stateless widget

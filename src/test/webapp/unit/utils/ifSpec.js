@@ -17,6 +17,18 @@ describe("ngm-if", function () {
         expect(element.children('span').length).toEqual(1);
     });
 
+    it('should delete the old element and add a new element if the expression changes', function () {
+        compile('<div><span ngm-if="a">A</span></div>');
+        expect(element.children('span').length).toEqual(0);
+        scope.a = 'a';
+        scope.$digest();
+        expect(element.children('span').length).toEqual(1);
+        scope.a = 'aa';
+        scope.$digest();
+        expect(element.children('span').length).toEqual(1);
+
+    });
+
     it('should remove the element if the expression is false', function () {
         compile('<div><span ngm-if="false">A</span></div>');
         expect(element.children('span').length).toEqual(0);

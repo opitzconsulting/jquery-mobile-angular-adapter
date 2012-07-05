@@ -10,34 +10,70 @@ Test page during development.
     <link rel="stylesheet" href="lib/jquery.mobile.css"/>
 
     <script src="lib/jquery.js"></script>
+    <script>
+        /*
+        $(document).bind("mobileinit", function() {
+            $.mobile.pushStateEnabled = false;
+            $.mobile.hashListeningEnabled = false;
+            console.log("init");
+        });
+        */
 
+    </script>
+    <script src="lib/angular.js"></script>
+    <script src="lib/jquery.mobile.js"></script>
+    <script src="jqm-angular.jsp"></script>
     <script>
         // <![CDATA[
-        $(document).on('mobileinit', function () {
+        var mod = angular.module("ng");
+        mod.config(function($locationProvider) {
+            /*
+            $.mobile.pushStateEnabled = false;
+            $.mobile.hashListeningEnabled = false;
+            $.mobile.changePage.defaults.changeHash = false;
+            */
+            $locationProvider.plainMode(true);
+            console.log("init");
+        });
 
-            // Configure jQuery mobile
-            $.mobile.ns = 'jqm-';
-            console.log("now");
+        mod.controller("TestCtrl", function($scope, $navigate, $location) {
+            $scope.test = function() {
+                // document.location.hash = 'page2';
+                // $navigate("#page2");
+                $location.hash("page2");
+            }
+        });
+
+        mod.controller("Page1Ctrl", function($scope) {
+            $scope.$watch(function() {
+                console.log("digesting page1");
+            });
         });
 
         // ]]>
     </script>
-    <script src="lib/jquery.mobile.js"></script>
-
-    <script src="lib/angular.js"></script>
-    <script src="jqm-angular.jsp"></script>
 
 </head>
-<body>
-<div id="main" data-jqm-role="page" ng-app>
-    <div data-jqm-role="header">
+<body ng-app ng-controller="TestCtrl">
+<div id="main" data-role="page" ng-controller="Page1Ctrl">
+    <div data-role="header">
         Hello
     </div>
 
-    <div data-jqm-role="content">
-        <button>test</button>
+    <div data-role="content">
+        <button ng-click="test()">test</button>
     </div>
 </div>
+
+<div id="page2" data-role="page">
+    <div data-role="header">
+        Page2
+    </div>
+
+    <div data-role="content">
+    </div>
+</div>
+
 </body>
 
 </html>

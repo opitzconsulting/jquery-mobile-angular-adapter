@@ -1,29 +1,42 @@
 describe("angularUrlIntegration", function () {
-    it('should not be able to change urls', function () {
+    it('should be able to change pages using $location service', function () {
+        var $, $location, scope;
         loadHtml('/jqmng/ui/test-fixture.html');
         runs(function () {
-            var fr = testframe();
-            var injector = fr.$("body").injector();
-            var browser = injector.get("$browser");
-            var oldLoc = fr.window.location.href;
-            browser.url(fr.window.location.href + "#test");
-            expect(fr.window.location.href).toEqual(oldLoc);
+            $ = testframe().$;
+            var injector = $("body").injector();
+            scope = $("body").scope();
+            $location = injector.get("$location");
+
+            expect($.mobile.activePage.attr("id")).toBe("start");
+            $location.hash("page2");
+            scope.$digest();
+        });
+        waitsForAsync();
+        runs(function() {
+            expect($.mobile.activePage.attr("id")).toBe("page2");
+            expect($location.hash()).toBe('page2');
+            expect(testframe().location.hash).toBe('#page2');
         })
     });
 
-    it('should use jquery hashchange event instead of the own one', function () {
+    it('should be able to change pages using window.location', function () {
+        var $, $location, scope;
         loadHtml('/jqmng/ui/test-fixture.html');
         runs(function () {
-            var fr = testframe();
-            var injector = fr.$("body").injector();
-            var browser = injector.get("$browser");
-            var count = 0;
-            browser.onHashChange(function () {
-                count++;
-            });
-            expect(count).toEqual(0);
-            fr.$(fr.window).trigger('hashchange');
-            expect(count).toEqual(1);
+            $ = testframe().$;
+            var injector = $("body").injector();
+            scope = $("body").scope();
+            $location = injector.get("$location");
+
+            expect($.mobile.activePage.attr("id")).toBe("start");
+            testframe().location.hash = 'page2';
+        });
+        waitsForAsync();
+        runs(function() {
+            expect($.mobile.activePage.attr("id")).toBe("page2");
+            expect($location.hash()).toBe('page2');
+            expect(testframe().location.hash).toBe('#page2');
         });
     });
 

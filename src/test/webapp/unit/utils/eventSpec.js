@@ -22,7 +22,7 @@ describe('events', function () {
             var d = testutils.compileInPage('<input ngm-click="executed=true" type="text" ng-model="data">');
             var element = d.element;
             var scope = element.scope();
-            element.trigger('click');
+            element.trigger('vclick');
             expect(scope.executed).toEqual(true);
             element.val('test');
             testutils.triggerInputEvent(element);

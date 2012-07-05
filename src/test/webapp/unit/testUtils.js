@@ -10,7 +10,50 @@
 
     afterEach(function() {
         $(".temp").remove();
+        clearEvents();
     });
+
+    var markEvents = function() {
+        var key,
+            cache = angular.element.cache;
+
+        for(key in cache) {
+            if (cache.hasOwnProperty(key)) {
+                var events = cache[key].events;
+                for (var eventName in events) {
+                    var entries = events[eventName];
+                    for (var i=0; i<entries.length; i++) {
+                        entries[i].doNotClear = true;
+                    }
+                }
+            }
+        }
+    };
+    markEvents();
+
+    var clearEvents = function() {
+        var key,
+            cache = angular.element.cache;
+
+        for(key in cache) {
+            if (cache.hasOwnProperty(key)) {
+                var handle = cache[key].handle;
+                var elem = handle?$(handle.elem):null;
+                if (elem) {
+                    var events = cache[key].events;
+                    for (var eventName in events) {
+                        var entries = events[eventName];
+                        for (var i=entries.length-1; i>=0; i--) {
+                            if (!entries[i].doNotClear) {
+                                elem.unbind(eventName, entries[i].handler);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+
 
     function test$() {
         return $.apply(this, arguments);

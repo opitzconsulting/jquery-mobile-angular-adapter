@@ -1,33 +1,24 @@
 Changelog
 =====================
 
-1.0.7rc3
+1.0.7
 -------------
 - Updated to angular 1.0.1
-- Dropped ngm-event directives. Please use the event specific directives like ngm-click, ...
+- $location service can now be used again. Note that by default, this uses
+  a new `plain` mode, which directly represents `window.location`.
 - Added jsfiddle template for reporting issues (see Readme)
+- Support for namespaces for jqm tags (via `$.mobile.ns`).
 - Better support for angular directives with template and templateUrl.
-
-1.0.7rc2
--------------
-- Update to angular 1.0 rc10
 - complete refactoring for performance improvements, and to allow directive with template and templateUrl.
-- Removed `$navigate` filter. Use `$navigate` service instead. Reason: This puts too much logic in the html page and leads
+- Removed `$navigate` expression. Use `$navigate` service instead. Reason: This puts too much logic in the html page and leads
   to errors if `$q` is not used correctly.
 - Removed the `fadein` directive, as there are better ways to do this (see the corresponding jquery mobile plugin...)
-
-
-1.0.7rc1
--------------
-- Update to angular 1.0rc3 and jquery 1.7
 - ng-app directive of angular is required
-- 'ngm:event' directive is gone. Please use the new event directives introduced in 1.0.5
-- `$navigate` expression was changed to the `navigate` filter (note: the `$navigate` service was untouched by this).
+- 'ngm:event' directive is gone. Please use the new event directives introduced in 1.0.5 like ngm-click, ...
 - `$navigate` now does no more add the "#" automatically. This allows multiple ajax pages to be used.
 - `paged` expression was changed to the `paged` filter.
 - removed `iff` expression as it was only used internally and is now no more needed.
 - removed `$.mobile.globalScope` as it was only used internally. Use angular's `$rootScope` service instead.
-- updated the build process
 - removed custom build of jquery mobile, as no patches are needed any more to work
   with angular 1.0.
 

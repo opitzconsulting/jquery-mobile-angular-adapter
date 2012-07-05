@@ -87,12 +87,6 @@ Reporting Issues
 - Please provide a jsfiddle, using the following template: http://jsfiddle.net/tigbro/ZHKBA/
 
 
-Limitations
-------------
-This deactivates angular's feature to change urls via the `$browser` or `$location` services.
-This was needed as angular's url handling is incompatibly with jquery mobile and leads to
-unwanted navigations.
-
 Usage
 ---------
 
@@ -141,6 +135,13 @@ Running the tests
   The unit-tests can be run via the url `localhost:8080/jqmng/UnitSpecRunner.html`
   The ui-tests can be run via the url `localhost:8080/jqmng/UiSpecRunner.html`
 
+
+Using `$location` service
+---------------------
+This changes the default `$location` service of angular to a new `plain` mode, which
+directly represent `window.location`. I.e.
+this is neither html5 mode nor hashbang mode (see the angular documentation for details).
+So setting `$location.hash('someHash')` directly sets `window.location.hash`.
 
 Scopes
 -----------

@@ -11,7 +11,7 @@
 <jsp:include page="integration/scopeReentrance.js"/>
 <jsp:include page="integration/compileIntegration.js"/>
 <jsp:include page="integration/jqmAngularWidgets.js"/>
-<jsp:include page="integration/deactivateNgLocationChange.js"/>
+<jsp:include page="integration/plainLocationProvider.js"/>
 <jsp:include page="integration/ngRepeatPatch.js"/>
 <jsp:include page="integration/ngOptionsPatch.js"/>
 <jsp:include page="integration/option.js"/>

@@ -1,12 +1,17 @@
 /**
- * This is an extension to the locationProvider of angular:
- * It allows normal urls to be used in $location, without hashbang or html5 mode.
- * This is required for the hashchange handling of jquery mobile to work properly.
- * Furthermore, this extends the $browser so that it reuses the hashchange handler of
- * jqm for angular and ensures, that angular's handler is always called before the one from jqm.
- * By this, $location is always up to date when jquery mobile fires pagebeforecreate, ...
+ * This is an extension to the locationProvider of angular and provides a new mode: jqmCompat-mode.
  * <p>
- * Configuration: $locationProvider.plainMode(true) enables this new mode.
+ * This mode allows to use the normal jquery mobile hash handling (hash = page id).
+ * For this to work, it maps window.location directly to $location, without hashbang or html5 mode.
+ * Furthermore, this mode extends the $browser so that it reuses the hashchange handler of
+ * jqm and ensures, that angular's handler is always called before the one from jqm.
+ * By this, $location is always up to date when jquery mobile fires pagebeforecreate, ...
+ * Note: In this mode, angular routes are not useful.
+ * <p>
+ * If this mode is turned off, the hash listening and chaning of jqm is completely deactivated.
+ * Then you are able to use angular's routes for navigation and `$navigate` service for jqm page navigation.
+ * <p>
+ * Configuration: $locationProvider.jqmCompatMode(bool). Default is `true`.
  * <p>
  * Note: Much of the code below is copied from angular, as it is contained in an internal angular function scope.
  */
@@ -196,6 +201,13 @@
                     triggerAngularHashChange();
                     _hashChange(hash);
                 };
+                var _setPath = $.mobile.path.set;
+                $.mobile.path.set = function(hash) {
+                    var res = _setPath.apply(this, arguments);
+                    triggerAngularHashChange();
+                    return res;
+                };
+
                 urlChangeInit = true;
             } else {
                 res = _onUrlChange(callback);

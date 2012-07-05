@@ -10,64 +10,6 @@ all widgets in jquery mobile can be used directly in angular, without further mo
 
 Note that this adapter also provides special utilities useful for mobile applications.
 
-Integration strategy
----------------------
-
-Jquery mobile has two kinds of markup:
-
-- Stateless markup/widgets: Markup, that does not hold state or event listeners, and just adds css classes to the dom.
-  E.g. `$.fn.buttonMarkup`, which is created using `<a href="..." data-role="button">`
-- Stateful markup/widgets: Markup that holds state (e.g. event listeners, ...). This markup uses the jquery ui widget factory.
-  E.g. `$.mobile.button`, which is created using `<button>`.
-
-Integration strategy:
-
-1. We have a `precompile` phase: This is called before the angular compiles does it's work, i.e. before
-   `$compile` is called, and before `directive.template` and `directive.templateUrl` is evaluated.
-   Here, we trigger the jqm `create` and `pagecreate` event.
-   Before this, we instrument all stateful jqm widgets (see above), so they do not
-   really create the jqm widget, but only add the attribute `jqm-create=<widgetName>` and `jqm-link=<widgetname>`
-   to the corresponding element. By this, all stateless  markup can be used by angular for stamping (e.g. in ng-repeat),
-   without calling a jqm method again, so we are fast.
-   Furthermore, we have special handlers in the precompile phase for those jqm widgets that wrap themselves into new elements
-   (checkboxradio, slider, button, selectmenu, search input), as the angular compiler does not like this.
-   Finally, we also mark all jqm pages with the `jqm-page` attribute. This is needed as jqm pages are
-   represented as `data-role=page` in the dom and angular does not allow to create directives that only match
-   pages but not other jqm widgets.
-
-2. We have the directive `ngmPage`:
-   This creates an own scope for every page. By this, we are able to disconnect the scope of the pages that
-   are not visible right now. This is important for optimizing performance.
-   This creates the jqm pages by calling `element.page()` in the pre link phase, however without the
-   `pagecreate` event. By this, we only create the page instance, but do not modify the dom
-   (as this is not allowed in the pre link phase). Furthermore, the `page` jqm widget instance is already
-    available for the other widgets, which are created in the post link phase.
-
-3. We have the directive `ngmCreate`:
-   This will create the jqm widgets in the post link phase. For widgets that wrap themselves into new elements this
-   needs to be called for the wrapper, that was already created in the precompile phase. This is important as
-   the jqm widgets do more DOM transformations during creations that the angular compiler does not like
-   (e.g. the jqm widget `<input type="checkbox>"` enhances the sibling `<label>` element and wraps that element).
-   By calling the widget during the post link phase of the wrapper element those DOM modifications are ok with angular.
-
-4. We have the directive `ngmLink`:
-   Here we listen for changes in the model and refresh the jqm widgets when needed and vice versa.
-   For elements that wrap themselves into new elements this will be called on the original element
-   (e.g. the `<input>` for `<input type="checkbox">` elements), in contrast to the `ngmCreate` directive.
-
-4. All together: This minimizes the number DOM traversals and DOM changes
-
-   * We use angular's stamping for stateless widget markup, i.e. we call the jqm functions only once,
-     and let angular do the rest.
-   * We do not use the jqm `create` event for refreshing widgets,
-     but angular's directives. By this, we prevent unneeded executions of jquery selectors.
-   * We reuse the selectors in jqm for detecting which elements should be enhanced with which jqm widgets.
-
-Ohter possibilities not chosen:
-
-- Calling the jqm "create"-Event whenever the DOM changes (see the jqm docs). However,
-  this is very slow, as this would lead to many DOM traversals by the different jqm listeners
-  for the "create"-Event.
 
 Dependencies
 ----------------
@@ -136,12 +78,24 @@ Running the tests
   The ui-tests can be run via the url `localhost:8080/jqmng/UiSpecRunner.html`
 
 
-Using `$location` service
+`$location` service, routes and jqm hashchange handling
 ---------------------
-This changes the default `$location` service of angular to a new `plain` mode, which
-directly represent `window.location`. I.e.
-this is neither html5 mode nor hashbang mode (see the angular documentation for details).
-So setting `$location.hash('someHash')` directly sets `window.location.hash`.
+
+By default, jqm listens for all hash changes and shows the the page with the id of the current location hash.
+Also, if you navigate programmatically to a new page (e.g. by the `$navigate` service), the hash is also adjusted.
+This mode of url handling is called jqm compatibility mode in the adapter. It is enabled by default.
+Please note that this is different to both, the hashbang and the html5 mode of angular. For this to work,
+the adapter replaces the default `$location` service of angular with new one that directly maps `window.location`
+to `$location`. This mode is not useful together with angular routes.
+
+
+However, you can also turn the jqm compatibility mode off. Then, jquery mobile will neither listen to hash changes
+nor will it update the hash when pages are changed programmatically (e.g. by the `$navigate` service). This is useful
+if you want to use routes in angular. For this, there is the function `jqmCompatMode(bool)` in the
+`$locationProvider`. Here is an example for turning jqm compatibility mode off:
+
+    module.config(function($location) { location.jqmCompatMode(false); });
+
 
 Scopes
 -----------
@@ -268,5 +222,62 @@ The following example shows an example for a paged list for the data in the vari
     </ul>
 
 
+Integration strategy
+---------------------
 
+Jquery mobile has two kinds of markup:
+
+- Stateless markup/widgets: Markup, that does not hold state or event listeners, and just adds css classes to the dom.
+  E.g. `$.fn.buttonMarkup`, which is created using `<a href="..." data-role="button">`
+- Stateful markup/widgets: Markup that holds state (e.g. event listeners, ...). This markup uses the jquery ui widget factory.
+  E.g. `$.mobile.button`, which is created using `<button>`.
+
+Integration strategy:
+
+1. We have a `precompile` phase: This is called before the angular compiles does it's work, i.e. before
+   `$compile` is called, and before `directive.template` and `directive.templateUrl` is evaluated.
+   Here, we trigger the jqm `create` and `pagecreate` event.
+   Before this, we instrument all stateful jqm widgets (see above), so they do not
+   really create the jqm widget, but only add the attribute `jqm-create=<widgetName>` and `jqm-link=<widgetname>`
+   to the corresponding element. By this, all stateless  markup can be used by angular for stamping (e.g. in ng-repeat),
+   without calling a jqm method again, so we are fast.
+   Furthermore, we have special handlers in the precompile phase for those jqm widgets that wrap themselves into new elements
+   (checkboxradio, slider, button, selectmenu, search input), as the angular compiler does not like this.
+   Finally, we also mark all jqm pages with the `jqm-page` attribute. This is needed as jqm pages are
+   represented as `data-role=page` in the dom and angular does not allow to create directives that only match
+   pages but not other jqm widgets.
+
+2. We have the directive `ngmPage`:
+   This creates an own scope for every page. By this, we are able to disconnect the scope of the pages that
+   are not visible right now. This is important for optimizing performance.
+   This creates the jqm pages by calling `element.page()` in the pre link phase, however without the
+   `pagecreate` event. By this, we only create the page instance, but do not modify the dom
+   (as this is not allowed in the pre link phase). Furthermore, the `page` jqm widget instance is already
+    available for the other widgets, which are created in the post link phase.
+
+3. We have the directive `ngmCreate`:
+   This will create the jqm widgets in the post link phase. For widgets that wrap themselves into new elements this
+   needs to be called for the wrapper, that was already created in the precompile phase. This is important as
+   the jqm widgets do more DOM transformations during creations that the angular compiler does not like
+   (e.g. the jqm widget `<input type="checkbox>"` enhances the sibling `<label>` element and wraps that element).
+   By calling the widget during the post link phase of the wrapper element those DOM modifications are ok with angular.
+
+4. We have the directive `ngmLink`:
+   Here we listen for changes in the model and refresh the jqm widgets when needed and vice versa.
+   For elements that wrap themselves into new elements this will be called on the original element
+   (e.g. the `<input>` for `<input type="checkbox">` elements), in contrast to the `ngmCreate` directive.
+
+4. All together: This minimizes the number DOM traversals and DOM changes
+
+   * We use angular's stamping for stateless widget markup, i.e. we call the jqm functions only once,
+     and let angular do the rest.
+   * We do not use the jqm `create` event for refreshing widgets,
+     but angular's directives. By this, we prevent unneeded executions of jquery selectors.
+   * We reuse the selectors in jqm for detecting which elements should be enhanced with which jqm widgets.
+
+Ohter possibilities not chosen:
+
+- Calling the jqm "create"-Event whenever the DOM changes (see the jqm docs). However,
+  this is very slow, as this would lead to many DOM traversals by the different jqm listeners
+  for the "create"-Event.
 

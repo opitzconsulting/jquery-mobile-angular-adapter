@@ -5,7 +5,7 @@ Changelog
 -------------
 - Updated to angular 1.0.1
 - $location service can now be used again. Note that by default, this uses
-  a new `plain` mode, which directly represents `window.location`.
+  a new `jqmCompat` mode. For routes to work this has to be disabled.
 - Added jsfiddle template for reporting issues (see Readme)
 - Support for namespaces for jqm tags (via `$.mobile.ns`).
 - Better support for angular directives with template and templateUrl.

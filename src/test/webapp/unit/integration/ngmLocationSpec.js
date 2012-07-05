@@ -16,12 +16,12 @@ function spyOnlyCallsWithArgs(obj, method) {
 var jqLite = window.jQuery;
 
 
-describe('$location service in plain mode', function() {
+describe('ngm extensions to $location', function() {
     var url;
 
     function initService() {
         return module(function($provide, $locationProvider){
-            $locationProvider.plainMode(true);
+            $locationProvider.jqmCompatMode(true);
         });
     }
     function initBrowser(url, basePath) {
@@ -428,7 +428,7 @@ describe('$location service in plain mode', function() {
 
                 link = jqLite('<a href="' + linkHref + '"' + attrs + '>' + content + '</a>')[0];
 
-                $locationProvider.plainMode(true);
+                $locationProvider.jqmCompatMode(true);
                 $locationProvider.hashPrefix('!');
                 return function($rootElement, $document) {
                     $rootElement.append(link);

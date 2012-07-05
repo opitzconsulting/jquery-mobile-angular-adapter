@@ -27,20 +27,16 @@ Test page during development.
         // <![CDATA[
         var mod = angular.module("ng");
         mod.config(function($locationProvider) {
-            /*
-            $.mobile.pushStateEnabled = false;
-            $.mobile.hashListeningEnabled = false;
-            $.mobile.changePage.defaults.changeHash = false;
-            */
-            $locationProvider.plainMode(true);
+            $locationProvider.jqmCompatMode(false);
+            $locationProvider.html5Mode(true);
             console.log("init");
         });
 
         mod.controller("TestCtrl", function($scope, $navigate, $location) {
             $scope.test = function() {
-                // document.location.hash = 'page2';
-                // $navigate("#page2");
                 $location.hash("page2");
+                // $navigate("#page2");
+                // $navigate("#page2");
             }
         });
 

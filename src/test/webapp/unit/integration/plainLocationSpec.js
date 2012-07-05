@@ -343,7 +343,7 @@ describe('$location service in plain mode', function() {
                 $log.info('after', newUrl, oldUrl, $browser.url());
             });
 
-            expect($location.url()).toEqual('');
+            expect($location.url()).toEqual('/');
             $location.url('/somePath');
             expect($location.url()).toEqual('/somePath');
             expect($browser.url()).toEqual('http://server/');
@@ -352,17 +352,17 @@ describe('$location service in plain mode', function() {
             $rootScope.$apply();
 
             expect($log.info.logs.shift()).
-                toEqual(['before', 'http://server/#/somePath', 'http://server/', 'http://server/']);
+                toEqual(['before', 'http://server/somePath', 'http://server/', 'http://server/']);
             expect($log.info.logs.shift()).
-                toEqual(['after', 'http://server/#/somePath', 'http://server/', 'http://server/#/somePath']);
+                toEqual(['after', 'http://server/somePath', 'http://server/', 'http://server/somePath']);
             expect($location.url()).toEqual('/somePath');
-            expect($browser.url()).toEqual('http://server/#/somePath');
+            expect($browser.url()).toEqual('http://server/somePath');
         }));
 
 
         it('should allow $locationChangeStart event cancellation', inject(function($location, $browser, $rootScope, $log) {
             expect($browser.url()).toEqual('http://server/');
-            expect($location.url()).toEqual('');
+            expect($location.url()).toEqual('/');
 
             $rootScope.$on('$locationChangeStart', function(event, newUrl, oldUrl) {
                 $log.info('before', newUrl, oldUrl, $browser.url());
@@ -372,7 +372,7 @@ describe('$location service in plain mode', function() {
                 throw Error('location should have been canceled');
             });
 
-            expect($location.url()).toEqual('');
+            expect($location.url()).toEqual('/');
             $location.url('/somePath');
             expect($location.url()).toEqual('/somePath');
             expect($browser.url()).toEqual('http://server/');
@@ -381,9 +381,9 @@ describe('$location service in plain mode', function() {
             $rootScope.$apply();
 
             expect($log.info.logs.shift()).
-                toEqual(['before', 'http://server/#/somePath', 'http://server/', 'http://server/']);
+                toEqual(['before', 'http://server/somePath', 'http://server/', 'http://server/']);
             expect($log.info.logs[1]).toBeUndefined();
-            expect($location.url()).toEqual('');
+            expect($location.url()).toEqual('/');
             expect($browser.url()).toEqual('http://server/');
         }));
 
@@ -392,7 +392,7 @@ describe('$location service in plain mode', function() {
                 $rootScope.$apply(); // clear initial $locationChangeStart
 
                 expect($browser.url()).toEqual('http://server/');
-                expect($location.url()).toEqual('');
+                expect($location.url()).toEqual('/');
 
                 $rootScope.$on('$locationChangeStart', function(event, newUrl, oldUrl) {
                     throw Error('there is no before when user enters URL directly to browser');

@@ -32193,42 +32193,30 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
             return;
         }
         var urlChangeInit = false;
-        var urlChangeListeners = [];
-        var lastBrowserUrl = $browser.url();
 
         var _onUrlChange = $browser.onUrlChange;
+        var triggerAngularHashChange;
         $browser.onUrlChange = function (callback) {
+            var res;
             if (!urlChangeInit) {
+                var _bind = $.fn.bind;
+                $.fn.bind = function(event, handler) {
+                    triggerAngularHashChange = handler;
+                };
+                var res = _onUrlChange(callback);
+                $.fn.bind = _bind;
+
                 var _hashChange = $.mobile._handleHashChange;
                 $.mobile._handleHashChange = function(hash) {
-                    fireUrlChange();
+                    triggerAngularHashChange();
                     _hashChange(hash);
                 };
                 urlChangeInit = true;
+            } else {
+                res = _onUrlChange(callback);
             }
-
-            urlChangeListeners.push(callback);
-            return callback;
+            return res;
         };
-
-        var _url = $browser.url;
-        $browser.url = function (url, replace) {
-            // setter
-            if (url) {
-                lastBrowserUrl = url;
-            }
-            return _url.apply(this, arguments);
-        };
-
-
-        function fireUrlChange() {
-            if (lastBrowserUrl == $browser.url()) return;
-
-            lastBrowserUrl = $browser.url();
-            angular.forEach(urlChangeListeners, function (listener) {
-                listener($browser.url());
-            });
-        }
 
     }
 

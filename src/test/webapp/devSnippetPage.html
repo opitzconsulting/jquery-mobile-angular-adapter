@@ -4,7 +4,6 @@
 Test page during development.
 -->
 <head>
-    <title>MobileToys</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
 
     <link rel="stylesheet" href="lib/jquery.mobile.css"/>
@@ -33,6 +32,12 @@ Test page during development.
         });
 
         mod.controller("TestCtrl", function($scope, $navigate, $location) {
+            $scope.$watch(function() {
+                var active = $.mobile.urlHistory.getActive();
+                return active && active.title;
+            }, function(title) {
+                document.title = title;
+            });
             $scope.test = function() {
                 $location.hash("page2");
                 // $navigate("#page2");
@@ -53,17 +58,18 @@ Test page during development.
 <body ng-app ng-controller="TestCtrl">
 <div id="main" data-role="page" ng-controller="Page1Ctrl">
     <div data-role="header">
-        Hello
+        <h1>{{$parent.title}}</h1>
     </div>
 
     <div data-role="content">
-        <button ng-click="test()">test</button>
+        <input type="text" ng-model="$parent.title">
+        <a href="#page2">Page2</a>
     </div>
 </div>
 
 <div id="page2" data-role="page">
     <div data-role="header">
-        Page2
+        <h1>Hallo {{title}}</h1>
     </div>
 
     <div data-role="content">

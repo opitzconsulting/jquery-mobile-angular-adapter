@@ -1,6 +1,8 @@
 (function($, angular, window) {
 
     beforeEach(function() {
+        $(".temp").remove();
+        $(":jqmData(role='page')").remove();
         $.mobile.pageContainer = $("body");
         $.mobile.firstPage = [];
         module("ng", function($provide) {
@@ -9,7 +11,6 @@
     });
 
     afterEach(function() {
-        $(".temp").remove();
         clearEvents();
     });
 

@@ -17,9 +17,6 @@ describe("ngmLocation", function () {
             locationChangeSpy = jasmine.createSpy('$locationChangeSuccess');
             scope.$digest();
             scope.$on("$locationChangeSuccess", locationChangeSpy);
-            locationChangeSpy.andCallFake(function() {
-                console.log("now");
-            });
         });
     }
 

@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.opitzconsulting.html5</groupId>
     <artifactId>jquery-mobile-angular-adapter</artifactId>
-    <version>1.0.7-rc3-SNAPSHOT</version>
+    <version>1.1.0</version>
     <name>JQuery Mobile Angular Adapter</name>
     <packaging>war</packaging>
     <description>Adapter for using jquery mobile with angular</description>
@@ -70,9 +70,9 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>com.google.jstestdriver</groupId>
-                        <artifactId>maven-jstestdriver-plugin</artifactId>
-                        <version>1.3.2.2</version>
+                        <groupId>com.googlecode.jstd-maven-plugin</groupId>
+                        <artifactId>jstd-maven-plugin</artifactId>
+                        <version>1.3.2.5</version>
                         <configuration>
                             <browser>${browser}</browser>
                             <port>9876</port>
@@ -81,6 +81,15 @@
                             <testOutput>${project.build.directory}/jstd-reports</testOutput>
                             <tests>all</tests>
                         </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>com.google.jstestdriver</groupId>
+                                <artifactId>jstestdriver</artifactId>
+                                <version>1.3.4.b</version>
+                                <scope>system</scope>
+                                <systemPath>${basedir}/misc/JsTestDriver-1.3.4.b.jar</systemPath>
+                            </dependency>
+                        </dependencies>
                         <executions>
                             <execution>
                                 <id>run-unit-tests</id>
@@ -148,8 +157,9 @@
         <dependency>
             <groupId>com.google.jstestdriver</groupId>
             <artifactId>jstestdriver</artifactId>
-            <version>1.3.2</version>
-            <scope>test</scope>
+            <version>1.3.4.b</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/misc/JsTestDriver-1.3.4.b.jar</systemPath>
         </dependency>
     </dependencies>
 

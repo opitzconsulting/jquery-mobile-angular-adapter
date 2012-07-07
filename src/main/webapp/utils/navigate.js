@@ -119,4 +119,4 @@
 
     return navigate;
 
-})(window.jQuery, window.angular);
+})($, angular);

@@ -35,4 +35,4 @@
             return $rootScope;
         }]);
     }]);
-})(window.angular);
+})(angular);

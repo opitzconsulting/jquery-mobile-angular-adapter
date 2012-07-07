@@ -34,4 +34,4 @@
         createEventDirective(directive, eventDirectives[directive])
     }
 
-})(window.angular);
+})(angular);

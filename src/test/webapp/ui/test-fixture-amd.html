@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MobileToys</title>
+    <script>opener && opener.instrument && opener.instrument(window);</script>
+    <link rel="stylesheet" href="../lib/jquery.mobile.css"/>
+
+    <script src="../lib/require.js"></script>
+    <script>
+        require.config({
+            paths:{
+                'jquery':'../lib/jquery',
+                'angular':'../lib/angular',
+                'jquery.mobile':'../lib/jquery.mobile'
+            },
+            shim:{
+                'angular':{
+                    deps:['jquery'],
+                    exports:'angular'
+                }
+            }
+        });
+
+        require([
+            "angular",
+            "../jquery-mobile-angular-adapter"
+        ], function (angular) {
+            angular.element(document).ready(function() {
+                angular.bootstrap(document.documentElement);
+            });
+        });
+    </script>
+</head>
+<body>
+    <div id="start" data-role="page">
+        <div data-role="header">
+            <h1>Hello World</h1>
+        </div>
+    </div>
+
+</body>
+</html>

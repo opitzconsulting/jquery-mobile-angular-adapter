@@ -3,7 +3,9 @@ Changelog
 
 1.1.0
 -------------
-- Updated to angular 1.0.1
+- Updated to angular 1.0.1.
+- Added link to german book about using the adapter and a more complex example.
+- Added AMD module support.
 - complete refactoring for performance improvements, and to support directives with template and templateUrl.
 - $location service can now be used again. Note that by default, this uses
   a new `jqmCompat` mode. For routes to work this has to be disabled.

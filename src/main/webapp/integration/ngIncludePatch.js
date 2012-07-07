@@ -19,4 +19,4 @@
                 }
             }
         });
-})(window.angular);
+})(angular);

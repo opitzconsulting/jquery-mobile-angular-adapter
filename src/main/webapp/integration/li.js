@@ -21,4 +21,4 @@
             }
         };
     });
-})(window.angular);
+})(angular);

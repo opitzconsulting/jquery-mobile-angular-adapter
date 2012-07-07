@@ -334,4 +334,4 @@
     }
 
 
-})(window.angular, window.jQuery);
+})(angular, $);

@@ -5,6 +5,13 @@
 * Copyright 2011, Tobias Bosch (OPITZ CONSULTING GmbH)
 * Licensed under the MIT license.
 */
+(function(factory) {
+if (typeof define === "function" && define.amd) {
+define(["jquery", "angular", "jquery.mobile"], factory);
+} else {
+factory(window.jQuery, window.angular);
+}
+})(function($, angular) {
 (function ($) {
     function patch(obj, fnName, callback) {
         var _old = obj[fnName];
@@ -75,7 +82,7 @@
         return old.apply(self, args);
     });
 
-})(window.jQuery);
+})($);
 /**
  * Helper that introduces the concept of precompilation: Preprocess the dom before
  * angular processes it.
@@ -148,7 +155,7 @@
         }]);
     }]);
 
-})(window.jQuery, window.angular);
+})($, angular);
 (function (angular) {
 
     var ng = angular.module('ng');
@@ -186,7 +193,7 @@
             return $rootScope;
         }]);
     }]);
-})(window.angular);
+})(angular);
 (function (angular) {
     var ng = angular.module('ng');
     ng.config(['$provide', function ($provide) {
@@ -209,7 +216,7 @@
             return $rootScope;
         }]);
     }]);
-})(window.angular);
+})(angular);
 (function ($, angular) {
     // Only digest the $.mobile.activePage when rootScope.$digest is called.
     var ng = angular.module('ng');
@@ -491,7 +498,7 @@
         });
     }
 
-})(window.jQuery, window.angular);
+})($, angular);
 (function (angular, $) {
     var widgetConfig = {
         checkboxradio:{
@@ -828,7 +835,7 @@
     }
 
 
-})(window.angular, window.jQuery);
+})(angular, $);
 /**
  * This is an extension to the locationProvider of angular and provides a new mode: jqmCompat-mode.
  * <p>
@@ -1093,7 +1100,7 @@
 
     }]);
 
-})(window.angular, window.jQuery);
+})(angular, $);
 (function ($, angular) {
     // Patch for ng-repeat to fire an event whenever the children change.
     // Only watching Scope create/destroy is not enough here, as ng-repeat
@@ -1165,7 +1172,7 @@
             }
         };
     });
-})(window.jQuery, window.angular);
+})($, angular);
 (function ($, angular) {
     // This is a copy of parts of angular's ngOptions directive to detect changes in the values
     // of ngOptions (emits the $childrenChanged event on the scope).
@@ -1237,7 +1244,7 @@
     }]);
 
 
-})(window.jQuery, window.angular);
+})($, angular);
 (function (angular) {
     var ng = angular.module("ng");
     ng.directive('option', ['$interpolate', function ($interpolate) {
@@ -1257,7 +1264,7 @@
             }
         };
     }]);
-})(window.angular);
+})(angular);
 (function (angular) {
     var ng = angular.module("ng");
     ng.directive('li', function() {
@@ -1281,7 +1288,7 @@
             }
         };
     });
-})(window.angular);
+})(angular);
 (function (angular) {
     // Patch for ng-switch to fire an event whenever the children change.
 
@@ -1300,7 +1307,7 @@
                 }
             }
         });
-})(window.angular);
+})(angular);
 (function (angular) {
     // Patch for ng-include to fire an event whenever the children change.
 
@@ -1322,7 +1329,7 @@
                 }
             }
         });
-})(window.angular);
+})(angular);
 (function ($, angular) {
     var mod = angular.module('ng');
     mod.directive("input", function () {
@@ -1365,7 +1372,7 @@
         };
 
     });
-})(window.jQuery, window.angular);
+})($, angular);
 
 
 (function (angular) {
@@ -1407,7 +1414,7 @@
     ng.directive('ngmIf', function () {
         return ngIfDirective;
     });
-})(window.angular);
+})(angular);
 
 (function (angular) {
     var mod = angular.module('ng');
@@ -1445,7 +1452,7 @@
         createEventDirective(directive, eventDirectives[directive])
     }
 
-})(window.angular);
+})(angular);
 (function($, angular) {
     function splitAtFirstColon(value) {
         var pos = value.indexOf(':');
@@ -1567,7 +1574,7 @@
 
     return navigate;
 
-})(window.jQuery, window.angular);
+})($, angular);
 (function(angular) {
     var storageName = '$$sharedControllers';
 
@@ -1628,7 +1635,7 @@
             }
         };
     }]);
-})(window.angular);
+})(angular);
 (function($, angular) {
     var showCalls = [];
 
@@ -1760,7 +1767,7 @@
     }]);
 
     return res;
-})(window.jQuery, window.angular);
+})($, angular);
 (function ($, angular) {
 
     function pagedListFilterFactory(defaultListPageSize, filterFilter, orderByFilter) {
@@ -1916,4 +1923,5 @@
     var mod = angular.module(['ng']);
     mod.constant('defaultListPageSize', 10);
     mod.filter('paged', pagedListFilterFactory);
-})(window.jQuery, window.angular);
+})($, angular);
+});

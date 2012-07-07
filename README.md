@@ -7,8 +7,10 @@ Description
 Integration between jquery mobile and angular.js. Needed as jquery mobile
 enhances the pages with new elements and styles and so does angular. With this adapter,
 all widgets in jquery mobile can be used directly in angular, without further modifications.
+Furthermore, this adapter also provides special utilities useful for mobile applications.
 
-Note that this adapter also provides special utilities useful for mobile applications.
+If you are interested in how to build mobile web apps with this adapter, have a look at the german book
+[Mobile Web-Apps mit JavaScript](http://www.opitz-consulting.com/go_javascriptbuch).
 
 
 Dependencies
@@ -17,27 +19,30 @@ Dependencies
 - jquery 1.7.1
 - jquery mobile 1.1.0 Final
 
-Sample
+Examples
 ------------
-- Js fiddle [Todo mobile](http://jsfiddle.net/tigbro/Du2DY/).
-- Single source app for jquery-mobile and sencha touch: [https://github.com/tigbro/todo-mobile](https://github.com/tigbro/todo-mobile)
+- [Todo mobile](http://jsfiddle.net/tigbro/Du2DY/): JsFiddle
+- [Todo mobile](https://github.com/tigbro/todo-mobile): Single source app for jquery-mobile and sencha touch:
+- [Rent Your Legacy Car](https://github.com/mjswa/rylc-html5): A more complex example from the german book [Mobile Web-Apps mit JavaScript](http://www.opitz-consulting.com/go_javascriptbuch).
 
 
 Reporting Issues
 -------------
 - Issues can be reported at the Github project.
-- Please provide a jsfiddle, using the following template: http://jsfiddle.net/tigbro/ZHKBA/
+- Please provide a jsfiddle, using [this template](http://jsfiddle.net/tigbro/ZHKBA/).
 
 
 Usage
 ---------
 
+### Plain ###
+
 Include this adapter _after_ angular and jquery mobile (see below).
 
-Attention: The directive `ng-app` for the html element is required, as in all angular applications.
+Note: The directive `ng-app` for the html element is required, as in all angular applications.
 
 
-    <html xmlns:ng="http://angularjs.org" xmlns:ngm="http://jqm-angularjs.org" ng-app>
+    <html ng-app>
     <head>
         <title>MobileToys</title>
         <link rel="stylesheet" href="lib/jquery.mobile-1.1.css"/>
@@ -47,10 +52,53 @@ Attention: The directive `ng-app` for the html element is required, as in all an
         <script src="lib/jquery-mobile-angular-adapter.js"></script>
     </head>
 
+### With requirejs 2.x ###
+
+Create a `index.xhtml` file like the one below:
+
+    <html>
+    <head>
+        <title>MobileToys</title>
+        <link rel="stylesheet" href="lib/jquery.mobile-1.1.css"/>
+        <script src="lib/requirejs.js" data-main="main.js"/>
+    </head>
+    <body>
+       ... your jqm pages ...
+    </body>
+    </html>
+
+And a `main.js` file with the following content:
+
+    require.config({
+      shim:{
+        'angular':{ deps:['jquery'], exports:'angular'}
+      }
+    });
+    require([
+      "angular",
+      "jquery-mobile-angular-adapter",
+      ... // your controllers, angular modules, ...
+    ], function (angular) {
+      angular.element(document).ready(function() {
+        angular.bootstrap(document.documentElement, [<your angular modules>]);
+      });
+    });
+
+
+Notes:
+- This assumes that all libs are in the root folder of your webapp. To put them into a subfolder like `lib` use the
+  paths argument in the call to `require.config` (e.g. `paths: {angular: lib/angular}`, ...)
+- The libraries jQuery, jQuery Mobile and the adapter are already AMD modules. Only angular is not, which is why
+  we need a shim config for it.
+- We do NOT specify an `ng-app` directive in your html, but boostrap angular manually, when all modules have been loaded.
+  This is needed as the event `DOMContentLoaded`, for which the auto bootstrap of angular waits, may occur before all
+  modules have been loaded by requirejs.
+
+
 
 Directory layout
 -------------------
-This follows the usual maven directory layout:
+This project follows the usual maven directory layout:
 
 - src/main/webapp: The production code
 - src/test/webapp: The test code
@@ -63,10 +111,14 @@ Build
 The build is done using maven and node js.
 
 - `mvn clean package`: This will create a new version of the adapter and put it into `/compiled`.
+- `mvn clean package -Ptest -Dbrowser=<path to your browser>`: As above, but will also execute the unit and ui tests.
 
-The build also creates a standalone library including jquery, jquery-mobile and angular.
-If you want to do something during the initialization of jquery-mobile, use the following callback:
-`window.mobileinit = function() { ... }`
+Results of the build:
+
+- `compiled/jquery-mobile-angular-adapter-<version>.js`: The adapter in one file, without dependencies.
+- `compiled/jquery-mobile-angular-adapter-standalone-<version>.js`: The adapter in one file including jquery, jquery-mobile and angular.
+   If you want to do something during the initialization of jquery-mobile, use the following callback:
+  `window.mobileinit = function() { ... }`
 
 Running the tests
 -------------------
@@ -78,7 +130,7 @@ Running the tests
   The ui-tests can be run via the url `localhost:8080/jqmng/UiSpecRunner.html`
 
 
-`$location` service, routes and jqm hashchange handling
+Jqm hashchange handling, `$location` service and routes
 ---------------------
 
 By default, jqm listens for all hash changes and shows the the page with the id of the current location hash.
@@ -104,7 +156,7 @@ so there is no performance interaction between pages.
 
 For communicating between the pages use the `ngm-shared-controller` directive (see below).
 
-Widgets, Directives and Services
+Directives, Filters and Services
 -----------
 
 ### Directive `ngm-shared-controller`
@@ -143,8 +195,8 @@ using the `ngm-event` directive with the corresponding event name.
 Usage: E.g. `<a href="#" ngm-swipeleft="myFn()">`
 
 
-### Attribute Widget ngm-if
-The attribute widget `@ngm-if` allows to add/remove an element to/from the dom, depending on an expression.
+### Directive ngm-if
+The directive `@ngm-if` allows to add/remove an element to/from the dom, depending on an expression.
 This is especially useful at places where we cannot insert an `ng-switch` into the dom. E.g. jquery mobile
 does not allow elements between an `ul` and an `li` element.
 

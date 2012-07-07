@@ -31200,6 +31200,13 @@ $( document ).bind( "pagecreate create", function( e ){
 })(window, document);
 angular.element(document).find('head').append('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak{display:none;}ng\\:form{display:block;}</style>');
 
+(function(factory) {
+if (typeof define === "function" && define.amd) {
+define(["jquery", "angular", "jquery.mobile"], factory);
+} else {
+factory(window.jQuery, window.angular);
+}
+})(function($, angular) {
 (function ($) {
     function patch(obj, fnName, callback) {
         var _old = obj[fnName];
@@ -31270,7 +31277,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         return old.apply(self, args);
     });
 
-})(window.jQuery);
+})($);
 /**
  * Helper that introduces the concept of precompilation: Preprocess the dom before
  * angular processes it.
@@ -31343,7 +31350,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         }]);
     }]);
 
-})(window.jQuery, window.angular);
+})($, angular);
 (function (angular) {
 
     var ng = angular.module('ng');
@@ -31381,7 +31388,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
             return $rootScope;
         }]);
     }]);
-})(window.angular);
+})(angular);
 (function (angular) {
     var ng = angular.module('ng');
     ng.config(['$provide', function ($provide) {
@@ -31404,7 +31411,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
             return $rootScope;
         }]);
     }]);
-})(window.angular);
+})(angular);
 (function ($, angular) {
     // Only digest the $.mobile.activePage when rootScope.$digest is called.
     var ng = angular.module('ng');
@@ -31686,7 +31693,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         });
     }
 
-})(window.jQuery, window.angular);
+})($, angular);
 (function (angular, $) {
     var widgetConfig = {
         checkboxradio:{
@@ -32023,7 +32030,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
     }
 
 
-})(window.angular, window.jQuery);
+})(angular, $);
 /**
  * This is an extension to the locationProvider of angular and provides a new mode: jqmCompat-mode.
  * <p>
@@ -32288,7 +32295,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
 
     }]);
 
-})(window.angular, window.jQuery);
+})(angular, $);
 (function ($, angular) {
     // Patch for ng-repeat to fire an event whenever the children change.
     // Only watching Scope create/destroy is not enough here, as ng-repeat
@@ -32360,7 +32367,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
             }
         };
     });
-})(window.jQuery, window.angular);
+})($, angular);
 (function ($, angular) {
     // This is a copy of parts of angular's ngOptions directive to detect changes in the values
     // of ngOptions (emits the $childrenChanged event on the scope).
@@ -32432,7 +32439,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
     }]);
 
 
-})(window.jQuery, window.angular);
+})($, angular);
 (function (angular) {
     var ng = angular.module("ng");
     ng.directive('option', ['$interpolate', function ($interpolate) {
@@ -32452,7 +32459,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
             }
         };
     }]);
-})(window.angular);
+})(angular);
 (function (angular) {
     var ng = angular.module("ng");
     ng.directive('li', function() {
@@ -32476,7 +32483,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
             }
         };
     });
-})(window.angular);
+})(angular);
 (function (angular) {
     // Patch for ng-switch to fire an event whenever the children change.
 
@@ -32495,7 +32502,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
                 }
             }
         });
-})(window.angular);
+})(angular);
 (function (angular) {
     // Patch for ng-include to fire an event whenever the children change.
 
@@ -32517,7 +32524,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
                 }
             }
         });
-})(window.angular);
+})(angular);
 (function ($, angular) {
     var mod = angular.module('ng');
     mod.directive("input", function () {
@@ -32560,7 +32567,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         };
 
     });
-})(window.jQuery, window.angular);
+})($, angular);
 
 
 (function (angular) {
@@ -32602,7 +32609,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
     ng.directive('ngmIf', function () {
         return ngIfDirective;
     });
-})(window.angular);
+})(angular);
 
 (function (angular) {
     var mod = angular.module('ng');
@@ -32640,7 +32647,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
         createEventDirective(directive, eventDirectives[directive])
     }
 
-})(window.angular);
+})(angular);
 (function($, angular) {
     function splitAtFirstColon(value) {
         var pos = value.indexOf(':');
@@ -32762,7 +32769,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
 
     return navigate;
 
-})(window.jQuery, window.angular);
+})($, angular);
 (function(angular) {
     var storageName = '$$sharedControllers';
 
@@ -32823,7 +32830,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
             }
         };
     }]);
-})(window.angular);
+})(angular);
 (function($, angular) {
     var showCalls = [];
 
@@ -32955,7 +32962,7 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
     }]);
 
     return res;
-})(window.jQuery, window.angular);
+})($, angular);
 (function ($, angular) {
 
     function pagedListFilterFactory(defaultListPageSize, filterFilter, orderByFilter) {
@@ -33111,4 +33118,5 @@ angular.element(document).find('head').append('<style type="text/css">@charset "
     var mod = angular.module(['ng']);
     mod.constant('defaultListPageSize', 10);
     mod.filter('paged', pagedListFilterFactory);
-})(window.jQuery, window.angular);
+})($, angular);
+});

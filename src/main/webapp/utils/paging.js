@@ -153,4 +153,4 @@
     var mod = angular.module(['ng']);
     mod.constant('defaultListPageSize', 10);
     mod.filter('paged', pagedListFilterFactory);
-})(window.jQuery, window.angular);
+})($, angular);

@@ -40,4 +40,4 @@
         };
 
     });
-})(window.jQuery, window.angular);
+})($, angular);

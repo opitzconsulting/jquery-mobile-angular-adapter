@@ -58,4 +58,4 @@
             }
         };
     }]);
-})(window.angular);
+})(angular);

@@ -37,4 +37,4 @@
     ng.directive('ngmIf', function () {
         return ngIfDirective;
     });
-})(window.angular);
+})(angular);

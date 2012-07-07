@@ -5,6 +5,13 @@
 * Copyright 2011, Tobias Bosch (OPITZ CONSULTING GmbH)
 * Licensed under the MIT license.
 */
+(function(factory) {
+if (typeof define === "function" && define.amd) {
+define(["jquery", "angular", "jquery.mobile"], factory);
+} else {
+factory(window.jQuery, window.angular);
+}
+})(function($, angular) {
 <jsp:include page="integration/jqmDestroyFix.js"/>
 <jsp:include page="integration/precompileSupport.js"/>
 <jsp:include page="integration/scopeReconnect.js"/>
@@ -26,3 +33,4 @@
 <jsp:include page="utils/sharedController.js"/>
 <jsp:include page="utils/waitDialog.js"/>
 <jsp:include page="utils/paging.js"/>
+});

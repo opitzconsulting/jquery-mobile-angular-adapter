@@ -68,4 +68,4 @@
         return old.apply(self, args);
     });
 
-})(window.jQuery);
+})($);

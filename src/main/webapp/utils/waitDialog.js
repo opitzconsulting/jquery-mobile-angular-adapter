@@ -129,4 +129,4 @@
     }]);
 
     return res;
-})(window.jQuery, window.angular);
+})($, angular);

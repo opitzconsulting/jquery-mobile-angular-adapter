@@ -81,15 +81,6 @@
                             <testOutput>${project.build.directory}/jstd-reports</testOutput>
                             <tests>all</tests>
                         </configuration>
-                        <dependencies>
-                            <dependency>
-                                <groupId>com.google.jstestdriver</groupId>
-                                <artifactId>jstestdriver</artifactId>
-                                <version>1.3.4.b</version>
-                                <scope>system</scope>
-                                <systemPath>${basedir}/misc/JsTestDriver-1.3.4.b.jar</systemPath>
-                            </dependency>
-                        </dependencies>
                         <executions>
                             <execution>
                                 <id>run-unit-tests</id>
@@ -152,14 +143,13 @@
         </profile>
     </profiles>
 
-
     <dependencies>
         <dependency>
             <groupId>com.google.jstestdriver</groupId>
             <artifactId>jstestdriver</artifactId>
             <version>1.3.4.b</version>
             <scope>system</scope>
-            <systemPath>${basedir}/misc/JsTestDriver-1.3.4.b.jar</systemPath>
+            <systemPath>${basedir}/misc/JsTestDriver.jar</systemPath>
         </dependency>
     </dependencies>
 

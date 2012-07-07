@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html ng-app>
 <head>
     <title>MobileToys</title>
     <script>opener && opener.instrument && opener.instrument(window);</script>
@@ -20,14 +20,19 @@
                 }
             }
         });
-
+        function tryHoldReady() {
+            if (!tryHoldReady.executed && window.jQuery) {
+                window.jQuery.holdReady(true);
+                tryHoldReady.executed = true;
+            }
+        }
+        tryHoldReady();
+        require.onResourceLoad = tryHoldReady;
         require([
-            "angular",
+            "jquery",
             "../jquery-mobile-angular-adapter"
-        ], function (angular) {
-            angular.element(document).ready(function() {
-                angular.bootstrap(document.documentElement);
-            });
+        ], function (jquery) {
+            jquery.holdReady(false);
         });
     </script>
 </head>

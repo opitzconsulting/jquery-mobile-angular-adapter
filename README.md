@@ -74,27 +74,34 @@ And a `main.js` file with the following content:
         'angular':{ deps:['jquery'], exports:'angular'}
       }
     });
+    function tryHoldReady() {
+      if (!tryHoldReady.executed && window.jQuery) {
+        window.jQuery.holdReady(true);
+        tryHoldReady.executed = true;
+      }
+    }
+    tryHoldReady();
+    require.onResourceLoad = tryHoldReady;
     require([
-      "angular",
+      "jquery",
       "jquery-mobile-angular-adapter",
       ... // your controllers, angular modules, ...
-    ], function (angular) {
-      angular.element(document).ready(function() {
-        angular.bootstrap(document.documentElement, [<your angular modules>]);
-      });
+    ], function (jquery) {
+      jquery.holdReady(false);
     });
 
 
 Notes:
+
 - This assumes that all libs are in the root folder of your webapp. To put them into a subfolder like `lib` use the
   paths argument in the call to `require.config` (e.g. `paths: {angular: lib/angular}`, ...)
 - The libraries jQuery, jQuery Mobile and the adapter are already AMD modules. Only angular is not, which is why
   we need a shim config for it.
-- We do NOT specify an `ng-app` directive in your html, but boostrap angular manually, when all modules have been loaded.
-  This is needed as the event `DOMContentLoaded`, for which the auto bootstrap of angular waits, may occur before all
-  modules have been loaded by requirejs.
-
-
+- We simulate a later `load` event of the document by using `jQuery.holdReady`, by which we wait until all modules
+  have been loaded. This is needed as the normal `load` event may occur before all modules have been loaded by requirejs.
+  Note that this functionality was already included in requirejs 1.x, but no more in requirejs 2.x.
+- Usage of manual bootstrap of angular does not work well with jquery-mobile, as jquery-mobile relies on the
+  jQuery ready event to be fired at the right time.
 
 Directory layout
 -------------------

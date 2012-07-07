@@ -8,6 +8,11 @@ describe('regression', function () {
             expect(c.element.find('a').hasClass('ui-link')).toBe(false);
             expect(c.element.find('a').hasClass('ui-link-inherit')).toBe(true);
         });
+        it("should not style buttonMarkup with ui-link", function() {
+            var c = testutils.compileInPage('<a href="" data-role="button"></a>');
+            expect(c.element.hasClass('ui-link')).toBe(false);
+
+        });
     });
 
     describe("selectmenu", function () {

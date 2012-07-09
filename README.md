@@ -34,13 +34,12 @@ Reporting Issues
 
 Usage
 ---------
+Note: The directive `ng-app` for the html element is required, as in all angular applications.
+
 
 ### Plain ###
 
 Include this adapter _after_ angular and jquery mobile (see below).
-
-Note: The directive `ng-app` for the html element is required, as in all angular applications.
-
 
     <html ng-app>
     <head>
@@ -56,7 +55,7 @@ Note: The directive `ng-app` for the html element is required, as in all angular
 
 Create a `index.xhtml` file like the one below:
 
-    <html>
+    <html ng-app>
     <head>
         <title>MobileToys</title>
         <link rel="stylesheet" href="lib/jquery.mobile-1.1.css"/>

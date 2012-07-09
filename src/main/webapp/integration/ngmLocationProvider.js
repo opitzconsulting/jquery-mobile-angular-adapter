@@ -218,6 +218,18 @@
     }
 
     var ng = angular.module("ng");
+    ng.config(['$provide', '$locationProvider', function ($provide, $locationProvider) {
+        $provide.decorator('$browser', ['$sniffer', '$delegate', function ($sniffer, $browser) {
+            if ($locationProvider.jqmCompatMode()) {
+                // Angular should not use the history api and use the hash bang location service,
+                // which we will extend below.
+                $sniffer.history = false;
+                reusejQueryMobileHashChangeForAngular($browser);
+            }
+            return $browser;
+        }]);
+    }]);
+
     ng.config(['$locationProvider', function ($locationProvider) {
         var jqmCompatMode = true;
         /**
@@ -238,14 +250,8 @@
         };
 
         var _$get = $locationProvider.$get;
-        $locationProvider.$get = ['$injector', '$sniffer', '$browser', function ($injector, $sniffer, $browser) {
+        $locationProvider.$get = ['$injector', '$browser', function ($injector, $browser) {
             if (jqmCompatMode) {
-                // Angular should not use the history api and use the hash bang location service,
-                // which we will extend below.
-                $sniffer.history = false;
-
-                reusejQueryMobileHashChangeForAngular($browser);
-
                 var $location = $injector.invoke(_$get, $locationProvider);
                 patchLocationServiceToUsePlainUrls($location, $browser.url());
 

@@ -42,6 +42,7 @@ factory(window.jQuery, window.angular);
 }
 })(function($, angular) {
 <jsp:include page="integration/jqmDestroyFix.js"/>
+<jsp:include page="integration/deferAngularBootstrap.js"/>
 <jsp:include page="integration/precompileSupport.js"/>
 <jsp:include page="integration/scopeReconnect.js"/>
 <jsp:include page="integration/scopeReentrance.js"/>

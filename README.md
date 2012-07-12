@@ -152,7 +152,7 @@ nor will it update the hash when pages are changed programmatically (e.g. by the
 if you want to use routes in angular. For this, there is the function `jqmCompatMode(bool)` in the
 `$locationProvider`. Here is an example for turning jqm compatibility mode off:
 
-    module.config(function($location) { location.jqmCompatMode(false); });
+    module.config(function($locationProvider) { $locationProvider.jqmCompatMode(false); });
 
 
 Scopes

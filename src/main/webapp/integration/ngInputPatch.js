@@ -1,6 +1,7 @@
 (function ($, angular) {
     var mod = angular.module('ng');
-    mod.directive("input", function () {
+
+    function inputDirectivePatch() {
         return {
             restrict:'E',
             require:'?ngModel',
@@ -38,6 +39,8 @@
                 }
             }
         };
+    }
 
-    });
+    mod.directive("input", inputDirectivePatch);
+    mod.directive("textarea", inputDirectivePatch);
 })($, angular);

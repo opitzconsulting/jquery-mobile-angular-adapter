@@ -9,76 +9,37 @@ Test page during development.
     <link rel="stylesheet" href="lib/jquery.mobile.css"/>
 
     <script src="lib/jquery.js"></script>
-    <script>
-        /*
-        $(document).bind("mobileinit", function() {
-            $.mobile.pushStateEnabled = false;
-            $.mobile.hashListeningEnabled = false;
-            console.log("init");
-        });
-        */
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("dom loaded");
-        },false);
-
-    </script>
-    <script src="lib/angular.js"></script>
     <script src="lib/jquery.mobile.js"></script>
+
+    <script src="lib/angular.js"></script>
     <script src="jqm-angular.jsp"></script>
     <script>
         // <![CDATA[
-        var mod = angular.module("ng");
-        mod.config(function($locationProvider) {
-            $locationProvider.jqmCompatMode(false);
-            $locationProvider.html5Mode(true);
-            console.log("init");
-        });
+        var mod = angular.module("ngm", []);
 
-        mod.controller("TestCtrl", function($scope, $navigate, $location) {
-            $scope.$watch(function() {
-                var active = $.mobile.urlHistory.getActive();
-                return active && active.title;
-            }, function(title) {
-                document.title = title;
-            });
-            $scope.test = function() {
-                $location.hash("page2");
-                // $navigate("#page2");
-                // $navigate("#page2");
-            }
+        mod.controller('MainController', function($scope) {
+            $scope.infopunkte = [{name:'test1', selected:true}, {name:'test1', selected:true}];
         });
-
-        mod.controller("Page1Ctrl", function($scope) {
-            $scope.$watch(function() {
-                console.log("digesting page1");
-            });
-        });
-
         // ]]>
     </script>
 
 </head>
-<body ng-app ng-controller="TestCtrl">
-<div id="main" data-role="page" ng-controller="Page1Ctrl">
-    <div data-role="header">
-        <h1>{{$parent.title}}</h1>
-    </div>
-
+<body ng-app="ngm">
+<div id="main" data-role="page" ng-controller="MainController">
     <div data-role="content">
-        <input type="text" ng-model="$parent.title">
-        <a href="#page2">Page2</a>
+        <div data-role="collapsible">
+            <h1>label1</h1>
+            <div data-role="collapsible">
+                <h1>label2</h1>
+                <p>content2</p>
+            </div>
+
+            </div>
+        </div>
     </div>
 </div>
 
-<div id="page2" data-role="page">
-    <div data-role="header">
-        <h1>Hallo {{title}}</h1>
-    </div>
-
-    <div data-role="content">
-    </div>
-</div>
-
+​
 </body>
 
 </html>

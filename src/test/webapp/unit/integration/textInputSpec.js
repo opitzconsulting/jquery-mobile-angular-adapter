@@ -82,6 +82,19 @@ describe("textInput", function () {
         expect(scope.mysel).toEqual('1999-10-09');
     });
 
+    it('should enhance textareas', function() {
+        var d = testutils.compileInPage('<textarea ng-model="data"></textarea>');
+        var input = d.element;
+        expect(input.hasClass("ui-input-text")).toBe(true);
+        var scope = input.scope();
+        input[0].value = 'test';
+        testutils.triggerInputEvent(input);
+        expect(scope.data).toEqual('test');
+        scope.data = 'test2';
+        scope.$root.$digest();
+        expect(input[0].value).toEqual('test2');
+    });
+
     describe("search input", function() {
         it('should be removable', function () {
             // search input wraps itself into a parent div

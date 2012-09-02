@@ -197,7 +197,7 @@
     }
 
     function textinputCreate(origCreate, element, initArgs) {
-        if (element[0].nodeName.toUpperCase()==="INPUT") {
+        if (element[0].nodeName.toUpperCase()!=="DIV") {
             // no wrapper
             return origCreate.apply(element, initArgs);
         }

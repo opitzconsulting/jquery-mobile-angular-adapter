@@ -31610,6 +31610,9 @@ factory(window.jQuery, window.angular);
     }]);
 
     function connectToDocument(node, callback) {
+        if (!node.parentNode) {
+            return callback();
+        }
         // search the top most element for node.
         while (node.parentNode && node.parentNode.nodeType === 1) {
             node = node.parentNode;

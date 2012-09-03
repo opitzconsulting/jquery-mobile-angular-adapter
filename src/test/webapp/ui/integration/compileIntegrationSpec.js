@@ -34,6 +34,20 @@ describe('compileIntegration', function () {
         });
     });
 
+    it("should allow manual bootstrap using $compile on the document", function() {
+        loadHtml('/jqmng/ui/empty-fixture.html');
+        runs(function() {
+            var win = testframe();
+            var $ = win.$;
+            $("body").append('<div id="somePage" data-role="page"></div>');
+            win.angular.bootstrap(win.document);
+            console.log("now");
+            expect($("#somePage").hasClass("ui-page")).toBe(true);
+
+
+        });
+    });
+
     describe("page stamping", function() {
         it("should allow to use jqm pages with ng-repeat", function() {
             loadHtml('/jqmng/ui/empty-fixture.html', function (win) {

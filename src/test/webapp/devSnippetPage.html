@@ -10,45 +10,41 @@ Test page during development.
 
     <script src="lib/jquery.js"></script>
     <script src="lib/jquery.mobile.js"></script>
-    <!--
-    <script>
-        var _c = $.fn.collapsible;
-        $.fn.collapsible = function() {
-            var nestedContent = this.find(".ui-collapsible-content");
-            var nestedContentClass = "ui-collapsible-content";
-            nestedContent.removeClass(nestedContentClass);
-            try {
-                return _c.apply(this, arguments);
-            } finally {
-                nestedContent.addClass(nestedContentClass);
-            }
-        };
-    </script>
-    -->
 
     <script src="lib/angular.js"></script>
     <script src="jqm-angular.jsp"></script>
-    <script>
-        // <![CDATA[
-        var mod = angular.module("ngm", []);
-
-        mod.controller('MainController', function($scope) {
-            $scope.infopunkte = [{name:'test1', selected:true}, {name:'test1', selected:true}];
-        });
-        // ]]>
-    </script>
 </head>
-<body ng-app="ngm">
-<div id="main" data-role="page" ng-controller="MainController">
-    <div data-role="content" id="target">
-        <input type="checkbox" ng-model="coll" name="dummy">
-        <div id="coll1" data-role="collapsible" data-collapsed="coll">
-            <h1 class="tbo">label1</h1>
-            hello
+<body>
+
+
+<!-- Replace="data-title" breaks the rendering of every radio button which has also a replace directive -->
+<!-- Worked with the jQuery Angular Adapter rc1 -->
+<div data-role="page" id="page1" replace="data-title" data-title="Test">
+
+    <div data-role="header">
+        <h1>Test app</h1>
+    </div><!-- /header -->
+
+    <div data-role="content">
+    </div><!-- /content -->
+
+    <div data-role="footer" data-position="fixed">
+        <div class="ui-bar">
+            Footer
         </div>
     </div>
-</div>
 
+</div><!-- /page -->
+
+<script>
+    angular.element(document).ready(function() {
+        var injector = angular.bootstrap(document);
+    });
+</script>
+
+</body>
+</html>
+​
 ​
 </body>
 

@@ -82,6 +82,20 @@ factory(window.jQuery, window.angular);
         return old.apply(self, args);
     });
 
+    // collapsible has problems when a collapsible is created with a nested collapsible,
+    // if the nested collapsible is created before the outside collapsible.
+    var _c = $.fn.collapsible;
+    var nestedContentClass = "ui-collapsible-content";
+    $.fn.collapsible = function() {
+        var nestedContent = this.find(".ui-collapsible-content");
+        nestedContent.removeClass(nestedContentClass);
+        try {
+            return _c.apply(this, arguments);
+        } finally {
+            nestedContent.addClass(nestedContentClass);
+        }
+    };
+
 })($);
 /**
  * This will delay the angular initialization by two nested calls to jQuery.fn.ready.
@@ -540,7 +554,7 @@ factory(window.jQuery, window.angular);
     /**
      * Directive for connecting widgets with angular. See ngmCreate.
      */
-    ng.directive("ngmLink", function () {
+    ng.directive("ngmLink", ["$injector", function ($injector) {
         return {
             restrict:'A',
             priority:0,
@@ -552,13 +566,13 @@ factory(window.jQuery, window.angular);
                         var widgetName, widgetSpec;
                         for (widgetName in widgets) {
                             widgetSpec = jqmWidgets[widgetName];
-                            widgetSpec.link(scope, iElement, iAttrs, ctrls);
+                            widgetSpec.link(scope, iElement, iAttrs, ctrls, $injector);
                         }
                     }
                 };
             }
         }
-    });
+    }]);
 
     function patchJqmWidget(widgetName, precompileFn) {
         patchJq(widgetName, function () {
@@ -640,7 +654,7 @@ factory(window.jQuery, window.angular);
             create:buttonCreate
         },
         collapsible:{
-            handlers:[disabledHandler]
+            handlers:[disabledHandler, collapsedHandler]
         },
         textinput:{
             handlers:[disabledHandler],
@@ -678,9 +692,10 @@ factory(window.jQuery, window.angular);
     };
 
     function mergeHandlers(widgetName, list) {
-        return function () {
+        return function ($injector) {
             var args = Array.prototype.slice.call(arguments);
             args.unshift(widgetName);
+            args.push($injector);
             for (var i = 0; i < list.length; i++) {
                 list[i].apply(this, args);
             }
@@ -905,6 +920,32 @@ factory(window.jQuery, window.angular);
                 iElement[widgetName]("enable");
             }
         });
+    }
+
+    function collapsedHandler(widgetName, scope, iElement, iAttrs, ctrls, $inject) {
+        var $parse = $inject.get("$parse");
+        if (iAttrs.collapsed) {
+            var collapsedGetter = $parse(iAttrs.collapsed);
+            var collapsedSetter = collapsedGetter.assign;
+            scope.$watch(collapsedGetter, function(value) {
+                if (value) {
+                    iElement.trigger("collapse");
+                } else {
+                    iElement.trigger("expand");
+                }
+            });
+
+            iElement.bind("collapse", function () {
+                scope.$apply(function() {
+                    collapsedSetter(scope, true);
+                });
+            });
+            iElement.bind("expand", function () {
+                scope.$apply(function() {
+                    collapsedSetter(scope, false);
+                });
+            });
+        }
     }
 
     function checkedHandler(widgetName, scope, iElement, iAttrs, ctrls) {

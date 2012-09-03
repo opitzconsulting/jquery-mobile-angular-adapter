@@ -193,7 +193,7 @@
     /**
      * Directive for connecting widgets with angular. See ngmCreate.
      */
-    ng.directive("ngmLink", function () {
+    ng.directive("ngmLink", ["$injector", function ($injector) {
         return {
             restrict:'A',
             priority:0,
@@ -205,13 +205,13 @@
                         var widgetName, widgetSpec;
                         for (widgetName in widgets) {
                             widgetSpec = jqmWidgets[widgetName];
-                            widgetSpec.link(scope, iElement, iAttrs, ctrls);
+                            widgetSpec.link(scope, iElement, iAttrs, ctrls, $injector);
                         }
                     }
                 };
             }
         }
-    });
+    }]);
 
     function patchJqmWidget(widgetName, precompileFn) {
         patchJq(widgetName, function () {

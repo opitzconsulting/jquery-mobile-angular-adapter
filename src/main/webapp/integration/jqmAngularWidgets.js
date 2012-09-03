@@ -11,7 +11,7 @@
             create:buttonCreate
         },
         collapsible:{
-            handlers:[disabledHandler]
+            handlers:[disabledHandler, collapsedHandler]
         },
         textinput:{
             handlers:[disabledHandler],
@@ -49,9 +49,10 @@
     };
 
     function mergeHandlers(widgetName, list) {
-        return function () {
+        return function ($injector) {
             var args = Array.prototype.slice.call(arguments);
             args.unshift(widgetName);
+            args.push($injector);
             for (var i = 0; i < list.length; i++) {
                 list[i].apply(this, args);
             }
@@ -276,6 +277,32 @@
                 iElement[widgetName]("enable");
             }
         });
+    }
+
+    function collapsedHandler(widgetName, scope, iElement, iAttrs, ctrls, $inject) {
+        var $parse = $inject.get("$parse");
+        if (iAttrs.collapsed) {
+            var collapsedGetter = $parse(iAttrs.collapsed);
+            var collapsedSetter = collapsedGetter.assign;
+            scope.$watch(collapsedGetter, function(value) {
+                if (value) {
+                    iElement.trigger("collapse");
+                } else {
+                    iElement.trigger("expand");
+                }
+            });
+
+            iElement.bind("collapse", function () {
+                scope.$apply(function() {
+                    collapsedSetter(scope, true);
+                });
+            });
+            iElement.bind("expand", function () {
+                scope.$apply(function() {
+                    collapsedSetter(scope, false);
+                });
+            });
+        }
     }
 
     function checkedHandler(widgetName, scope, iElement, iAttrs, ctrls) {

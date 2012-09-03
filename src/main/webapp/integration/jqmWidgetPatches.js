@@ -68,4 +68,18 @@
         return old.apply(self, args);
     });
 
+    // collapsible has problems when a collapsible is created with a nested collapsible,
+    // if the nested collapsible is created before the outside collapsible.
+    var _c = $.fn.collapsible;
+    var nestedContentClass = "ui-collapsible-content";
+    $.fn.collapsible = function() {
+        var nestedContent = this.find(".ui-collapsible-content");
+        nestedContent.removeClass(nestedContentClass);
+        try {
+            return _c.apply(this, arguments);
+        } finally {
+            nestedContent.addClass(nestedContentClass);
+        }
+    };
+
 })($);

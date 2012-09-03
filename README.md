@@ -280,6 +280,17 @@ The following example shows an example for a paged list for the data in the vari
     </ul>
 
 
+Notes on the integration of some jqm widgets
+----------------
+
+### widget collapsible
+
+- The attribute `data-collapsed` has bidirectional data binding, e.g.
+
+    <div data-role="collapsible" data-collapsed="someProperty">...</div>
+
+
+
 Integration strategy
 ---------------------
 

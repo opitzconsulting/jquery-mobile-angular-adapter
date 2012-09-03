@@ -1,6 +1,12 @@
 Changelog
 =====================
 
+1.1.1
+-------------
+- Collapsible now has bidirectonal data binding for the `data-collapsed` attribute.
+-
+
+
 1.1.0
 -------------
 - Updated to angular 1.0.1.

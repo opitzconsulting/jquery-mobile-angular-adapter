@@ -279,6 +279,9 @@ The following example shows an example for a paged list for the data in the vari
          </li>
     </ul>
 
+_Attention_: The paged filter does not work together with filter chaining, as it stores the paging state in the
+list instances.
+
 
 Notes on the integration of some jqm widgets
 ----------------

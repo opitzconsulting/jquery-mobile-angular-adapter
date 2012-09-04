@@ -149,10 +149,16 @@ to `$location`. This mode is not useful together with angular routes.
 
 However, you can also turn the jqm compatibility mode off. Then, jquery mobile will neither listen to hash changes
 nor will it update the hash when pages are changed programmatically (e.g. by the `$navigate` service). This is useful
-if you want to use routes in angular. For this, there is the function `jqmCompatMode(bool)` in the
+if you want to manually control the urls in angular. For this, there is the function `jqmCompatMode(bool)` in the
 `$locationProvider`. Here is an example for turning jqm compatibility mode off:
 
     module.config(function($locationProvider) { $locationProvider.jqmCompatMode(false); });
+
+_Please note_: In this mode, routes from angular still cannot be used. Routes work together with the `ng-view` directive.
+And that directive will inject a loaded page into it's body. However, jquery mobile requires all pages to be loaded directly
+under the body element of the page. So, the problem with using routes is now how `ng-view` works...
+A replacement for using routes to load external pages is using `$navigate` with an external url, e.g. `$navigate('somePage.html')`.
+This will load `somePage.html` using ajax and show it afterwards using jquery mobile navigation.
 
 
 Scopes

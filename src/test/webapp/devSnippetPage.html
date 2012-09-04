@@ -9,17 +9,28 @@ Test page during development.
     <link rel="stylesheet" href="lib/jquery.mobile.css"/>
 
     <script src="lib/jquery.js"></script>
-    <script src="lib/jquery.mobile.js"></script>
     <script src="lib/angular.js"></script>
+    <script src="lib/jquery.mobile.js"></script>
     <script src="jqm-angular.jsp"></script>
+
     <script>
         // <![CDATA[
-        var mod = angular.module("ngm", []);
+        function ServicesController($navigate) {
+            $navigate("#testPage");
+        }
 
-        mod.controller('MainController', function($scope) {
-            $scope.list = [];
-            for (var i=0; i<30; i++) {
-                $scope.list.push(''+i);
+        ServicesController.$inject = ['$navigate'];
+
+        var mod = angular.module("ngm", []);
+        mod.config(function ($locationProvider, $routeProvider) {
+            $locationProvider.jqmCompatMode && $locationProvider.jqmCompatMode(false);
+            // $locationProvider.html5Mode(true);
+
+        });
+
+        mod.controller('MainController', function ($scope, $navigate) {
+            $scope.test = function() {
+                $navigate("testPage.html");
             }
         });
         // ]]>
@@ -29,21 +40,10 @@ Test page during development.
 <div id="main" data-role="page" ng-controller="MainController">
     <div data-role="content" id="target">
 
-        <input type="text" ng-model="filter">
-        <p></p>
-        <ul data-role="listview">
-            <li ng-repeat="l in list | filter:filter | paged:'pager1'">
-                {{l}}
-            </li>
-            <li ngm-if="pager1.hasMore">
-                <a href="" ng-click="pager1.loadMore()">
-                    Load More
-                </a>
-            </li>
-        </ul>
+        <a href="" ng-click="test()">Services</a>
+
     </div>
 </div>
-
 ​
 </body>
 

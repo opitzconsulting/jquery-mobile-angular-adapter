@@ -7,7 +7,7 @@
                 return list;
             }
             if (!stateProperty) {
-
+                throw new Error("Missing pager property");
             }
             var scope = this;
             var state = scope[stateProperty];

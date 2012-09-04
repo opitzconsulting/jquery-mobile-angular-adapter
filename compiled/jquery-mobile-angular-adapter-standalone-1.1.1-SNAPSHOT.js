@@ -32465,6 +32465,7 @@ factory(window.jQuery, window.angular);
                 // deactivate jqm hash listening and changing
                 $.mobile.pushStateEnabled = false;
                 $.mobile.hashListeningEnabled = false;
+                $.mobile.linkBindingEnabled = false;
                 $.mobile.changePage.defaults.changeHash = false;
 
                 return $injector.invoke(_$get, $locationProvider);
@@ -33153,7 +33154,7 @@ factory(window.jQuery, window.angular);
                 return list;
             }
             if (!stateProperty) {
-
+                throw new Error("Missing pager property");
             }
             var scope = this;
             var state = scope[stateProperty];

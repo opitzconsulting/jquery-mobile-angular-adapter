@@ -10,41 +10,40 @@ Test page during development.
 
     <script src="lib/jquery.js"></script>
     <script src="lib/jquery.mobile.js"></script>
-
     <script src="lib/angular.js"></script>
     <script src="jqm-angular.jsp"></script>
+    <script>
+        // <![CDATA[
+        var mod = angular.module("ngm", []);
+
+        mod.controller('MainController', function($scope) {
+            $scope.list = [];
+            for (var i=0; i<30; i++) {
+                $scope.list.push(''+i);
+            }
+        });
+        // ]]>
+    </script>
 </head>
-<body>
+<body ng-app="ngm">
+<div id="main" data-role="page" ng-controller="MainController">
+    <div data-role="content" id="target">
 
-
-<!-- Replace="data-title" breaks the rendering of every radio button which has also a replace directive -->
-<!-- Worked with the jQuery Angular Adapter rc1 -->
-<div data-role="page" id="page1" replace="data-title" data-title="Test">
-
-    <div data-role="header">
-        <h1>Test app</h1>
-    </div><!-- /header -->
-
-    <div data-role="content">
-    </div><!-- /content -->
-
-    <div data-role="footer" data-position="fixed">
-        <div class="ui-bar">
-            Footer
-        </div>
+        <input type="text" ng-model="filter">
+        <p></p>
+        <ul data-role="listview">
+            <li ng-repeat="l in list | filter:filter | paged:'pager1'">
+                {{l}}
+            </li>
+            <li ngm-if="pager1.hasMore">
+                <a href="" ng-click="pager1.loadMore()">
+                    Load More
+                </a>
+            </li>
+        </ul>
     </div>
+</div>
 
-</div><!-- /page -->
-
-<script>
-    angular.element(document).ready(function() {
-        var injector = angular.bootstrap(document);
-    });
-</script>
-
-</body>
-</html>
-​
 ​
 </body>
 

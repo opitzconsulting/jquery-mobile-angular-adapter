@@ -4,7 +4,7 @@ Changelog
 1.1.1
 -------------
 - Collapsible now has bidirectonal data binding for the `data-collapsed` attribute.
--
+- `paged` filter changed and simplified, so that it can be used with angular filter chaining.
 
 
 1.1.0

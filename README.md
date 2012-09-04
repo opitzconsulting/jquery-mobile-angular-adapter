@@ -250,37 +250,39 @@ problems result from DOM operations, which can be reduced with this paging mecha
 To implement this paging mechanism, the angular filter `paged` was created.
 For displaying a page within a list, simply use:
 
-    list | paged:{pageSize: 12, filter: someFilter, orderBy: someOrder})
+    list | paged:'pagerId':12
 
-This returns the subarray of the given filtered and ordered array with the currently loaded pages.
-For the `filter` and `orderBy` parameter see the builtin angular filters `filter` and `orderBy`.
-The parameters `pageSize`, `filter` and `orderBy` are optional and can be combined in any order.
-If the pageSize is omitted, the default page size is used. This is by default 10, and can be configured using
+This returns the subarray of the given array with the currently loaded pages.
+
+The first parameter is required and must be unique for every usage of the `paged` filter. It is the property name in the scope
+which stores the state of pagination for this filter usage, and also contains the function `loadMore` and `hasMore` (see below).
+
+If the second parameter is a number, it is interpreted as the pageSize. If this parameter is omitted, the default page size is used.
+This is by default 10, and can be configured using
 
     module(["ng"]).value('defaultListPageSize', 123);
 
+For filtering and sorting the paged array, you can use filter chaining with the angular filters `filter` and `orderBy`, e.g.
+
+    list | filter:{name:'someName'} | orderBy:'name' | paged:'pagerId'
+
 To show a button that loads the next page of the list, use the following syntax:
 
-    <a href="#" ngm-if="list | paged:'hasMore'" ngm-click="list | paged:'loadMore'">Load More</a>
+    <a href="#" ngm-if="pagerId.hasMore()" ngm-click="pagerId.loadMore()">Load More</a>
 
-The filter `paged|'hasMore'` returns a boolean indicating if all pages of the list have been loaded.
-The filter `paged|'loadMore'` loads the next page into the list.
-
-Note that this will cache the result of the paging, filtering and sorting until something changes.
-By this, paging should work fine also for large lists.
+- `pagerId` is the id used in the `paged` filter.
+- `pagerId.hasMore` returns a boolean indicating if all pages of the list have been loaded.
+- `pagerId.loadMore()` loads the next page into the list.
 
 The following example shows an example for a paged list for the data in the variable `myList`:
 
 
     <ul data-role="listview">
-        <li ng-repeat="item in list | paged:{pageSize:10}">{{item}}</li>
-        <li ngm-if="list | paged:'hasMore'">
-            <a href="#" ngm-click="list | paged:'loadMore'">Load more</a>
+        <li ng-repeat="item in list | paged:'pager1'">{{item}}</li>
+        <li ngm-if="pager1.hasMore()">
+            <a href="#" ngm-click="pager1.loadMore()">Load more</a>
          </li>
     </ul>
-
-_Attention_: The paged filter does not work together with filter chaining, as it stores the paging state in the
-list instances.
 
 
 Notes on the integration of some jqm widgets

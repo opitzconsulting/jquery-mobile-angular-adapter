@@ -15,36 +15,124 @@ Test page during development.
 
     <script>
         // <![CDATA[
-        function ServicesController($navigate) {
-            $navigate("#testPage");
-        }
+        var module = angular.module("todo", []);
+        module.factory('todoStore', function($http, $waitDialog) {
+            var readUrl = 'https://secure.openkeyval.org/';
+            var writeUrl = 'https://secure.openkeyval.org/store/?';
 
-        ServicesController.$inject = ['$navigate'];
+            function read(key) {
+                $waitDialog.show();
+                return $http({
+                    method: 'JSONP',
+                    url: readUrl + key+'?callback=JSON_CALLBACK'
+                }).then(function(response) {
+                            $waitDialog.hide();
+                            return response.data;
+                        });
+            }
 
-        var mod = angular.module("ngm", []);
-        mod.config(function ($locationProvider, $routeProvider) {
-            $locationProvider.jqmCompatMode && $locationProvider.jqmCompatMode(false);
-            // $locationProvider.html5Mode(true);
+            function write(key, value) {
+                $waitDialog.show();
+                value = encodeURIComponent(JSON.stringify(value));
+                $http({
+                    method: 'JSONP',
+                    url: writeUrl + key + '=' + value+'&callback=JSON_CALLBACK'
+                }).then(function() {
+                            $waitDialog.hide();
+                        });
+            }
+
+            return {
+                read: read,
+                write: write
+            }
 
         });
 
-        mod.controller('MainController', function ($scope, $navigate) {
-            $scope.test = function() {
-                $navigate("testPage.html");
+
+        module.controller('TodoController', function($scope, $navigate, todoStore, $location) {
+            $scope.storageKey = 'JQueryMobileAngularTodoapp';
+            $scope.data = {
+                todos: [],
+                inputText: ''
+            };
+            $scope.addTodo = function() {
+                $scope.todos.push({name: $scope.inputText, done: false});
+                $scope.inputText = '';
+            };
+            $scope.showSettings = function() {
+                $navigate("#settings");
+            };
+            $scope.back = function() {
+                $navigate('back');
+            };
+            $scope.refreshTodos = function() {
+                todoStore.read($scope.storageKey).then(function(data) {
+                    if (!data) {
+                        data = [];
+                    }
+                    $scope.todos = data;
+                });
+            };
+            $scope.saveTodos = function() {
+                // delete all checked todos
+                var newTodos = [], todo;
+                for (var i=0; i<$scope.todos.length; i++) {
+                    todo = $scope.todos[i];
+                    if (!todo.done) {
+                        newTodos.push(todo);
+                    }
+                }
+                $scope.todos = newTodos;
+                todoStore.write($scope.storageKey, $scope.todos);
             }
         });
         // ]]>
     </script>
 </head>
-<body ng-app="ngm">
-<div id="main" data-role="page" ng-controller="MainController">
-    <div data-role="content" id="target">
+<body>
+<div ng-controller="TodoController" ng-app="todo">
+    <div id="main" data-role="page" ngm-pagebeforeshow="refreshTodos()" ngm-swipeleft="showSettings()">
+        <div data-role="header">
+            <h1>Todos</h1>
+            <a href="" id="saveTodos" data-role="button" ngm-click="saveTodos()">Save</a>
+            <a href="#settings" data-role="button">Settings</a>
+        </div>
 
-        <a href="" ng-click="test()">Services</a>
-
+        <div data-role="content">
+            <div data-role="fieldcontain">
+                <form ng-submit="addTodo()" data-ajax="false">
+                    <input type="text" id="inputText" ng-model="$parent.inputText" placeholder="enter your todo here" ng-model-instant>
+                </form>
+            </div>
+            <div data-role="controlgroup">
+                <fieldset ng-repeat="todo in todos | paged:'pager1'">
+                    <input type="checkbox" ng-model="todo.done" id="checked">
+                    <label for="checked">{{todo.name}}</label>
+                </fieldset>
+                <div ngm-if="pager1.hasMore">
+                    <a href="#" ngm-click="pager1.loadMore()" data-role="button">Load more</a>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <div id="settings" data-role="page" ngm-swiperight="back()">
+        <div data-role="header">
+            <h1>Settings</h1>
+            <a href="" id="saveSettings" data-role="button" data-rel="back">Save</a>
+        </div>
+
+        <div data-role="content">
+            <div data-role="fieldcontain">
+                <input type="text" id="storageKey" ng-model="$parent.storageKey" placeholder="enter your storage key here">
+            </div>
+        </div>
+    </div>
+
 </div>
-​
+
+​​
 </body>
 
 </html>

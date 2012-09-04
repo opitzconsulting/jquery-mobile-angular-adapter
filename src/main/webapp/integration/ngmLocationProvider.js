@@ -252,7 +252,12 @@
         var _$get = $locationProvider.$get;
         $locationProvider.$get = ['$injector', '$browser', function ($injector, $browser) {
             if (jqmCompatMode) {
+                // temporary deactivate $browser.url for changing the url,
+                // as the original $location service might call it before we can patch it!
+                var _url = $browser.url;
+                $browser.url = function() { return _url.call(this) };
                 var $location = $injector.invoke(_$get, $locationProvider);
+                $browser.url = _url;
                 patchLocationServiceToUsePlainUrls($location, $browser.url());
 
                 return $location;

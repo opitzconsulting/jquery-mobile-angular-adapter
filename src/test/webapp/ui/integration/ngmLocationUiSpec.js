@@ -80,7 +80,6 @@ describe("ngmLocation", function () {
             });
         });
 
-
     });
 
     describe('not in jqmCompat mode', function() {

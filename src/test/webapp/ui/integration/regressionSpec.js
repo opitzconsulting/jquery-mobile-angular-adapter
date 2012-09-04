@@ -132,6 +132,23 @@ describe("regression", function () {
               expect($.mobile.activePage.attr("id")).toBe("page1");
           });
       });
+
+
+      it('should be able to start at a subpage in jqmCompatMode when using the $location service in a main controller', function() {
+          var $, win;
+          loadHtml('/jqmng/ui/test-fixture.html#page2', function(win) {
+              win.$("body").attr("ng-controller", "MainController");
+              win.MainController = function($location) {
+
+              };
+          });
+          runs(function () {
+              win = testframe();
+              $ = win.$;
+              expect($.mobile.activePage.attr("id")).toBe("page2");
+          });
+      });
+
   });
 
 });

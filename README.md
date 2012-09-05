@@ -156,9 +156,13 @@ if you want to manually control the urls in angular. For this, there is the func
 
 _Please note_: In this mode, routes from angular still cannot be used. Routes work together with the `ng-view` directive.
 And that directive will inject a loaded page into it's body. However, jquery mobile requires all pages to be loaded directly
-under the body element of the page. So, the problem with using routes is now how `ng-view` works...
+under the body element of the page. So, the problem with using routes is now how `ng-view` works. The feature request #59
+addresses this issue by requesting new directives.
+
 A replacement for using routes to load external pages is using `$navigate` with an external url, e.g. `$navigate('somePage.html')`.
-This will load `somePage.html` using ajax and show it afterwards using jquery mobile navigation.
+This will load `somePage.html` using ajax and show it afterwards using jquery mobile navigation. Note that the caching
+can be configured, see here: [http://jquerymobile.com/demos/1.1.1/docs/pages/page-cache.html](http://jquerymobile.com/demos/1.1.1/docs/pages/page-cache.html). Note that this approach also allows to specify navigate properties, like the transition animation to use, ...
+See `$navigate` for details.
 
 
 Scopes

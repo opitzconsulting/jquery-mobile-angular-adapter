@@ -57,15 +57,27 @@
         });
     }
 
-    // controlgroup should not exclude invisible children
+    // Patch 1: controlgroup should not exclude invisible children
     // as long as it is not visible itself!
+    // Patch 2: to refresh a controlgroup we call it multiple times.
+    // However, controlgroup then wraps its children multiple times
+    // in nested divs.
+
     patch($.fn, "controlgroup", function (old, self, args) {
-        if (self.filter(":visible").length === 0) {
-            var options = args[0] || {};
-            options.excludeInvisible = false;
-            return old.call(self, options);
+        var _wrapInner = $.fn.wrapInner;
+        if (self.children(".ui-controlgroup-controls").length>0) {
+            $.fn.wrapInner = function() { };
         }
-        return old.apply(self, args);
+        try {
+            if (self.filter(":visible").length === 0) {
+                var options = args[0] || {};
+                options.excludeInvisible = false;
+                return old.call(self, options);
+            }
+            return old.apply(self, args);
+        } finally {
+            $.fn.wrapInner = _wrapInner;
+        }
     });
 
     // collapsible has problems when a collapsible is created with a nested collapsible,

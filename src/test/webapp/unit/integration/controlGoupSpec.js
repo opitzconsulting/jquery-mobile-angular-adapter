@@ -1,4 +1,11 @@
 describe("controlgroup", function () {
+    it("should wrap it's children only once into a div when called multiple times", function() {
+        var el = $('<div></div>');
+        el.controlgroup();
+        el.controlgroup();
+        expect(el.find(".ui-controlgroup-controls").length).toBe(1);
+    });
+
     it("should stamp the widget using the jqm widget", function () {
         var spy = testutils.spyOnJq('controlgroup');
         var c = testutils.compileInPage('<div data-role="controlgroup" ng-repeat="l in list"></div>');
@@ -21,7 +28,7 @@ describe("controlgroup", function () {
         scope.list = [1, 2];
         scope.$digest();
         expect(spy.callCount).toBe(1);
-        var buttons = list.children("a");
+        var buttons = list.children("div").children("a");
         expect(buttons.length).toBe(2);
         expect(buttons.eq(0).hasClass("ui-corner-top")).toBe(true);
         expect(buttons.eq(0).hasClass("ui-corner-bottom")).toBe(false);
@@ -40,14 +47,14 @@ describe("controlgroup", function () {
             '<div data-role="controlgroup" ng-init="list=[1,2,3]">' +
                 '<a href="" data-role="button" ng-repeat="l in list">{{l}}</a></div>');
         var list = d.element;
-        var buttons = list.children("a");
+        var buttons = list.children("div").children("a");
         expect(buttons.length).toBe(3);
         var scope = d.element.scope();
         var spy = testutils.spyOnJq('controlgroup').andCallThrough();
         scope.list = [1];
         scope.$digest();
         expect(spy.callCount).toBe(1);
-        var buttons = list.children("a");
+        var buttons = list.children("div").children("a");
         expect(buttons.length).toBe(1);
         expect(buttons.eq(0).hasClass("ui-corner-top")).toBe(true);
         expect(buttons.eq(0).hasClass("ui-corner-bottom")).toBe(true);

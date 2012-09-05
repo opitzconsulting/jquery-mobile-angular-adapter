@@ -67,7 +67,7 @@ describe("regression", function () {
             });
             runs(function () {
                 var $ = testframe().$;
-                var btns = $("#group1").children("a");
+                var btns = $("#group1").children("div").children("a");
                 expect(btns.eq(0).hasClass("ui-corner-top")).toBe(true);
                 expect(btns.eq(0).hasClass("ui-corner-bottom")).toBe(false);
                 expect(btns.eq(1).hasClass("ui-corner-top")).toBe(false);
@@ -87,7 +87,7 @@ describe("regression", function () {
             });
             runs(function () {
                 var $ = testframe().$;
-                var btns = $("#group1").children("a");
+                var btns = $("#group1").children("div").children("a");
                 expect(btns.eq(0).hasClass("ui-corner-top")).toBe(true);
                 expect(btns.eq(0).hasClass("ui-corner-bottom")).toBe(false);
                 expect(btns.eq(1).hasClass("ui-corner-top")).toBe(false);

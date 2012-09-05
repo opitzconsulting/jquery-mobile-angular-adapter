@@ -17,7 +17,7 @@ Dependencies
 ----------------
 - angular 1.0.1
 - jquery 1.7.1
-- jquery mobile 1.1.0 Final
+- jquery mobile 1.1.1 Final
 
 Examples
 ------------

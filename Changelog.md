@@ -3,6 +3,7 @@ Changelog
 
 1.1.1
 -------------
+- Updated to jquery mobile 1.1.1
 - Bugfixes to different elements.
 - Collapsible now has bidirectonal data binding for the `data-collapsed` attribute.
 - `navbar` automatically refreshes if children `li` elements are added / removed.

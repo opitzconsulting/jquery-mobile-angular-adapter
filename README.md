@@ -274,7 +274,7 @@ For filtering and sorting the paged array, you can use filter chaining with the 
 
 To show a button that loads the next page of the list, use the following syntax:
 
-    <a href="#" ngm-if="pagerId.hasMore()" ngm-click="pagerId.loadMore()">Load More</a>
+    <a href="#" ngm-if="pagerId.hasMore" ngm-click="pagerId.loadMore()">Load More</a>
 
 - `pagerId` is the id used in the `paged` filter.
 - `pagerId.hasMore` returns a boolean indicating if all pages of the list have been loaded.
@@ -285,7 +285,7 @@ The following example shows an example for a paged list for the data in the vari
 
     <ul data-role="listview">
         <li ng-repeat="item in list | paged:'pager1'">{{item}}</li>
-        <li ngm-if="pager1.hasMore()">
+        <li ngm-if="pager1.hasMore">
             <a href="#" ngm-click="pager1.loadMore()">Load more</a>
          </li>
     </ul>

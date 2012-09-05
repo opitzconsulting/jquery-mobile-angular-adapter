@@ -38,7 +38,7 @@
             handlers:[refreshControlgroupOnChildrenChange]
         },
         navbar:{
-            handlers:[]
+            handlers:[refreshOnChildrenChange]
         },
         dialog:{
             handlers:[]

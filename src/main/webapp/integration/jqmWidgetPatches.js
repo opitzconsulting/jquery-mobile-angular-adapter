@@ -94,4 +94,29 @@
         }
     };
 
+    // navbar does not contain a refresh function, so we add it here.
+    $.mobile.navbar.prototype.refresh = function() {
+        var $navbar = this.element,
+            $navbtns = $navbar.find( "a" ),
+            iconpos = $navbtns.filter( ":jqmData(icon)" ).length ?
+                this.options.iconpos : undefined;
+
+        var list = $navbar.find("ul");
+        var listEntries = list.children("li");
+        list.removeClass(function (index, css) {
+            return (css.match(/\bui-grid-\S+/g) || []).join(' ');
+        });
+        listEntries.removeClass(function (index, css) {
+            return (css.match(/\bui-block-\S+/g) || []).join(' ');
+        });
+        list.jqmEnhanceable().grid({ grid: this.options.grid });
+
+        $navbtns.buttonMarkup({
+            corners:	false,
+            shadow:		false,
+            inline:     true,
+            iconpos:	iconpos
+        });
+    };
+
 })($);

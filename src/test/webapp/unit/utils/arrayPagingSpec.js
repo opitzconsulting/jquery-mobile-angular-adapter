@@ -175,5 +175,11 @@ describe("arrayPaging", function () {
             l = ['1', '12', '123'];
             expect(pagedFilter.call(scope, l, 'id1', 2)).toEqual(['1', '12']);
         });
+
+        it('should save the last paging result in the cache property', function() {
+            var l = ['1', '12', '123'];
+            var pagedList = pagedFilter.call(scope, l, 'id1', 2);
+            expect(scope.id1.cache).toBe(pagedList);
+        });
     });
 });

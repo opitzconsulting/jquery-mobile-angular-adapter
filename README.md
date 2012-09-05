@@ -264,10 +264,11 @@ For displaying a page within a list, simply use:
 
 This returns the subarray of the given array with the currently loaded pages.
 
-The first parameter is required and must be unique for every usage of the `paged` filter. It is the property name in the scope
-which stores the state of pagination for this filter usage, and also contains the function `loadMore` and `hasMore` (see below).
+Parameters:
 
-If the second parameter is a number, it is interpreted as the pageSize. If this parameter is omitted, the default page size is used.
+1. The first parameter is required and must be unique for every usage of the `paged` filter. It is the property name in the scope
+which stores the state of pagination for this filter usage, and also contains the function `loadMore` and `hasMore` (see below).
+2. If the second parameter is a number, it is interpreted as the pageSize. If this parameter is omitted, the default page size is used.
 This is by default 10, and can be configured using
 
     module(["ng"]).value('defaultListPageSize', 123);
@@ -294,6 +295,8 @@ The following example shows an example for a paged list for the data in the vari
          </li>
     </ul>
 
+Note: `pagerId.cache` stores the last result that was returns for a `list | paged:'pagerId'` expression. This can be
+  used to check whether the paged list is empty, .. without refiltering the list.
 
 Notes on the integration of some jqm widgets
 ----------------

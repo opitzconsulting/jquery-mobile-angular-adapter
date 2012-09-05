@@ -32,7 +32,8 @@
             }
             state.hasMore = endIndex < list.length;
             state.endIndex = endIndex;
-            return list.slice(0, endIndex);
+            state.cache = list.slice(0, endIndex);
+            return state.cache;
         }
     }
 

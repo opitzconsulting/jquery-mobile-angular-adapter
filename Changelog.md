@@ -3,7 +3,7 @@ Changelog
 
 1.1.2
 -------------
-
+- added missing event directives. Changed `ngm-click` to `ngm-vclick` as this matches directly to the jqm docs.
 
 1.1.1
 -------------

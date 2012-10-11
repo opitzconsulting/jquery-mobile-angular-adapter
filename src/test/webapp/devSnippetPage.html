@@ -13,8 +13,10 @@ Test page during development.
     <script src="jqm-angular.jsp"></script>
 
     <script>
-        function Controller($navigate, $location) {
-
+        function Controller($scope) {
+            $scope.doit = function() {
+                alert("ok");
+            }
         }
 
     </script>
@@ -24,7 +26,7 @@ Test page during development.
 <div data-role="page" id="startseite" data-theme="a" ng-controller="Controller">
     <div data-role="header">
         <h1>Hello World</h1>
-        <a href="#page2">Page2</a>
+        <a href="" ngm-vclick="doit()">Page2</a>
     </div>
 
 </div>

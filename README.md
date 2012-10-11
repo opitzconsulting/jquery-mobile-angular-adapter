@@ -189,24 +189,17 @@ If the controller is used on more than one page, the instance of the controller 
 Note that the shared controller have the full scope functionality, e.g. for dependecy injection
 or using `$watch`.
 
-### Event-Directives
+### Event-Directives of jQuery Mobile
 
-The following event directives are supported:
+The following event directives are supported (see [http://jquerymobile.com/demos/1.2.0/docs/api/events.html](http://jquerymobile.com/demos/1.2.0/docs/api/events.html)):
 
-- `ngm-click`
-- `ngm-tap`
-- `ngm-taphold`
-- `ngm-swipe`
-- `ngm-swiperight`
-- `ngm-swipeleft`
-- `ngm-pagebeforeshow`
-- `ngm-pagebeforehide`
-- `ngm-pageshow`
-- `ngm-pagehide`
+- `ngm-tap`,`taphold`,
+- `ngm-swipe`,`ngm-swiperight`,`ngm-swipeleft`,
+- `ngm-vmouseover`,`ngm-vmouseout`,`ngm-vmousedown`,`ngm-vmousemove`,`ngm-vmouseup`,`ngm-vclick`,`ngm-vmousecancel`,
+- `ngm-orientationchange`,
+- `ngm-scrollstart`,`ngm-scrollend`,
+- `ngm-pagebeforeshow`,`ngm-pagebeforehide`,`ngm-pageshow`,`ngm-pagehide`
 
-
-For the mentioned events there are special directives to simplify the markup. Each of them is equivalent to
-using the `ngm-event` directive with the corresponding event name.
 
 Usage: E.g. `<a href="#" ngm-swipeleft="myFn()">`
 
@@ -279,7 +272,7 @@ For filtering and sorting the paged array, you can use filter chaining with the 
 
 To show a button that loads the next page of the list, use the following syntax:
 
-    <a href="#" ngm-if="pagerId.hasMore" ngm-click="pagerId.loadMore()">Load More</a>
+    <a href="#" ngm-if="pagerId.hasMore" ngm-vclick="pagerId.loadMore()">Load More</a>
 
 - `pagerId` is the id used in the `paged` filter.
 - `pagerId.hasMore` returns a boolean indicating if all pages of the list have been loaded.
@@ -291,7 +284,7 @@ The following example shows an example for a paged list for the data in the vari
     <ul data-role="listview">
         <li ng-repeat="item in list | paged:'pager1'">{{item}}</li>
         <li ngm-if="pager1.hasMore">
-            <a href="#" ngm-click="pager1.loadMore()">Load more</a>
+            <a href="#" ngm-vclick="pager1.loadMore()">Load more</a>
          </li>
     </ul>
 

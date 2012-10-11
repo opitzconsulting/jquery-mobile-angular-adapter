@@ -1,5 +1,5 @@
 /**
-* jQuery Mobile angularJS adaper v1.1.1-SNAPSHOT
+* jQuery Mobile angularJS adaper v1.1.2-SNAPSHOT
 * http://github.com/tigbro/jquery-mobile-angular-adapter
 *
 * Copyright 2011, Tobias Bosch (OPITZ CONSULTING GmbH)
@@ -233,9 +233,14 @@ factory(window.jQuery, window.angular);
         }
     }
 
-    // See jQuery.bindReady
+    // See jQuery.bindReady.
+    // Note that we cannot use $.ready here, as we prevent $.ready by using $.holdReady!
     function addReadyListener(document, fn) {
         var executed = false;
+
+        function isDocComplete() {
+            return document.readyState === "complete";
+        }
 
         function callOnce() {
             if (!executed) {
@@ -246,13 +251,20 @@ factory(window.jQuery, window.angular);
 
         // Catch cases where $(document).ready() is called after the
         // browser event has already occurred.
-        if (document.readyState === "complete") {
+        if (isDocComplete()) {
             callOnce();
         } else {
-            document.addEventListener("DOMContentLoaded", callOnce, false);
-
-            // A fallback to window.onload, that will always work
-            window.addEventListener("load", callOnce, false);
+            if (document.attachEvent) {
+                document.attachEvent("onreadystatechange", function() {
+                    callOnce();
+                });
+                // A fallback to window.onload, that will always work
+                window.attachEvent("onload", callOnce);
+            } else {
+                document.addEventListener("DOMContentLoaded", callOnce, false);
+                // A fallback to window.onload, that will always work
+                window.addEventListener("load", callOnce, false);
+            }
         }
     }
 
@@ -2026,7 +2038,8 @@ factory(window.jQuery, window.angular);
             }
             state.hasMore = endIndex < list.length;
             state.endIndex = endIndex;
-            return list.slice(0, endIndex);
+            state.cache = list.slice(0, endIndex);
+            return state.cache;
         }
     }
 

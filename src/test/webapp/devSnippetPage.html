@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html>
 <!--
 Test page during development.
@@ -13,63 +12,25 @@ Test page during development.
     <script src="lib/jquery.mobile.js"></script>
     <script src="jqm-angular.jsp"></script>
 
-    <script>
-        // <![CDATA[
-
-        // ]]>
-    </script>
 </head>
-<body ng-app>
+<body ng-app="ng" id="ng-app">
 <div data-role="page" id="startseite" data-theme="a">
-    <div data-role="header" data-theme="a" data-backbtn="false" <%=sbu.getString("SET_header_fixation") %> >
-    <h1><%=rbu.getString("L001_Willkommen")%></h1>
-    <%--<a id="logout" href="#" data-rel="back" ngm-click="logout()"><%=rbu.getString("L001_Logout")%></a>--%>
-    <a id="logout" href="#hinweisLogout"><%=rbu.getString("L001_Logout")%></a>
-</div>
-<div id="logo">
-    <div class="ui-icon"></div>
-</div>
-<div data-role="content">
-    <button ng-click="flag1 = true">Flag1</button>
-    <button ng-click="flag2 = true">Flag2</button>
-
-    <div id="icons" data-role="navbar">
-        <ul>
-            <li ngm-if="flag1">
-                <a href="" onclick="navToMeldungssaetze()" id="meldungNav" data-icon="custom" data-theme="a"><%= rbu.getString("L001_Alarme")%></a>
-            </li>
-            <li ngm-if="flag2">
-                <a href="" onclick="navToTrendDkz()" id="trendNav" data-icon="custom" data-theme="a"><%= rbu.getString("L001_Trend")%></a>
-            </li>
-            <li ngm-if="flag2">
-                <a href="" onclick="navToTrendProfile()" id="trendProfilNav" data-icon="custom" data-theme="a"><%= rbu.getString("L001_Trendprofil")%></a>
-            </li>
-            <li>
-                <a href="" onclick="navToDkz()" id="dkzNav"  data-icon="custom" data-theme="a"><%= rbu.getString("L001_Dkz")%></a>
-            </li>
-        </ul>
-    </div>
-
-    <div id="icons2" data-role="navbar">
-        <ul>
-            <li>
-                <a href="" onclick="navToMeldungssaetze()" id="meldungNav" data-icon="custom" data-theme="a"><%= rbu.getString("L001_Alarme")%></a>
-            </li>
-            <li>
-                <a href="" onclick="navToTrendDkz()" id="trendNav" data-icon="custom" data-theme="a"><%= rbu.getString("L001_Trend")%></a>
-            </li>
-            <li>
-                <a href="" onclick="navToTrendProfile()" id="trendProfilNav" data-icon="custom" data-theme="a"><%= rbu.getString("L001_Trendprofil")%></a>
-            </li>
-            <li>
-                <a href="" onclick="navToDkz()" id="dkzNav"  data-icon="custom" data-theme="a"><%= rbu.getString("L001_Dkz")%></a>
-            </li>
-        </ul>
+    <div data-role="header">
+        <h1>Hello World</h1>
+        <a href="#page2">Page2</a>
     </div>
 
 </div>
+
+<div data-role="page" id="page2">
+    <div data-role="header">
+        <h1>Page2</h1>
+        <a href="#page2">Page2</a>
+    </div>
+
+
 </div>
-​​
+
 </body>
 
 </html>

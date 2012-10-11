@@ -97,9 +97,14 @@
         }
     }
 
-    // See jQuery.bindReady
+    // See jQuery.bindReady.
+    // Note that we cannot use $.ready here, as we prevent $.ready by using $.holdReady!
     function addReadyListener(document, fn) {
         var executed = false;
+
+        function isDocComplete() {
+            return document.readyState === "complete";
+        }
 
         function callOnce() {
             if (!executed) {
@@ -110,13 +115,20 @@
 
         // Catch cases where $(document).ready() is called after the
         // browser event has already occurred.
-        if (document.readyState === "complete") {
+        if (isDocComplete()) {
             callOnce();
         } else {
-            document.addEventListener("DOMContentLoaded", callOnce, false);
-
-            // A fallback to window.onload, that will always work
-            window.addEventListener("load", callOnce, false);
+            if (document.attachEvent) {
+                document.attachEvent("onreadystatechange", function() {
+                    callOnce();
+                });
+                // A fallback to window.onload, that will always work
+                window.attachEvent("onload", callOnce);
+            } else {
+                document.addEventListener("DOMContentLoaded", callOnce, false);
+                // A fallback to window.onload, that will always work
+                window.addEventListener("load", callOnce, false);
+            }
         }
     }
 

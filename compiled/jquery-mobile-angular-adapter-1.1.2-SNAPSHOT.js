@@ -736,7 +736,8 @@ factory(window.jQuery, window.angular);
             handlers:[refreshOnChildrenChange]
         },
         dialog:{
-            handlers:[]
+            handlers:[],
+            create:dialogCreate
         },
         fixedtoolbar:{
             handlers:[]
@@ -915,6 +916,27 @@ factory(window.jQuery, window.angular);
         var res = origCreate.apply(input, initArgs);
 
         $.fn.wrap = _wrap;
+        return res;
+    }
+
+    function dialogCreate(origCreate, element, initArgs) {
+        // Dialog widget creates a close button and relies on the
+        // usual enhancement of links that takes place during page initialization.
+        // However, we enhance links, ... only once during the compile phase,
+        // but create widgets during the link phase. By this, the close button
+        // does not get enhanced. So do it here manually (makes the dialog widget
+        // more self robust).
+        var _bind = $.fn.bind;
+        var closeButton;
+        $.fn.bind = function() {
+            if (this.prop("tagName").toUpperCase()==='A') {
+                closeButton = this;
+            }
+            return _bind.apply(this, arguments);
+        };
+        var res = origCreate.apply(element, initArgs);
+        $.fn.bind = _bind;
+        closeButton && closeButton.buttonMarkup();
         return res;
     }
 

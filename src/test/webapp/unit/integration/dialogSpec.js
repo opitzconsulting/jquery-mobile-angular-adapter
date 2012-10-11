@@ -8,4 +8,11 @@ describe("dialog", function () {
         scope.$root.$digest();
         expect(spy.callCount).toBe(2);
     });
+
+    it("should enhance the close button", function() {
+        var dialog = testutils.compile('<div data-role="dialog"><div data-role="header"></div></div>');
+        var closeButton = dialog.find("a");
+        expect(closeButton.length).toBe(1);
+        expect(closeButton.hasClass("ui-btn")).toBe(true);
+    });
 });

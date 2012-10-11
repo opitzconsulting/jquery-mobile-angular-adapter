@@ -42,6 +42,7 @@
         },
         dialog:{
             handlers:[],
+            precompile:dialogPrecompile,
             create:dialogCreate
         },
         fixedtoolbar:{
@@ -90,18 +91,21 @@
         var _wrapAll = $.fn.wrapAll;
         var input = element.children("input");
         var wrapper = element;
-        $.fn.wrapAll = function (container) {
-            if (this[0] === input[0]) {
-                $.fn.wrapAll = _wrapAll;
-                var tempContainer = $(container);
-                wrapper[0].className = tempContainer[0].className;
-                return input;
+
+        return withPatches($.fn, {
+            wrapAll: function(_wrapAll, self, args) {
+                var container = args[0];
+                if (self[0] === input[0]) {
+                    $.fn.wrapAll = _wrapAll;
+                    var tempContainer = $(container);
+                    wrapper[0].className = tempContainer[0].className;
+                    return input;
+                }
+                return _wrapAll.apply(self, args);
             }
-            return _wrapAll.apply(this, arguments);
-        };
-        var res = origCreate.apply(input, initArgs);
-        $.fn.wrapAll = _wrapAll;
-        return res;
+        }, function() {
+            return origCreate.apply(input, initArgs);
+        });
     }
 
     // Slider appends a new element after the input/select element for which it was created.
@@ -132,30 +136,25 @@
     function buttonCreate(origCreate, element, initArgs) {
         var wrapper = element;
         var button = element.children().eq(0);
-
-        var _text = $.fn.text;
-        $.fn.text = function () {
-            if (arguments.length > 0) {
-                // Only catch the first setter call
-                $.fn.text = _text;
-                return wrapper;
+        return withPatches($.fn, {
+            text: function(_text, self, args) {
+                if (args.length > 0) {
+                    // Only catch the first setter call
+                    $.fn.text = _text;
+                    return wrapper;
+                }
+                return _text.apply(self, args);
+            },
+            insertBefore: function(_insertBefore, self, args) {
+                var element = args[0];
+                if (self[0] === wrapper[0] && element[0] === button[0]) {
+                    return wrapper;
+                }
+                return _insertBefore.apply(self, args);
             }
-            return _text.apply(this, arguments);
-        };
-
-        var _insertBefore = $.fn.insertBefore;
-        $.fn.insertBefore = function (element) {
-            if (this[0] === wrapper[0] && element[0] === button[0]) {
-                return wrapper;
-            }
-            return _insertBefore.apply(this, arguments);
-        };
-
-        var res = origCreate.apply(button, initArgs);
-
-        $.fn.text = _text;
-        $.fn.insertBefore = _insertBefore;
-        return res;
+        }, function() {
+            return origCreate.apply(button, initArgs);
+        });
     }
 
     // selectmenu wraps itself into a new element.
@@ -170,22 +169,21 @@
         var wrapper = element;
         var select = element.children().eq(0);
 
-        var _wrap = $.fn.wrap;
-        $.fn.wrap = function (container) {
-            if (this[0] === select[0]) {
-                $.fn.wrap = _wrap;
-                var tempContainer = $(container);
-                wrapper[0].className = tempContainer[0].className;
+        return withPatches($.fn, {
+           wrap: function(_wrap, self, args) {
+               var container = args[0];
+               if (self[0] === select[0]) {
+                   $.fn.wrap = _wrap;
+                   var tempContainer = $(container);
+                   wrapper[0].className = tempContainer[0].className;
 
-                return select;
-            }
-            return _wrap.apply(this, arguments);
-        };
-
-        var res = origCreate.apply(select, initArgs);
-
-        $.fn.wrap = _wrap;
-        return res;
+                   return select;
+               }
+               return _wrap.apply(self, args);
+           }
+        }, function() {
+            return origCreate.apply(select, initArgs);
+        });
     }
 
     // textinput for input-type "search" wraps itself into a new element
@@ -206,43 +204,97 @@
         var wrapper = element;
         var input = element.children().eq(0);
 
-        var _wrap = $.fn.wrap;
-        $.fn.wrap = function (container) {
-            if (this[0] === input[0]) {
-                $.fn.wrap = _wrap;
-                var tempContainer = $(container);
-                wrapper[0].className = tempContainer[0].className;
+        return withPatches($.fn, {
+            wrap: function(_wrap, self, args) {
+                var container = args[0];
+                if (self[0] === input[0]) {
+                    $.fn.wrap = _wrap;
+                    var tempContainer = $(container);
+                    wrapper[0].className = tempContainer[0].className;
 
-                return input;
+                    return input;
+                }
+                return _wrap.apply(self, args);
             }
-            return _wrap.apply(this, arguments);
-        };
+        }, function() {
+            return origCreate.apply(input, initArgs);
+        });
+    }
 
-        var res = origCreate.apply(input, initArgs);
+    // Dialog: separate event binding and dom enhancement.
+    // Note: We do need to add the close button during precompile,
+    // as the enhancement for the dialog header and footer depends on it.
+    // We cannot adjust the timing of the header enhancement as it is no jqm widget.
+    function dialogPrecompile(origElement, initAttrs) {
+        var options = $.mobile.dialog.prototype.options;
+        var $el = origElement,
+            headerCloseButton = $( "<a href='#' data-" + $.mobile.ns + "icon='delete' data-" + $.mobile.ns + "iconpos='notext'>"+ options.closeBtnText + "</a>" ),
+            dialogWrap = $("<div/>", {
+                "role" : "dialog",
+                "class" : "ui-dialog-contain ui-corner-all ui-overlay-shadow"
+            });
 
-        $.fn.wrap = _wrap;
-        return res;
+        $el
+            .wrapInner( dialogWrap )
+            .children()
+            .find( ":jqmData(role='header')" )
+            .prepend( headerCloseButton )
+            .end()
+            .children( ':first-child')
+            .addClass( "ui-corner-top" )
+            .end()
+            .children( ":last-child" )
+            .addClass( "ui-corner-bottom" );
+
+        headerCloseButton.buttonMarkup();
+        $el.data("headerCloseButton", headerCloseButton);
+
+        return $el;
     }
 
     function dialogCreate(origCreate, element, initArgs) {
-        // Dialog widget creates a close button and relies on the
-        // usual enhancement of links that takes place during page initialization.
-        // However, we enhance links, ... only once during the compile phase,
-        // but create widgets during the link phase. By this, the close button
-        // does not get enhanced. So do it here manually (makes the dialog widget
-        // more self robust).
-        var _bind = $.fn.bind;
-        var closeButton;
-        $.fn.bind = function() {
-            if (this.prop("tagName").toUpperCase()==='A') {
-                closeButton = this;
+        return withPatches($.fn, {
+            init: function(_init, self, args) {
+                // return the already created header close button
+                var selector = args[0];
+                if (selector && selector.indexOf && selector.indexOf("<a href='#' data-")===0) {
+                    return element.data("headerCloseButton");
+                }
+                return _init.apply(self, args);
+            },
+            wrapInner: function(_wrapInner, self, args) {
+                if (self[0]===element[0]) {
+                    return $();
+                }
+                return _wrapInner.apply(self, args);
             }
-            return _bind.apply(this, arguments);
-        };
-        var res = origCreate.apply(element, initArgs);
-        $.fn.bind = _bind;
-        closeButton && closeButton.buttonMarkup();
-        return res;
+        }, function() {
+            return origCreate.apply(element, initArgs);
+        });
+    }
+
+    function withPatches(obj, patches, callback) {
+        var _old = {};
+
+        function patchProp(prop) {
+            var oldFn = _old[prop] = obj[prop];
+            obj[prop] = function() {
+                return patches[prop](oldFn, this, arguments);
+            };
+            obj[prop].prototype = oldFn.prototype;
+        }
+
+        var prop;
+        for (prop in patches) {
+            patchProp(prop);
+        }
+        try {
+            return callback();
+        } finally {
+            for (prop in _old) {
+                obj[prop] = _old[prop];
+            }
+        }
     }
 
     var CLONING_DIRECTIVE_REGEXP = /(^|[\W])(repeat|switch-when|if)($|[\W])/;

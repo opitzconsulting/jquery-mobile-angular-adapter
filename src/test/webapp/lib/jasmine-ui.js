@@ -206,6 +206,14 @@ jasmine.ui.log = function(msg) {
     jasmine.Spec.prototype.loadHtml = function(url, instrumentCallback) {
         var spec = this;
         spec.runs(function() {
+            // TODO this does not work well. why?
+            /*
+            jasmine.ui.addLoadHtmlListenerForNextLoad('errorCallback', 'beforeContent', function(window) {
+                window.addEventListener('error', function(error) {
+                    spec.fail(error);
+                }, false);
+            });
+            */
             if (instrumentCallback) {
                 jasmine.ui.addLoadHtmlListenerForNextLoad('loadHtmlCallback', 'afterContent', instrumentCallback);
             }

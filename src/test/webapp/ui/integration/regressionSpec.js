@@ -134,20 +134,47 @@ describe("regression", function () {
       });
 
 
-      it('should be able to start at a subpage in jqmCompatMode when using the $location service in a main controller', function() {
-          var $, win;
+      it('should be able to start at an internal subpage in jqmCompatMode when using the $location service in a main controller', function() {
+          var $, win, errors;
           loadHtml('/jqmng/ui/test-fixture.html#page2', function(win) {
               win.$("body").attr("ng-controller", "MainController");
               win.MainController = function($location) {
 
               };
+              errors = [];
+              win.onerror = function(event) {
+                  errors.push(event);
+              }
+
           });
           runs(function () {
               win = testframe();
               $ = win.$;
+              expect(errors).toEqual([]);
               expect($.mobile.activePage.attr("id")).toBe("page2");
           });
       });
+
+      it('should be able to start at an external subpage in jqmCompatMode when using the $location service in a main controller', function() {
+          var $, win, errors;
+          loadHtml('/jqmng/ui/test-fixture.html#/jqmng/ui/externalPage.html', function(win) {
+              win.$("body").attr("ng-controller", "MainController");
+              win.MainController = function($location) {
+
+              };
+              errors = [];
+              win.onerror = function(event) {
+                  errors.push(event);
+              }
+          });
+          runs(function () {
+              win = testframe();
+              $ = win.$;
+              expect(errors).toEqual([]);
+              expect($.mobile.activePage.attr("id")).toBe("externalPage");
+          });
+      });
+
 
   });
 

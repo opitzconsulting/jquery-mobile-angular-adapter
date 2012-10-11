@@ -32600,6 +32600,14 @@ factory(window.jQuery, window.angular);
                     triggerAngularHashChange();
                     return res;
                 };
+                if (window.history) {
+                    var _replaceState = history.replaceState;
+                    history.replaceState = function() {
+                        var res = _replaceState.apply(this, arguments);
+                        triggerAngularHashChange();
+                        return res;
+                    };
+                }
 
                 urlChangeInit = true;
             } else {

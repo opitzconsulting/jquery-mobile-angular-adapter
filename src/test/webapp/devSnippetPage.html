@@ -12,9 +12,16 @@ Test page during development.
     <script src="lib/jquery.mobile.js"></script>
     <script src="jqm-angular.jsp"></script>
 
+    <script>
+        function Controller($navigate, $location) {
+
+        }
+
+    </script>
+
 </head>
-<body ng-app="ng" id="ng-app">
-<div data-role="page" id="startseite" data-theme="a">
+<body ng-app="ng">
+<div data-role="page" id="startseite" data-theme="a" ng-controller="Controller">
     <div data-role="header">
         <h1>Hello World</h1>
         <a href="#page2">Page2</a>

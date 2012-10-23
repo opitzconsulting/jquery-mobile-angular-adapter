@@ -14,5 +14,6 @@ describe("dialog", function () {
         var closeButton = dialog.find("a");
         expect(closeButton.length).toBe(1);
         expect(closeButton.hasClass("ui-btn")).toBe(true);
+        expect(closeButton.hasClass("ui-btn-up-a")).toBe(true);
     });
 });

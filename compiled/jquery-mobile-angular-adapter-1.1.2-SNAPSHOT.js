@@ -941,7 +941,6 @@ factory(window.jQuery, window.angular);
             .children( ":last-child" )
             .addClass( "ui-corner-bottom" );
 
-        headerCloseButton.buttonMarkup();
         $el.data("headerCloseButton", headerCloseButton);
 
         return $el;

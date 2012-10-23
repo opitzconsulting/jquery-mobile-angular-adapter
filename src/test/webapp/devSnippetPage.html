@@ -21,26 +21,15 @@ Test page during development.
 
 </head>
 <body ng-app="ng">
-<div data-role="page" id="page1" data-theme="a" ng-controller="Controller">
+<div data-role="dialog" id="page1" ng-controller="Controller">
     <div data-role="header">
-        <h1>Hello World</h1>
+        <h1>Hello</h1>
         <a href="#page2">Page2</a>
     </div>
     <div data-role="content">
-        <input type="search" ng-model="test">
-
-        {{test}}
+        Test
     </div>
 
-</div>
-
-<div id="page2" data-role="dialog">
-    <div data-role="header">
-        <h1>My header</h1>
-    </div>
-    <div data-role="content">
-        Hello mobile world!
-    </div>
 </div>
 
 ​

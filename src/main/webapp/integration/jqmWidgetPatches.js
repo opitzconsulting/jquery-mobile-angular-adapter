@@ -65,8 +65,9 @@
 
     patch($.fn, "controlgroup", function (old, self, args) {
         var _wrapInner = $.fn.wrapInner;
-        if (self.children(".ui-controlgroup-controls").length>0) {
-            $.fn.wrapInner = function() { };
+        if (self.children(".ui-controlgroup-controls").length > 0) {
+            $.fn.wrapInner = function () {
+            };
         }
         try {
             if (self.filter(":visible").length === 0) {
@@ -84,7 +85,7 @@
     // if the nested collapsible is created before the outside collapsible.
     var _c = $.fn.collapsible;
     var nestedContentClass = "ui-collapsible-content";
-    $.fn.collapsible = function() {
+    $.fn.collapsible = function () {
         var nestedContent = this.find(".ui-collapsible-content");
         nestedContent.removeClass(nestedContentClass);
         try {
@@ -95,10 +96,34 @@
     };
 
     // navbar does not contain a refresh function, so we add it here.
-    $.mobile.navbar.prototype.refresh = function() {
-        var $navbar = this.element,
-            $navbtns = $navbar.find( "a" ),
-            iconpos = $navbtns.filter( ":jqmData(icon)" ).length ?
+
+    patch($.mobile.navbar.prototype, '_create', function (old, self, args) {
+        var _find = $.fn.find;
+        var navbar = self.element;
+        var navbarBtns;
+        $.fn.find = function(selector) {
+            var res = _find.apply(this, arguments);
+            if (selector==='a') {
+                navbar.data('$navbtns', res);
+            }
+            return res;
+        };
+        try {
+            return old.apply(self, args);
+        } finally {
+            $.fn.find = _find;
+        }
+    });
+
+    $.mobile.navbar.prototype.refresh = function () {
+        var $navbar = this.element;
+
+        var $navbtns = $navbar.data("$navbtns");
+        $navbtns.splice(0, $navbtns.length);
+        $.each($navbar.find("a"), function(key, value) {
+            $navbtns.push(value);
+        });
+        var iconpos = $navbtns.filter(":jqmData(icon)").length ?
                 this.options.iconpos : undefined;
 
         var list = $navbar.find("ul");
@@ -109,13 +134,13 @@
         listEntries.removeClass(function (index, css) {
             return (css.match(/\bui-block-\S+/g) || []).join(' ');
         });
-        list.jqmEnhanceable().grid({ grid: this.options.grid });
+        list.jqmEnhanceable().grid({ grid:this.options.grid });
 
         $navbtns.buttonMarkup({
-            corners:	false,
-            shadow:		false,
-            inline:     true,
-            iconpos:	iconpos
+            corners:false,
+            shadow:false,
+            inline:true,
+            iconpos:iconpos
         });
     };
 

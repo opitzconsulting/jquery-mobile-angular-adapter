@@ -21,18 +21,20 @@ Test page during development.
 
 </head>
 <body ng-app="ng">
-<div data-role="dialog" id="page1" ng-controller="Controller">
-    <div data-role="header">
-        <h1>Hello</h1>
-        <a href="#page2">Page2</a>
-    </div>
-    <div data-role="content">
-        Test
-    </div>
 
+<div id="main" data-role="page">
+    <div data-role="content">
+
+        <div data-role="navbar" data-ng-init="items = ['A','B']">
+            <ul>
+                <li ><a href="#">{{item}}1</a></li>
+                <li ><a href="#">{{item}}2</a></li>
+            </ul>
+        </div>
+    </div>
 </div>
 
-​
+​​
 </body>
 
 </html>

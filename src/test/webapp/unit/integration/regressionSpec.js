@@ -120,5 +120,22 @@ describe('regression', function () {
         });
     });
 
+    describe('navbar', function() {
+        it('should remove the active selection when another item is selected and the navbar was created with ng-repeat', function() {
+            var d = testutils.compileInPage('<div data-role="navbar"><ul><li ng-repeat="l in list"><a href="#">{{l}}</a></li></ul></div>');
+            var scope = d.element.scope();
+            scope.list = [1,2];
+            scope.$apply();
+            var links = d.element.find('a');
+            var link1 = links.eq(0);
+            var link2 = links.eq(1);
+            link1.trigger('vclick');
+            link2.trigger('vclick');
+            expect(link1.hasClass($.mobile.activeBtnClass)).toBe(false);
+            expect(link2.hasClass($.mobile.activeBtnClass)).toBe(true);
+
+        });
+    });
+
 });
 

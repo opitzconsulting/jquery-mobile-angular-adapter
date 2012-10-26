@@ -15,9 +15,9 @@ If you are interested in how to build mobile web apps with this adapter, have a 
 
 Dependencies
 ----------------
-- angular 1.0.1
+- angular 1.0.2
 - jquery 1.7.1
-- jquery mobile 1.1.1 Final
+- jquery mobile 1.2.0 Final
 
 Examples
 ------------
@@ -299,7 +299,6 @@ Notes on the integration of some jqm widgets
 - The attribute `data-collapsed` has bidirectional data binding, e.g.
 
     <div data-role="collapsible" data-collapsed="someProperty">...</div>
-
 
 
 Integration strategy

@@ -25,9 +25,9 @@ describe("checkbox", function () {
             });
         });
         var c = testutils.compileInPage('<div sample="true"></div>');
-        // checkbox wraps itself into a div...
-        expect(c.element.children("div").children("input").length).toBe(1);
-        expect(c.element.children("div").children("label").length).toBe(1);
+        // checkbox wraps itself into a fieldset...
+        expect(c.element.find("input").length).toBe(1);
+        expect(c.element.find("label").length).toBe(1);
 
     });
 

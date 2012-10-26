@@ -37,7 +37,7 @@ describe("navigate", function () {
 
         it("should add the pageId during changePage to new history entries", function() {
             var page = $('<div id="page1"></div>');
-            $(document).trigger("pagebeforechange", {toPage: page});
+            $(document).trigger("pagebeforechange", {toPage: page, options: {}});
             var urlHistory = $.mobile.urlHistory;
             urlHistory.addNew();
             expect(urlHistory.stack.length).toBe(1);

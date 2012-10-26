@@ -18,7 +18,7 @@ describe("selectSlider", function () {
         var d = testutils.compileInPage(
             '<select ng-model="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>'
         );
-        var select = d.element;
+        var select = d.element.find('select');
         var scope = select.scope();
         scope.mysel = "v1";
         scope.$root.$digest();
@@ -32,7 +32,7 @@ describe("selectSlider", function () {
 
     it('should save the model value into the ui', function () {
         var d = testutils.compileInPage('<select ng-model="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
-        var select = d.element;
+        var select = d.element.find('select');
         var scope = d.page.scope();
         scope.mysel = "v1";
         scope.$root.$digest();
@@ -50,7 +50,7 @@ describe("selectSlider", function () {
     it('should use the disabled attribute', function () {
         var d = testutils.compileInPage(
             '<select ng-model="mysel" data-role="slider" ng-disabled="disabled"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
-        var select = d.element;
+        var select = d.element.find('select');
         var scope = select.scope();
         scope.disabled = false;
         scope.$root.$digest();

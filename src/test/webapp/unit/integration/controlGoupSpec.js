@@ -1,6 +1,6 @@
 describe("controlgroup", function () {
     it("should wrap it's children only once into a div when called multiple times", function() {
-        var el = $('<div></div>');
+        var el = $('<div>some content</div>');
         el.controlgroup();
         el.controlgroup();
         expect(el.find(".ui-controlgroup-controls").length).toBe(1);

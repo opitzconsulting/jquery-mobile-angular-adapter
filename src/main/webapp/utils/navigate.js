@@ -21,8 +21,10 @@
         var _addNew = urlHistory.addNew;
         urlHistory.addNew = function() {
             var res = _addNew.apply(this, arguments);
-            var lastEntry = urlHistory.stack[urlHistory.stack.length-1];
-            lastEntry.pageId = lastToPage.attr("id");
+            if (lastToPage) {
+                var lastEntry = urlHistory.stack[urlHistory.stack.length-1];
+                lastEntry.pageId = lastToPage.attr("id");
+            }
             return res;
         }
     }

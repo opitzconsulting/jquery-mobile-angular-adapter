@@ -18,7 +18,7 @@ describe("input button", function () {
     it('should allow clicks via ng-click', function () {
         var d = testutils.compileInPage('<input type="button" id="mysel" ng-click="flag = true">Test');
         var page = d.page;
-        var input = d.element;
+        var input = d.element.find("input");
         var scope = input.scope();
         expect(scope.flag).toBeFalsy();
         input.trigger('click');
@@ -28,7 +28,7 @@ describe("input button", function () {
     it('should use the disabled attribute', function () {
         var d = testutils.compileInPage('<input type="button" id="mysel" ng-click="flag = true" ng-disabled="disabled">Test');
         var page = d.page;
-        var input = d.element;
+        var input = d.element.find("input");
         var scope = input.scope();
         var parentDiv = input.parent();
         scope.disabled = false;

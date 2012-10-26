@@ -20,7 +20,7 @@ describe("selectmenu", function () {
             var c = testutils.compileInPage(
                 '<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
             var page = c.page;
-            var select = c.element;
+            var select = c.element.find('select');
             expect(select[0].value).toEqual("v1");
             var scope = select.scope();
             expect(scope.mysel).toEqual("v1");
@@ -38,7 +38,7 @@ describe("selectmenu", function () {
         it('should save the model value into the ui', function () {
             var c = testutils.compileInPage('<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
             var page = c.page;
-            var select = c.element;
+            var select = c.element.find('select');
             var scope = select.scope();
             expect(select[0].value).toEqual("v1");
             // jquery mobile creates a new span
@@ -55,7 +55,7 @@ describe("selectmenu", function () {
             var c = testutils.compileInPage(
                 '<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="false" ng-disabled="disabled"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
             var page = c.page;
-            var select = c.element;
+            var select = c.element.find('select');
             var scope = select.scope();
             scope.disabled = false;
             scope.$root.$digest();
@@ -69,13 +69,13 @@ describe("selectmenu", function () {
 
         it('should be removable', function () {
             var c = testutils.compileInPage(
-                '<select ng-repeat="l in list" ng-model="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+                '<div><select ng-repeat="l in list" ng-model="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select></div>');
             var page = c.page;
             var scope = page.scope();
             scope.list = [1,2];
             scope.$root.$digest();
             // ui select creates a new parent for itself
-            var content = page.find(":jqmData(role='content')");
+            var content = c.element;
             expect(content.children('div').length).toEqual(2);
             scope.list = [1];
             scope.$root.$digest();
@@ -90,7 +90,7 @@ describe("selectmenu", function () {
             var c = testutils.compileInPage(
                 '<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="true"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
             var page = c.page;
-            var select = c.element;
+            var select = c.element.find('select');
             expect(select[0].value).toEqual("v1");
             var scope = select.scope();
             expect(scope.mysel).toEqual("v1");
@@ -102,7 +102,7 @@ describe("selectmenu", function () {
         it('should save the model value into the ui', function () {
             var c = testutils.compileInPage('<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="true"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
             var page = c.page;
-            var select = c.element;
+            var select = c.element.find('select');
             var scope = select.scope();
             expect(select[0].value).toEqual("v1");
             scope.mysel = "v2";
@@ -114,7 +114,7 @@ describe("selectmenu", function () {
             var c = testutils.compileInPage(
                 '<select ng-init="mysel=\'v1\'" ng-model="mysel" data-native-menu="true" ng-disabled="disabled"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
             var page = c.page;
-            var select = c.element;
+            var select = c.element.find('select');
             var scope = select.scope();
             scope.disabled = false;
             scope.$root.$digest();
@@ -128,13 +128,13 @@ describe("selectmenu", function () {
 
         it('should be removable', function () {
             var c = testutils.compileInPage(
-                '<select ng-repeat="l in list" ng-model="mysel" data-native-menu="true"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
+                '<div><select ng-repeat="l in list" ng-model="mysel" data-native-menu="true"><option value="v1" default="true">v1</option><option value="v2">v2</option></select></div>');
             var page = c.page;
             var scope = page.scope();
             scope.list = [1,2];
             scope.$root.$digest();
             // ui select creates a new parent for itself
-            var content = page.find(":jqmData(role='content')");
+            var content = c.element;
             expect(content.children('div').length).toEqual(2);
             scope.list = [1];
             scope.$root.$digest();
@@ -149,7 +149,7 @@ describe("selectmenu", function () {
         beforeEach(function () {
             c = testutils.compileInPage(
                 '<select data-native-menu="false"><option ng-repeat="l in list" value="{{l}}">{{l}}</option></select>');
-            select = c.element;
+            select = c.element.find('select');
             selectmenu = select.data("selectmenu");
             spyOn(selectmenu, 'refresh').andCallThrough();
             scope = c.element.scope();
@@ -175,7 +175,7 @@ describe("selectmenu", function () {
         beforeEach(function () {
             c = testutils.compileInPage(
                 '<select data-native-menu="false"><option value="{{v}}">{{l}}</option></select>');
-            select = c.element;
+            select = c.element.find('select');
             selectmenu = select.data("selectmenu");
             spyOn(selectmenu, 'refresh').andCallThrough();
             scope = c.element.scope();
@@ -208,7 +208,7 @@ describe("selectmenu", function () {
         beforeEach(function () {
             c = testutils.compileInPage(
                 '<select ng-init="data=1" list="1" ng-model="data" data-native-menu="false" ng-options="value.v as value.l group by value.g for value in list"></select>');
-            select = c.element;
+            select = c.element.find('select');
             selectmenu = select.data("selectmenu");
             scope = c.element.scope();
             spyOn(selectmenu, 'refresh').andCallThrough();
@@ -285,7 +285,7 @@ describe("selectmenu", function () {
         beforeEach(function () {
             c = testutils.compileInPage(
                 '<select ng-init="data=1" list="1" ng-model="data" data-native-menu="false" ng-options="value.v as value.l group by value.g for (key,value) in list"></select>');
-            select = c.element;
+            select = c.element.find('select');
             selectmenu = select.data("selectmenu");
             scope = c.element.scope();
             spyOn(selectmenu, 'refresh').andCallThrough();

@@ -17,20 +17,17 @@ Test page during development.
             $scope.data = {};
         }
 
+
     </script>
 
 </head>
 <body ng-app="ng">
 
 <div id="main" data-role="page">
-    <div data-role="content">
+    <div data-role="content" id="content" ng-init="data=1">
+        <select ng-model="data" ng-options="e for e in list"></select>
 
-        <div data-role="navbar" data-ng-init="items = ['A','B']">
-            <ul>
-                <li ><a href="#">{{item}}1</a></li>
-                <li ><a href="#">{{item}}2</a></li>
-            </ul>
-        </div>
+
     </div>
 </div>
 

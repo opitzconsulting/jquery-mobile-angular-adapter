@@ -20,7 +20,7 @@ describe('regression', function () {
             var c = testutils.compileInPage(
                 '<select data-native-menu="true" ng-model="myval" ng-options="e.value for e in list"></select>');
             var page = c.page;
-            var select = c.element;
+            var select = c.element.find("select");
             var scope = select.scope();
             expect(scope.myval).toBeFalsy();
             scope.list = [
@@ -105,8 +105,8 @@ describe('regression', function () {
                     + '<input type="checkbox" ng-model="model2" id="chk2"><label for="chk2">Chk2</label></div>'
             );
             var element = c.element;
-            var chk1Label = element.children("div").eq(0).children("label");
-            var chk2Label = element.children("div").eq(1).children("label");
+            var chk1Label = element.children("fieldset").eq(0).children("div").children("label");
+            var chk2Label = element.children("fieldset").eq(1).children("div").children("label");
             expect(chk1Label.hasClass('ui-checkbox-on')).toBeFalsy();
             expect(chk2Label.hasClass('ui-checkbox-on')).toBeFalsy();
 

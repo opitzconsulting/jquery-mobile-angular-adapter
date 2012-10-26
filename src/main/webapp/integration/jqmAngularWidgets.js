@@ -5,9 +5,11 @@
             precompile:checkboxRadioPrecompile,
             create:checkboxRadioCreate
         },
+        // Button wraps itself into a new element.
+        // Angular does not like this, so we do it in advance.
         button:{
             handlers:[disabledHandler],
-            precompile:buttonPrecompile,
+            precompile:wrapIntoDivPrecompile,
             create:buttonCreate
         },
         collapsible:{
@@ -16,11 +18,11 @@
         textinput:{
             handlers:[disabledHandler],
             precompile:textinputPrecompile,
-            create:textinputCreate
+            create:unwrapFromDivCreate
         },
         slider:{
             handlers:[disabledHandler, refreshAfterNgModelRender],
-            precompile:sliderPrecompile,
+            precompile:wrapIntoDivPrecompile,
             create:sliderCreate
         },
         listview:{
@@ -29,10 +31,12 @@
         collapsibleset:{
             handlers:[refreshOnChildrenChange]
         },
+        // selectmenu wraps itself into a button and an outer div.
+        // Angular does not like this, so we do it in advance.
         selectmenu:{
             handlers:[disabledHandler, refreshAfterNgModelRender, refreshOnChildrenChange],
-            precompile:selectmenuPrecompile,
-            create:selectmenuCreate
+            precompile:wrapIntoDivPrecompile,
+            create:unwrapFromDivCreate
         },
         controlgroup:{
             handlers:[refreshControlgroupOnChildrenChange]
@@ -69,121 +73,51 @@
     }
 
     // -------------------
-    // precompile functions
+    // precompile and create functions
 
-    // Checkboxradio wraps the input and label into a new element.
-    // The angular compiler does not like this, as it changes elements that are not
-    // in the subtree of the input element that is currently linked.
+    // Slider appends a new element after the input/select element for which it was created.
+    // The angular compiler does not like this, so we wrap the two elements into a new parent node.
+    function sliderCreate(origCreate, element, initArgs) {
+        var slider = element.children().eq(0);
+        origCreate.apply(slider, initArgs);
+    }
+
+    // Checkboxradio requires a label for every checkbox input. From the jqm perspective, the label
+    // can be at different locations in the DOM tree. However, if the
+    // label is not under the same parent as the checkbox, this could change the DOM structure
+    // too much for angular's compiler.
+    // So we dynamically create a parent <fieldset> and move the label into that tag if needed.
+    // Also, the checkboxradio widget changes dom elements in the neighbouring label element,
+    // which is also a no-go for the angular compiler. For this, we create the checkboxradio widget
+    // when we are linking the <fieldset> element, as changing children is fine for the compiler.
     function checkboxRadioPrecompile(origElement, initArgs) {
-        // Selectors: See the checkboxradio-Plugin in jqm.
+        // See the checkboxradio-Plugin in jqm for the selectors used to locate the label.
         var parentLabel = $(origElement).closest("label");
         var container = $(origElement).closest("form,fieldset,:jqmData(role='page'),:jqmData(role='dialog')");
         if (container.length===0) {
             container = origElement.parent();
         }
         var label = parentLabel.length ? parentLabel : container.find("label").filter("[for='" + origElement[0].id + "']");
-        var wrapper = $("<div></div>").insertBefore(origElement).append(origElement).append(label);
-        moveCloningDirectives(origElement, origElement.parent());
+        var parent = origElement.parent();
+        if (parent[0].tagName.toUpperCase()!=='FIELDSET') {
+            origElement.wrap("<fieldset></fieldset>");
+        }
+        // ensure that the label is after the input element in each case.
+        var wrapper = origElement.parent();
+        wrapper.append(label);
+        moveCloningDirectives(origElement, wrapper);
         return wrapper;
     }
 
     function checkboxRadioCreate(origCreate, element, initArgs) {
-        var _wrapAll = $.fn.wrapAll;
-        var input = element.children("input");
-        var wrapper = element;
-
-        return withPatches($.fn, {
-            wrapAll: function(_wrapAll, self, args) {
-                var container = args[0];
-                if (self[0] === input[0]) {
-                    $.fn.wrapAll = _wrapAll;
-                    var tempContainer = $(container);
-                    wrapper[0].className = tempContainer[0].className;
-                    return input;
-                }
-                return _wrapAll.apply(self, args);
-            }
-        }, function() {
-            return origCreate.apply(input, initArgs);
-        });
-    }
-
-    // Slider appends a new element after the input/select element for which it was created.
-    // The angular compiler does not like this, so we wrap the two elements into a new parent node.
-    function sliderPrecompile(origElement, initArgs) {
-        origElement.wrapAll("<div></div>");
-        var wrapper = origElement.parent();
-        moveCloningDirectives(origElement, wrapper);
-        return wrapper;
-    }
-
-    function sliderCreate(origCreate, element, initArgs) {
-        var slider = element.children().eq(0);
-        origCreate.apply(slider, initArgs);
-    }
-
-    // Button wraps itself into a new element.
-    // Angular does not like this, so we do it in advance.
-    function buttonPrecompile(origElement, initArgs) {
-        var wrapper = $("<div></div>")
-            .text(origElement.text() || origElement.val())
-            .insertBefore(origElement)
-            .append(origElement);
-        moveCloningDirectives(origElement, wrapper);
-        return wrapper;
+        // we ensured in precompile that the label is after the checkbox and both are within a <fieldset>
+        var checkbox = element.children().eq(0);
+        origCreate.apply(checkbox, initArgs);
     }
 
     function buttonCreate(origCreate, element, initArgs) {
-        var wrapper = element;
-        var button = element.children().eq(0);
-        return withPatches($.fn, {
-            text: function(_text, self, args) {
-                if (args.length > 0) {
-                    // Only catch the first setter call
-                    $.fn.text = _text;
-                    return wrapper;
-                }
-                return _text.apply(self, args);
-            },
-            insertBefore: function(_insertBefore, self, args) {
-                var element = args[0];
-                if (self[0] === wrapper[0] && element[0] === button[0]) {
-                    return wrapper;
-                }
-                return _insertBefore.apply(self, args);
-            }
-        }, function() {
-            return origCreate.apply(button, initArgs);
-        });
-    }
-
-    // selectmenu wraps itself into a new element.
-    // Angular does not like this, so we do it in advance.
-    function selectmenuPrecompile(origElement, initArgs) {
-        var wrapper = $("<div></div>").insertBefore(origElement).append(origElement);
-        moveCloningDirectives(origElement, wrapper);
-        return wrapper;
-    }
-
-    function selectmenuCreate(origCreate, element, initArgs) {
-        var wrapper = element;
-        var select = element.children().eq(0);
-
-        return withPatches($.fn, {
-           wrap: function(_wrap, self, args) {
-               var container = args[0];
-               if (self[0] === select[0]) {
-                   $.fn.wrap = _wrap;
-                   var tempContainer = $(container);
-                   wrapper[0].className = tempContainer[0].className;
-
-                   return select;
-               }
-               return _wrap.apply(self, args);
-           }
-        }, function() {
-            return origCreate.apply(select, initArgs);
-        });
+        // TODO preserve the text node!
+        return unwrapFromDivCreate(origCreate, element, initArgs);
     }
 
     // textinput for input-type "search" wraps itself into a new element
@@ -191,35 +125,87 @@
         if (!origElement.is("[type='search'],:jqmData(type='search')")) {
             return origElement;
         }
-        var wrapper = $("<div></div>").insertBefore(origElement).append(origElement);
+        return wrapIntoDivPrecompile(origElement, initArgs);
+    }
+
+    function wrapIntoDivPrecompile(origElement, initArgs) {
+        origElement.wrapAll("<div></div>");
+        var wrapper = origElement.parent();
         moveCloningDirectives(origElement, wrapper);
         return wrapper;
     }
 
-    function textinputCreate(origCreate, element, initArgs) {
-        if (element[0].nodeName.toUpperCase()!=="DIV") {
+    function unwrapFromDivCreate(origCreate, element, initArgs) {
+        if (element[0].nodeName.toUpperCase() !== "DIV") {
             // no wrapper
             return origCreate.apply(element, initArgs);
         }
+        if (origCreate.isSpy && origCreate.originalValue!==origCreate.plan) {
+            // spy that does not call through
+            return origCreate.apply(element, initArgs);
+        }
+
         var wrapper = element;
-        var input = element.children().eq(0);
+        var button = element.children().eq(0);
+        button.insertBefore(wrapper);
+        // TODO refactor this!
+        // Do not use remove as this will fire a destroy event.
+        wrapper[0].parentNode.removeChild(wrapper[0]);
+        wrapper.html('');
+        var wrapperUsed = false;
+        function useWrapperIfPossible(oldFn, selector) {
+            oldFn.restore();
+            if (wrapperUsed) {
+                return false;
+            }
+            wrapperUsed = true;
+            if (selector) {
+                var template = $(selector);
+                wrapper[0].className = template[0].className;
+            }
+            return true;
+        }
 
-        return withPatches($.fn, {
+        var res = withPatches($.fn, {
+            init:function (_init, self, args) {
+                var selector = args[0];
+                if (typeof selector === "string" && selector.charAt(0) === '<') {
+                    if (useWrapperIfPossible(_init, selector)) {
+                        return wrapper;
+                    }
+                }
+                return _init.apply(self, args);
+            },
             wrap: function(_wrap, self, args) {
-                var container = args[0];
-                if (self[0] === input[0]) {
-                    $.fn.wrap = _wrap;
-                    var tempContainer = $(container);
-                    wrapper[0].className = tempContainer[0].className;
-
-                    return input;
+                var selector = args[0];
+                if (useWrapperIfPossible(_wrap, selector)) {
+                    wrapper.insertBefore(self);
+                    wrapper.append(self);
+                    return self;
                 }
                 return _wrap.apply(self, args);
+            },
+            wrapAll: function(_wrapAll, self, args) {
+                var selector = args[0];
+                if (useWrapperIfPossible(_wrapAll, selector)) {
+                    wrapper.insertBefore(self);
+                    wrapper.append(self);
+                    return self;
+                }
+                return _wrapAll.apply(self, args);
             }
         }, function() {
-            return origCreate.apply(input, initArgs);
+            return origCreate.apply(button, initArgs);
         });
+        if (!wrapperUsed) {
+            throw new Error("wrapper was not used!");
+        }
+        return res;
     }
+
+
+    // TODO from here! Use new strategy!
+
 
     // Dialog: separate event binding and dom enhancement.
     // Note: We do need to add the close button during precompile,
@@ -228,23 +214,25 @@
     function dialogPrecompile(origElement, initAttrs) {
         var options = $.mobile.dialog.prototype.options;
         var $el = origElement,
-            headerCloseButton = $( "<a href='#' data-" + $.mobile.ns + "icon='delete' data-" + $.mobile.ns + "iconpos='notext'>"+ options.closeBtnText + "</a>" ),
+            headerCloseButton = $("<a href='#' data-" + $.mobile.ns + "icon='delete' data-" + $.mobile.ns + "iconpos='notext'>" + options.closeBtnText + "</a>"),
             dialogWrap = $("<div/>", {
-                "role" : "dialog",
-                "class" : "ui-dialog-contain ui-corner-all ui-overlay-shadow"
+                "role":"dialog",
+                "class":"ui-dialog-contain ui-corner-all ui-overlay-shadow"
             });
 
+        // TODO we only need the close button here, not more!
+        // TODO the dialog wrap element only needs a simple div, not more!
         $el
-            .wrapInner( dialogWrap )
+            .wrapInner(dialogWrap)
             .children()
-            .find( ":jqmData(role='header')" )
-            .prepend( headerCloseButton )
+            .find(":jqmData(role='header')")
+            .prepend(headerCloseButton)
             .end()
-            .children( ':first-child')
-            .addClass( "ui-corner-top" )
+            .children(':first-child')
+            .addClass("ui-corner-top")
             .end()
-            .children( ":last-child" )
-            .addClass( "ui-corner-bottom" );
+            .children(":last-child")
+            .addClass("ui-corner-bottom");
 
         $el.data("headerCloseButton", headerCloseButton);
 
@@ -252,22 +240,24 @@
     }
 
     function dialogCreate(origCreate, element, initArgs) {
+        // TODO use new kind of patches!
+
         return withPatches($.fn, {
-            init: function(_init, self, args) {
+            init:function (_init, self, args) {
                 // return the already created header close button
                 var selector = args[0];
-                if (selector && selector.indexOf && selector.indexOf("<a href='#' data-")===0) {
+                if (selector && selector.indexOf && selector.indexOf("<a href='#' data-") === 0) {
                     return element.data("headerCloseButton");
                 }
                 return _init.apply(self, args);
             },
-            wrapInner: function(_wrapInner, self, args) {
-                if (self[0]===element[0]) {
+            wrapInner:function (_wrapInner, self, args) {
+                if (self[0] === element[0]) {
                     return $();
                 }
                 return _wrapInner.apply(self, args);
             }
-        }, function() {
+        }, function () {
             return origCreate.apply(element, initArgs);
         });
     }
@@ -277,7 +267,11 @@
 
         function patchProp(prop) {
             var oldFn = _old[prop] = obj[prop];
-            obj[prop] = function() {
+            oldFn.restore = function() {
+                obj[prop] = oldFn;
+                delete oldFn.restore;
+            };
+            obj[prop] = function () {
                 return patches[prop](oldFn, this, arguments);
             };
             obj[prop].prototype = oldFn.prototype;
@@ -291,7 +285,7 @@
             return callback();
         } finally {
             for (prop in _old) {
-                obj[prop] = _old[prop];
+                _old[prop].restore && _old[prop].restore();
             }
         }
     }
@@ -357,7 +351,7 @@
         if (iAttrs.collapsed) {
             var collapsedGetter = $parse(iAttrs.collapsed);
             var collapsedSetter = collapsedGetter.assign;
-            scope.$watch(collapsedGetter, function(value) {
+            scope.$watch(collapsedGetter, function (value) {
                 if (value) {
                     iElement.trigger("collapse");
                 } else {
@@ -366,12 +360,12 @@
             });
 
             iElement.bind("collapse", function () {
-                scope.$apply(function() {
+                scope.$apply(function () {
                     collapsedSetter(scope, true);
                 });
             });
             iElement.bind("expand", function () {
-                scope.$apply(function() {
+                scope.$apply(function () {
                     collapsedSetter(scope, false);
                 });
             });

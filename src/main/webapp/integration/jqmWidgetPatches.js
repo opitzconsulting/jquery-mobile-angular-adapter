@@ -17,6 +17,10 @@
         listbox && listbox.remove();
     });
 
+    // native selectmenu throws an error is no option is contained!
+    $.mobile.selectmenu.prototype.placeholder = "";
+
+
     // Listview may create subpages that need to be removed when the widget is destroyed.
     patch($.mobile.listview.prototype, "destroy", function (old, self, args) {
         // Destroy the widget instance first to prevent
@@ -59,26 +63,13 @@
 
     // Patch 1: controlgroup should not exclude invisible children
     // as long as it is not visible itself!
-    // Patch 2: to refresh a controlgroup we call it multiple times.
-    // However, controlgroup then wraps its children multiple times
-    // in nested divs.
-
     patch($.fn, "controlgroup", function (old, self, args) {
-        var _wrapInner = $.fn.wrapInner;
-        if (self.children(".ui-controlgroup-controls").length > 0) {
-            $.fn.wrapInner = function () {
-            };
+        if (self.filter(":visible").length === 0) {
+            var options = args[0] || {};
+            options.excludeInvisible = false;
+            return old.call(self, options);
         }
-        try {
-            if (self.filter(":visible").length === 0) {
-                var options = args[0] || {};
-                options.excludeInvisible = false;
-                return old.call(self, options);
-            }
-            return old.apply(self, args);
-        } finally {
-            $.fn.wrapInner = _wrapInner;
-        }
+        return old.apply(self, args);
     });
 
     // collapsible has problems when a collapsible is created with a nested collapsible,

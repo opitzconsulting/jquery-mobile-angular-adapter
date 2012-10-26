@@ -24,7 +24,7 @@ describe("inputSlider", function () {
 
     it('should save the ui text value into the model', function () {
         var d = testutils.compileInPage('<input type="number" data-type="range"  ng-model="mysel" min="0" max="300">');
-        var input = d.element;
+        var input = d.element.find("input");
         var scope = input.scope();
         input.val(100);
         testutils.triggerInputEvent(input);
@@ -33,7 +33,7 @@ describe("inputSlider", function () {
 
     it("should save the ui slider value into the model", function() {
         var d = testutils.compileInPage('<input type="number" data-type="range"  ng-model="mysel" min="0" max="100">');
-        var input = d.element;
+        var input = d.element.find("input");
         var slider = input.data("slider").slider;
         var event = jQuery.Event("mousedown");
         var expectedValue = 50;
@@ -47,7 +47,7 @@ describe("inputSlider", function () {
 
     it('should save the model value into the ui and refresh', function () {
         var d = testutils.compileInPage('<input type="number" data-type="range"  ng-model="mysel" min="0" max="300">');
-        var input = d.element;
+        var input = d.element.find("input");
         var container = input.parent();
         var scope = input.scope();
         scope.mysel = "100";
@@ -58,7 +58,7 @@ describe("inputSlider", function () {
 
     it('should use the disabled attribute', function () {
         var d = testutils.compileInPage('<input type="number" data-type="range"  ng-model="mysel" value="150" min="0" max="300" ng-disabled="disabled">');
-        var input = d.element;
+        var input = d.element.find("input");
         var scope = input.scope();
         scope.disabled = false;
         scope.$root.$digest();

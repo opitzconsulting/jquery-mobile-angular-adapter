@@ -24,10 +24,20 @@ Test page during development.
 <body ng-app="ng">
 
 <div id="main" data-role="page">
-    <div data-role="content" id="content" ng-init="data=1">
-        <select ng-model="data" ng-options="e for e in list"></select>
+    <div data-role="controlgroup">
+    <input type="radio" ng-model="radio1" name="radio-choice-1" id="radio-choice-1" value="choice-1" checked="checked" />
+    <label for="radio-choice-1">Cat</label>
 
+    <input type="radio" ng-model="radio1" name="radio-choice-1" id="radio-choice-2" value="choice-2"  />
+    <label for="radio-choice-2">Dog</label>
 
+    <input type="radio" ng-model="radio1" name="radio-choice-1" id="radio-choice-3" value="choice-3"  />
+    <label for="radio-choice-3">Hamster</label>
+
+    <input type="radio" ng-model="radio1" name="radio-choice-1" id="radio-choice-4" value="choice-4"  />
+    <label for="radio-choice-4">Lizard</label>
+
+    {{radio1}}
     </div>
 </div>
 

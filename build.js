@@ -1,11 +1,11 @@
 var fs  = require("fs");
-var carrier = require('carrier');
 var uglify = require('uglify-js');
 var encoding = "utf-8";
 
+var pjson = require('./package.json');
+
 function readVersion() {
-    var pom = fs.readFileSync('pom.xml', encoding);
-    return /<version>(.*)<\/version>/.exec(pom)[1];
+    return pjson.version;
 }
 
 var versionPlaceholder = "${project.version}";

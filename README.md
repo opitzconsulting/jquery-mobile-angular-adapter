@@ -241,8 +241,8 @@ The service `$waitDialog` allows the access to the jquery mobile wait dialog. It
    when the user clicks on the wait dialog.
 
 Default messages are:
-- `$.mobile.loadingMessageWithCancel`: for waitForWithCancel
-- `$.mobile.loadingMessage`: for all other cases
+- `$.mobile.loader.prototype.options.textWithCancel`: for waitForWithCancel. This is a new property.
+- `$.mobile.loader.prototype.options.text`: for all other cases, see the jquery mobile docs.
 
 
 ### Filter `paged`: Paging for lists

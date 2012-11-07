@@ -14,6 +14,17 @@ describe("button", function () {
         expect(createCount).toBe(2);
     });
 
+    it("should allow markup in the button content", function() {
+        var d = testutils.compileInPage('<button>{{name}}</button>');
+        var input = d.element.find("button");
+        var scope = input.scope();
+        scope.name = 'someName';
+        scope.$apply();
+        expect($("span span", input.parent()).text()).toBe(scope.name);
+
+
+    });
+
     it('should allow clicks via ng-click', function () {
         var d = testutils.compileInPage('<button id="mysel" ng-click="flag = true">Test</button>');
         var page = d.page;

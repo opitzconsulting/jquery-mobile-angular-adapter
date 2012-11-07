@@ -94,12 +94,12 @@
         // See the checkboxradio-Plugin in jqm for the selectors used to locate the label.
         var parentLabel = $(origElement).closest("label");
         var container = $(origElement).closest("form,fieldset,:jqmData(role='page'),:jqmData(role='dialog')");
-        if (container.length===0) {
+        if (container.length === 0) {
             container = origElement.parent();
         }
         var label = parentLabel.length ? parentLabel : container.find("label").filter("[for='" + origElement[0].id + "']");
         var parent = origElement.parent();
-        if (parent[0].tagName.toUpperCase()!=='FIELDSET') {
+        if (parent[0].tagName.toUpperCase() !== 'FIELDSET') {
             origElement.wrap("<fieldset></fieldset>");
         }
         // ensure that the label is after the input element in each case.
@@ -116,8 +116,15 @@
     }
 
     function buttonCreate(origCreate, element, initArgs) {
-        // TODO preserve the text node!
-        return unwrapFromDivCreate(origCreate, element, initArgs);
+        // Button destroys the text node and recreates a new one. This does not work
+        // if the text node contains angular expressions.
+        var button = element.children().eq(0);
+        var textNode = button.contents();
+        var res = unwrapFromDivCreate(origCreate, element, initArgs);
+        var textSpan = element.find("span span");
+        textSpan.empty();
+        textSpan.append(textNode);
+        return res;
     }
 
     // textinput for input-type "search" wraps itself into a new element
@@ -137,142 +144,133 @@
 
     function unwrapFromDivCreate(origCreate, element, initArgs) {
         if (element[0].nodeName.toUpperCase() !== "DIV") {
-            // no wrapper
+            // no wrapper existing.
             return origCreate.apply(element, initArgs);
         }
-        if (origCreate.isSpy && origCreate.originalValue!==origCreate.plan) {
+
+        if (isMock(origCreate)) {
             // spy that does not call through
             return origCreate.apply(element, initArgs);
         }
 
-        var wrapper = element;
-        var button = element.children().eq(0);
-        button.insertBefore(wrapper);
-        // TODO refactor this!
-        // Do not use remove as this will fire a destroy event.
-        wrapper[0].parentNode.removeChild(wrapper[0]);
-        wrapper.html('');
-        var wrapperUsed = false;
-        function useWrapperIfPossible(oldFn, selector) {
-            oldFn.restore();
-            if (wrapperUsed) {
-                return false;
-            }
-            wrapperUsed = true;
-            if (selector) {
-                var template = $(selector);
-                wrapper[0].className = template[0].className;
-            }
-            return true;
+        var child = element.children().eq(0);
+        child.insertBefore(element);
+        element.empty();
+        return useExistingElementsForNewElements(element, function() {
+            return origCreate.apply(child, initArgs);
+        });
+    }
+
+    // Dialog: separate event binding and dom enhancement.
+    // Note: We do need to add the close button during precompile,
+    // as the enhancement for the dialog header depends on it (calculation which button is left, right, ...)
+    // We cannot adjust the timing of the header enhancement as it is no jqm widget.
+    function dialogPrecompile(origElement, initAttrs) {
+        var options = $.mobile.dialog.prototype.options;
+        var headerCloseButton = $("<a href='#' data-" + $.mobile.ns + "icon='delete' data-" + $.mobile.ns + "iconpos='notext'>" + options.closeBtnText + "</a>");
+        origElement.find(":jqmData(role='header')").prepend(headerCloseButton);
+        origElement.data('headerCloseButton', headerCloseButton);
+        return origElement;
+    }
+
+    function dialogCreate(origCreate, element, initArgs) {
+        if (isMock(origCreate)) {
+            // During unit tests...
+            return origCreate.apply(element, initArgs);
+        }
+        var headerCloseButton = element.data('headerCloseButton');
+        return useExistingElementsForNewElements(headerCloseButton, function() {
+            return origCreate.apply(element, initArgs);
+        });
+    }
+
+    function isMock(origCreate) {
+        return origCreate.isSpy && origCreate.originalValue !== origCreate.plan;
+    }
+
+    function useExistingElementsForNewElements(existingElements, callback) {
+        var i, el, tagName;
+        var existingElementsHashByElementName = {};
+        for (i = 0; i < existingElements.length; i++) {
+            el = existingElements.eq(i);
+            // Do not use jQuery.fn.remove as this will fire a destroy event,
+            // which leads to unwanted side effects by it's listeners.
+            el[0].parentNode.removeChild(el[0]);
+            tagName = el[0].nodeName.toUpperCase();
+            existingElementsHashByElementName[tagName] = el;
         }
 
+        function useExistingElementIfPossible(selector) {
+            if (selector) {
+                var template = $(selector);
+                var tagName = template[0].nodeName.toUpperCase();
+                var existingElement = existingElementsHashByElementName[tagName];
+                if (existingElement) {
+                    delete existingElementsHashByElementName[tagName];
+                    existingElement[0].className += ' ' + template[0].className;
+                    return existingElement;
+                }
+            }
+            return false;
+        }
         var res = withPatches($.fn, {
             init:function (_init, self, args) {
                 var selector = args[0];
                 if (typeof selector === "string" && selector.charAt(0) === '<') {
-                    if (useWrapperIfPossible(_init, selector)) {
-                        return wrapper;
+                    var existingElement = useExistingElementIfPossible(selector);
+                    if (existingElement) {
+                        return existingElement;
                     }
                 }
                 return _init.apply(self, args);
             },
-            wrap: function(_wrap, self, args) {
+            wrap:function (_wrap, self, args) {
                 var selector = args[0];
-                if (useWrapperIfPossible(_wrap, selector)) {
+                var wrapper = useExistingElementIfPossible(selector);
+                if (wrapper) {
                     wrapper.insertBefore(self);
                     wrapper.append(self);
                     return self;
                 }
                 return _wrap.apply(self, args);
             },
-            wrapAll: function(_wrapAll, self, args) {
+            wrapAll:function (_wrapAll, self, args) {
                 var selector = args[0];
-                if (useWrapperIfPossible(_wrapAll, selector)) {
+                var wrapper = useExistingElementIfPossible(selector);
+                if (wrapper) {
                     wrapper.insertBefore(self);
                     wrapper.append(self);
                     return self;
                 }
                 return _wrapAll.apply(self, args);
             }
-        }, function() {
-            return origCreate.apply(button, initArgs);
-        });
-        if (!wrapperUsed) {
-            throw new Error("wrapper was not used!");
+        }, callback);
+        for (tagName in existingElementsHashByElementName) {
+            throw new Error("existing element with tagName "+tagName+" was not used!");
         }
         return res;
     }
 
-
-    // TODO from here! Use new strategy!
-
-
-    // Dialog: separate event binding and dom enhancement.
-    // Note: We do need to add the close button during precompile,
-    // as the enhancement for the dialog header and footer depends on it.
-    // We cannot adjust the timing of the header enhancement as it is no jqm widget.
-    function dialogPrecompile(origElement, initAttrs) {
-        var options = $.mobile.dialog.prototype.options;
-        var $el = origElement,
-            headerCloseButton = $("<a href='#' data-" + $.mobile.ns + "icon='delete' data-" + $.mobile.ns + "iconpos='notext'>" + options.closeBtnText + "</a>"),
-            dialogWrap = $("<div/>", {
-                "role":"dialog",
-                "class":"ui-dialog-contain ui-corner-all ui-overlay-shadow"
-            });
-
-        // TODO we only need the close button here, not more!
-        // TODO the dialog wrap element only needs a simple div, not more!
-        $el
-            .wrapInner(dialogWrap)
-            .children()
-            .find(":jqmData(role='header')")
-            .prepend(headerCloseButton)
-            .end()
-            .children(':first-child')
-            .addClass("ui-corner-top")
-            .end()
-            .children(":last-child")
-            .addClass("ui-corner-bottom");
-
-        $el.data("headerCloseButton", headerCloseButton);
-
-        return $el;
-    }
-
-    function dialogCreate(origCreate, element, initArgs) {
-        // TODO use new kind of patches!
-
-        return withPatches($.fn, {
-            init:function (_init, self, args) {
-                // return the already created header close button
-                var selector = args[0];
-                if (selector && selector.indexOf && selector.indexOf("<a href='#' data-") === 0) {
-                    return element.data("headerCloseButton");
-                }
-                return _init.apply(self, args);
-            },
-            wrapInner:function (_wrapInner, self, args) {
-                if (self[0] === element[0]) {
-                    return $();
-                }
-                return _wrapInner.apply(self, args);
-            }
-        }, function () {
-            return origCreate.apply(element, initArgs);
-        });
-    }
-
     function withPatches(obj, patches, callback) {
         var _old = {};
+        var executingCount = 0;
 
         function patchProp(prop) {
             var oldFn = _old[prop] = obj[prop];
-            oldFn.restore = function() {
+            oldFn.restore = function () {
                 obj[prop] = oldFn;
                 delete oldFn.restore;
             };
             obj[prop] = function () {
-                return patches[prop](oldFn, this, arguments);
+                if (executingCount) {
+                    return oldFn.apply(this, arguments);
+                }
+                executingCount++;
+                try {
+                    return patches[prop](oldFn, this, arguments);
+                } finally {
+                    executingCount--;
+                }
             };
             obj[prop].prototype = oldFn.prototype;
         }
@@ -428,4 +426,5 @@
     }
 
 
-})(angular, $);
+})
+    (angular, $);

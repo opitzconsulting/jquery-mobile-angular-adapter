@@ -1,6 +1,10 @@
 describe('scope reentrance', function () {
+    var scope;
+    beforeEach(function() {
+        scope = angular.injector(["ng", "ngMock"]).get("$rootScope");
+    });
+
     it("should allow $apply within $apply", function () {
-        var scope = angular.injector(["ng"]).get("$rootScope");
         var res;
         scope.$watch(function () {
             res = scope.$apply('1+2');
@@ -10,7 +14,6 @@ describe('scope reentrance', function () {
     });
 
     it("should allow $digest within $digest", function () {
-        var scope = angular.injector(["ng"]).get("$rootScope");
         scope.$watch(function () {
             scope.$digest();
         });

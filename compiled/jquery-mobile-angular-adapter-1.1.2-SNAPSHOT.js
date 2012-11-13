@@ -151,146 +151,6 @@ factory(window.jQuery, window.angular);
 
 })($);
 /**
- * This will delay the angular initialization by two nested calls to jQuery.fn.ready.
- * By this, angular initialization will always be the last that is called by jQuery.fn.ready.
- * This is needed so that other libs (especially jqm), who also rely on jQuery.fn.ready for initialization, have
- * the chance to initialize before angular, no matter in which order the libs are included in the dom.
- * <p>
- * Concrete problem: See ui/integration/regressionSpec#navigation
- * <p>
- * Details: This is a copy of the scan for ng-app, ... attributes of angular. This will also remove
- * those attributes from the dom, so angular does not get to see them.
- */
-(function ($, angular) {
-    var forEach = angular.forEach;
-    function deferAngularBootstrap(element, bootstrap) {
-        $.holdReady(true);
-        var doc = element.nodeType === 9 ? element : element.ownerDocument;
-        addReadyListener(doc, function () {
-            var config = findAndRemoveAngularConfig(element);
-            if (config) {
-                $(function () {
-                    bootstrap(config.appElement, config.module);
-                })
-            }
-            $.holdReady(false);
-        });
-    }
-
-    function findAndRemoveAngularConfig(element) {
-        var elements = [element],
-            appElement,
-            module,
-            names = ['ng:app', 'ng-app', 'x-ng-app', 'data-ng-app'],
-            NG_APP_CLASS_REGEXP = /\sng[:\-]app(:\s*([\w\d_]+);?)?\s/;
-
-        function append(element) {
-            element && elements.push(element);
-        }
-
-        forEach(names, function (name) {
-            names[name] = true;
-            append(document.getElementById(name));
-            name = name.replace(':', '\\:');
-            if (element.querySelectorAll) {
-                forEach(element.querySelectorAll('.' + name), append);
-                forEach(element.querySelectorAll('.' + name + '\\:'), append);
-                forEach(element.querySelectorAll('[' + name + ']'), append);
-            }
-        });
-
-        forEach(elements, function (element) {
-            if (!appElement) {
-                if (element.getAttribute) {
-                    var id = element.getAttribute("id");
-                    forEach(names, function (name) {
-                        if (id === name) {
-                            element.removeAttribute("id");
-                        }
-                    });
-                }
-                if (element.className) {
-                    var newClassAttr = element.className.replace(/[^;]+;?/g, function (classPart) {
-                        var className = ' ' + classPart + ' ';
-                        var match = NG_APP_CLASS_REGEXP.exec(className);
-                        if (match) {
-                            appElement = element;
-                            module = (match[2] || '').replace(/\s+/g, ',');
-                            return '';
-                        }
-                        return classPart;
-                    });
-                    if (!newClassAttr) {
-                        element.removeAttribute("class");
-                    } else {
-                        element.className = newClassAttr;
-                    }
-                }
-                var attrs = [];
-                forEach(element.attributes, function (attr) {
-                    if (!appElement && names[attr.name]) {
-                        appElement = element;
-                        module = attr.value;
-                        attrs.push(attr);
-                    }
-                });
-                forEach(attrs, function (attr) {
-                    element.removeAttributeNode(attr);
-                });
-            }
-        });
-        if (appElement) {
-            return {
-                appElement:appElement,
-                module:module ? [module] : []
-            }
-        } else {
-            return undefined;
-        }
-    }
-
-    // See jQuery.bindReady.
-    // Note that we cannot use $.ready here, as we prevent $.ready by using $.holdReady!
-    function addReadyListener(document, fn) {
-        var executed = false;
-
-        function isDocComplete() {
-            return document.readyState === "complete";
-        }
-
-        function callOnce() {
-            if (!executed) {
-                executed = true;
-                fn();
-            }
-        }
-
-        // Catch cases where $(document).ready() is called after the
-        // browser event has already occurred.
-        if (isDocComplete()) {
-            callOnce();
-        } else {
-            if (document.attachEvent) {
-                document.attachEvent("onreadystatechange", function() {
-                    callOnce();
-                });
-                // A fallback to window.onload, that will always work
-                window.attachEvent("onload", callOnce);
-            } else {
-                document.addEventListener("DOMContentLoaded", callOnce, false);
-                // A fallback to window.onload, that will always work
-                window.addEventListener("load", callOnce, false);
-            }
-        }
-    }
-
-    deferAngularBootstrap(document, angular.bootstrap);
-
-    // expose for tests
-    $.mobile.deferAngularBootstrap = deferAngularBootstrap;
-})($, angular);
-
-/**
  * Helper that introduces the concept of precompilation: Preprocess the dom before
  * angular processes it.
  * <p>
@@ -431,6 +291,7 @@ factory(window.jQuery, window.angular);
         var page = $(event.target);
         var currPageScope = page.scope();
         if (currPageScope) {
+            currPageScope.$emit("jqmPagebeforeshow");
             currPageScope.$root.$digest();
         }
     });
@@ -470,6 +331,7 @@ factory(window.jQuery, window.angular);
                     if (hasPages && !jqmInitialized) {
                         jqmInitialized = true;
                         $.mobile.initializePage();
+                        $rootScope.$broadcast("jqmInit");
                     }
                 }
 
@@ -1140,290 +1002,231 @@ factory(window.jQuery, window.angular);
 })
     (angular, $);
 /**
- * This is an extension to the locationProvider of angular and provides a new mode: jqmCompat-mode.
- * <p>
- * This mode allows to use the normal jquery mobile hash handling (hash = page id).
- * For this to work, it maps window.location directly to $location, without hashbang or html5 mode.
- * Furthermore, this mode extends the $browser so that it reuses the hashchange handler of
- * jqm and ensures, that angular's handler is always called before the one from jqm.
- * By this, $location is always up to date when jquery mobile fires pagebeforecreate, ...
- * Note: In this mode, angular routes are not useful.
- * <p>
- * If this mode is turned off, the hash listening and chaning of jqm is completely deactivated.
- * Then you are able to use angular's routes for navigation and `$navigate` service for jqm page navigation.
- * <p>
- * Configuration: $locationProvider.jqmCompatMode(bool). Default is `true`.
- * <p>
- * Note: Much of the code below is copied from angular, as it is contained in an internal angular function scope.
+ * This combines the routing of angular and jquery mobile. In detail, it deactivates the routing in jqm
+ * and reuses that of angular.
  */
 (function (angular, $) {
-    var URL_MATCH = /^([^:]+):\/\/(\w+:{0,1}\w*@)?([\w\.-]*)(:([0-9]+))?(\/[^\?#]*)?(\?([^#]*))?(#(.*))?$/,
-        PATH_MATCH = /^([^\?#]*)?(\?([^#]*))?(#(.*))?$/,
-        DEFAULT_PORTS = {'http':80, 'https':443, 'ftp':21};
+    var mod = angular.module("ng");
 
-
-    /**
-     * Parses an escaped url query string into key-value pairs.
-     * @returns Object.<(string|boolean)>
-     */
-    function parseKeyValue(/**string*/keyValue) {
-        var obj = {}, key_value, key;
-        angular.forEach((keyValue || "").split('&'), function (keyValue) {
-            if (keyValue) {
-                key_value = keyValue.split('=');
-                key = decodeURIComponent(key_value[0]);
-                obj[key] = angular.isDefined(key_value[1]) ? decodeURIComponent(key_value[1]) : true;
-            }
-        });
-        return obj;
-    }
-
-    /**
-     * This method is intended for encoding *key* or *value* parts of query component. We need a custom
-     * method becuase encodeURIComponent is too agressive and encodes stuff that doesn't have to be
-     * encoded per http://tools.ietf.org/html/rfc3986:
-     *    query       = *( pchar / "/" / "?" )
-     *    pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
-     *    unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
-     *    pct-encoded   = "%" HEXDIG HEXDIG
-     *    sub-delims    = "!" / "$" / "&" / "'" / "(" / ")"
-     *                     / "*" / "+" / "," / ";" / "="
-     */
-    function encodeUriQuery(val, pctEncodeSpaces) {
-        return encodeURIComponent(val).
-            replace(/%40/gi, '@').
-            replace(/%3A/gi, ':').
-            replace(/%24/g, '$').
-            replace(/%2C/gi, ',').
-            replace((pctEncodeSpaces ? null : /%20/g), '+');
-    }
-
-    /**
-     * Encode path using encodeUriSegment, ignoring forward slashes
-     *
-     * @param {string} path Path to encode
-     * @returns {string}
-     */
-    function encodePath(path) {
-        var segments = path.split('/'),
-            i = segments.length;
-
-        while (i--) {
-            segments[i] = encodeUriSegment(segments[i]);
-        }
-
-        return segments.join('/');
-    }
-
-    /**
-     * We need our custom mehtod because encodeURIComponent is too agressive and doesn't follow
-     * http://www.ietf.org/rfc/rfc3986.txt with regards to the character set (pchar) allowed in path
-     * segments:
-     *    segment       = *pchar
-     *    pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
-     *    pct-encoded   = "%" HEXDIG HEXDIG
-     *    unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
-     *    sub-delims    = "!" / "$" / "&" / "'" / "(" / ")"
-     *                     / "*" / "+" / "," / ";" / "="
-     */
-    function encodeUriSegment(val) {
-        return encodeUriQuery(val, true).
-            replace(/%26/gi, '&').
-            replace(/%3D/gi, '=').
-            replace(/%2B/gi, '+');
-    }
-
-    function toKeyValue(obj) {
-        var parts = [];
-        angular.forEach(obj, function (value, key) {
-            parts.push(encodeUriQuery(key, true) + (value === true ? '' : '=' + encodeUriQuery(value, true)));
-        });
-        return parts.length ? parts.join('&') : '';
-    }
-
-    function int(str) {
-        return parseInt(str, 10);
-    }
-
-    function matchUrl(url, obj) {
-        var match = URL_MATCH.exec(url);
-
-        match = {
-            protocol:match[1],
-            host:match[3],
-            port:int(match[5]) || DEFAULT_PORTS[match[1]] || null,
-            path:match[6] || '/',
-            search:match[8],
-            hash:match[10]
-        };
-
-        if (obj) {
-            obj.$$protocol = match.protocol;
-            obj.$$host = match.host;
-            obj.$$port = match.port;
-        }
-
-        return match;
-    }
-
-
-    function composeProtocolHostPort(protocol, host, port) {
-        return protocol + '://' + host + (port == DEFAULT_PORTS[protocol] ? '' : ':' + port);
-    }
-
-
-    /**
-     * Patches the angular LocationHashbangUrl service to use the url directly.
-     */
-    function patchLocationServiceToUsePlainUrls($location, initUrl) {
-
-        /**
-         * Parse given html5 (regular) url string into properties
-         * @param {string} newAbsoluteUrl HTML5 url
-         * @private
-         */
-        $location.$$parse = function (newAbsoluteUrl) {
-            var match = matchUrl(newAbsoluteUrl, this);
-
-            this.$$path = decodeURIComponent(match.path);
-            this.$$search = parseKeyValue(match.search);
-            this.$$hash = match.hash && decodeURIComponent(match.hash) || '';
-
-            this.$$compose();
-        };
-
-        /**
-         * Compose url and update `absUrl` property
-         * @private
-         */
-        $location.$$compose = function () {
-            var search = toKeyValue(this.$$search),
-                hash = this.$$hash ? '#' + encodePath(this.$$hash) : '';
-
-            this.$$url = encodePath(this.$$path) + (search ? '?' + search : '') + hash;
-            this.$$absUrl = composeProtocolHostPort(this.$$protocol, this.$$host, this.$$port) +
-                this.$$url;
-        };
-
-        $location.$$rewriteAppUrl = function (absoluteLinkUrl) {
-            // deactivate link rewriting
-            return null;
-        };
-
-        $location.$$parse(initUrl);
-    }
-
-    /**
-     * This reuses the hashchange handler of jqm for angular and ensures, that angular's handler
-     * is always called before the one from jqm.
-     * By this, $location is always up to date when jquery mobile fires pagebeforecreate, ...
-     * @param $browser
-     */
-    function reusejQueryMobileHashChangeForAngular($browser) {
-        if ($browser.isMock) {
-            return;
-        }
-        var urlChangeInit = false;
-
-        var _onUrlChange = $browser.onUrlChange;
-        var triggerAngularHashChange;
-        $browser.onUrlChange = function (callback) {
-            var res;
-            if (!urlChangeInit) {
-                var _bind = $.fn.bind;
-                $.fn.bind = function(event, handler) {
-                    triggerAngularHashChange = handler;
+    function registerBrowserDecorator($provide) {
+        $provide.decorator('$browser', ['$delegate', function ($browser) {
+            $browser.inHashChange = 0;
+            var _onUrlChange = $browser.onUrlChange;
+            $browser.onUrlChange = function (callback) {
+                var proxy = function () {
+                    $browser.inHashChange++;
+                    try {
+                        return callback.apply(this, arguments);
+                    } finally {
+                        $browser.inHashChange--;
+                    }
                 };
-                var res = _onUrlChange(callback);
-                $.fn.bind = _bind;
-
-                var _hashChange = $.mobile._handleHashChange;
-                $.mobile._handleHashChange = function(hash) {
-                    triggerAngularHashChange();
-                    _hashChange(hash);
-                };
-                var _setPath = $.mobile.path.set;
-                $.mobile.path.set = function(hash) {
-                    var res = _setPath.apply(this, arguments);
-                    triggerAngularHashChange();
-                    return res;
-                };
-                if (window.history) {
-                    var _replaceState = history.replaceState;
-                    history.replaceState = function() {
-                        var res = _replaceState.apply(this, arguments);
-                        triggerAngularHashChange();
-                        return res;
-                    };
-                }
-
-                urlChangeInit = true;
-            } else {
-                res = _onUrlChange(callback);
-            }
-            return res;
-        };
-
-    }
-
-    var ng = angular.module("ng");
-    ng.config(['$provide', '$locationProvider', function ($provide, $locationProvider) {
-        $provide.decorator('$browser', ['$sniffer', '$delegate', function ($sniffer, $browser) {
-            if ($locationProvider.jqmCompatMode()) {
-                // Angular should not use the history api and use the hash bang location service,
-                // which we will extend below.
-                $sniffer.history = false;
-                reusejQueryMobileHashChangeForAngular($browser);
-            }
+                _onUrlChange.call(this, proxy);
+            };
             return $browser;
         }]);
+
+
+        $provide.decorator('$location', ['$delegate', function ($location) {
+            $location.routeOverride = function (routeOverride) {
+                $location.$$routeOverride = routeOverride;
+                return this;
+            };
+            return $location;
+        }]);
+    }
+
+    $.mobile._registerBrowserDecorator = registerBrowserDecorator;
+    mod.config(['$provide', function ($provide) {
+        registerBrowserDecorator($provide);
     }]);
 
-    ng.config(['$locationProvider', function ($locationProvider) {
-        var jqmCompatMode = true;
-        /**
-         * @ngdoc property
-         * @name ng.$locationProvider#jqmCompatMode
-         * @methodOf ng.$locationProvider
-         * @description
-         * @param {string=} mode Use jqm compatibility mode for navigation.
-         * @returns {*} current value if used as getter or itself (chaining) if used as setter
-         */
-        $locationProvider.jqmCompatMode = function (mode) {
-            if (angular.isDefined(mode)) {
-                jqmCompatMode = mode;
-                return this;
-            } else {
-                return jqmCompatMode;
-            }
+
+    // This needs to be outside of a angular config callback, as jqm reads this during initialization.
+    function disableJqmHashChange() {
+        $.mobile.pushStateEnabled = false;
+        $.mobile.hashListeningEnabled = false;
+        $.mobile.linkBindingEnabled = false;
+        $.mobile.changePage.defaults.changeHash = false;
+        if ($.support.dynamicBaseTag) {
+            $.support.dynamicBaseTag = false;
+            $.mobile.base.set = function () {};
+        }
+    }
+
+    disableJqmHashChange();
+
+    var originalPath = location.pathname;
+    var originalBasePath = getBasePath(originalPath);
+
+    function getBasePath(path) {
+        return path.substr(0, path.lastIndexOf('/'));
+    }
+
+    // html5 mode is always required, so we are able to allow links like
+    // <a href="somePage.html"> to load external pages.
+    mod.config(['$locationProvider', function ($locationProvider) {
+        $locationProvider.html5Mode(true);
+    }]);
+
+    mod.directive('ngView', function () {
+        throw new Error("ngView is not allowed and not needed with the jqm adapter.");
+    });
+
+    var DEFAULT_JQM_PAGE = 'DEFAULT_JQM_PAGE';
+
+    mod.config(['$routeProvider', function ($routeProvider) {
+        var _when = $routeProvider.when;
+        $routeProvider.when = function (path, params) {
+            createNgmRouting(params);
+            return _when.apply(this, arguments);
         };
 
-        var _$get = $locationProvider.$get;
-        $locationProvider.$get = ['$injector', '$browser', function ($injector, $browser) {
-            if (jqmCompatMode) {
-                // temporary deactivate $browser.url for changing the url,
-                // as the original $location service might call it before we can patch it!
-                var _url = $browser.url;
-                $browser.url = function() { return _url.call(this) };
-                var $location = $injector.invoke(_$get, $locationProvider);
-                $browser.url = _url;
-                patchLocationServiceToUsePlainUrls($location, $browser.url());
+        $routeProvider.otherwise({
+            templateUrl:DEFAULT_JQM_PAGE
+        });
+    }]);
 
-                return $location;
-            } else {
-                // deactivate jqm hash listening and changing
-                $.mobile.pushStateEnabled = false;
-                $.mobile.hashListeningEnabled = false;
-                $.mobile.linkBindingEnabled = false;
-                $.mobile.changePage.defaults.changeHash = false;
+    function createNgmRouting(routeParams) {
+        if (!routeParams.templateUrl) {
+            throw new Error("Only routes with templateUrl are allowed!");
+        }
+        if (routeParams.controller) {
+            throw new Error("Controllers are not allowed on routes. However, you may use the onActivate parameter");
+        }
+    }
 
-                return $injector.invoke(_$get, $locationProvider);
+    mod.run(['$route', '$rootScope', '$location', '$browser', function ($route, $rootScope, $location, $browser) {
+        var routeOverrideCopyProps = ['templateUrl', 'jqmOptions', 'onActivate'];
+        $rootScope.$on('$routeChangeStart', function (event, newRoute) {
+            var routeOverride = $location.$$routeOverride;
+            delete $location.$$routeOverride;
+            if (routeOverride) {
+                angular.forEach(routeOverrideCopyProps, function (propName) {
+                    if (routeOverride[propName]) {
+                        newRoute[propName] = routeOverride[propName];
+                    }
+                });
+
+                newRoute.resolve = newRoute.resolve || {};
+                angular.forEach(routeOverride.locals, function (value, key) {
+                    newRoute.resolve[key] = function () {
+                        return value;
+                    };
+                });
             }
-        }];
 
+            // Prevent angular from loading the template, as jquery mobile already does this!
+            newRoute.ngmTemplateUrl = newRoute.templateUrl;
+            newRoute.templateUrl = undefined;
+        });
+
+        $rootScope.$on('jqmPagebeforeshow', function (event) {
+            var current = $route.current;
+            if (current && current.onActivate) {
+                event.targetScope[current.onActivate].call(event.targetScope, current.locals);
+            }
+        });
+
+        $rootScope.$on('$routeChangeSuccess', function () {
+            var newRoute = $route.current;
+            var $document = $(document);
+
+            function getDefaultJqmPageUrl() {
+                var hash = $location.hash();
+                if (hash) {
+                    return "#" + hash;
+                } else {
+                    var path = $location.path();
+                    if (path) {
+                        path = originalBasePath + path;
+                        return path;
+                    }
+                }
+                return originalPath;
+            }
+
+            var url = newRoute.ngmTemplateUrl;
+            if (url === DEFAULT_JQM_PAGE) {
+                url = getDefaultJqmPageUrl();
+            }
+            var navConfig = {};
+            if ($browser.inHashChange) {
+                navConfig.fromHashChange = true;
+            }
+
+            if (newRoute.jqmOptions) {
+                angular.extend(navConfig, newRoute.jqmOptions);
+            }
+
+            if (!$.mobile.pageContainer) {
+                $rootScope.$on("jqmInit", startNavigation);
+            } else {
+                startNavigation();
+            }
+
+            function startNavigation() {
+                $.mobile.changePage(url, navConfig);
+            }
+        });
     }]);
 
 })(angular, $);
+(function ($, angular) {
+
+    var mod = angular.module("ng");
+    mod.config(['$provide', function ($provide) {
+        $provide.decorator('$location', ['$delegate', function ($location) {
+            $location.back = function () {
+                $location.$$back = true;
+                return this;
+            };
+            return $location;
+        }]);
+    }]);
+
+    /* TODO
+    mod.run(['$rootScope', '$location', '$history', function ($rootScope, $location, $history) {
+        var urlStack = [];
+        var activeIndex = -1;
+
+        $rootScope.$on('$locationChangeStart', function (event, newUrl) {
+            if ($location.$$back) {
+                delete $location.$$back;
+
+
+                event.preventDefault();
+            }
+            // TODO problem, when some one else is rejecting the change
+            $location.$$savedReplace = $location.$$replace;
+        });
+        $rootScope.$on('$locationChangeSuccess', function (event, newUrl) {
+            activeIndex = urlStack.indexOf(newUrl);
+            if (activeIndex === -1) {
+                if ($location.$$savedReplace && urlStack.length) {
+                    urlStack[urlStack.length-1] = newUrl;
+                } else {
+                    urlStack.push(newUrl);
+                }
+                activeIndex = urlStack.length-1;
+            } else {
+
+            }
+        });
+    }]);
+
+    */
+
+    mod.factory('$history', function () {
+        function go(relativeIndex) {
+            window.history.go(relativeIndex);
+        }
+
+        return {
+            go:go
+        };
+    });
+})(window.jQuery, window.angular);
 (function ($, angular) {
     // Patch for ng-repeat to fire an event whenever the children change.
     // Only watching Scope create/destroy is not enough here, as ng-repeat
@@ -1802,116 +1605,51 @@ factory(window.jQuery, window.angular);
         ];
     }
 
-    function instrumentUrlHistoryToSavePageId() {
-        var lastToPage;
-        $(document).on("pagebeforechange", function(event, data) {
-            if (typeof data.toPage === "object") {
-                lastToPage = data.toPage;
-            }
-        });
-        var urlHistory = $.mobile.urlHistory;
-        var _addNew = urlHistory.addNew;
-        urlHistory.addNew = function() {
-            var res = _addNew.apply(this, arguments);
-            if (lastToPage) {
-                var lastEntry = urlHistory.stack[urlHistory.stack.length-1];
-                lastEntry.pageId = lastToPage.attr("id");
-            }
-            return res;
-        }
-    }
-    instrumentUrlHistoryToSavePageId();
-
-    function getNavigateIndexInHistory(pageId) {
-        var urlHistory = $.mobile.urlHistory;
-        var activeIndex = urlHistory.activeIndex;
-        var stack = $.mobile.urlHistory.stack;
-        for (var i = stack.length - 1; i >= 0; i--) {
-            if (i!==activeIndex && stack[i].pageId === pageId) {
-                return i - activeIndex;
-            }
-        }
-        return undefined;
-    }
-
-    function callActivateFnOnPageChange(fnName, params) {
-        if (fnName) {
-            $(document).one("pagebeforechange", function(event, data) {
-                var toPageUrl = $.mobile.path.parseUrl( data.toPage );
-                var page = $("#"+toPageUrl.hash.substring(1));
-                function executeCall() {
-                    var scope = page.scope();
-                    scope[fnName].apply(scope, params);
-                }
-                if (!page.data("page")) {
-                    page.one("pagecreate", executeCall);
-                    return;
-                }
-                executeCall();
-            });
-        }
-    }
-
-    /*
-     * Service for page navigation.
-     * @param target has the syntax: [<transition>:]pageId
-     * @param activateFunctionName Function to call in the target scope.
-     * @param further params Parameters for the function that should be called in the target scope.
-     */
-    function navigate(target, activateFunctionName) {
-        var activateParams = Array.prototype.slice.call(arguments, 2);
-        callActivateFnOnPageChange(activateFunctionName, activateParams);
-        var navigateOptions;
-        if (typeof target === 'object') {
-            navigateOptions = target;
-            target = navigateOptions.target;
-        }
-        var parts = splitAtFirstColon(target);
-        var isBack = false;
-        if (parts.length === 2 && parts[0] === 'back') {
-            isBack = true;
-            target = parts[1];
-        } else if (parts.length === 2) {
-            navigateOptions = { transition: parts[0] };
-            target = parts[1];
-        }
-        if (target === 'back') {
-            window.history.go(-1);
-            return;
-        }
-        if (isBack) {
-            // The page may be removed from the DOM by the cache handling
-            // of jquery mobile.
-            $.mobile.loadPage(target, {showLoadMsg: true}).then(function(_a,_b,page) {
-                var relativeIndex = getNavigateIndexInHistory(page.attr("id"));
-                if (relativeIndex!==undefined) {
-                    window.history.go(relativeIndex);
-                } else {
-                    jqmChangePage(target, {reverse: true});
-                }
-            });
-        } else {
-            jqmChangePage(target, navigateOptions);
-        }
-    }
-
-    function jqmChangePage(target, navigateOptions) {
-        if (navigateOptions) {
-            $.mobile.changePage(target, navigateOptions);
-        } else {
-            $.mobile.changePage(target);
-        }
-    }
-
-
     var mod = angular.module('ng');
-    mod.factory('$navigate', function() {
+    mod.factory('$navigate', ['$location', '$history', function($location, $history) {
+        /*
+         * Service for page navigation.
+         * @param target has the syntax: [<transition>:]pageId
+         * @param activateFunctionName Function to call in the target scope.
+         * @param further params Parameters for the function that should be called in the target scope.
+         */
+        function navigate(target, activateFunctionName, activateParams) {
+            var navigateOptions;
+            if (typeof target === 'object') {
+                navigateOptions = target;
+                target = navigateOptions.target;
+            }
+            var parts = splitAtFirstColon(target);
+            var isBack = false;
+            if (parts.length === 2 && parts[0] === 'back') {
+                isBack = true;
+                target = parts[1];
+            } else if (parts.length === 2) {
+                navigateOptions = { transition: parts[0] };
+                target = parts[1];
+            }
+            if (target === 'back') {
+                $history.go(-1);
+                return;
+            }
+            if (isBack) {
+                $location.back();
+            }
+            $location.routeOverride({
+                jqmOptions: navigateOptions,
+                onActivate: activateFunctionName,
+                locals: activateParams
+            });
+            if (target.charAt(0)==='#') {
+                $location.hash(target.substring(1));
+            } else {
+                $location.path(target);
+            }
+        }
+
         return navigate;
-    });
+    }]);
 
-
-
-    return navigate;
 
 })($, angular);
 (function(angular) {

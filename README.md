@@ -136,33 +136,65 @@ Running the tests
   The ui-tests can be run via the url `localhost:8080/jqmng/UiSpecRunner.html`
 
 
-Jqm hashchange handling, `$location` service and routes
+Navigation and routes
 ---------------------
 
-By default, jqm listens for all hash changes and shows the the page with the id of the current location hash.
-Also, if you navigate programmatically to a new page (e.g. by the `$navigate` service), the hash is also adjusted.
-This mode of url handling is called jqm compatibility mode in the adapter. It is enabled by default.
-Please note that this is different to both, the hashbang and the html5 mode of angular. For this to work,
-the adapter replaces the default `$location` service of angular with new one that directly maps `window.location`
-to `$location`. This mode is not useful together with angular routes.
+The adapter integrates angular routes with jquery mobile in the following way:
+
+- If no route is defined, the default jquery mobile url handling applies:
+    * Navigation to a hash shows the page whose id is the same as the hash, e.g.
+    `<a href="#somePage">`.
+    * Navigation to a normal page loads that page using ajax and
+    then navigates to that page, e.g. `<a href="somePage.html">`
+- You can set the special property `jqmOptions` on routes, e.g.
+
+        $routeProvider.when('/somePage', {
+            templateUrl:'someTemplate.html',
+            jqmOptions: { transition: 'flip' }
+        });
+
+    Those properties are directly passed to `$.mobile.changePage`. For a documentation of the available options
+    have a look at the jquery mobile documentation.
+- You can set the special property `onActivate`. If this is set,
+  a function with this name is searched and executed in the scope of the page to which the route navigates to.
+  The parameters for this function are the `$route.current.locals`.
+
+- The `$location` service has a new function `routeOverride`. By this, you can override route properties only
+  for the next routing. This is useful e.g. for passing special parameters to the `onActivate` function. The following
+  properties can be overridden: `templateUrl`, `jqmOptions`, `onActivate`, `locals`. E.g.
+
+      $location.routeOverride({
+        locals: {someKey: 'someValue'},
+        onActivate: 'someActivateFn'
+      });
+      $location.path('/someRoutePath');
+
+  On the next route change, this will call the function `someActivateFn` on the new page and pass the parameter object
+  `{someKey: 'someValue'}`.
 
 
-However, you can also turn the jqm compatibility mode off. Then, jquery mobile will neither listen to hash changes
-nor will it update the hash when pages are changed programmatically (e.g. by the `$navigate` service). This is useful
-if you want to manually control the urls in angular. For this, there is the function `jqmCompatMode(bool)` in the
-`$locationProvider`. Here is an example for turning jqm compatibility mode off:
 
-    module.config(function($locationProvider) { $locationProvider.jqmCompatMode(false); });
+- Internally, we use jquery mobile to load the pages and do the transition between the pages.
+  By this, we automatically support
+  the prefetching and caching functionality for pages from jquery mobile (see their docs for details).
+  E.g. use `<a href="prefetchThisPage.html" data-prefetch> ... </a>` in a parent page to prefetch a child page.
 
-_Please note_: In this mode, routes from angular still cannot be used. Routes work together with the `ng-view` directive.
-And that directive will inject a loaded page into it's body. However, jquery mobile requires all pages to be loaded directly
-under the body element of the page. So, the problem with using routes is now how `ng-view` works. The feature request #59
-addresses this issue by requesting new directives.
 
-A replacement for using routes to load external pages is using `$navigate` with an external url, e.g. `$navigate('somePage.html')`.
-This will load `somePage.html` using ajax and show it afterwards using jquery mobile navigation. Note that the caching
-can be configured, see here: [http://jquerymobile.com/demos/1.1.1/docs/pages/page-cache.html](http://jquerymobile.com/demos/1.1.1/docs/pages/page-cache.html). Note that this approach also allows to specify navigate properties, like the transition animation to use, ...
-See `$navigate` for details.
+Restrictions:
+- controllers on routes are not supported. Please use `ng-controller` within the page to be loaded for this
+  or the `onActivate` function on routes.
+  The reasoning behind this is that some pages of jquery mobile are local pages in the same document as the main page
+  and others are loaded using ajax. However, the pages in the same document are compiled at the same time the main page is compiled.
+  Furthermore, by supporting the page cache of jquery mobile assigning a controller would also not be possible.
+  To pass data via routes just let your controllers examine the current route using the `$route` and `$routeParams` service.
+- We always enable `$locationProvider.html5Mode`. By this, we are compatible to the default jquery mobile behaviour,
+  e.g. links like `<a href="somePage.html">` are possible and do not reload the whole page but use AJAX.
+- Routes with a `templateUrl` must point to a full jquery mobile page. Loading parts of jquery mobile pages is not supported.
+- The `ngView` directive cannot be used as jqm pages need to be inserted at a special place in the DOM.
+  However, the adapter takes care of the normal `ngView` handling and inserts the pages at the right place.
+- There needs to be an initial page in the main document of the application. I.e. a `<div data-role="page">` within
+  that html file that also includes angular and jqm. All other pages can then be included using routes with
+  a `templateUrl` property.
 
 
 Scopes

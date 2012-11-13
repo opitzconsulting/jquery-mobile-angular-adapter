@@ -1,7 +1,7 @@
 describe("arrayPaging", function () {
     var pagedFilter, injector, scope;
     beforeEach(function () {
-        injector = angular.injector(["ng"]);
+        injector = angular.injector(["ng", "ngMock"]);
         pagedFilter = injector.get("pagedFilter");
         scope = {};
     });

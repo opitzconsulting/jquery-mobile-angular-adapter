@@ -5,6 +5,7 @@
         var page = $(event.target);
         var currPageScope = page.scope();
         if (currPageScope) {
+            currPageScope.$emit("jqmPagebeforeshow");
             currPageScope.$root.$digest();
         }
     });
@@ -44,6 +45,7 @@
                     if (hasPages && !jqmInitialized) {
                         jqmInitialized = true;
                         $.mobile.initializePage();
+                        $rootScope.$broadcast("jqmInit");
                     }
                 }
 

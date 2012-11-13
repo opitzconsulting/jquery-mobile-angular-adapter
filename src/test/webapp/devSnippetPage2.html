@@ -1,9 +1,27 @@
-<div data-role="page" ng-controller="Ctrl" id="page2">
-    <div data-role="content">
-        {{city}}
-        {{cities}}
+<html>
+<!--
+Test page during development.
+-->
+<head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
 
-        <select id="rental1Page_city" ng-model="city" ng-options="c.name for c in cities">
-        </select>
+    <link rel="stylesheet" href="lib/jquery.mobile.css"/>
+
+    <script src="lib/jquery.js"></script>
+    <script src="lib/jquery.mobile.js"></script>
+
+</head>
+<body ng-app="ng">
+
+<div id="main" data-role="page">
+    <div data-role="content">
+        <a href="template.html">Test</a>
+
+
     </div>
 </div>
+
+​​
+</body>
+
+</html>

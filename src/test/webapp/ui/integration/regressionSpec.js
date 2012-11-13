@@ -115,14 +115,16 @@ describe("regression", function () {
     });
 
   describe('navigation', function() {
-      // Note: This test is the reason for the deferAngularBootstrap handling!
       it("should navigate correctly when angular is loaded before jqm", function() {
           var $, win;
-          loadHtml('/jqmng/ui/test-fixture-deferredBootstrap.html#/jqmng/ui/page1.html');
+          loadHtml('/jqmng/ui/test-fixture-deferredBootstrap.html#/page1.html');
           runs(function () {
               win = testframe();
               $ = win.$;
-              $.mobile.changePage("page2.html");
+              var injector = $("body").injector();
+              var $location = injector.get("$location");
+              $location.path("page2.html");
+              // $.mobile.changePage("page2.html");
           });
           runs(function() {
               win.history.back();

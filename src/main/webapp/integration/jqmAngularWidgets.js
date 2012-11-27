@@ -156,7 +156,7 @@
         var child = element.children().eq(0);
         child.insertBefore(element);
         element.empty();
-        return useExistingElementsForNewElements(element, function() {
+        return useExistingElementsForNewElements(element, function () {
             return origCreate.apply(child, initArgs);
         });
     }
@@ -179,7 +179,7 @@
             return origCreate.apply(element, initArgs);
         }
         var headerCloseButton = element.data('headerCloseButton');
-        return useExistingElementsForNewElements(headerCloseButton, function() {
+        return useExistingElementsForNewElements(headerCloseButton, function () {
             return origCreate.apply(element, initArgs);
         });
     }
@@ -213,6 +213,7 @@
             }
             return false;
         }
+
         var res = withPatches($.fn, {
             init:function (_init, self, args) {
                 var selector = args[0];
@@ -246,7 +247,7 @@
             }
         }, callback);
         for (tagName in existingElementsHashByElementName) {
-            throw new Error("existing element with tagName "+tagName+" was not used!");
+            throw new Error("existing element with tagName " + tagName + " was not used!");
         }
         return res;
     }
@@ -356,17 +357,18 @@
                     iElement.trigger("expand");
                 }
             });
-
-            iElement.bind("collapse", function () {
-                scope.$apply(function () {
-                    collapsedSetter(scope, true);
+            if (collapsedSetter) {
+                iElement.bind("collapse", function () {
+                    scope.$apply(function () {
+                        collapsedSetter(scope, true);
+                    });
                 });
-            });
-            iElement.bind("expand", function () {
-                scope.$apply(function () {
-                    collapsedSetter(scope, false);
+                iElement.bind("expand", function () {
+                    scope.$apply(function () {
+                        collapsedSetter(scope, false);
+                    });
                 });
-            });
+            }
         }
     }
 

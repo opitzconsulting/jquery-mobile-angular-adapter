@@ -729,7 +729,7 @@ factory(window.jQuery, window.angular);
         var child = element.children().eq(0);
         child.insertBefore(element);
         element.empty();
-        return useExistingElementsForNewElements(element, function() {
+        return useExistingElementsForNewElements(element, function () {
             return origCreate.apply(child, initArgs);
         });
     }
@@ -752,7 +752,7 @@ factory(window.jQuery, window.angular);
             return origCreate.apply(element, initArgs);
         }
         var headerCloseButton = element.data('headerCloseButton');
-        return useExistingElementsForNewElements(headerCloseButton, function() {
+        return useExistingElementsForNewElements(headerCloseButton, function () {
             return origCreate.apply(element, initArgs);
         });
     }
@@ -786,6 +786,7 @@ factory(window.jQuery, window.angular);
             }
             return false;
         }
+
         var res = withPatches($.fn, {
             init:function (_init, self, args) {
                 var selector = args[0];
@@ -819,7 +820,7 @@ factory(window.jQuery, window.angular);
             }
         }, callback);
         for (tagName in existingElementsHashByElementName) {
-            throw new Error("existing element with tagName "+tagName+" was not used!");
+            throw new Error("existing element with tagName " + tagName + " was not used!");
         }
         return res;
     }
@@ -929,17 +930,18 @@ factory(window.jQuery, window.angular);
                     iElement.trigger("expand");
                 }
             });
-
-            iElement.bind("collapse", function () {
-                scope.$apply(function () {
-                    collapsedSetter(scope, true);
+            if (collapsedSetter) {
+                iElement.bind("collapse", function () {
+                    scope.$apply(function () {
+                        collapsedSetter(scope, true);
+                    });
                 });
-            });
-            iElement.bind("expand", function () {
-                scope.$apply(function () {
-                    collapsedSetter(scope, false);
+                iElement.bind("expand", function () {
+                    scope.$apply(function () {
+                        collapsedSetter(scope, false);
+                    });
                 });
-            });
+            }
         }
     }
 
@@ -1056,13 +1058,6 @@ factory(window.jQuery, window.angular);
 
     disableJqmHashChange();
 
-    var originalPath = location.pathname;
-    var originalBasePath = getBasePath(originalPath);
-
-    function getBasePath(path) {
-        return path.substr(0, path.lastIndexOf('/'));
-    }
-
     // html5 mode is always required, so we are able to allow links like
     // <a href="somePage.html"> to load external pages.
     mod.config(['$locationProvider', function ($locationProvider) {
@@ -1097,6 +1092,13 @@ factory(window.jQuery, window.angular);
     }
 
     mod.run(['$route', '$rootScope', '$location', '$browser', function ($route, $rootScope, $location, $browser) {
+        var originalPath = location.pathname;
+        var originalBasePath = getBasePath(originalPath);
+
+        function getBasePath(path) {
+            return path.substr(0, path.lastIndexOf('/'));
+        }
+
         var routeOverrideCopyProps = ['templateUrl', 'jqmOptions', 'onActivate'];
         $rootScope.$on('$routeChangeStart', function (event, newRoute) {
             var routeOverride = $location.$$routeOverride;

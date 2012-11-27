@@ -12,76 +12,24 @@ Test page during development.
     <script src="lib/angular.js"></script>
     <script src="jqm-angular.jsp"></script>
 
-    <script>
 
-        var mod = angular.module("ng");
-
-        // TODO use this for integration tests!
-        /*
-        mod.config(function ($snifferProvider) {
-            var _get = $snifferProvider.$get[1];
-            $snifferProvider.$get[1] = function () {
-                var res = _get.apply(this, arguments);
-                res.history = true;
-                return res;
-            }
-        });
-        */
-
-
-        mod.config(['$routeProvider', function ($routeProvider) {
-            $routeProvider.when('/a', {
-                templateUrl:'template.html',
-                onActivate: 'onActivate',
-                jqmOptions: {
-                    transition: 'flip'
-                }
-            });
-        }]);
-
-        mod.controller("MainController", function($scope, $route, $location, $navigate) {
-            $scope.click = function() {
-                /*
-                $location.routeOverride({
-                    jqmOptions: {transition: 'slide'},
-                    // templateUrl: 'testPage.html',
-                    locals: {
-                        test: 'tbo'
-                    }
-                    // onActivate: 'onActivate2'
-                });
-                $location.path('a');
-                */
-                $navigate({target: 'a', transition: 'slide'}, 'onActivate2', {test: 'tbo'});
-            }
-        });
-
-        mod.controller("TestController", function($scope, $route) {
-            $scope.onActivate = function(locals) {
-                console.log("Hello", locals);
-                console.log($route);
-            };
-            $scope.onActivate2 = function(locals) {
-                console.log("Hello2", locals);
-                console.log($route);
-            }
-        });
-
-
-    </script>
 
 </head>
 <body ng-app="ng">
 
-<div id="main" data-role="page" ng-controller="MainController">
-    <div data-role="header">
-        <h1>Main</h1>
-    </div>
+<div id="main" data-role="page">
     <div data-role="content">
-        <a href="" ngm-vclick="click()">Test</a>
+        <div data-role="collapsible" data-collapsed="true">
+            <h3>Header</h3>
+            <div>
+                Content
+            </div>
+        </div>
+        {{opened}}
+        <button ng-click="collapsed=false">Open</button>
+        <button ng-click="collapsed=true">Close</button>
     </div>
 </div>
-
 ​​
 </body>
 

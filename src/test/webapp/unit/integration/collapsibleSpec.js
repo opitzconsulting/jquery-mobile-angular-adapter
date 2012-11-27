@@ -38,33 +38,39 @@ describe("collapsible", function () {
         expect(input.hasClass(collapsedClass)).toBeFalsy();
     });
 
-    it('should update the data-collapsed variable', function () {
-        var d = testutils.compileInPage('<div id="el" data-role="collapsible" data-collapsed="collapsed">' +
-            '<h3>header</h3>' +
-            '<p>content</p>' +
-            '</div>');
-        var input = d.element;
-        var scope = input.scope();
-        var header = input.find('h3');
-        expect(scope.collapsed).toBe(false);
-        header.trigger('click');
-        expect(scope.collapsed).toBe(true);
+    describe('data-collapsed', function() {
+        var input, scope, header;
+        function init(collapsedAttribute) {
+            var d = testutils.compileInPage('<div id="el" data-role="collapsible" data-collapsed="'+collapsedAttribute+'">' +
+                '<h3>header</h3>' +
+                '<p>content</p>' +
+                '</div>');
+            input = d.element;
+            scope = input.scope();
+            header = input.find('h3');
+        }
+
+        it('should update the data-collapsed variable', function () {
+            init('collapsed');
+            expect(scope.collapsed).toBe(false);
+            header.trigger('click');
+            expect(scope.collapsed).toBe(true);
+        });
+
+        it('should work with fixed data-collapsed value', function () {
+            init('true');
+            header.trigger('click');
+            // expect no exception here.
+        });
+
+        it("should update the ui when data-collapsed changes", function() {
+            init('collapsed');
+            expect(input.hasClass(collapsedClass)).toBe(false);
+            scope.collapsed = true;
+            scope.$root.$digest();
+            expect(input.hasClass(collapsedClass)).toBe(true);
+        });
     });
-
-    it("should update the ui when data-collapsed changes", function() {
-        var d = testutils.compileInPage('<div id="el" data-role="collapsible" data-collapsed="collapsed">' +
-            '<h3>header</h3>' +
-            '<p>content</p>' +
-            '</div>');
-        var input = d.element;
-        var scope = input.scope();
-        expect(input.hasClass(collapsedClass)).toBe(false);
-        scope.collapsed = true;
-        scope.$root.$digest();
-        expect(input.hasClass(collapsedClass)).toBe(true);
-    });
-
-
 
     it("should use the disabled attribute", function() {
         var d = testutils.compileInPage('<div id="el" data-role="collapsible" ng-disabled="disabled">' +

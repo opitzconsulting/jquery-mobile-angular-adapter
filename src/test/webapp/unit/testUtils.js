@@ -8,7 +8,7 @@
         $.mobile.firstPage = $();
         $.mobile.urlHistory.stack = [ {url : 'someUrl' } ];
         $.mobile.urlHistory.activeIndex = 0;
-        module("ng", function($provide) {
+        module("ng", function($provide, $routeProvider) {
             $provide.value('$rootElement', $("body"));
         });
     });

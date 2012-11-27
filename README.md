@@ -21,6 +21,7 @@ Dependencies
 
 Examples
 ------------
+- See the [wiki page](wiki/Projects-using-the-adapter)
 - [Todo mobile](http://jsfiddle.net/tigbro/Du2DY/): JsFiddle
 - [Todo mobile](https://github.com/tigbro/todo-mobile): Single source app for jquery-mobile and sencha touch:
 - [Rent Your Legacy Car](https://github.com/mjswa/rylc-html5): A more complex example from the german book [Mobile Web-Apps mit JavaScript](http://www.opitz-consulting.com/go_javascriptbuch).

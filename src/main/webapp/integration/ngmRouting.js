@@ -53,13 +53,6 @@
 
     disableJqmHashChange();
 
-    var originalPath = location.pathname;
-    var originalBasePath = getBasePath(originalPath);
-
-    function getBasePath(path) {
-        return path.substr(0, path.lastIndexOf('/'));
-    }
-
     // html5 mode is always required, so we are able to allow links like
     // <a href="somePage.html"> to load external pages.
     mod.config(['$locationProvider', function ($locationProvider) {
@@ -94,6 +87,13 @@
     }
 
     mod.run(['$route', '$rootScope', '$location', '$browser', function ($route, $rootScope, $location, $browser) {
+        var originalPath = location.pathname;
+        var originalBasePath = getBasePath(originalPath);
+
+        function getBasePath(path) {
+            return path.substr(0, path.lastIndexOf('/'));
+        }
+
         var routeOverrideCopyProps = ['templateUrl', 'jqmOptions', 'onActivate'];
         $rootScope.$on('$routeChangeStart', function (event, newRoute) {
             var routeOverride = $location.$$routeOverride;

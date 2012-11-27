@@ -97,8 +97,8 @@ describe("regression", function () {
         });
     });
 
-    describe('namespace', function() {
-        it("should allow to use a different jquery mobile namespace", function() {
+    describe('namespace', function () {
+        it("should allow to use a different jquery mobile namespace", function () {
             loadHtml('/jqmng/ui/empty-fixture.html', function (frame) {
                 var $ = frame.$;
                 $.mobile.ns = "jqm-";
@@ -114,70 +114,68 @@ describe("regression", function () {
 
     });
 
-  describe('navigation', function() {
-      it("should navigate correctly when angular is loaded before jqm", function() {
-          var $, win;
-          loadHtml('/jqmng/ui/test-fixture-deferredBootstrap.html#/page1.html');
-          runs(function () {
-              win = testframe();
-              $ = win.$;
-              var injector = $("body").injector();
-              var $location = injector.get("$location");
-              $location.path("page2.html");
-              // $.mobile.changePage("page2.html");
-          });
-          runs(function() {
-              win.history.back();
-          });
-          waits(1000);
-          runs(function() {
-              expect($.mobile.activePage.attr("id")).toBe("page1");
-          });
-      });
+    describe('navigation', function () {
+        it("should navigate correctly when angular is loaded before jqm", function () {
+            var $, win;
+            loadHtml('/jqmng/ui/test-fixture-deferredBootstrap.html#/page1.html');
+            runs(function () {
+                win = testframe();
+                $ = win.$;
+                var injector = $("body").injector();
+                var $location = injector.get("$location");
+                $location.path("page2.html");
+                // $.mobile.changePage("page2.html");
+            });
+            runs(function () {
+                win.history.back();
+            });
+            waits(1000);
+            runs(function () {
+                expect($.mobile.activePage.attr("id")).toBe("page1");
+            });
+        });
 
 
-      it('should be able to start at an internal subpage in jqmCompatMode when using the $location service in a main controller', function() {
-          var $, win, errors;
-          loadHtml('/jqmng/ui/test-fixture.html#page2', function(win) {
-              win.$("body").attr("ng-controller", "MainController");
-              win.MainController = function($location) {
+        it('should be able to start at an internal subpage in jqmCompatMode when using the $location service in a main controller', function () {
+            var $, win, errors;
+            loadHtml('/jqmng/ui/test-fixture.html#page2', function (win) {
+                win.$("body").attr("ng-controller", "MainController");
+                win.MainController = function ($location) {
 
-              };
-              errors = [];
-              win.onerror = function(event) {
-                  errors.push(event);
-              }
+                };
+                errors = [];
+                win.onerror = function (event) {
+                    errors.push(event);
+                }
 
-          });
-          runs(function () {
-              win = testframe();
-              $ = win.$;
-              expect(errors).toEqual([]);
-              expect($.mobile.activePage.attr("id")).toBe("page2");
-          });
-      });
+            });
+            runs(function () {
+                win = testframe();
+                $ = win.$;
+                expect(errors).toEqual([]);
+                expect($.mobile.activePage.attr("id")).toBe("page2");
+            });
+        });
 
-      it('should be able to start at an external subpage in jqmCompatMode when using the $location service in a main controller', function() {
-          var $, win, errors;
-          loadHtml('/jqmng/ui/test-fixture.html#/jqmng/ui/externalPage.html', function(win) {
-              win.$("body").attr("ng-controller", "MainController");
-              win.MainController = function($location) {
+        it('should be able to start at an external subpage in jqmCompatMode when using the $location service in a main controller', function () {
+            var $, win, errors;
+            loadHtml('/jqmng/ui/test-fixture.html#/jqmng/ui/externalPage.html', function (win) {
+                win.$("body").attr("ng-controller", "MainController");
+                win.MainController = function ($location) {
 
-              };
-              errors = [];
-              win.onerror = function(event) {
-                  errors.push(event);
-              }
-          });
-          runs(function () {
-              win = testframe();
-              $ = win.$;
-              expect(errors).toEqual([]);
-              expect($.mobile.activePage.attr("id")).toBe("externalPage");
-          });
-      });
-
-
-  });
+                };
+                errors = [];
+                win.onerror = function (event) {
+                    errors.push(event);
+                }
+            });
+            runs(function () {
+                win = testframe();
+                $ = win.$;
+                expect(errors).toEqual([]);
+                expect($.mobile.activePage.attr("id")).toBe("externalPage");
+            });
+        });
+    });
 
 });

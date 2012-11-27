@@ -94,6 +94,49 @@ describe('ngmRouting', function() {
         });
     });
 
+    describe('misc', function() {
+        it('should deactivate jqm hash listening and changing', function() {
+            expect($.mobile.pushStateEnabled).toBe(false);
+            expect($.mobile.hashListeningEnabled).toBe(false);
+            expect($.mobile.linkBindingEnabled).toBe(false);
+            expect($.mobile.changePage.defaults.changeHash).toBe(false);
+        });
+
+        it('should not change the base tag during jqm navigation, as angular does not like this (see following bug test)', inject(function($browser, $location) {
+            expect($.support.dynamicBaseTag).toBe(false);
+            var oldHref = $.mobile.base.element.attr("href");
+            $.mobile.base.set("somePage");
+            expect($.mobile.base.element.attr("href")).toBe(oldHref);
+        }));
+
+        it('should still contain the angular bug: changing the $location.path in a click function of an anchor when the base tag is different to the document location results in a wrong location', inject(function($browser, $location) {
+            spyOn($.mobile, 'changePage');
+            var initUrl = $browser.$$url;
+
+            var c = testutils.compileInPage('<a ng-click="click()">Link</a>');
+
+            var base = $("base");
+            var oldBase = base.attr("href");
+            base.attr('href', initUrl+'test.html');
+
+            var link = c.element;
+            var scope = link.scope();
+            scope.click = function() {
+                $location.path("/someLink");
+            };
+            link.click();
+            // This is the bug: This should really be equal if everything would work as it should be!
+            expect($location.path()).not.toEqual("/someLink");
+
+            base.attr('href', oldBase);
+
+        }));
+    });
+
+    describe('route listening', function() {
+
+    });
+
 
 
 

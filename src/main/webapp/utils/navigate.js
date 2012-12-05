@@ -11,7 +11,7 @@
     }
 
     var mod = angular.module('ng');
-    mod.factory('$navigate', ['$location', '$history', function($location, $history) {
+    mod.factory('$navigate', ['$location', function($location) {
         /*
          * Service for page navigation.
          * @param target has the syntax: [<transition>:]pageId
@@ -34,22 +34,18 @@
                 target = parts[1];
             }
             if (target === 'back') {
-                $history.go(-1);
-                return;
-            }
-            if (isBack) {
-                $location.back();
+                $location.goBack();
+            } else {
+                if (isBack) {
+                    $location.backMode();
+                }
+                $location.url(target);
             }
             $location.routeOverride({
                 jqmOptions: navigateOptions,
                 onActivate: activateFunctionName,
                 locals: activateParams
             });
-            if (target.charAt(0)==='#') {
-                $location.hash(target.substring(1));
-            } else {
-                $location.path(target);
-            }
         }
 
         return navigate;

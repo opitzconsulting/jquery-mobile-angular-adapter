@@ -51,14 +51,7 @@ angular.mock.$Browser = function() {
     // register url polling fn
 
     self.onUrlChange = function(listener) {
-        self.pollFns.push(
-            function() {
-                if (self.$$lastUrl != self.$$url) {
-                    self.$$lastUrl = self.$$url;
-                    listener(self.$$url);
-                }
-            }
-        );
+        self.pollFns.push(listener);
 
         return listener;
     };
@@ -142,9 +135,14 @@ angular.mock.$Browser.prototype = {
      * run all fns in pollFns
      */
     poll: function poll() {
-        angular.forEach(this.pollFns, function(pollFn){
-            pollFn();
-        });
+        var self = this;
+        if (this.$$lastUrl != this.$$url) {
+            this.$$lastUrl = this.$$url;
+
+            angular.forEach(this.pollFns, function(pollFn){
+                pollFn(self.$$url);
+            });
+        }
     },
 
     addPollFn: function(pollFn) {

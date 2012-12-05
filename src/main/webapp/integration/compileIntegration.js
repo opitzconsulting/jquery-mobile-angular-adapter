@@ -1,14 +1,6 @@
 (function ($, angular) {
     // Only digest the $.mobile.activePage when rootScope.$digest is called.
     var ng = angular.module('ng');
-    $('div').live('pagebeforeshow', function (event, data) {
-        var page = $(event.target);
-        var currPageScope = page.scope();
-        if (currPageScope) {
-            currPageScope.$emit("jqmPagebeforeshow");
-            currPageScope.$root.$digest();
-        }
-    });
 
     $.mobile.autoInitializePage = false;
     var lastCreatedPages = [];
@@ -139,6 +131,11 @@
                         // This does no dom transformation, so it's safe to call this in the prelink function.
                         createPagesWithoutPageCreateEvent(iElement);
                         lastCreatedPages.push(scope);
+                        iElement.bind('pagebeforeshow', function (event) {
+                            var page = $(event.target);
+                            scope.$emit("jqmPagebeforeshow", page);
+                            scope.$root.$digest();
+                        });
                     }
                 };
             }

@@ -15,7 +15,7 @@ If you are interested in how to build mobile web apps with this adapter, have a 
 
 Dependencies
 ----------------
-- angular 1.0.2
+- angular 1.0.3
 - jquery 1.7.1
 - jquery mobile 1.2.0 Final
 
@@ -156,40 +156,58 @@ The adapter integrates angular routes with jquery mobile in the following way:
 
     Those properties are directly passed to `$.mobile.changePage`. For a documentation of the available options
     have a look at the jquery mobile documentation.
-- You can set the special property `onActivate`. If this is set,
+- You can set the special property `onActivate` in routes. If this is set,
   a function with this name is searched and executed in the scope of the page to which the route navigates to.
-  The parameters for this function are the `$route.current.locals`.
+  The parameters for this function are the `$route.current.locals`, which are calculates by the `resolve` entry
+  of the route. E.g.
 
-- The `$location` service has a new function `routeOverride`. By this, you can override route properties only
-  for the next routing. This is useful e.g. for passing special parameters to the `onActivate` function. The following
-  properties can be overridden: `templateUrl`, `jqmOptions`, `onActivate`, `locals`. E.g.
+        $routeProvider.when('/somePage', {
+            templateUrl:'someTemplate.html',
+            onActivate: 'someFn',
+            resolve: {someParam: function() { return 'hello'; }}
+        });
 
-      $location.routeOverride({
-        locals: {someKey: 'someValue'},
-        onActivate: 'someActivateFn'
-      });
-      $location.path('/someRoutePath');
-
-  On the next route change, this will call the function `someActivateFn` on the new page and pass the parameter object
-  `{someKey: 'someValue'}`.
-
-
+        function SomePageController($scope) {
+           $scope.someFn = function(locals) {
+              expect(locals.someParam).toBe('hello');
+           }
+        }
 
 - Internally, we use jquery mobile to load the pages and do the transition between the pages.
-  By this, we automatically support
-  the prefetching and caching functionality for pages from jquery mobile (see their docs for details).
+  By this, we automatically support the prefetching and caching functionality for pages from jquery mobile (see their docs for details).
   E.g. use `<a href="prefetchThisPage.html" data-prefetch> ... </a>` in a parent page to prefetch a child page.
+- Please also look at the `$location` service for controlling history and changing route params for just one route call.
+
+Default routing: `basePath+$location.url()`
+
+* E.g. for a page `/somePath/somePage.html` and `location.url()=='/page1'` this results in `/somePath/page1`.
+* To be compatible to plain jquery mobile the adapter creates a default routing for all urls that are not
+  mapped by other routes.
+* If a document contains the link `<a href="somePage">` and the user clicks on that link, angular updates `$location.url`
+  to `/somePage`. However, in plain jquery mobile, this should load the page `/somePath/somePage`. This is why
+  we append the `basePath` to the `$location.url()`.
+
+
+Notes:
+
+- We always enable `$locationProvider.html5Mode`. By this, we are compatible to the default jquery mobile behaviour,
+  e.g. links like `<a href="somePage.html">` are possible and do not reload the whole page but use AJAX.
+- If you want to start an app directly on a subpage, use the following url:
+  * For an external page that should be loaded using ajax: `index.html#/somePage.html`
+  * For an internal page that is also contained in the `index.html: `index.html#/index.html#someOtherPage` (yes, this url contains
+    2 hashes).
+- jQuery mobile automatically creates a `<base>` tag for the main page and sets it's href-attribute to the main page.
+  There are some parts of angular that use this fact, so keep it in mind when debugging errors.
 
 
 Restrictions:
+
 - controllers on routes are not supported. Please use `ng-controller` within the page to be loaded for this
   or the `onActivate` function on routes.
   The reasoning behind this is that some pages of jquery mobile are local pages in the same document as the main page
   and others are loaded using ajax. However, the pages in the same document are compiled at the same time the main page is compiled.
   Furthermore, by supporting the page cache of jquery mobile assigning a controller would also not be possible.
   To pass data via routes just let your controllers examine the current route using the `$route` and `$routeParams` service.
-- We always enable `$locationProvider.html5Mode`. By this, we are compatible to the default jquery mobile behaviour,
-  e.g. links like `<a href="somePage.html">` are possible and do not reload the whole page but use AJAX.
 - Routes with a `templateUrl` must point to a full jquery mobile page. Loading parts of jquery mobile pages is not supported.
 - The `ngView` directive cannot be used as jqm pages need to be inserted at a special place in the DOM.
   However, the adapter takes care of the normal `ngView` handling and inserts the pages at the right place.
@@ -244,22 +262,62 @@ does not allow elements between an `ul` and an `li` element.
 
 Usage: E.g. `<div ngm-if="myFlag">asdfasdf</div>`
 
+### Service `$history`
+
+Methods and Properties:
+
+* `$history.go(relativeIndex)`: This will call `window.history.go(relativeIndex)`.
+* `$history.urlStack`: This contains the list of visited urls
+* `$history.activeIndex`: This defines the currently active index in the `urlStack`
+
+
+### Service `$location` (extensions)
+
+- `$location.routeOverride(someOverride)`: By this, you can override route properties only
+  for the next routing. This is useful e.g. for passing special parameters to the `onActivate` function. The following
+  properties can be overridden: `templateUrl`, `jqmOptions`, `onActivate`, `locals`
+  (With `locals` we mean the resolved functions from the `resolve` hash in a route). E.g.
+
+        $location.routeOverride({
+          locals: {someKey: 'someValue'},
+          onActivate: 'someActivateFn'
+        });
+        $location.path('/someRoutePath');
+
+        function SomePageController($scope) {
+           $scope.someActivateFn = function(locals) {
+              expect(locals.someKey).toBe(someValue);
+           }
+        }
+
+- `$location.backMode()`: This will try to go back in history to the url specified by `$location`. E.g. if the navigation path
+  to the current page is `page1->page2->page3` and we then call `$location.path('page1'); $location.backMode()` this will
+  go two steps back in history.
+- `location.goBack()`: This will call `$location.backMode()` and fill the url of `$location` by the last
+  entry in the browser history.
+
+
 ### Service `$navigate`
 
-Syntax: `$navigate('[transition]:pageId'[,activateFn][,activateFnParam1, ...])`
+Syntax: `$navigate('[transition]:url'[,activateFn][,activateParams])`
 
-Service to change the given page.
-- The pageId is the pageId of `$.mobile.changePage`, e.g. `#homepage` for navigation within the current page
-  or `somePage.html` for loading another page.
+Service to change the current page.
+
+- The url will be given to `$location.url`.
 - If the transition has the special value `back` than the browser will go back in history to
-  the defined page, e.g. `back:#hompage`.
-- The transition may be omitted, e.g. `$navigate('#homepage')`.
-- To go back one page use `$navigate('back')`.
+  the defined page, e.g. `back:#hompage` (see `$location.backMode()`).
+- The transition defines the jquey mobile transition, and may be omitted, e.g. `$navigate('#homepage')`
+  (see `$location.routeOverride` and `jqmOptions` property of routes).
+- To go back one page use `$navigate('back')` (see `$location.goBack()`).
 - If the `activateFn` function is given, it will be called after the navigation on the target page with
-  `activateFnParam1, ...` as arguments. The invocation is done before the `pagebeforeshow` event on the target page.
+  `activateParams` as single argument. The invocation is done before the `pagebeforeshow` event on the target page.
+  (see `$location.routeOverride` and `onActivate` property of routes).
 - If you want to pass special options to the jquery mobile `changePage` function:
   Pass in an object to the `$navigate` function instead of a pageId. This object will be forwarded
   to jqm `changePage`. To define the new pageId, this object needs the additional property `target`.
+  (see `$location.routeOverride` and `jqmOptions` property of routes).
+
+Note: This service is for backward compatibility and only uses the extensions of `$location` for it's implementation.
 
 
 ### Service $waitDialog
@@ -393,3 +451,6 @@ Ohter possibilities not chosen:
   this is very slow, as this would lead to many DOM traversals by the different jqm listeners
   for the "create"-Event.
 
+Integration of jqm routing and angular routing:
+- We chose to use the angular routing, as it is very flexible and programmable, and it is easier to integrate jqm
+  routing with angular routing and the other way around.

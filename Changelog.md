@@ -3,9 +3,10 @@ Changelog
 
 1.1.2
 -------------
-- updated to angular 1.0.2 and jqm 1.2.0
+- updated to angular 1.0.3 and jqm 1.2.0
 - support for angular routes for external jqm pages
-- general `$history` service that is integrated with `$location` service.
+- general `$history` service and extensions to the `$location` service to
+  control history and route parameters for a single route call.
 - `$navigate` now only supports one parameter for the activation function. See `$location.routeOverride` for
   the general concept.
 - internal refactorings and simplifications.

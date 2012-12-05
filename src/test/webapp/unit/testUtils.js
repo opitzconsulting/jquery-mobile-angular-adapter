@@ -8,8 +8,12 @@
         $.mobile.firstPage = $();
         $.mobile.urlHistory.stack = [ {url : 'someUrl' } ];
         $.mobile.urlHistory.activeIndex = 0;
-        module("ng", function($provide, $routeProvider) {
+        $.mobile.origChangePage = $.mobile.changePage;
+        spyOn($.mobile, 'changePage');
+        spyOn(window.history, 'go');
+        module("ng", function($provide) {
             $provide.value('$rootElement', $("body"));
+            $.mobile._registerBrowserDecorator($provide);
         });
     });
 

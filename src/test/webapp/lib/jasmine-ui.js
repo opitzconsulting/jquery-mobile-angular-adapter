@@ -47,27 +47,35 @@ jasmine.ui.log = function(msg) {
     }
 
     var testwindow;
+    var loadCounter = 0;
     window.testframe = function(url) {
         if (arguments.length > 0) {
             if (!url.charAt(0)=='/') {
                 throw new Error("the url for the testframe needs to be absolute!");
             }
             if (!testwindow) {
-                testwindow = window.open(url, 'jasmineui');
+                testwindow = window.open('', 'jasmineui');
             }
-            var oldPath = testwindow.location.pathname;
-            // if only the hash changes, the
-            // page will not reload by assigning the href but only
-            // change the hashpath.
-            // So detect this and do a manual reload.
-            var urlSplitAtHash = splitAtHash(url);
-            if (oldPath===urlSplitAtHash[0]) {
-                testwindow.location.hash = urlSplitAtHash[1];
-                testwindow.location.reload();
+            var oldUrl = testwindow.location.href;
+            var match = testwindow.location.href.match(/reloadId=([^#\?])+/);
+            if (match) {
+                var tmp = (+match[1])+1;
+                if (!isNaN(tmp)) {
+                    loadCounter = tmp;
+                }
+            }
+
+            // make the url unique by using a counter...
+            var uniqueUrl;
+            if (url.indexOf('?')===-1) {
+                uniqueUrl = url.replace(/#/g, '?reloadId='+loadCounter+'#');
             } else {
-                testwindow.location.href = url;
+                uniqueUrl = url.replace(/\?/g, '?reloadId='+loadCounter+'&');
             }
+            loadCounter++;
+            testwindow.location.href = uniqueUrl;
         }
+
         return testwindow;
     };
     window.testwindow = window.testframe;

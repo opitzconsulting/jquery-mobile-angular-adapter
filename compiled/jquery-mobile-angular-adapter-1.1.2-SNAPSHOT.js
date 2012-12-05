@@ -287,14 +287,6 @@ factory(window.jQuery, window.angular);
 (function ($, angular) {
     // Only digest the $.mobile.activePage when rootScope.$digest is called.
     var ng = angular.module('ng');
-    $('div').live('pagebeforeshow', function (event, data) {
-        var page = $(event.target);
-        var currPageScope = page.scope();
-        if (currPageScope) {
-            currPageScope.$emit("jqmPagebeforeshow");
-            currPageScope.$root.$digest();
-        }
-    });
 
     $.mobile.autoInitializePage = false;
     var lastCreatedPages = [];
@@ -425,6 +417,11 @@ factory(window.jQuery, window.angular);
                         // This does no dom transformation, so it's safe to call this in the prelink function.
                         createPagesWithoutPageCreateEvent(iElement);
                         lastCreatedPages.push(scope);
+                        iElement.bind('pagebeforeshow', function (event) {
+                            var page = $(event.target);
+                            scope.$emit("jqmPagebeforeshow", page);
+                            scope.$root.$digest();
+                        });
                     }
                 };
             }
@@ -1011,20 +1008,28 @@ factory(window.jQuery, window.angular);
     var mod = angular.module("ng");
 
     function registerBrowserDecorator($provide) {
-        $provide.decorator('$browser', ['$delegate', function ($browser) {
-            $browser.inHashChange = 0;
-            var _onUrlChange = $browser.onUrlChange;
-            $browser.onUrlChange = function (callback) {
-                var proxy = function () {
-                    $browser.inHashChange++;
-                    try {
-                        return callback.apply(this, arguments);
-                    } finally {
-                        $browser.inHashChange--;
-                    }
-                };
-                _onUrlChange.call(this, proxy);
+        $provide.decorator('$browser', ['$delegate', '$history', function ($browser, $history) {
+            $browser.origBaseHref = $browser.baseHref;
+            $browser.baseHref = function () {
+                var result = $browser.origBaseHref.apply(this, arguments);
+                return result.replace(/\?[^#]*/, "");
             };
+            var _url = $browser.url;
+            $browser.url = function (url, replace) {
+                var back = replace === 'back';
+                if (back) {
+                    replace = false;
+                }
+                var res = _url.call(this, replace);
+                if (url) {
+                    // setter
+                    $history.onUrlChangeProgrammatically(url, replace, back);
+                }
+                return _url.apply(this, arguments);
+            };
+            $browser.onUrlChange(function (newUrl) {
+                $history.onUrlChangeBrowser(newUrl);
+            });
             return $browser;
         }]);
 
@@ -1052,7 +1057,8 @@ factory(window.jQuery, window.angular);
         $.mobile.changePage.defaults.changeHash = false;
         if ($.support.dynamicBaseTag) {
             $.support.dynamicBaseTag = false;
-            $.mobile.base.set = function () {};
+            $.mobile.base.set = function () {
+            };
         }
     }
 
@@ -1073,7 +1079,12 @@ factory(window.jQuery, window.angular);
     mod.config(['$routeProvider', function ($routeProvider) {
         var _when = $routeProvider.when;
         $routeProvider.when = function (path, params) {
-            createNgmRouting(params);
+            if (!params.templateUrl && !params.redirectTo) {
+                throw new Error("Only routes with templateUrl or redirectTo are allowed with the jqm adapter!");
+            }
+            if (params.controller) {
+                throw new Error("Controllers are not allowed on routes with the jqm adapter. However, you may use the onActivate parameter");
+            }
             return _when.apply(this, arguments);
         };
 
@@ -1082,23 +1093,11 @@ factory(window.jQuery, window.angular);
         });
     }]);
 
-    function createNgmRouting(routeParams) {
-        if (!routeParams.templateUrl) {
-            throw new Error("Only routes with templateUrl are allowed!");
-        }
-        if (routeParams.controller) {
-            throw new Error("Controllers are not allowed on routes. However, you may use the onActivate parameter");
-        }
+    function getBasePath(path) {
+        return path.substr(0, path.lastIndexOf('/'));
     }
 
-    mod.run(['$route', '$rootScope', '$location', '$browser', function ($route, $rootScope, $location, $browser) {
-        var originalPath = location.pathname;
-        var originalBasePath = getBasePath(originalPath);
-
-        function getBasePath(path) {
-            return path.substr(0, path.lastIndexOf('/'));
-        }
-
+    mod.run(['$route', '$rootScope', '$location', '$browser', '$history', function ($route, $rootScope, $location, $browser, $history) {
         var routeOverrideCopyProps = ['templateUrl', 'jqmOptions', 'onActivate'];
         $rootScope.$on('$routeChangeStart', function (event, newRoute) {
             var routeOverride = $location.$$routeOverride;
@@ -1134,26 +1133,20 @@ factory(window.jQuery, window.angular);
             var newRoute = $route.current;
             var $document = $(document);
 
-            function getDefaultJqmPageUrl() {
-                var hash = $location.hash();
-                if (hash) {
-                    return "#" + hash;
-                } else {
-                    var path = $location.path();
-                    if (path) {
-                        path = originalBasePath + path;
-                        return path;
-                    }
-                }
-                return originalPath;
-            }
-
             var url = newRoute.ngmTemplateUrl;
             if (url === DEFAULT_JQM_PAGE) {
-                url = getDefaultJqmPageUrl();
+                var url = $location.url();
+                if (url.indexOf('/') === -1) {
+                    url = $browser.origBaseHref() + url;
+                } else {
+                    url = getBasePath($browser.baseHref()) + url;
+                }
+            }
+            if (!url) {
+                return;
             }
             var navConfig = {};
-            if ($browser.inHashChange) {
+            if ($history.fromUrlChange) {
                 navConfig.fromHashChange = true;
             }
 
@@ -1173,59 +1166,104 @@ factory(window.jQuery, window.angular);
         });
     }]);
 
+    mod.directive('a', function() {
+        return {
+            restrict: 'E',
+            compile: function(element, attr) {
+                if (element.attr('href')==='#') {
+                    attr.$set('href', '');
+                }
+            }
+        };
+    });
+
 })(angular, $);
 (function ($, angular) {
 
     var mod = angular.module("ng");
     mod.config(['$provide', function ($provide) {
-        $provide.decorator('$location', ['$delegate', function ($location) {
-            $location.back = function () {
-                $location.$$back = true;
+        $provide.decorator('$location', ['$delegate', '$history', function ($location, $history) {
+            $location.backMode = function () {
+                $location.$$replace = "back";
+                return this;
+            };
+            $location.goBack = function () {
+                if ($history.activeIndex <= 0) {
+                    throw new Error("There is no page in the history to go back to!");
+                }
+                this.$$parse($history.urlStack[$history.activeIndex - 1]);
+                this.backMode();
                 return this;
             };
             return $location;
         }]);
+
     }]);
-
-    /* TODO
-    mod.run(['$rootScope', '$location', '$history', function ($rootScope, $location, $history) {
-        var urlStack = [];
-        var activeIndex = -1;
-
-        $rootScope.$on('$locationChangeStart', function (event, newUrl) {
-            if ($location.$$back) {
-                delete $location.$$back;
-
-
-                event.preventDefault();
-            }
-            // TODO problem, when some one else is rejecting the change
-            $location.$$savedReplace = $location.$$replace;
-        });
-        $rootScope.$on('$locationChangeSuccess', function (event, newUrl) {
-            activeIndex = urlStack.indexOf(newUrl);
-            if (activeIndex === -1) {
-                if ($location.$$savedReplace && urlStack.length) {
-                    urlStack[urlStack.length-1] = newUrl;
-                } else {
-                    urlStack.push(newUrl);
-                }
-                activeIndex = urlStack.length-1;
-            } else {
-
-            }
-        });
-    }]);
-
-    */
 
     mod.factory('$history', function () {
+        var $history;
+
         function go(relativeIndex) {
             window.history.go(relativeIndex);
         }
 
-        return {
-            go:go
+        function onUrlChangeBrowser(url) {
+            $history.activeIndex = $history.urlStack.indexOf(url);
+            if ($history.activeIndex === -1) {
+                onUrlChangeProgrammatically(url, false);
+            } else {
+                $history.fromUrlChange = true;
+            }
+        }
+
+        function onUrlChangeProgrammatically(url, replace, back) {
+            if (back) {
+                // Algorithm for going back:
+                // We just do a normal navigation with angular,
+                // by which we are adding a new entry into the navigation log.
+                // After the normal navigation, we also do a history.go(-...)
+                // to update the browser history.
+                // However, this second navigation does not trigger anything, as it
+                // does not change the url.
+                // This algorithm works well as by this we don't have to intercept $browser from
+                // doing anything, which would be tricky, as the digest cycle assumes that calling
+                // $browser.url-setter results in an immediate update to $browser.url getter,
+                // but changing browser history via history.go is asynchronous (in contrast
+                // to hash changing using location.hash / location.href).
+                // Furthermore, the route instance does not change, by which we can pass
+                // route overrides also when going back (see ngmRouting.js)
+                var currIndex = $history.activeIndex;
+                var newIndex = $history.urlStack.lastIndexOf(url, currIndex - 1);
+                if (newIndex !== -1 && currIndex !== -1) {
+                    // Update $history to contain the right values immediately
+                    $history.activeIndex = newIndex;
+                    $history.fromUrlChange = true;
+                    // Reason for "-1" here:
+                    // we always do an additional change for the current url (see algorithm above).
+                    $history.go(newIndex - currIndex - 1);
+                    // Note: Don't reflect the additional url change in the internal
+                    // urlStack, so calculating the new activeIndex works as expected.
+                    return;
+                }
+            }
+            if ($history.urlStack[$history.activeIndex] === url) {
+                return;
+            }
+            $history.fromUrlChange = false;
+            if (!replace) {
+                $history.activeIndex++;
+            }
+            $history.urlStack.splice($history.activeIndex, $history.urlStack.length - $history.activeIndex);
+            $history.urlStack.push(url);
+        }
+
+        return $history = {
+            go:go,
+            urlStack:[],
+            activeIndex:-1,
+            fromUrlChange:false,
+            onUrlChangeProgrammatically:onUrlChangeProgrammatically,
+            onUrlChangeBrowser:onUrlChangeBrowser
         };
     });
 })(window.jQuery, window.angular);
@@ -1608,7 +1646,7 @@ factory(window.jQuery, window.angular);
     }
 
     var mod = angular.module('ng');
-    mod.factory('$navigate', ['$location', '$history', function($location, $history) {
+    mod.factory('$navigate', ['$location', function($location) {
         /*
          * Service for page navigation.
          * @param target has the syntax: [<transition>:]pageId
@@ -1631,22 +1669,18 @@ factory(window.jQuery, window.angular);
                 target = parts[1];
             }
             if (target === 'back') {
-                $history.go(-1);
-                return;
-            }
-            if (isBack) {
-                $location.back();
+                $location.goBack();
+            } else {
+                if (isBack) {
+                    $location.backMode();
+                }
+                $location.url(target);
             }
             $location.routeOverride({
                 jqmOptions: navigateOptions,
                 onActivate: activateFunctionName,
                 locals: activateParams
             });
-            if (target.charAt(0)==='#') {
-                $location.hash(target.substring(1));
-            } else {
-                $location.path(target);
-            }
         }
 
         return navigate;

@@ -6,20 +6,28 @@
     var mod = angular.module("ng");
 
     function registerBrowserDecorator($provide) {
-        $provide.decorator('$browser', ['$delegate', function ($browser) {
-            $browser.inHashChange = 0;
-            var _onUrlChange = $browser.onUrlChange;
-            $browser.onUrlChange = function (callback) {
-                var proxy = function () {
-                    $browser.inHashChange++;
-                    try {
-                        return callback.apply(this, arguments);
-                    } finally {
-                        $browser.inHashChange--;
-                    }
-                };
-                _onUrlChange.call(this, proxy);
+        $provide.decorator('$browser', ['$delegate', '$history', function ($browser, $history) {
+            $browser.origBaseHref = $browser.baseHref;
+            $browser.baseHref = function () {
+                var result = $browser.origBaseHref.apply(this, arguments);
+                return result.replace(/\?[^#]*/, "");
             };
+            var _url = $browser.url;
+            $browser.url = function (url, replace) {
+                var back = replace === 'back';
+                if (back) {
+                    replace = false;
+                }
+                var res = _url.call(this, replace);
+                if (url) {
+                    // setter
+                    $history.onUrlChangeProgrammatically(url, replace, back);
+                }
+                return _url.apply(this, arguments);
+            };
+            $browser.onUrlChange(function (newUrl) {
+                $history.onUrlChangeBrowser(newUrl);
+            });
             return $browser;
         }]);
 
@@ -47,7 +55,8 @@
         $.mobile.changePage.defaults.changeHash = false;
         if ($.support.dynamicBaseTag) {
             $.support.dynamicBaseTag = false;
-            $.mobile.base.set = function () {};
+            $.mobile.base.set = function () {
+            };
         }
     }
 
@@ -68,7 +77,12 @@
     mod.config(['$routeProvider', function ($routeProvider) {
         var _when = $routeProvider.when;
         $routeProvider.when = function (path, params) {
-            createNgmRouting(params);
+            if (!params.templateUrl && !params.redirectTo) {
+                throw new Error("Only routes with templateUrl or redirectTo are allowed with the jqm adapter!");
+            }
+            if (params.controller) {
+                throw new Error("Controllers are not allowed on routes with the jqm adapter. However, you may use the onActivate parameter");
+            }
             return _when.apply(this, arguments);
         };
 
@@ -77,23 +91,11 @@
         });
     }]);
 
-    function createNgmRouting(routeParams) {
-        if (!routeParams.templateUrl) {
-            throw new Error("Only routes with templateUrl are allowed!");
-        }
-        if (routeParams.controller) {
-            throw new Error("Controllers are not allowed on routes. However, you may use the onActivate parameter");
-        }
+    function getBasePath(path) {
+        return path.substr(0, path.lastIndexOf('/'));
     }
 
-    mod.run(['$route', '$rootScope', '$location', '$browser', function ($route, $rootScope, $location, $browser) {
-        var originalPath = location.pathname;
-        var originalBasePath = getBasePath(originalPath);
-
-        function getBasePath(path) {
-            return path.substr(0, path.lastIndexOf('/'));
-        }
-
+    mod.run(['$route', '$rootScope', '$location', '$browser', '$history', function ($route, $rootScope, $location, $browser, $history) {
         var routeOverrideCopyProps = ['templateUrl', 'jqmOptions', 'onActivate'];
         $rootScope.$on('$routeChangeStart', function (event, newRoute) {
             var routeOverride = $location.$$routeOverride;
@@ -129,26 +131,20 @@
             var newRoute = $route.current;
             var $document = $(document);
 
-            function getDefaultJqmPageUrl() {
-                var hash = $location.hash();
-                if (hash) {
-                    return "#" + hash;
-                } else {
-                    var path = $location.path();
-                    if (path) {
-                        path = originalBasePath + path;
-                        return path;
-                    }
-                }
-                return originalPath;
-            }
-
             var url = newRoute.ngmTemplateUrl;
             if (url === DEFAULT_JQM_PAGE) {
-                url = getDefaultJqmPageUrl();
+                var url = $location.url();
+                if (url.indexOf('/') === -1) {
+                    url = $browser.origBaseHref() + url;
+                } else {
+                    url = getBasePath($browser.baseHref()) + url;
+                }
+            }
+            if (!url) {
+                return;
             }
             var navConfig = {};
-            if ($browser.inHashChange) {
+            if ($history.fromUrlChange) {
                 navConfig.fromHashChange = true;
             }
 
@@ -167,5 +163,16 @@
             }
         });
     }]);
+
+    mod.directive('a', function() {
+        return {
+            restrict: 'E',
+            compile: function(element, attr) {
+                if (element.attr('href')==='#') {
+                    attr.$set('href', '');
+                }
+            }
+        };
+    });
 
 })(angular, $);

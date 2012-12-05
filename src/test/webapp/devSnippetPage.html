@@ -8,29 +8,65 @@ Test page during development.
     <link rel="stylesheet" href="lib/jquery.mobile.css"/>
 
     <script src="lib/jquery.js"></script>
-    <script src="lib/jquery.mobile.js"></script>
     <script src="lib/angular.js"></script>
+    <script src="lib/jquery.mobile.js"></script>
     <script src="jqm-angular.jsp"></script>
 
+    <script>
 
+        var ng = angular.module("ng");
+        ng.controller("TestController", function($scope, $location, $rootScope) {
+            $scope.$navigate = function(hash, back) {
+                $location.path(hash);
+                if (back) {
+                    $location.backMode();
+                }
+            };
+
+            $rootScope.$on('$routeChangeSuccess', function() {
+                console.log("route change success");
+            });
+            $rootScope.$on('$locationChangeSuccess', function() {
+                console.log("location change success");
+            });
+        });
+
+        ng.config(function($routeProvider) {
+            $routeProvider.when('/page1', {
+                templateUrl: '#page1',
+                jqmOptions: {
+                    transition: 'slide'
+                }
+            });
+            $routeProvider.when('/page2', {
+                templateUrl: '#page2',
+                jqmOptions: {
+                    transition: 'slide'
+                }
+            });
+        });
+
+
+    </script>
 
 </head>
-<body ng-app="ng">
+<body ng-app="ng" ng-controller="TestController">
+  <div data-role="page" id="page1">
+      <div data-role="header">Page1</div>
+      <div data-role="content">
+          <a href="/page2">Page2</a>
+      </div>
 
-<div id="main" data-role="page">
-    <div data-role="content">
-        <div data-role="collapsible" data-collapsed="true">
-            <h3>Header</h3>
-            <div>
-                Content
-            </div>
-        </div>
-        {{opened}}
-        <button ng-click="collapsed=false">Open</button>
-        <button ng-click="collapsed=true">Close</button>
-    </div>
-</div>
-​​
+  </div>
+
+  <div data-role="page" id="page2">
+      <div data-role="header">Page2</div>
+      <div data-role="content">
+          <a ng-click="$navigate('', true)">Back to Page1</a>
+      </div>
+
+  </div>
+
 </body>
 
 </html>

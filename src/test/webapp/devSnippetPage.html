@@ -15,23 +15,8 @@ Test page during development.
     <script>
 
         var ng = angular.module("ng");
-        ng.controller("TestController", function($scope, $location, $rootScope) {
-            $scope.$navigate = function(hash, back) {
-                console.log("now");
-
-                /*$location.hash(hash);
-                if (back) {
-                    $location.backMode();
-                }
-                */
-            };
-
-            $rootScope.$on('$routeChangeSuccess', function() {
-                console.log("route change success");
-            });
-            $rootScope.$on('$locationChangeSuccess', function() {
-                console.log("location change success");
-            });
+        ng.controller("TestController", function($waitDialog) {
+                $waitDialog.show("Hello", function(){});
         });
     </script>
 
@@ -50,12 +35,11 @@ Test page during development.
   <div data-role="page" id="page1">
       <div data-role="header">Page1</div>
       <div data-role="content">
-          <a href="#page2" id="test">Page2</a>
       </div>
 
   </div>
 
-  <div data-role="page" id="page2">
+  <div data-role="dialog" id="page2">
       <div data-role="header">Page2</div>
       <div data-role="content">
           <a ngm-vclick="$navigate('', true)" href="#">Back to Page1</a>

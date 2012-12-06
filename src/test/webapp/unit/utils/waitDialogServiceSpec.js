@@ -89,6 +89,16 @@ describe("waitdialogService", function () {
             });
         });
 
+        it('should wait for jqm to initialize before using $.mobile.loading', function() {
+            var _old = $.mobile.pageContainer;
+            delete $.mobile.pageContainer;
+            service.show();
+            expect($.mobile.loading).not.toHaveBeenCalled();
+            $.mobile.pageContainer = _old;
+            $rootScope.$emit('jqmInit');
+            expect($.mobile.loading).toHaveBeenCalledWith('show');
+        });
+
     });
 
     describe('waitFor', function () {

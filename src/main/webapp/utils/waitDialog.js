@@ -26,6 +26,10 @@
         }
 
         function updateUi() {
+            if (!$.mobile.pageContainer) {
+                rootScope.$on("jqmInit", updateUi);
+                return;
+            }
             if (showCalls.length > 0) {
                 var lastCall = showCalls[showCalls.length - 1];
                 var msg = lastCall.msg;

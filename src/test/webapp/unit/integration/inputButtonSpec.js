@@ -15,6 +15,14 @@ describe("input button", function () {
         expect(createCount).toBe(2);
     });
 
+    it('should use the value attribute', function() {
+        var d = testutils.compileInPage('<input type="button" value="test">Test');
+        var page = d.page;
+        var input = d.element.find("input");
+        var textNode = $(".ui-btn-text", input.parent());
+        expect(textNode.text()).toBe('test');
+    });
+
     it('should allow clicks via ng-click', function () {
         var d = testutils.compileInPage('<input type="button" id="mysel" ng-click="flag = true">Test');
         var page = d.page;

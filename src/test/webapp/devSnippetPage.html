@@ -13,40 +13,29 @@ Test page during development.
     <script src="jqm-angular.jsp"></script>
 
     <script>
+        var mod = angular.module("ngm", []);
 
-        var ng = angular.module("ng");
-        ng.controller("TestController", function($waitDialog) {
-                $waitDialog.show("Hello", function(){});
+        mod.controller('MainController', function($scope) {
+
         });
     </script>
-
-    <script>
-        $(function() {
-           $("#test").bind("vclick", function() {
-               console.log("vclick");
-           });
-        });
-
-    </script>
-
 
 </head>
-<body ng-app="ng" ng-controller="TestController">
-  <div data-role="page" id="page1">
-      <div data-role="header">Page1</div>
-      <div data-role="content">
-      </div>
+<body>
+<div id="main" data-role="page" ng-app="ngm" ng-controller="MainController">
+    <div data-role="content">
+        <button data-icon="check">Button button</button>
 
-  </div>
+        <button data-icon="check">Button button</button>
 
-  <div data-role="dialog" id="page2">
-      <div data-role="header">Page2</div>
-      <div data-role="content">
-          <a ngm-vclick="$navigate('', true)" href="#">Back to Page1</a>
-      </div>
 
-  </div>
+        <input data-icon="check" type="button" value="Input button"></button>
+    </div>
+</div>
 
+​
+
+​
 </body>
 
 </html>

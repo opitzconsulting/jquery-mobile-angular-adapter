@@ -121,9 +121,11 @@
         var button = element.children().eq(0);
         var textNode = button.contents();
         var res = unwrapFromDivCreate(origCreate, element, initArgs);
-        var textSpan = element.find("span span");
-        textSpan.empty();
-        textSpan.append(textNode);
+        if (angular.lowercase(button[0].nodeName)==='button') {
+            var textSpan = element.find(".ui-btn-text");
+            textSpan.empty();
+            textSpan.append(textNode);
+        }
         return res;
     }
 

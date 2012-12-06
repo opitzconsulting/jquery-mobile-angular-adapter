@@ -105,7 +105,7 @@ describe("ngmRouting", function () {
                 });
             });
 
-            it('should load external pages without changing the base tag but adjusting link urls', function() {
+            it('should load external pages without changing the base tag but adjusting link urls', function () {
                 var startUrl;
                 init();
                 runs(function () {
@@ -288,8 +288,8 @@ describe("ngmRouting", function () {
                 expect(onActivateArguments).toBeFalsy();
                 $location.goBack();
                 $location.routeOverride({
-                    onActivate: 'onActivate',
-                    locals: expectedArgs
+                    onActivate:'onActivate',
+                    locals:expectedArgs
                 });
                 scope.$apply();
             });
@@ -299,6 +299,79 @@ describe("ngmRouting", function () {
             });
         });
 
+    });
+
+    describe('vclick events on empty anchor tags', function () {
+        var el;
+
+        function init(hrefValue) {
+            initWithHistorySupport('#/test-fixture.html#start', true, function (win) {
+                win.$("#start").append('<div data-role="content"><a href="' + hrefValue + '" id="link"></a></div>');
+                el = win.$("#link");
+            });
+        }
+
+        it('should execute a vclick handler when a click event occurs on empty links', function () {
+            init("");
+            runs(function () {
+                var spy = jasmine.createSpy('vclick');
+                el.bind('vclick', spy);
+                el.trigger('click');
+                expect(spy).toHaveBeenCalled();
+            });
+        });
+
+        it('should execute a vclick handler when a click event occurs on links with href="#"', function () {
+            init("#");
+            runs(function () {
+                var spy = jasmine.createSpy('vclick');
+                el.bind('vclick', spy);
+                el.trigger('click');
+                expect(spy).toHaveBeenCalled();
+            });
+        });
+
+        it('should execute a vclick handler when a click event occurs on a link with a filled href attribute', function() {
+            init("#someHash");
+            runs(function () {
+                var spy = jasmine.createSpy('vclick');
+                el.bind('vclick', spy);
+                el.trigger('click');
+                expect(spy).toHaveBeenCalled();
+            });
+
+        });
+
+        it('should not update $location nor window.location when an empty link is clicked', function () {
+            init("");
+            runs(function () {
+                $location.hash('someHash');
+                scope.$apply();
+                el.trigger('click');
+                expect($location.hash()).toBe('someHash');
+            });
+        });
+
+        it('should not update $location nor window.location when a link with href="#" is clicked', function () {
+            init("#");
+            runs(function () {
+                $location.hash('someHash');
+                scope.$apply();
+                el.trigger('click');
+                expect($location.hash()).toBe('someHash');
+            });
+        });
+
+        it('should update $location if a link with a filled href attribute is clicked', function() {
+            init("#someHash2");
+            runs(function () {
+                $location.hash('someHash');
+                scope.$apply();
+                el.trigger('click');
+                expect($location.hash()).toBe('someHash2');
+            });
+
+        });
     });
 
 });

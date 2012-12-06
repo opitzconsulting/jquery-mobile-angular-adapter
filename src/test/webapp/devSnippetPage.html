@@ -8,8 +8,8 @@ Test page during development.
     <link rel="stylesheet" href="lib/jquery.mobile.css"/>
 
     <script src="lib/jquery.js"></script>
-    <script src="lib/angular.js"></script>
     <script src="lib/jquery.mobile.js"></script>
+    <script src="lib/angular.js"></script>
     <script src="jqm-angular.jsp"></script>
 
     <script>
@@ -17,10 +17,13 @@ Test page during development.
         var ng = angular.module("ng");
         ng.controller("TestController", function($scope, $location, $rootScope) {
             $scope.$navigate = function(hash, back) {
-                $location.path(hash);
+                console.log("now");
+
+                /*$location.hash(hash);
                 if (back) {
                     $location.backMode();
                 }
+                */
             };
 
             $rootScope.$on('$routeChangeSuccess', function() {
@@ -30,31 +33,24 @@ Test page during development.
                 console.log("location change success");
             });
         });
+    </script>
 
-        ng.config(function($routeProvider) {
-            $routeProvider.when('/page1', {
-                templateUrl: '#page1',
-                jqmOptions: {
-                    transition: 'slide'
-                }
-            });
-            $routeProvider.when('/page2', {
-                templateUrl: '#page2',
-                jqmOptions: {
-                    transition: 'slide'
-                }
-            });
+    <script>
+        $(function() {
+           $("#test").bind("vclick", function() {
+               console.log("vclick");
+           });
         });
 
-
     </script>
+
 
 </head>
 <body ng-app="ng" ng-controller="TestController">
   <div data-role="page" id="page1">
       <div data-role="header">Page1</div>
       <div data-role="content">
-          <a href="/page2">Page2</a>
+          <a href="#page2" id="test">Page2</a>
       </div>
 
   </div>
@@ -62,7 +58,7 @@ Test page during development.
   <div data-role="page" id="page2">
       <div data-role="header">Page2</div>
       <div data-role="content">
-          <a ng-click="$navigate('', true)">Back to Page1</a>
+          <a ngm-vclick="$navigate('', true)" href="#">Back to Page1</a>
       </div>
 
   </div>

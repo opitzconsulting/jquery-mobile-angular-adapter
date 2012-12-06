@@ -1166,16 +1166,85 @@ factory(window.jQuery, window.angular);
         });
     }]);
 
-    mod.directive('a', function() {
-        return {
-            restrict: 'E',
-            compile: function(element, attr) {
-                if (element.attr('href')==='#') {
-                    attr.$set('href', '');
+    (function patchAngularToAllowVclicksOnEmptyAnchorTags() {
+        // Problem 1:
+        // Angular has a directive for links with an empty "href" attribute.
+        // This directive has a click-listener which prevents the default action
+        // and stops the propagation of the event to parent elements.
+        // However, for simulating vclicks in desktop browsers, jQuery Mobile has a click-listener
+        // on the document. As angular stops propagation of the event, jQuery Mobile never
+        // receives it and therefore never fires the vclick event.
+
+        // Problem 2:
+        // Links with a href-Attribute of value "#" are noops in plain jquery mobile apps
+        // (see e.g. the close button of dialogs).
+        // However, angular interprets such links as a normal link and by this updates
+        // the hash of $location-service to be empty.
+
+        // Solution part1: new directive that sets the href-Attribute of all links to "#". By this,
+        // the mentioned angular directive for links with empty href-Attributes does no more apply
+        mod.directive('a', function () {
+            return {
+                restrict:'E',
+                compile:function (element, attr) {
+                    if (isNoopLink(element)) {
+                        attr.$set('href', '#');
+                    }
                 }
+            };
+        });
+
+        // Solution part2: patch the listener for clicks in angular that updates $location to only be executed
+        // when the href-Attribute of a link is not equal to "#". Otherwise still prevent the default action,
+        // so that the browser does not update the browser location directly.
+        mod.config(['$locationProvider', function ($locationProvider) {
+            var orig$get = $locationProvider.$get;
+            $locationProvider.$get = ['$injector', '$rootElement', function ($injector, $rootElement) {
+                return decorateNewClickHandlersOnRootElementWhileCalling($rootElement,
+                    function (originalClickHandler) {
+                        return function (event) {
+                            var elm = $(event.target);
+                            // traverse the DOM up to find first A tag
+                            while (angular.lowercase(elm[0].nodeName) !== 'a') {
+                                // ignore rewriting if no A tag (reached root element, or no parent - removed from document)
+                                if (elm[0] === $rootElement[0] || !(elm = elm.parent())[0]) return;
+                            }
+                            if (isNoopLink(elm)) {
+                                event.preventDefault();
+                            } else {
+                                originalClickHandler.apply(this, arguments);
+                            }
+                        }
+                    },
+                    function () {
+                        return $injector.invoke(orig$get, $locationProvider);
+                    });
+            }];
+        }]);
+
+        function decorateNewClickHandlersOnRootElementWhileCalling($rootElement, clickHandlerDecorator, callback) {
+            var _bind = $.fn.bind;
+            try {
+                $.fn.bind = function (eventName, callback) {
+                    var newCallback = callback;
+                    if (eventName === 'click' && this[0] === $rootElement[0]) {
+                        newCallback = clickHandlerDecorator(callback);
+                    }
+                    return _bind.call(this, eventName, newCallback);
+                };
+                return callback();
             }
-        };
-    });
+            finally {
+                $.fn.bind = _bind;
+            }
+        }
+
+        function isNoopLink(element) {
+            var href = element.attr('href');
+            return (href === '#' || !href);
+        }
+    })();
+
 
 })(angular, $);
 (function ($, angular) {

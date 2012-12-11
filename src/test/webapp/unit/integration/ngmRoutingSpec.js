@@ -107,14 +107,21 @@ describe('ngmRouting', function () {
             inject(function ($browser) {
                 $browser.$$baseHref = 'http://someUrl/somePage?a=b';
                 expect($browser.baseHref()).toBe('http://someUrl/somePage');
-                expect($browser.origBaseHref()).toBe($browser.$$baseHref);
+                expect($browser.baseHrefWithSearch()).toBe($browser.$$baseHref);
 
                 $browser.$$baseHref = 'http://someUrl/somePage';
                 expect($browser.baseHref()).toBe('http://someUrl/somePage');
-                expect($browser.origBaseHref()).toBe($browser.$$baseHref);
+                expect($browser.baseHrefWithSearch()).toBe($browser.$$baseHref);
             });
         });
 
+        it('should return the url without protocol for file urls when calling $browser.baseHref()', function () {
+            inject(function ($browser) {
+                $browser.$$baseHref = 'file:///someUrl/somePage?a=b';
+                expect($browser.baseHref()).toBe('/someUrl/somePage');
+                expect($browser.baseHrefWithSearch()).toBe('/someUrl/somePage?a=b');
+            });
+        });
     });
 
     describe('not supported angular routing features', function () {

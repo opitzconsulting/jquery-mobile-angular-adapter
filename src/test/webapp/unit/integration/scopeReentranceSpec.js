@@ -1,7 +1,9 @@
 describe('scope reentrance', function () {
     var scope;
     beforeEach(function() {
-        scope = angular.injector(["ng", "ngMock"]).get("$rootScope");
+        inject(['$rootScope', function(_$rootScope) {
+            scope = _$rootScope;
+        }]);
     });
 
     it("should allow $apply within $apply", function () {

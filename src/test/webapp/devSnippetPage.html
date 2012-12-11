@@ -14,6 +14,14 @@ Test page during development.
 
     <script>
         var mod = angular.module("ngm", []);
+        /*
+        mod.config(['$provide', function ($provide) {
+            $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
+                $sniffer.history = false;
+                return $sniffer;
+            }]);
+        }]);
+        */
 
         mod.controller('MainController', function($scope) {
 
@@ -21,15 +29,10 @@ Test page during development.
     </script>
 
 </head>
-<body>
-<div id="main" data-role="page" ng-app="ngm" ng-controller="MainController">
+<body ng-app="ngm" ng-controller="MainController">
+<div id="main" data-role="page" >
     <div data-role="content">
-        <button data-icon="check">Button button</button>
-
-        <button data-icon="check">Button button</button>
-
-
-        <input data-icon="check" type="button" value="Input button"></button>
+        <a href="template.html">Page2</a>
     </div>
 </div>
 

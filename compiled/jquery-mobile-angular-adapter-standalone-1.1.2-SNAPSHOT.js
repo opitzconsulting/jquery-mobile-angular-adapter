@@ -34021,9 +34021,20 @@ factory(window.jQuery, window.angular);
 
     function registerBrowserDecorator($provide) {
         $provide.decorator('$browser', ['$delegate', '$history', function ($browser, $history) {
-            $browser.origBaseHref = $browser.baseHref;
+            var _baseHref = $browser.baseHref;
+            function baseHrefWithSearch() {
+                // Patch for baseHref to return the correct path also for file-urls.
+                // See bug https://github.com/angular/angular.js/issues/1690
+                var href = _baseHref.call($browser);
+                return href ? href.replace(/^file?\:\/\/[^\/]*/, '') : href;
+            }
+
+            $browser.baseHrefWithSearch = baseHrefWithSearch;
             $browser.baseHref = function () {
-                var result = $browser.origBaseHref.apply(this, arguments);
+                var result = $browser.baseHrefWithSearch.apply(this, arguments);
+                // remove search part. Required so that we can directly
+                // navigate to a subpage when there is a search part in the url.
+                // TODO file a bug report in angular for this!
                 return result.replace(/\?[^#]*/, "");
             };
             var _url = $browser.url;
@@ -34148,10 +34159,12 @@ factory(window.jQuery, window.angular);
             var url = newRoute.ngmTemplateUrl;
             if (url === DEFAULT_JQM_PAGE) {
                 var url = $location.url();
+                // Use the href that also contains the search part.
+                var baseHref = $browser.baseHrefWithSearch();
                 if (url.indexOf('/') === -1) {
-                    url = $browser.origBaseHref() + url;
+                    url = baseHref + url;
                 } else {
-                    url = getBasePath($browser.baseHref()) + url;
+                    url = getBasePath(baseHref) + url;
                 }
             }
             if (!url) {

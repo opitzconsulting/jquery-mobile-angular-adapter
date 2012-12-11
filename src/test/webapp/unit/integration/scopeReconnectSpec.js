@@ -1,7 +1,9 @@
 describe('scope reconnect', function () {
     var rootScope, childScope, counter;
     beforeEach(function () {
-        rootScope = angular.injector(["ng", "ngMock"]).get("$rootScope");
+        inject(['$rootScope', function(_$rootScope) {
+            rootScope = _$rootScope;
+        }]);
         childScope = rootScope.$new();
         childScope.$watch(function () {
             counter++;

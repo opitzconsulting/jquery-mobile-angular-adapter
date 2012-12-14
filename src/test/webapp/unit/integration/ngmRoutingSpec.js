@@ -5,7 +5,11 @@ describe('ngmRouting', function () {
         beforeEach(function () {
             module(function ($routeProvider) {
                 $routeProvider.when('/someRoute', {
-                    templateUrl:'someTemplateUrl'
+                    templateUrl:'someTemplateUrl',
+                    jqmOptions: {
+                        a: 1,
+                        b: 2
+                    }
                 });
             });
         });
@@ -29,15 +33,18 @@ describe('ngmRouting', function () {
             });
         });
 
-        it('should override the jqmOptions', function () {
+        it('should merge the jqmOptions', function () {
             inject(function ($location, $route, $rootScope) {
-                var overriddenValue = {};
                 $location.path('/someRoute');
                 $location.routeOverride({
-                    jqmOptions:overriddenValue
+                    jqmOptions:{
+                        b: 3
+                    }
                 });
                 $rootScope.$digest();
-                expect($route.current.jqmOptions).toBe(overriddenValue);
+                expect($route.current.jqmOptions).toEqual({
+                    a:1, b:3
+                });
             });
         });
 
@@ -70,7 +77,7 @@ describe('ngmRouting', function () {
 
     describe('navigation links', function () {
         describe('options for $.mobile.changePage from links', function () {
-            it('data-rel, data-transition, data-reverse, data-dom-cache, link', function () {
+            it('data-rel, data-transition, data-reverse, link', function () {
                 var c = testutils.compileInPage('<a href="http://server/someLink" data-rel="popup" data-transition="someTrans" data-direction="reverse"/>');
                 c.element.click();
                 var args = $.mobile.changePage.mostRecentCall.args[1];
@@ -78,6 +85,23 @@ describe('ngmRouting', function () {
                 expect(args.link[0]).toBe(c.element[0]);
                 expect(args.transition).toBe('someTrans');
                 expect(args.reverse).toBe(true);
+            });
+            it('should use the transition from the route if no transition is specified in the link', function() {
+                module(function($routeProvider) {
+                    $routeProvider.when('/page1', {
+                        templateUrl: 'somePage',
+                        jqmOptions: {
+                            transition: 'slide'
+                        }
+                    });
+                });
+                inject(function($location, $rootScope) {
+                    var c = testutils.compileInPage('<a href="http://server/page1"/>');
+                    c.element.click();
+                    $rootScope.$apply();
+                    var args = $.mobile.changePage.mostRecentCall.args[1];
+                    expect(args.transition).toBe('slide');
+                });
             });
             it('data-rel=back should call $location.goBack() and ignore the href', inject(function ($location) {
                 spyOn($location, 'goBack');

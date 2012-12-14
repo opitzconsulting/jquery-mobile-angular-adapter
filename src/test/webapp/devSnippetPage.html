@@ -14,42 +14,57 @@ Test page during development.
 
     <script>
         var mod = angular.module("ngm", []);
-        mod.config(['$provide', function ($provide) {
-            $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
-                $sniffer.history = false;
-                return $sniffer;
-            }]);
-        }]);
 
-        mod.controller('MainController', function($scope) {
+        mod.controller('MainController', function($scope, $navigate) {
+            $scope.next = function() {
+                $navigate('#main1');
+            };
+        });
 
+        mod.controller('MainController1', function($scope, $navigate) {
+            $scope.next = function() {
+                $navigate('#main2');
+            };
+
+            $scope.previous = function() {
+                $navigate('#main');
+            };
+        });
+
+        mod.controller('MainController2', function($scope, $navigate) {
+            $scope.back = function() {
+                $navigate('back', 'previous');
+            };
         });
     </script>
 
 </head>
-<body ng-app="ngm" ng-controller="MainController">
-<div id="main" data-role="page" >
-    <div data-role="content">
-        <a href="#page2" data-rel="dialog" class="ui-content" data-theme="e">Dialog</a>
-        <a href="#popupInfo" data-rel="popup" class="ui-content" data-theme="e">Popup</a>
+<body >
 
-        <div data-role="popup" id="popupInfo">
-            <p>Popup</p>
+​
+<div ng-app="ngm">
+    <div id="main" data-role="page" ng-controller="MainController">
+        <div data-role="content">
+            <p>MainController</p>
+            <a href="#" ngm-vclick="next()">Next</a>
         </div>
-
-
-    </div>
-</div>
-
-<div id="page2" data-role="page">
-    <div data-role="header">
-        <h1>Popup</h1>
-        <a href="" data-rel="back">Back</a>
     </div>
 
+    <div id="main1" data-role="page" ng-controller="MainController1">
+        <div data-role="content">
+            <p>MainController1</p>
+            <a href="#" ngm-vclick="next()">Next</a>
+        </div>
+    </div>
+
+    <div id="main2" data-role="page" ng-controller="MainController2">
+        <div data-role="content">
+            <p>MainController2</p>
+            <a href="#" ngm-vclick="back()">Back</a>
+        </div>
+    </div>
 </div>
-
-
+​
 
 ​
 </body>

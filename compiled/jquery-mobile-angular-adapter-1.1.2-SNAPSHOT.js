@@ -1124,7 +1124,6 @@ factory(window.jQuery, window.angular);
     }
 
     mod.run(['$route', '$rootScope', '$location', '$browser', '$history', function ($route, $rootScope, $location, $browser, $history) {
-        var routeOverrideCopyProps = ['templateUrl', 'jqmOptions', 'onActivate'];
         var _dialogUrl = '/' + $.mobile.dialogHashKey;
 
         $rootScope.$on('$routeChangeStart', onRouteChangeStart);
@@ -1139,11 +1138,14 @@ factory(window.jQuery, window.angular);
             var routeOverride = $location.$$routeOverride;
             delete $location.$$routeOverride;
             if (routeOverride) {
-                angular.forEach(routeOverrideCopyProps, function (propName) {
-                    if (routeOverride[propName]) {
-                        newRoute[propName] = routeOverride[propName];
-                    }
-                });
+                if (routeOverride.templateUrl) {
+                    newRoute.templateUrl = routeOverride.templateUrl;
+                }
+                if (routeOverride.onActivate) {
+                    newRoute.onActivate = routeOverride.onActivate;
+                }
+                newRoute.jqmOptions = newRoute.jqmOptions || {};
+                angular.extend(newRoute.jqmOptions, routeOverride.jqmOptions);
 
                 newRoute.resolve = newRoute.resolve || {};
                 angular.forEach(routeOverride.locals, function (value, key) {
@@ -1279,12 +1281,20 @@ factory(window.jQuery, window.angular);
                             event.stopPropagation();
                         } else {
                             var override = $location.routeOverride() || {};
-                            override.jqmOptions = {
-                                role:rel,
-                                link:iElement,
-                                transition:iElement.jqmData("transition"),
-                                reverse:iElement.jqmData("direction") === 'reverse'
+                            var jqmOptions = override.jqmOptions = {
+                                link:iElement
                             };
+                            if (rel) {
+                                jqmOptions.role = rel;
+                            }
+                            var trans = iElement.jqmData("transition");
+                            if (trans) {
+                                jqmOptions.transition = trans;
+                            }
+                            var direction = iElement.jqmData("direction");
+                            if (direction) {
+                                jqmOptions.reverse = direction==="reverse";
+                            }
                             $location.routeOverride(override);
                         }
                     });

@@ -14,14 +14,12 @@ Test page during development.
 
     <script>
         var mod = angular.module("ngm", []);
-        /*
         mod.config(['$provide', function ($provide) {
             $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
                 $sniffer.history = false;
                 return $sniffer;
             }]);
         }]);
-        */
 
         mod.controller('MainController', function($scope) {
 
@@ -32,11 +30,26 @@ Test page during development.
 <body ng-app="ngm" ng-controller="MainController">
 <div id="main" data-role="page" >
     <div data-role="content">
-        <a href="template.html">Page2</a>
+        <a href="#page2" data-rel="dialog" class="ui-content" data-theme="e">Dialog</a>
+        <a href="#popupInfo" data-rel="popup" class="ui-content" data-theme="e">Popup</a>
+
+        <div data-role="popup" id="popupInfo">
+            <p>Popup</p>
+        </div>
+
+
     </div>
 </div>
 
-​
+<div id="page2" data-role="page">
+    <div data-role="header">
+        <h1>Popup</h1>
+        <a href="" data-rel="back">Back</a>
+    </div>
+
+</div>
+
+
 
 ​
 </body>

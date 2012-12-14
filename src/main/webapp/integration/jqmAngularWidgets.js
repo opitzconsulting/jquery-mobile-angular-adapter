@@ -51,6 +51,9 @@
         },
         fixedtoolbar:{
             handlers:[]
+        },
+        popup: {
+            handlers:[]
         }
     };
 

@@ -90,11 +90,11 @@ describe("waitdialogService", function () {
         });
 
         it('should wait for jqm to initialize before using $.mobile.loading', function() {
-            var _old = $.mobile.pageContainer;
-            delete $.mobile.pageContainer;
+            var _old = $.mobile.firstPage;
+            delete $.mobile.firstPage;
             service.show();
             expect($.mobile.loading).not.toHaveBeenCalled();
-            $.mobile.pageContainer = _old;
+            $.mobile.firstPage = _old;
             $rootScope.$emit('jqmInit');
             expect($.mobile.loading).toHaveBeenCalledWith('show');
         });

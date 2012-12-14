@@ -13,6 +13,7 @@ describe('ngmRouting', function () {
         it('should save the override on the $location object', inject(function ($location) {
             var someOverride = {};
             $location.routeOverride(someOverride);
+            expect($location.routeOverride()).toBe(someOverride);
             expect($location.$$routeOverride).toBe(someOverride);
         }));
 
@@ -67,12 +68,75 @@ describe('ngmRouting', function () {
         });
     });
 
+    describe('navigation links', function () {
+        describe('options for $.mobile.changePage from links', function () {
+            it('data-rel, data-transition, data-reverse, data-dom-cache, link', function () {
+                var c = testutils.compileInPage('<a href="http://server/someLink" data-rel="popup" data-transition="someTrans" data-direction="reverse"/>');
+                c.element.click();
+                var args = $.mobile.changePage.mostRecentCall.args[1];
+                expect(args.role).toBe('popup');
+                expect(args.link[0]).toBe(c.element[0]);
+                expect(args.transition).toBe('someTrans');
+                expect(args.reverse).toBe(true);
+            });
+            it('data-rel=back should call $location.goBack() and ignore the href', inject(function ($location) {
+                spyOn($location, 'goBack');
+                var oldLocation = $location.url();
+                var c = testutils.compileInPage('<a href="http://server/someLink" data-rel="back"/>');
+                var event = $.Event("click");
+                c.element.trigger(event);
+                expect($location.goBack).toHaveBeenCalled();
+                expect(event.isDefaultPrevented()).toBe(true);
+                expect(event.isPropagationStopped()).toBe(true);
+                expect($location.url()).toBe(oldLocation);
+            }));
+            it('data-rel=external should call $browser.url with the given url and not execute the default angular location handling', inject(function ($browser, $location) {
+                var oldLocation = $location.url();
+                spyOn($browser, 'url').andCallThrough();
+                var c = testutils.compileInPage('<a href="http://someOtherServer" data-rel="external"/>');
+                var event = $.Event("click");
+                c.element.trigger(event);
+                expect(event.isDefaultPrevented()).toBe(true);
+                expect(event.isPropagationStopped()).toBe(true);
+                expect($location.url()).toBe(oldLocation);
+                expect($browser.url).toHaveBeenCalledWith("http://someOtherServer");
+            }));
+        });
+    });
+
     describe('misc', function () {
         it('should deactivate jqm hash listening and changing', function () {
             expect($.mobile.pushStateEnabled).toBe(false);
             expect($.mobile.hashListeningEnabled).toBe(false);
             expect($.mobile.linkBindingEnabled).toBe(false);
             expect($.mobile.origChangePage.defaults.changeHash).toBe(false);
+        });
+
+        // The reason for this spec is that the "navigate" event
+        // closes popups immediately when we use normal hash navigation
+        // (i.e. without html5 history replaceState)
+        it('should not fire a "navigate" event on hash change', function () {
+            var hashChanged = false,
+                spy;
+            runs(function () {
+                spy = jasmine.createSpy();
+                $(window).bind("hashchange", function () {
+                    hashChanged = true;
+                });
+            });
+            waits(100);
+            runs(function () {
+                $.mobile.pageContainer.one('navigate', spy);
+                var oldHash = location.hash;
+                location.hash = 'someNewHash';
+                location.hash = oldHash;
+            });
+            waitsFor(function () {
+                return hashChanged;
+            });
+            runs(function () {
+                expect(spy).not.toHaveBeenCalled();
+            });
         });
 
         it('should not change the base tag during jqm navigation, as angular does not like this (see following bug test)', inject(function ($browser, $location) {
@@ -150,8 +214,8 @@ describe('ngmRouting', function () {
                 }
                 // OK cases:
 
-                $routeProvider.when('/', {templateUrl: 'someTemplate'});
-                $routeProvider.when('/', {redirectTo: 'someRedirect'});
+                $routeProvider.when('/', {templateUrl:'someTemplate'});
+                $routeProvider.when('/', {redirectTo:'someRedirect'});
             });
             // Kick off routing.
             inject(function ($route) {

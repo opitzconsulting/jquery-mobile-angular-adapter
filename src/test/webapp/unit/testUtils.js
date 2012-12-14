@@ -15,6 +15,7 @@
             $provide.value('$rootElement', $("body"));
             $.mobile._registerBrowserDecorator($provide);
         });
+        $.mobile.popup.active = undefined;
     });
 
     afterEach(function() {

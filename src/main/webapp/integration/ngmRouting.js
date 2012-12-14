@@ -8,6 +8,7 @@
     function registerBrowserDecorator($provide) {
         $provide.decorator('$browser', ['$delegate', '$history', function ($browser, $history) {
             var _baseHref = $browser.baseHref;
+
             function baseHrefWithSearch() {
                 // Patch for baseHref to return the correct path also for file-urls.
                 // See bug https://github.com/angular/angular.js/issues/1690
@@ -29,7 +30,7 @@
                 if (back) {
                     replace = false;
                 }
-                var res = _url.call(this, replace);
+                var res = _url.apply(this, arguments);
                 if (url) {
                     // setter
                     $history.onUrlChangeProgrammatically(url, replace, back);
@@ -45,6 +46,9 @@
 
         $provide.decorator('$location', ['$delegate', function ($location) {
             $location.routeOverride = function (routeOverride) {
+                if (arguments.length === 0) {
+                    return $location.$$routeOverride;
+                }
                 $location.$$routeOverride = routeOverride;
                 return this;
             };
@@ -69,6 +73,8 @@
             $.mobile.base.set = function () {
             };
         }
+        $.mobile._handleHashChange = function () {
+        };
     }
 
     disableJqmHashChange();
@@ -108,7 +114,17 @@
 
     mod.run(['$route', '$rootScope', '$location', '$browser', '$history', function ($route, $rootScope, $location, $browser, $history) {
         var routeOverrideCopyProps = ['templateUrl', 'jqmOptions', 'onActivate'];
-        $rootScope.$on('$routeChangeStart', function (event, newRoute) {
+        var _dialogUrl = '/' + $.mobile.dialogHashKey;
+
+        $rootScope.$on('$routeChangeStart', onRouteChangeStart);
+        $rootScope.$on('jqmPagebeforeshow', onPagebeforeshow);
+        $rootScope.$on('$routeChangeSuccess', onRouteChangeSuccess);
+        instrumentPopupCloseToNavigateBackWhenDialogUrlIsSet();
+        instrumentDialogCloseToNavigateBackWhenDialogUrlIsSet();
+
+        // ----------
+
+        function onRouteChangeStart(event, newRoute) {
             var routeOverride = $location.$$routeOverride;
             delete $location.$$routeOverride;
             if (routeOverride) {
@@ -129,21 +145,29 @@
             // Prevent angular from loading the template, as jquery mobile already does this!
             newRoute.ngmTemplateUrl = newRoute.templateUrl;
             newRoute.templateUrl = undefined;
-        });
+        }
 
-        $rootScope.$on('jqmPagebeforeshow', function (event) {
+
+        function onPagebeforeshow(event) {
             var current = $route.current;
             if (current && current.onActivate) {
                 event.targetScope[current.onActivate].call(event.targetScope, current.locals);
             }
-        });
+            var isDialog = $.mobile.activePage.jqmData("role") === "dialog";
+            if (isDialog) {
+                dialogUrl(true);
+            }
+        }
 
-        $rootScope.$on('$routeChangeSuccess', function () {
+        function onRouteChangeSuccess() {
             var newRoute = $route.current;
             var $document = $(document);
 
             var url = newRoute.ngmTemplateUrl;
             if (url === DEFAULT_JQM_PAGE) {
+                if (dialogUrl()) {
+                    return;
+                }
                 var url = $location.url();
                 // Use the href that also contains the search part.
                 var baseHref = $browser.baseHrefWithSearch();
@@ -156,16 +180,12 @@
             if (!url) {
                 return;
             }
-            var navConfig = {};
+            var navConfig = newRoute.jqmOptions = newRoute.jqmOptions || {};
             if ($history.fromUrlChange) {
                 navConfig.fromHashChange = true;
             }
 
-            if (newRoute.jqmOptions) {
-                angular.extend(navConfig, newRoute.jqmOptions);
-            }
-
-            if (!$.mobile.pageContainer) {
+            if (!$.mobile.firstPage) {
                 $rootScope.$on("jqmInit", startNavigation);
             } else {
                 startNavigation();
@@ -173,9 +193,96 @@
 
             function startNavigation() {
                 $.mobile.changePage(url, navConfig);
+                if ($.mobile.popup.active) {
+                    // Popup are available without loading,
+                    // so we can check them right after calling $.mobile.changePage!
+                    dialogUrl(true);
+                }
+
             }
-        });
+        }
+
+        function instrumentPopupCloseToNavigateBackWhenDialogUrlIsSet() {
+            var popupProto = $.mobile.popup.prototype;
+            popupProto.close = function() {
+                // make sure close is idempotent
+                if( !$.mobile.popup.active ){
+                    return;
+                }
+                if ( dialogUrl() ) {
+                    $rootScope.$apply(function() {
+                        $location.goBack();
+                    });
+                } else {
+                    this._close();
+                }
+            };
+        }
+
+        function instrumentDialogCloseToNavigateBackWhenDialogUrlIsSet() {
+            var dialogProto = $.mobile.dialog.prototype;
+            dialogProto.origClose = dialogProto.close;
+            dialogProto.close = function() {
+                if ( this._isCloseable ) {
+                    this._isCloseable = false;
+                    if ( dialogUrl() ) {
+                        $rootScope.$apply(function() {
+                            $location.goBack();
+                        });
+                    } else {
+                        this.origClose();
+                    }
+                }
+            };
+        }
+
+        // gets or sets a dialog url.
+        // We use the same behaviour as in jQuery Mobile: dialog urls
+        // are here for allowing users to click "back" to close the dialog,
+        // but prevent him from opening them again via "forward".
+        function dialogUrl() {
+            if (arguments.length===0) {
+                // getter
+                return $location.url()===_dialogUrl;
+            }
+            // setter
+            $location.url(_dialogUrl);
+            $location.replace();
+        }
     }]);
+
+    mod.directive('a', ['$location', '$browser', function ($location, $browser) {
+        return {
+            restrict:'E',
+            compile:function (element, attr) {
+                return function ($scope, iElement, iAttrs) {
+                    iElement.click(function (event) {
+                        var rel = iElement.jqmData("rel");
+                        if (rel === 'back') {
+                            $location.goBack();
+                            event.preventDefault();
+                            event.stopPropagation();
+                        } else if (rel === 'external') {
+                            $browser.url(iAttrs.href);
+                            event.preventDefault();
+                            event.stopPropagation();
+                        } else {
+                            var override = $location.routeOverride() || {};
+                            override.jqmOptions = {
+                                role:rel,
+                                link:iElement,
+                                transition:iElement.jqmData("transition"),
+                                reverse:iElement.jqmData("direction") === 'reverse'
+                            };
+                            $location.routeOverride(override);
+                        }
+                    });
+
+                };
+            }
+        };
+    }]);
+
 
     (function patchAngularToAllowVclicksOnEmptyAnchorTags() {
         // Problem 1:

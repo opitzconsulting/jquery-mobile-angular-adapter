@@ -11,8 +11,10 @@
                 if ($history.activeIndex <= 0) {
                     throw new Error("There is no page in the history to go back to!");
                 }
-                this.$$parse($history.urlStack[$history.activeIndex - 1]);
-                this.backMode();
+                // TODO
+                //this.$$parse($history.urlStack[$history.activeIndex - 1]);
+                //this.backMode();
+                $history.go(-1);
                 return this;
             };
             return $location;

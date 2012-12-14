@@ -127,6 +127,10 @@
                 tElement.removeAttr("ngm-page");
                 return {
                     pre:function (scope, iElement, iAttrs) {
+                        if (!$.mobile.pageContainer) {
+                            $.mobile.pageContainer = iElement.parent().addClass( "ui-mobile-viewport" );
+                        }
+
                         // Create the page widget without the pagecreate-Event.
                         // This does no dom transformation, so it's safe to call this in the prelink function.
                         createPagesWithoutPageCreateEvent(iElement);

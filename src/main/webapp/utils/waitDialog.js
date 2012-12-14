@@ -26,7 +26,7 @@
         }
 
         function updateUi() {
-            if (!$.mobile.pageContainer) {
+            if (!$.mobile.firstPage) {
                 rootScope.$on("jqmInit", updateUi);
                 return;
             }

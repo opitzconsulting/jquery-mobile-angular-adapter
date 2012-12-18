@@ -6,6 +6,28 @@
         }
     }
 
+    // patch for selectmenu when it opens a menu in an own page
+    $( document ).bind( "selectmenubeforecreate", function( event ) {
+        var selectmenuWidget = $( event.target ).data( "selectmenu" );
+        patch(selectmenuWidget, 'close', function (old, self, args) {
+            if (self.options.disabled || !self.isOpen) {
+                return;
+            }
+            if (self.menuType === "page") {
+                // See mobile.dialog#close for the same logic as here!
+                var dst = $.mobile.urlHistory.getPrev().url;
+                if (!$.mobile.path.isPath(dst)) {
+                    dst = $.mobile.path.makeUrlAbsolute("#" + dst);
+                }
+
+                $.mobile.changePage(dst, { changeHash:false, fromHashChange:true });
+                self.isOpen = false;
+            } else {
+                old.apply(self, args);
+            }
+        });
+    });
+
     // selectmenu may create parent elements and extra pages
     patch($.mobile.selectmenu.prototype, 'destroy', function (old, self, args) {
         old.apply(self, args);
@@ -92,9 +114,9 @@
         var _find = $.fn.find;
         var navbar = self.element;
         var navbarBtns;
-        $.fn.find = function(selector) {
+        $.fn.find = function (selector) {
             var res = _find.apply(this, arguments);
-            if (selector==='a') {
+            if (selector === 'a') {
                 navbar.data('$navbtns', res);
             }
             return res;
@@ -111,11 +133,11 @@
 
         var $navbtns = $navbar.data("$navbtns");
         $navbtns.splice(0, $navbtns.length);
-        $.each($navbar.find("a"), function(key, value) {
+        $.each($navbar.find("a"), function (key, value) {
             $navbtns.push(value);
         });
         var iconpos = $navbtns.filter(":jqmData(icon)").length ?
-                this.options.iconpos : undefined;
+            this.options.iconpos : undefined;
 
         var list = $navbar.find("ul");
         var listEntries = list.children("li");
@@ -134,5 +156,4 @@
             iconpos:iconpos
         });
     };
-
-})($);
+})(window.jQuery);

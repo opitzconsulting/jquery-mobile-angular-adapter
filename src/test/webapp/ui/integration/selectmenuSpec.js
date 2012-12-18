@@ -37,9 +37,8 @@ describe("selectmenu", function () {
             var dialog = $(".ui-dialog");
             $(dialog.find('li a')[1]).trigger('click')
             expect(scope.mysel).toEqual("v2");
-        });
-        waitsFor(function () {
-            return !dialogOpen();
+            expect(dialogOpen()).toBe(false);
+            expect($.mobile.activePage.attr('id')).toBe('start');
         });
     });
 

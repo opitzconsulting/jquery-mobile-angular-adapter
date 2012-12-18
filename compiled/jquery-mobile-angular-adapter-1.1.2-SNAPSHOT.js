@@ -28,6 +28,7 @@ factory(window.jQuery, window.angular);
                 return;
             }
             if (self.menuType === "page") {
+                // See mobile.dialog#close for the same logic as here!
                 var dst = $.mobile.urlHistory.getPrev().url;
                 if (!$.mobile.path.isPath(dst)) {
                     dst = $.mobile.path.makeUrlAbsolute("#" + dst);
@@ -602,7 +603,7 @@ factory(window.jQuery, window.angular);
         // Angular does not like this, so we do it in advance.
         button:{
             handlers:[disabledHandler],
-            precompile:wrapIntoDivPrecompile,
+            precompile:buttonPrecompile,
             create:buttonCreate
         },
         collapsible:{
@@ -645,7 +646,7 @@ factory(window.jQuery, window.angular);
         fixedtoolbar:{
             handlers:[]
         },
-        popup: {
+        popup:{
             handlers:[]
         }
     };
@@ -711,17 +712,28 @@ factory(window.jQuery, window.angular);
         origCreate.apply(checkbox, initArgs);
     }
 
+    function buttonPrecompile(origElement, initArgs) {
+        var wrapper = wrapIntoDivPrecompile(origElement, initArgs);
+        // Add a text node with the value content,
+        // so that angular bindings work for the value too
+
+        if (origElement[0].nodeName === 'INPUT') {
+            var value = origElement.val();
+            origElement.append(document.createTextNode(value));
+        }
+        return wrapper;
+    }
+
     function buttonCreate(origCreate, element, initArgs) {
         // Button destroys the text node and recreates a new one. This does not work
-        // if the text node contains angular expressions.
+        // if the text node contains angular expressions, so we move the
+        // text node to the right place.
         var button = element.children().eq(0);
         var textNode = button.contents();
         var res = unwrapFromDivCreate(origCreate, element, initArgs);
-        if (angular.lowercase(button[0].nodeName)==='button') {
-            var textSpan = element.find(".ui-btn-text");
-            textSpan.empty();
-            textSpan.append(textNode);
-        }
+        var textSpan = element.find(".ui-btn-text");
+        textSpan.empty();
+        textSpan.append(textNode);
         return res;
     }
 

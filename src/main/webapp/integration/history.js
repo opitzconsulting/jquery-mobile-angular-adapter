@@ -1,8 +1,35 @@
 (function ($, angular) {
 
     var mod = angular.module("ng");
-    mod.config(['$provide', function ($provide) {
-        $provide.decorator('$location', ['$delegate', '$history', function ($location, $history) {
+
+    function registerBrowserDecorator($provide) {
+        $provide.decorator('$rootScope', ['$delegate', rootScopeSuppressEventInDigestCycleDecorator]);
+        $provide.decorator('$location', ['$delegate', '$history', locationBackDecorator]);
+        $provide.decorator('$browser', ['$delegate', '$history', '$rootScope', '$injector', browserHistoryDecorator]);
+
+
+        function rootScopeSuppressEventInDigestCycleDecorator($rootScope) {
+            var suppressedEvents = {};
+            $rootScope.suppressEventInDigestCycle = function(eventName) {
+                suppressedEvents[eventName] = true;
+            };
+            var _$broadcast = $rootScope.$broadcast;
+            $rootScope.$broadcast = function(eventName) {
+                if (suppressedEvents[eventName]) {
+                    return {};
+                }
+                return _$broadcast.apply(this,arguments);
+            };
+            var _$digest = $rootScope.$digest;
+            $rootScope.$digest = function() {
+                var res = _$digest.apply(this, arguments);
+                suppressedEvents = {};
+                return res;
+            };
+            return $rootScope;
+        }
+
+        function locationBackDecorator($location, $history) {
             $location.backMode = function () {
                 $location.$$replace = "back";
                 return this;
@@ -11,18 +38,54 @@
                 if ($history.activeIndex <= 0) {
                     throw new Error("There is no page in the history to go back to!");
                 }
-                // TODO
-                //this.$$parse($history.urlStack[$history.activeIndex - 1]);
-                //this.backMode();
-                $history.go(-1);
+                this.$$parse($history.urlStack[$history.activeIndex - 1]);
+                this.backMode();
                 return this;
             };
             return $location;
-        }]);
+        }
 
+        function browserHistoryDecorator($browser, $history, $rootScope, $injector) {
+            var _url = $browser.url;
+            var cachedRouteOverride = null;
+            $browser.url = function (url, replace) {
+                if (url) {
+                    // setter
+                    var res = $history.onUrlChangeProgrammatically(url, replace === true, replace === 'back');
+                    if (res === false) {
+                        // cancel navigation and rely on the callback
+                        // from browser history.
+                        var $location = $injector.get('$location');
+                        cachedRouteOverride = $location.routeOverride();
+                        $location.$$parse(_url.call(this));
+                        // suppress $locationChangeSuccess and $locationChangeStart event in this eval loop,
+                        // so the routes don't get updated!
+                        $rootScope.suppressEventInDigestCycle('$locationChangeStart');
+                        $rootScope.suppressEventInDigestCycle('$locationChangeSuccess');
+                    }
+                }
+                return _url.apply(this, arguments);
+            };
+            var _onUrlChange = $browser.onUrlChange;
+            $browser.onUrlChange(function (newUrl) {
+                if (cachedRouteOverride) {
+                    var $location = $injector.get('$location');
+                    $location.routeOverride(cachedRouteOverride);
+                }
+                $history.onUrlChangeBrowser(newUrl);
+            });
+            return $browser;
+        }
+    }
+
+    $.mobile._registerBrowserDecorators = $.mobile._registerBrowserDecorators || [];
+    $.mobile._registerBrowserDecorators.push(registerBrowserDecorator);
+
+    mod.config(['$provide', function ($provide) {
+        registerBrowserDecorator($provide);
     }]);
 
-    mod.factory('$history', function () {
+    mod.factory('$history', ['$rootScope', function ($rootScope) {
         var $history;
 
         function go(relativeIndex) {
@@ -40,32 +103,12 @@
 
         function onUrlChangeProgrammatically(url, replace, back) {
             if (back) {
-                // Algorithm for going back:
-                // We just do a normal navigation with angular,
-                // by which we are adding a new entry into the navigation log.
-                // After the normal navigation, we also do a history.go(-...)
-                // to update the browser history.
-                // However, this second navigation does not trigger anything, as it
-                // does not change the url.
-                // This algorithm works well as by this we don't have to intercept $browser from
-                // doing anything, which would be tricky, as the digest cycle assumes that calling
-                // $browser.url-setter results in an immediate update to $browser.url getter,
-                // but changing browser history via history.go is asynchronous (in contrast
-                // to hash changing using location.hash / location.href).
-                // Furthermore, the route instance does not change, by which we can pass
-                // route overrides also when going back (see ngmRouting.js)
                 var currIndex = $history.activeIndex;
                 var newIndex = $history.urlStack.lastIndexOf(url, currIndex - 1);
                 if (newIndex !== -1 && currIndex !== -1) {
-                    // Update $history to contain the right values immediately
-                    $history.activeIndex = newIndex;
-                    $history.fromUrlChange = true;
-                    // Reason for "-1" here:
-                    // we always do an additional change for the current url (see algorithm above).
-                    $history.go(newIndex - currIndex - 1);
-                    // Note: Don't reflect the additional url change in the internal
-                    // urlStack, so calculating the new activeIndex works as expected.
-                    return;
+                    $history.go(newIndex - currIndex);
+                    // stop the normal navigation!
+                    return false;
                 }
             }
             if ($history.urlStack[$history.activeIndex] === url) {
@@ -87,5 +130,5 @@
             onUrlChangeProgrammatically:onUrlChangeProgrammatically,
             onUrlChangeBrowser:onUrlChangeBrowser
         };
-    });
+    }]);
 })(window.jQuery, window.angular);

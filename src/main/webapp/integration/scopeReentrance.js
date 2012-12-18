@@ -9,7 +9,6 @@
                 }
                 return _apply.apply(this, arguments);
             };
-            var refreshing = false;
             var _digest = $rootScope.$digest;
             $rootScope.$digest = function () {
                 if ($rootScope.$$phase) {

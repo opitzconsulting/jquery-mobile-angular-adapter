@@ -6,7 +6,10 @@
     var mod = angular.module("ng");
 
     function registerBrowserDecorator($provide) {
-        $provide.decorator('$browser', ['$delegate', '$history', function ($browser, $history) {
+        $provide.decorator('$browser', ['$delegate', browserBaseHrefDecorator]);
+        $provide.decorator('$location', ['$delegate', locationRouteOverrideDecorator]);
+
+        function browserBaseHrefDecorator ($browser) {
             var _baseHref = $browser.baseHref;
 
             function baseHrefWithSearch() {
@@ -24,27 +27,10 @@
                 // TODO file a bug report in angular for this!
                 return result.replace(/\?[^#]*/, "");
             };
-            var _url = $browser.url;
-            $browser.url = function (url, replace) {
-                var back = replace === 'back';
-                if (back) {
-                    replace = false;
-                }
-                var res = _url.apply(this, arguments);
-                if (url) {
-                    // setter
-                    $history.onUrlChangeProgrammatically(url, replace, back);
-                }
-                return _url.apply(this, arguments);
-            };
-            $browser.onUrlChange(function (newUrl) {
-                $history.onUrlChangeBrowser(newUrl);
-            });
             return $browser;
-        }]);
+        }
 
-
-        $provide.decorator('$location', ['$delegate', function ($location) {
+        function locationRouteOverrideDecorator($location) {
             $location.routeOverride = function (routeOverride) {
                 if (arguments.length === 0) {
                     return $location.$$routeOverride;
@@ -53,10 +39,12 @@
                 return this;
             };
             return $location;
-        }]);
+        }
     }
 
-    $.mobile._registerBrowserDecorator = registerBrowserDecorator;
+    $.mobile._registerBrowserDecorators = $.mobile._registerBrowserDecorators || [];
+    $.mobile._registerBrowserDecorators.push(registerBrowserDecorator);
+
     mod.config(['$provide', function ($provide) {
         registerBrowserDecorator($provide);
     }]);

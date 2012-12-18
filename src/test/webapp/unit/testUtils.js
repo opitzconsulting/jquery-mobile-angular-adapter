@@ -13,7 +13,10 @@
         spyOn(window.history, 'go');
         module("ng", function($provide) {
             $provide.value('$rootElement', $("body"));
-            $.mobile._registerBrowserDecorator($provide);
+            var i;
+            for (i=0; i<$.mobile._registerBrowserDecorators.length; i++) {
+                $.mobile._registerBrowserDecorators[i]($provide);
+            }
         });
         $.mobile.popup.active = undefined;
     });

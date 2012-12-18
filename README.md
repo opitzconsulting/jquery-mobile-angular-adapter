@@ -264,9 +264,11 @@ Usage: E.g. `<div ngm-if="myFlag">asdfasdf</div>`
 
 ### Service `$history`
 
+Note: This service is for internal purposes only (same level as `$browser`). Please use `$location.backMode()` or `$location.goBack()` instead.
+
 Methods and Properties:
 
-* `$history.go(relativeIndex)`: This will call `window.history.go(relativeIndex)`.
+* `$history.go(relativeIndex)`: This will directly call `window.history.go(relativeIndex)`.
 * `$history.urlStack`: This contains the list of visited urls
 * `$history.activeIndex`: This defines the currently active index in the `urlStack`
 

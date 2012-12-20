@@ -116,6 +116,19 @@ describe('ngmRouting', function () {
                 expect(event.isDefaultPrevented()).toBe(true);
                 expect($location.url()).toBe('/someLink2');
             }));
+            it('data-rel=back should go back in history with an empty href', inject(function ($location, $rootScope) {
+                var c = testutils.compileInPage('<a href="" data-rel="back"/>');
+                $location.path('/someLink');
+                $rootScope.$apply();
+                $location.path('/someLink2');
+                $rootScope.$apply();
+
+                var event = $.Event("click");
+                c.element.trigger(event);
+                expect(history.go).toHaveBeenCalledWith(-1);
+                expect(event.isDefaultPrevented()).toBe(true);
+                expect($location.url()).toBe('/someLink2');
+            }));
 
             it('data-rel=external should execute the default url action', inject(function ($browser, $location) {
                 var c = testutils.compileInPage('<a href="http://someOtherServer" data-rel="external"/>');

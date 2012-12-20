@@ -1284,13 +1284,13 @@ factory(window.jQuery, window.angular);
         // Attention: Do NOT stopPropagation, as otherwise
         // jquery Mobile will not generate a vclick event!
         var rel = iElement.jqmData("rel");
-        if (isNoopLink(iElement)) {
-            event.preventDefault();
-        } else if (rel === 'back') {
+        if (rel === 'back') {
             event.preventDefault();
             $scope.$apply(function () {
                 $location.goBack();
             });
+        } else if (isNoopLink(iElement)) {
+            event.preventDefault();
         } else {
             var absHref = iElement.prop('href'),
                 rewrittenUrl = $location.$$rewriteAppUrl(absHref);

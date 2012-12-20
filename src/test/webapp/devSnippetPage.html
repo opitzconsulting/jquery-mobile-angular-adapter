@@ -15,20 +15,27 @@ Test page during development.
 </head>
 <body ng-app="ngm">
 ​
-<div id="main" data-role="page" ng-app="ngm" ng-controller="MainController">
+<div id="main" data-role="page">
+    <div data-role="header">
+        <h1>Page1</h1>
+        <a href="#page2">Page2</a>
+    </div>
     <div data-role="content">
-
-        <a href="#popup1" data-rel="popup">Open Popup</a>
-
-        <div data-role="popup" id="popup1">
-            <a href="#" data-rel="back" data-role="button" data-theme="a" data-icon="delete" data-iconpos="notext" class="ui-btn-right">Close</a>
-            ...popup contents go here...
-        </div>
-
-        <a href="template.html">Template</a>
 
     </div>
 </div>
+
+<div id="page2" data-role="page">
+    <div data-role="header">
+        <h1>Page2</h1>
+        <a href="" data-rel="back">Back</a>
+    </div>
+    <div data-role="content">
+
+    </div>
+</div>
+
+​
 
 ​
 

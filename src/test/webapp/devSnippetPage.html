@@ -17,11 +17,16 @@ Test page during development.
 ​
 <div id="main" data-role="page" ng-app="ngm" ng-controller="MainController">
     <div data-role="content">
-        Hello mobile world!
-        <button>{{buttonText}}</button>
-        <a href="">{{buttonText}}</a>
-        <input type="button" value="{{buttonText}}">
-        <a href="" data-role="button">{{buttonText}}</a>
+
+        <a href="#popup1" data-rel="popup">Open Popup</a>
+
+        <div data-role="popup" id="popup1">
+            <a href="#" data-rel="back" data-role="button" data-theme="a" data-icon="delete" data-iconpos="notext" class="ui-btn-right">Close</a>
+            ...popup contents go here...
+        </div>
+
+        <a href="template.html">Template</a>
+
     </div>
 </div>
 

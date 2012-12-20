@@ -1048,10 +1048,7 @@ factory(window.jQuery, window.angular);
     var mod = angular.module("ng");
 
     function registerBrowserDecorator($provide) {
-        $provide.decorator('$browser', ['$delegate', browserBaseHrefDecorator]);
-        $provide.decorator('$location', ['$delegate', locationRouteOverrideDecorator]);
-
-        function browserBaseHrefDecorator ($browser) {
+        $provide.decorator('$browser', ['$delegate', function ($browser) {
             var _baseHref = $browser.baseHref;
 
             function baseHrefWithSearch() {
@@ -1070,7 +1067,10 @@ factory(window.jQuery, window.angular);
                 return result.replace(/\?[^#]*/, "");
             };
             return $browser;
-        }
+        }]);
+
+
+        $provide.decorator('$location', ['$delegate', locationRouteOverrideDecorator]);
 
         function locationRouteOverrideDecorator($location) {
             $location.routeOverride = function (routeOverride) {
@@ -1185,7 +1185,7 @@ factory(window.jQuery, window.angular);
             if (current && current.onActivate) {
                 event.targetScope[current.onActivate].call(event.targetScope, current.locals);
             }
-            var isDialog = $.mobile.activePage.jqmData("role") === "dialog";
+            var isDialog = $.mobile.activePage && $.mobile.activePage.jqmData("role") === "dialog";
             if (isDialog) {
                 dialogUrl(true);
             }
@@ -1236,17 +1236,14 @@ factory(window.jQuery, window.angular);
 
         function instrumentPopupCloseToNavigateBackWhenDialogUrlIsSet() {
             var popupProto = $.mobile.popup.prototype;
-            popupProto.close = function() {
-                // make sure close is idempotent
-                if( !$.mobile.popup.active ){
-                    return;
-                }
-                if ( dialogUrl() ) {
-                    $rootScope.$apply(function() {
+            var _close = popupProto._close;
+            popupProto._close = function () {
+                if (dialogUrl()) {
+                    $rootScope.$apply(function () {
                         $location.goBack();
                     });
                 } else {
-                    this._close();
+                    _close.apply(this, arguments);
                 }
             };
         }
@@ -1254,11 +1251,11 @@ factory(window.jQuery, window.angular);
         function instrumentDialogCloseToNavigateBackWhenDialogUrlIsSet() {
             var dialogProto = $.mobile.dialog.prototype;
             dialogProto.origClose = dialogProto.close;
-            dialogProto.close = function() {
-                if ( this._isCloseable ) {
+            dialogProto.close = function () {
+                if (this._isCloseable) {
                     this._isCloseable = false;
-                    if ( dialogUrl() ) {
-                        $rootScope.$apply(function() {
+                    if (dialogUrl()) {
+                        $rootScope.$apply(function () {
                             $location.goBack();
                         });
                     } else {
@@ -1273,9 +1270,9 @@ factory(window.jQuery, window.angular);
         // are here for allowing users to click "back" to close the dialog,
         // but prevent him from opening them again via "forward".
         function dialogUrl() {
-            if (arguments.length===0) {
+            if (arguments.length === 0) {
                 // getter
-                return $location.url()===_dialogUrl;
+                return $location.url() === _dialogUrl;
             }
             // setter
             $location.url(_dialogUrl);
@@ -1283,46 +1280,54 @@ factory(window.jQuery, window.angular);
         }
     }]);
 
-    mod.directive('a', ['$location', '$browser', function ($location, $browser) {
-        return {
-            restrict:'E',
-            compile:function (element, attr) {
-                return function ($scope, iElement, iAttrs) {
-                    iElement.click(function (event) {
-                        var rel = iElement.jqmData("rel");
-                        if (rel === 'back') {
-                            $location.goBack();
-                            event.preventDefault();
-                            event.stopPropagation();
-                        } else if (rel === 'external') {
-                            $browser.url(iAttrs.href);
-                            event.preventDefault();
-                            event.stopPropagation();
-                        } else {
-                            var override = $location.routeOverride() || {};
-                            var jqmOptions = override.jqmOptions = {
-                                link:iElement
-                            };
-                            if (rel) {
-                                jqmOptions.role = rel;
-                            }
-                            var trans = iElement.jqmData("transition");
-                            if (trans) {
-                                jqmOptions.transition = trans;
-                            }
-                            var direction = iElement.jqmData("direction");
-                            if (direction) {
-                                jqmOptions.reverse = direction==="reverse";
-                            }
-                            $location.routeOverride(override);
-                        }
-                    });
+    function defaultClickHandler(event, iElement, $scope, $location) {
+        // Attention: Do NOT stopPropagation, as otherwise
+        // jquery Mobile will not generate a vclick event!
+        var rel = iElement.jqmData("rel");
+        if (isNoopLink(iElement)) {
+            event.preventDefault();
+        } else if (rel === 'back') {
+            event.preventDefault();
+            $scope.$apply(function () {
+                $location.goBack();
+            });
+        } else {
+            var absHref = iElement.prop('href'),
+                rewrittenUrl = $location.$$rewriteAppUrl(absHref);
 
+            if (absHref && !iElement.attr('target') && rel !== 'external' && rewrittenUrl) {
+                // See original angular default click handler:
+                // update location manually
+                $location.$$parse(rewrittenUrl);
+                event.preventDefault();
+                // hack to work around FF6 bug 684208 when scenario runner clicks on links
+                window.angular['ff-684208-preventDefault'] = true;
+                // Additional handling
+                var override = $location.routeOverride() || {};
+                var jqmOptions = override.jqmOptions = {
+                    link:iElement
                 };
+                if (rel) {
+                    jqmOptions.role = rel;
+                }
+                var trans = iElement.jqmData("transition");
+                if (trans) {
+                    jqmOptions.transition = trans;
+                }
+                var direction = iElement.jqmData("direction");
+                if (direction) {
+                    jqmOptions.reverse = direction === "reverse";
+                }
+                $location.routeOverride(override);
+                $scope.$apply();
             }
-        };
-    }]);
+        }
+    }
 
+    function isNoopLink(element) {
+        var href = element.attr('href');
+        return (href === '#' || !href);
+    }
 
     (function patchAngularToAllowVclicksOnEmptyAnchorTags() {
         // Problem 1:
@@ -1357,49 +1362,46 @@ factory(window.jQuery, window.angular);
         // so that the browser does not update the browser location directly.
         mod.config(['$locationProvider', function ($locationProvider) {
             var orig$get = $locationProvider.$get;
-            $locationProvider.$get = ['$injector', '$rootElement', function ($injector, $rootElement) {
-                return decorateNewClickHandlersOnRootElementWhileCalling($rootElement,
-                    function (originalClickHandler) {
-                        return function (event) {
-                            var elm = $(event.target);
-                            // traverse the DOM up to find first A tag
-                            while (angular.lowercase(elm[0].nodeName) !== 'a') {
-                                // ignore rewriting if no A tag (reached root element, or no parent - removed from document)
-                                if (elm[0] === $rootElement[0] || !(elm = elm.parent())[0]) return;
-                            }
-                            if (isNoopLink(elm)) {
-                                event.preventDefault();
-                            } else {
-                                originalClickHandler.apply(this, arguments);
-                            }
-                        }
-                    },
+            $locationProvider.$get = ['$injector', '$rootElement', '$rootScope', function ($injector, $rootElement, $rootScope) {
+                var $location = preventClickHandlersOnRootElementWhileCalling($rootElement,
                     function () {
                         return $injector.invoke(orig$get, $locationProvider);
                     });
+                // Note: Some of this click handler was copied from the original
+                // default click handler in angular.
+                $rootElement.bind('click', function (event) {
+                    // TODO(vojta): rewrite link when opening in new tab/window (in legacy browser)
+                    // currently we open nice url link and redirect then
+
+                    if (event.ctrlKey || event.metaKey || event.which == 2) return;
+
+                    var elm = $(event.target);
+
+                    // traverse the DOM up to find first A tag
+                    while (angular.lowercase(elm[0].nodeName) !== 'a') {
+                        // ignore rewriting if no A tag (reached root element, or no parent - removed from document)
+                        if (elm[0] === $rootElement[0] || !(elm = elm.parent())[0]) return;
+                    }
+                    defaultClickHandler(event, elm, $rootScope, $location);
+                });
+                return $location;
             }];
         }]);
 
-        function decorateNewClickHandlersOnRootElementWhileCalling($rootElement, clickHandlerDecorator, callback) {
+        function preventClickHandlersOnRootElementWhileCalling($rootElement, callback) {
             var _bind = $.fn.bind;
             try {
-                $.fn.bind = function (eventName, callback) {
-                    var newCallback = callback;
+                $.fn.bind = function (eventName) {
                     if (eventName === 'click' && this[0] === $rootElement[0]) {
-                        newCallback = clickHandlerDecorator(callback);
+                        return;
                     }
-                    return _bind.call(this, eventName, newCallback);
+                    return _bind.apply(this, arguments);
                 };
                 return callback();
             }
             finally {
                 $.fn.bind = _bind;
             }
-        }
-
-        function isNoopLink(element) {
-            var href = element.attr('href');
-            return (href === '#' || !href);
         }
     })();
 

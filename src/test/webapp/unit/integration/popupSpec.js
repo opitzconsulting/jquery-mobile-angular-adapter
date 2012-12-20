@@ -1,4 +1,4 @@
-describe('popup', function() {
+describe('popup', function () {
     it("should stamp the widget using the jqm widget", function () {
         var spy = testutils.spyOnJq('popup');
         var c = testutils.compile('<div><div data-role="popup" ng-repeat="l in list"></div></div>');
@@ -41,6 +41,15 @@ describe('popup', function() {
             popup.popup("open");
             popup.popup("close");
             expect($location.url()).toEqual("/");
+        }));
+        it('should go back on a click on the popup close button', inject(function ($location) {
+            var c = testutils.compileInPage('<div data-role="popup" id="popup1"><a href="#" data-rel="back" id="close">Close</a></div>');
+            var popup = c.page.find("#popup1");
+            popup.popup("open");
+            var closeBtn = popup.find("#close");
+            closeBtn.click();
+            expect($location.url()).toEqual("/");
+
         }));
     });
 });

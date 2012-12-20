@@ -103,27 +103,26 @@ describe('ngmRouting', function () {
                     expect(args.transition).toBe('slide');
                 });
             });
-            it('data-rel=back should call $location.goBack() and ignore the href', inject(function ($location) {
-                spyOn($location, 'goBack');
-                var oldLocation = $location.url();
+            it('data-rel=back should go back in history and ignore the href', inject(function ($location, $rootScope) {
                 var c = testutils.compileInPage('<a href="http://server/someLink" data-rel="back"/>');
+                $location.path('/someLink');
+                $rootScope.$apply();
+                $location.path('/someLink2');
+                $rootScope.$apply();
+
                 var event = $.Event("click");
                 c.element.trigger(event);
-                expect($location.goBack).toHaveBeenCalled();
+                expect(history.go).toHaveBeenCalledWith(-1);
                 expect(event.isDefaultPrevented()).toBe(true);
-                expect(event.isPropagationStopped()).toBe(true);
-                expect($location.url()).toBe(oldLocation);
+                expect($location.url()).toBe('/someLink2');
             }));
-            it('data-rel=external should call $browser.url with the given url and not execute the default angular location handling', inject(function ($browser, $location) {
-                var oldLocation = $location.url();
-                spyOn($browser, 'url').andCallThrough();
+
+            it('data-rel=external should execute the default url action', inject(function ($browser, $location) {
                 var c = testutils.compileInPage('<a href="http://someOtherServer" data-rel="external"/>');
                 var event = $.Event("click");
                 c.element.trigger(event);
-                expect(event.isDefaultPrevented()).toBe(true);
-                expect(event.isPropagationStopped()).toBe(true);
-                expect($location.url()).toBe(oldLocation);
-                expect($browser.url).toHaveBeenCalledWith("http://someOtherServer");
+                expect(event.isDefaultPrevented()).toBe(false);
+                expect(event.isPropagationStopped()).toBe(false);
             }));
         });
     });

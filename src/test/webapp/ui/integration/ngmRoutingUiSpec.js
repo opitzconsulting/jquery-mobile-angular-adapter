@@ -37,7 +37,11 @@ describe("ngmRouting", function () {
 
     describe('history support true', function () {
         function init(hash) {
-            initWithHistorySupport(hash, true);
+            initWithHistorySupport(hash, true, function(win) {
+                var _changePage = win.$.mobile.changePage;
+                spyOn(win.$.mobile, 'changePage').andCallThrough();
+                $.mobile.changePage.defaults = _changePage.defaults;
+            });
         }
 
         describe('initial page', function () {
@@ -50,6 +54,16 @@ describe("ngmRouting", function () {
                     expect($location.path()).toBe('/test-fixture.html');
                     expect($location.hash()).toBe('page2');
                     expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
+                });
+            });
+
+            it('should call $.mobile.changePage only once with the subpage if a subpage is given', function () {
+                init('#/test-fixture.html#page2');
+                waits(500);
+                runs(function () {
+                    expect($.mobile.changePage.callCount).toBe(2);
+                    var pageStr = $.mobile.changePage.argsForCall[0][0];
+                    expect(pageStr.indexOf('#page2')).not.toBe(-1);
                 });
             });
 

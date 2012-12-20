@@ -43,6 +43,13 @@ Test page during development.
 
 var mod = angular.module("ngm", []);
 
+mod.config(['$provide', function ($provide) {
+    $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
+        $sniffer.history = true;
+        return $sniffer;
+    }]);
+}]);
+
 mod.controller('MainController', function($scope) {
 
     $scope.buttonText = "Dies ist ein Button";

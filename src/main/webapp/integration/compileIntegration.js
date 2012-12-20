@@ -36,7 +36,14 @@
                     }
                     if (hasPages && !jqmInitialized) {
                         jqmInitialized = true;
-                        $.mobile.initializePage();
+                        var _changePage = $.mobile.changePage;
+                        $.mobile.changePage = function () {};
+                        //$.mobile.changePage.defaults = _changePage.defaults;
+                        try {
+                            $.mobile.initializePage();
+                        } finally {
+                            $.mobile.changePage = _changePage;
+                        }
                         $rootScope.$broadcast("jqmInit");
                     }
                 }
@@ -128,7 +135,7 @@
                 return {
                     pre:function (scope, iElement, iAttrs) {
                         if (!$.mobile.pageContainer) {
-                            $.mobile.pageContainer = iElement.parent().addClass( "ui-mobile-viewport" );
+                            $.mobile.pageContainer = iElement.parent().addClass("ui-mobile-viewport");
                         }
 
                         // Create the page widget without the pagecreate-Event.

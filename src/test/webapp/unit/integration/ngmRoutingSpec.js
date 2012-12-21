@@ -100,6 +100,8 @@ describe('ngmRouting', function () {
 
                 var event = $.Event("click");
                 c.element.trigger(event);
+                jasmine.Clock.tick(11);
+
                 expect(history.go).toHaveBeenCalledWith(-1);
                 expect(event.isDefaultPrevented()).toBe(true);
                 expect($location.url()).toBe('/someLink2');
@@ -113,6 +115,7 @@ describe('ngmRouting', function () {
 
                 var event = $.Event("click");
                 c.element.trigger(event);
+                jasmine.Clock.tick(1);
                 expect(history.go).toHaveBeenCalledWith(-1);
                 expect(event.isDefaultPrevented()).toBe(true);
                 expect($location.url()).toBe('/someLink2');

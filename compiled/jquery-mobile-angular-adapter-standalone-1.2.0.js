@@ -34525,11 +34525,20 @@ factory(window.jQuery, window.angular);
         registerBrowserDecorator($provide);
     }]);
 
-    mod.factory('$history', ['$rootScope', function ($rootScope) {
+    mod.factory('$history', [function ($timeout) {
         var $history;
 
         function go(relativeIndex) {
-            window.history.go(relativeIndex);
+            // Always execute history.go asynchronously.
+            // This is required as firefox and IE10 trigger the popstate event
+            // in sync, which would result in problems, as
+            // in backMode we stop the normal navigation by stopping the $locationChangeSuccess event.
+            // However, if we would trigger a popstate event here in sync,
+            // the $locationChangeSuccess event from the poped state event would also be swallowed!
+            // We have a ui test for this (see ngmRoutingUiSpec#$location.back).
+            window.setTimeout(function() {
+                window.history.go(relativeIndex);
+            },0);
         }
 
         function onUrlChangeBrowser(url) {

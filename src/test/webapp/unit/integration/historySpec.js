@@ -1,7 +1,12 @@
 describe('history', function () {
     describe('go', function () {
-        it('should call window.history.go', inject(function ($history) {
+        it('should call window.history.go asynchronously', inject(function ($history) {
+            // Why asynchronously?
+            // Because some browsers (Firefox and IE10) trigger the popstate event in sync,
+            // which gets us into trouble for $location.backMode().
             $history.go(10);
+            expect(window.history.go).not.toHaveBeenCalled();
+            jasmine.Clock.tick(1);
             expect(window.history.go).toHaveBeenCalledWith(10);
         }));
     });
@@ -170,6 +175,7 @@ describe('history', function () {
                 $location.path("path1");
                 $location.backMode();
                 $rootScope.$apply();
+                jasmine.Clock.tick(1);
 
                 expect(window.history.go).toHaveBeenCalledWith(-1);
                 expect($location.path()).toBe("/path2");
@@ -191,6 +197,7 @@ describe('history', function () {
                 $location.path("path1");
                 $location.backMode();
                 $rootScope.$apply();
+                jasmine.Clock.tick(1);
 
                 expect(window.history.go).not.toHaveBeenCalled();
             }));
@@ -209,6 +216,7 @@ describe('history', function () {
                 $location.path("path2");
                 $location.backMode();
                 $rootScope.$apply();
+                jasmine.Clock.tick(1);
 
                 expect(locationChangeSuccessCounter).toBe(1);
                 expect($history.urlStack).toEqual(['http://server/path1', 'http://server/path2']);
@@ -245,6 +253,7 @@ describe('history', function () {
             $location.goBack();
             expect($location.absUrl()).toBe('http://server/path1');
             $rootScope.$apply();
+            jasmine.Clock.tick(1);
 
             expect($history.urlStack).toEqual(['http://server/path1', 'http://server/path2']);
             expect(window.history.go).toHaveBeenCalledWith(-1);

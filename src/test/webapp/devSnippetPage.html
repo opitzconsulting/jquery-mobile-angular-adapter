@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <!--
 Test page during development.
@@ -12,6 +13,16 @@ Test page during development.
     <script src="lib/angular.js"></script>
     <script src="jqm-angular.jsp"></script>
 
+<script>
+    var mod = angular.module("ngm", []);
+
+    mod.controller( "MainController", function( $scope, $location ) {
+        $scope.handler = function($event){
+            console.log($event);
+        }
+    });
+</script>
+
 
 </head>
 <body ng-app="ngm">
@@ -23,23 +34,25 @@ Test page during development.
     </div>
 
     <div data-role="content">
-        <a href="#page2" ngm-vclick="handler($event)">Page2</a>
+        <a href="#page2" data-transition="slide">Page2</a>
     </div>
 
 </div>
 
+<div data-role="page" id="page2" ng-controller="MainController" >
 
-​
+    <div data-role="header">
+        <h1>Page2</h1>
+    </div>
+
+    <div data-role="content">
+        <a href="#" data-rel="back">Back1</a>
+        <a href="#" onclick="history.back()">Back2</a>
+    </div>
+
+</div>
+
 </body>
 
-<script>
-    var mod = angular.module("ngm", []);
-
-    mod.controller( "MainController", function( $scope, $location ) {
-        $scope.handler = function($event){
-            console.log($event);
-        }
-    });
-    </script>
 
 </html>

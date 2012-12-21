@@ -20,6 +20,7 @@
         });
         spyOn(angular.mock.$Browser.prototype, 'url').andCallThrough();
         $.mobile.popup.active = undefined;
+        jasmine.Clock.installMock();
     });
 
     afterEach(function() {

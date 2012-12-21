@@ -18,6 +18,7 @@
                 $.mobile._registerBrowserDecorators[i]($provide);
             }
         });
+        spyOn(angular.mock.$Browser.prototype, 'url').andCallThrough();
         $.mobile.popup.active = undefined;
     });
 

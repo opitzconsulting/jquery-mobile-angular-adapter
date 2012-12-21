@@ -62,6 +62,7 @@
                         // so the routes don't get updated!
                         $rootScope.suppressEventInDigestCycle('$locationChangeStart');
                         $rootScope.suppressEventInDigestCycle('$locationChangeSuccess');
+                        return;
                     }
                 }
                 return _url.apply(this, arguments);

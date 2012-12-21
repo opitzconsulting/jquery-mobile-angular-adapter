@@ -45,10 +45,10 @@ Include this adapter _after_ angular and jquery mobile (see below).
     <html ng-app>
     <head>
         <title>MobileToys</title>
-        <link rel="stylesheet" href="lib/jquery.mobile-1.1.css"/>
-        <script src="lib/jquery-1.7.1.js"></script>
-        <script src="lib/jquery.mobile-1.1.0.js"></script>
-        <script src="lib/angular-1.1.0.js"></script>
+        <link rel="stylesheet" href="lib/jquery.mobile.css"/>
+        <script src="lib/jquery.js"></script>
+        <script src="lib/jquery.mobile.js"></script>
+        <script src="lib/angular.js"></script>
         <script src="lib/jquery-mobile-angular-adapter.js"></script>
     </head>
 
@@ -59,7 +59,7 @@ Create a `index.xhtml` file like the one below:
     <html ng-app>
     <head>
         <title>MobileToys</title>
-        <link rel="stylesheet" href="lib/jquery.mobile-1.1.css"/>
+        <link rel="stylesheet" href="lib/jquery.mobile.css"/>
         <script src="lib/requirejs.js" data-main="main.js"/>
     </head>
     <body>
@@ -304,6 +304,7 @@ Methods and Properties:
 - `$location.backMode()`: This will try to go back in history to the url specified by `$location`. E.g. if the navigation path
   to the current page is `page1->page2->page3` and we then call `$location.path('page1'); $location.backMode()` this will
   go two steps back in history.
+  Note that this is in analogy to the already existing angular method `$location.replace`.
 - `location.goBack()`: This will go one step back in history: call `$location.backMode()` and fill the url of `$location` by the last
   entry in the browser history.
 

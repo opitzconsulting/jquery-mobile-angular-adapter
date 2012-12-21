@@ -156,7 +156,7 @@ describe('history', function () {
                 expect($history.activeIndex).toBe(1);
             }));
 
-            it('should go back to the nearest entry in history', inject(function ($location, $rootScope, $history) {
+            it('should go back to the nearest entry in history but no change $location immediately', inject(function ($location, $rootScope, $browser) {
                 $location.path("path1");
                 $rootScope.$apply();
                 $location.path("path2");
@@ -166,11 +166,16 @@ describe('history', function () {
                 $location.path("path2");
                 $rootScope.$apply();
 
+                angular.mock.$Browser.prototype.url.reset();
                 $location.path("path1");
                 $location.backMode();
                 $rootScope.$apply();
 
                 expect(window.history.go).toHaveBeenCalledWith(-1);
+                expect($location.path()).toBe("/path2");
+                angular.forEach(angular.mock.$Browser.prototype.url.argsForCall, function(args) {
+                    expect(args).toEqual([]);
+                });
             }));
 
             it('should not go back if the $locationChangeStart event was canceled', inject(function ($location, $rootScope, $history) {

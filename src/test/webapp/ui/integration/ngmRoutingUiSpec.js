@@ -276,6 +276,16 @@ describe("ngmRouting", function () {
                         page.attr(attr, attrs[attr]);
                     }
                 }
+                var mod = frame.angular.module("ng");
+                mod.config(function($routeProvider) {
+                    $routeProvider.when('/start', {
+                        templateUrl: '#start'
+                    });
+                    $routeProvider.when('/page2', {
+                        templateUrl: '#page2',
+                        onActivate: 'onActivate(a)'
+                    });
+                });
             });
         }
 
@@ -284,8 +294,8 @@ describe("ngmRouting", function () {
                 expectedArgs = {a:2};
             var beforeShowCallCount = 0;
             visitPage("#start", function ($scope) {
-                $scope.onActivate = function (locals) {
-                    onActivateArguments = locals;
+                $scope.onActivate = function () {
+                    onActivateArguments = arguments;
                 };
                 $scope.onBeforeShow = function () {
                     beforeShowCallCount++;
@@ -297,46 +307,45 @@ describe("ngmRouting", function () {
                 onActivateArgumentsOnBeforeShow = undefined;
                 expect(onActivateArguments).toBeUndefined();
                 expect(onActivateArgumentsOnBeforeShow).toBeUndefined();
-                $location.hash('page2');
+                $location.path('/page2');
                 $location.routeOverride({
-                    onActivate:'onActivate',
                     locals:expectedArgs
                 });
                 scope.$apply();
             });
             waitsForAsync();
             runs(function () {
-                expect(onActivateArguments).toEqual(expectedArgs);
+                expect(onActivateArguments).toEqual([expectedArgs.a]);
                 expect(onActivateArgumentsOnBeforeShow).toBe(onActivateArguments);
                 expect(beforeShowCallCount).toBe(1);
             });
         });
 
-        it("should call the given function on the target page on back navigation", function () {
+        it("should call the onActivate function on the target page on back navigation", function () {
             var onActivateArguments,
                 expectedArgs = {a:2};
-            visitPage("#page2", function ($scope) {
-                $scope.onActivate = function (locals) {
-                    onActivateArguments = locals;
+            visitPage("#!/page2", function ($scope) {
+                $scope.onActivate = function () {
+                    onActivateArguments = arguments;
                 }
             });
             runs(function () {
-                $location.hash("start");
+                $location.path("/start");
                 scope.$apply();
             });
             waitsForAsync();
             runs(function () {
-                expect(onActivateArguments).toBeFalsy();
+                expect(onActivateArguments).toBeTruthy();
+                expect(onActivateArguments.a).toBeUndefined();
                 $location.goBack();
                 $location.routeOverride({
-                    onActivate:'onActivate',
                     locals:expectedArgs
                 });
                 scope.$apply();
             });
             waitsForAsync();
             runs(function () {
-                expect(onActivateArguments).toEqual(expectedArgs);
+                expect(onActivateArguments).toEqual([expectedArgs.a]);
             });
         });
 

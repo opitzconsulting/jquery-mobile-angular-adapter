@@ -21,18 +21,6 @@ describe('ngmRouting', function () {
             expect($location.$$routeOverride).toBe(someOverride);
         }));
 
-        it('should override the urlTemplate and save it into the ngmTemplateUrl route property', function () {
-            inject(function ($location, $route, $rootScope) {
-                var overriddenValue = 'someTemplate2';
-                $location.path('/someRoute');
-                $location.routeOverride({
-                    templateUrl:overriddenValue
-                });
-                $rootScope.$digest();
-                expect($route.current.ngmTemplateUrl).toBe(overriddenValue);
-            });
-        });
-
         it('should merge the jqmOptions', function () {
             inject(function ($location, $route, $rootScope) {
                 $location.path('/someRoute');
@@ -254,16 +242,16 @@ describe('ngmRouting', function () {
     });
 
     describe('onActivate', function () {
-        it('should call the onActivate function on the current route on pagebeforeshow event', inject(function ($route) {
+        it('should eval the onActivate expresion on the current route on pagebeforeshow event using $route.current.locals as extra variables', inject(function ($route) {
             var c = testutils.compileInPage('<div></div>');
             var page = c.page;
             var currentRoute = $route.current;
-            currentRoute.onActivate = 'someFn';
+            currentRoute.onActivate = 'someFn(a)';
             currentRoute.locals = {a:'b'};
             var scope = page.scope();
             scope.someFn = jasmine.createSpy('someFn');
             page.trigger('pagebeforeshow');
-            expect(scope.someFn).toHaveBeenCalledWith(currentRoute.locals);
+            expect(scope.someFn).toHaveBeenCalledWith(currentRoute.locals.a);
         }));
     });
 

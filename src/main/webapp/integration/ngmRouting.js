@@ -117,9 +117,6 @@
             var routeOverride = $location.$$routeOverride;
             delete $location.$$routeOverride;
             if (routeOverride) {
-                if (routeOverride.templateUrl) {
-                    newRoute.templateUrl = routeOverride.templateUrl;
-                }
                 if (routeOverride.onActivate) {
                     newRoute.onActivate = routeOverride.onActivate;
                 }
@@ -143,7 +140,7 @@
         function onPagebeforeshow(event) {
             var current = $route.current;
             if (current && current.onActivate) {
-                event.targetScope[current.onActivate].call(event.targetScope, current.locals);
+                event.targetScope.$eval(current.onActivate, current.locals);
             }
             var isDialog = $.mobile.activePage && $.mobile.activePage.jqmData("role") === "dialog";
             if (isDialog) {

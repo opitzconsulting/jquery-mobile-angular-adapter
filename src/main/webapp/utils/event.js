@@ -1,9 +1,12 @@
 (function (angular) {
     var mod = angular.module('ng');
 
-    function registerEventHandler(scope, element, eventType, handler) {
+    function registerEventHandler(scope, $parse, element, eventType, handler) {
+        var fn = $parse(handler);
         element.bind(eventType, function (event) {
-            var res = scope.$apply(handler, element);
+            scope.$apply(function() {
+                fn(scope, {$event:event});
+            });
             if (eventType.charAt(0) == 'v') {
                 // This is required to prevent a second
                 // click event, see
@@ -14,12 +17,12 @@
     }
 
     function createEventDirective(directive, eventType) {
-        mod.directive(directive, function () {
+        mod.directive(directive, ['$parse', function ($parse) {
             return function (scope, element, attrs) {
                 var eventHandler = attrs[directive];
-                registerEventHandler(scope, element, eventType, eventHandler);
+                registerEventHandler(scope, $parse, element, eventType, eventHandler);
             };
-        });
+        }]);
     }
 
     // See http://jquerymobile.com/demos/1.2.0/docs/api/events.html

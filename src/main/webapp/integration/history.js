@@ -10,18 +10,18 @@
 
         function rootScopeSuppressEventInDigestCycleDecorator($rootScope) {
             var suppressedEvents = {};
-            $rootScope.suppressEventInDigestCycle = function(eventName) {
+            $rootScope.suppressEventInDigestCycle = function (eventName) {
                 suppressedEvents[eventName] = true;
             };
             var _$broadcast = $rootScope.$broadcast;
-            $rootScope.$broadcast = function(eventName) {
+            $rootScope.$broadcast = function (eventName) {
                 if (suppressedEvents[eventName]) {
                     return {};
                 }
-                return _$broadcast.apply(this,arguments);
+                return _$broadcast.apply(this, arguments);
             };
             var _$digest = $rootScope.$digest;
-            $rootScope.$digest = function() {
+            $rootScope.$digest = function () {
                 var res = _$digest.apply(this, arguments);
                 suppressedEvents = {};
                 return res;
@@ -104,7 +104,8 @@
         function onUrlChangeProgrammatically(url, replace, back) {
             if (back) {
                 var currIndex = $history.activeIndex;
-                var newIndex = $history.urlStack.lastIndexOf(url, currIndex - 1);
+                var newIndex;
+                for (newIndex = currIndex - 1; newIndex >= 0 && $history.urlStack[newIndex] !== url; newIndex--);
                 if (newIndex !== -1 && currIndex !== -1) {
                     $history.go(newIndex - currIndex);
                     // stop the normal navigation!

@@ -34449,18 +34449,18 @@ factory(window.jQuery, window.angular);
 
         function rootScopeSuppressEventInDigestCycleDecorator($rootScope) {
             var suppressedEvents = {};
-            $rootScope.suppressEventInDigestCycle = function(eventName) {
+            $rootScope.suppressEventInDigestCycle = function (eventName) {
                 suppressedEvents[eventName] = true;
             };
             var _$broadcast = $rootScope.$broadcast;
-            $rootScope.$broadcast = function(eventName) {
+            $rootScope.$broadcast = function (eventName) {
                 if (suppressedEvents[eventName]) {
                     return {};
                 }
-                return _$broadcast.apply(this,arguments);
+                return _$broadcast.apply(this, arguments);
             };
             var _$digest = $rootScope.$digest;
-            $rootScope.$digest = function() {
+            $rootScope.$digest = function () {
                 var res = _$digest.apply(this, arguments);
                 suppressedEvents = {};
                 return res;
@@ -34543,7 +34543,8 @@ factory(window.jQuery, window.angular);
         function onUrlChangeProgrammatically(url, replace, back) {
             if (back) {
                 var currIndex = $history.activeIndex;
-                var newIndex = $history.urlStack.lastIndexOf(url, currIndex - 1);
+                var newIndex;
+                for (newIndex = currIndex - 1; newIndex >= 0 && $history.urlStack[newIndex] !== url; newIndex--);
                 if (newIndex !== -1 && currIndex !== -1) {
                     $history.go(newIndex - currIndex);
                     // stop the normal navigation!
@@ -34892,9 +34893,12 @@ factory(window.jQuery, window.angular);
 (function (angular) {
     var mod = angular.module('ng');
 
-    function registerEventHandler(scope, element, eventType, handler) {
+    function registerEventHandler(scope, $parse, element, eventType, handler) {
+        var fn = $parse(handler);
         element.bind(eventType, function (event) {
-            var res = scope.$apply(handler, element);
+            scope.$apply(function() {
+                fn(scope, {$event:event});
+            });
             if (eventType.charAt(0) == 'v') {
                 // This is required to prevent a second
                 // click event, see
@@ -34905,12 +34909,12 @@ factory(window.jQuery, window.angular);
     }
 
     function createEventDirective(directive, eventType) {
-        mod.directive(directive, function () {
+        mod.directive(directive, ['$parse', function ($parse) {
             return function (scope, element, attrs) {
                 var eventHandler = attrs[directive];
-                registerEventHandler(scope, element, eventType, eventHandler);
+                registerEventHandler(scope, $parse, element, eventType, eventHandler);
             };
-        });
+        }]);
     }
 
     // See http://jquerymobile.com/demos/1.2.0/docs/api/events.html

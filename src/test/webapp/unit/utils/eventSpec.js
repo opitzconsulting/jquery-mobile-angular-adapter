@@ -1,6 +1,6 @@
 describe('events', function () {
     describe("event shortcuts", function () {
-        it("should eval the expression when the event is fired", function () {
+        it("should eval the expression when the event is fired and provide the even via $event injection", function () {
             var jqmEvents = ['tap', 'taphold', 'swipe', 'swiperight', 'swipeleft', 'vmouseover',
                 'vmouseout',
                 'vmousedown',
@@ -19,11 +19,13 @@ describe('events', function () {
             var i,event;
             for (i=0; i<jqmEvents.length; i++) {
                 event = jqmEvents[i];
-                var d = testutils.compileInPage('<span ngm-' + event + '="executed=true"></span>');
+                var d = testutils.compileInPage('<span ngm-' + event + '="check($event)"></span>');
                 var element = d.element;
                 var scope = element.scope();
-                element.trigger(event);
-                expect(scope.executed).toEqual(true);
+                scope.check = jasmine.createSpy('checkEvent');
+                var eventObj = $.Event(event);
+                element.trigger(eventObj);
+                expect(scope.check).toHaveBeenCalledWith(eventObj);
             }
         });
 
@@ -39,10 +41,7 @@ describe('events', function () {
         });
 
 
-    });
 
-    describe('ngm-event', function() {
-        it("should execute teh ")
     });
 
 });

@@ -14,18 +14,32 @@ Test page during development.
 
 
 </head>
-<body ng-app>
+<body ng-app="ngm">
 ​
-    <div id="page1" data-role="page" >
-        <div data-role="content">
+<div data-role="page" id="mainPage" ng-controller="MainController" >
 
-                <input type="checkbox" name="checkbox-0" id="checkbox-lan-discovery" ng-model="Server.lan" />
-                <label ng-repeat="l in [1,2]" for="checkbox-lan-discovery">LAN Discovery</label>
-        </div>
-
-
+    <div data-role="header">
+        <h1>Main Page</h1>
     </div>
+
+    <div data-role="content">
+        <a href="#page2" ngm-vclick="handler($event)">Page2</a>
+    </div>
+
+</div>
+
+
 ​
 </body>
+
+<script>
+    var mod = angular.module("ngm", []);
+
+    mod.controller( "MainController", function( $scope, $location ) {
+        $scope.handler = function($event){
+            console.log($event);
+        }
+    });
+    </script>
 
 </html>

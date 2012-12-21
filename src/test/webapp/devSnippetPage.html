@@ -8,9 +8,16 @@ Test page during development.
     <link rel="stylesheet" href="lib/jquery.mobile.css"/>
 
     <script src="lib/jquery.js"></script>
-    <script src="lib/jquery.mobile.js"></script>
+    <script>
+        $(document).bind("mobileinit", function() {
+            $.support.dynamicBaseTag = false;
+        });
+
+    </script>
     <script src="lib/angular.js"></script>
+    <script src="lib/jquery.mobile.js"></script>
     <script src="jqm-angular.jsp"></script>
+
 
 </head>
 <body ng-app="ngm">
@@ -18,7 +25,7 @@ Test page during development.
 <div id="main" data-role="page">
     <div data-role="header">
         <h1>Page1</h1>
-        <a href="#page2">Page2</a>
+        <a href="page2.html" data-rel="external">Page2</a>
     </div>
     <div data-role="content">
 
@@ -45,12 +52,22 @@ var mod = angular.module("ngm", []);
 
 mod.config(['$provide', function ($provide) {
     $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
-        $sniffer.history = false;
+        $sniffer.history = true;
         return $sniffer;
     }]);
 }]);
 
-mod.controller('MainController', function($scope) {
+/*
+mod.config(['$locationProvider', function ($locationProvider) {
+    $locationProvider.hashPrefix('!');
+}]);
+
+mod.run(function($location, $route) {
+
+});
+*/
+
+    mod.controller('MainController', function($scope) {
 
     $scope.buttonText = "Dies ist ein Button";
 

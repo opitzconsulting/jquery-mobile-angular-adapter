@@ -1056,22 +1056,14 @@ factory(window.jQuery, window.angular);
 
     function registerBrowserDecorator($provide) {
         $provide.decorator('$browser', ['$delegate', function ($browser) {
-            var _baseHref = $browser.baseHref;
-
-            function baseHrefWithSearch() {
+            // Always return the same base href, as jquery mobile changes
+            // the base tag depending on which pages it is loading!
+            $browser.initialBaseHref = $browser.baseHref();
+            $browser.baseHref = function () {
                 // Patch for baseHref to return the correct path also for file-urls.
                 // See bug https://github.com/angular/angular.js/issues/1690
-                var href = _baseHref.call($browser);
+                var href = $browser.initialBaseHref;
                 return href ? href.replace(/^file?\:\/\/[^\/]*/, '') : href;
-            }
-
-            $browser.baseHrefWithSearch = baseHrefWithSearch;
-            $browser.baseHref = function () {
-                var result = $browser.baseHrefWithSearch.apply(this, arguments);
-                // remove search part. Required so that we can directly
-                // navigate to a subpage when there is a search part in the url.
-                // TODO file a bug report in angular for this!
-                return result.replace(/\?[^#]*/, "");
             };
             return $browser;
         }]);
@@ -1087,6 +1079,20 @@ factory(window.jQuery, window.angular);
                 $location.$$routeOverride = routeOverride;
                 return this;
             };
+
+            // If we start the app with a url like
+            // index.html?a=b#!/somePage.html, i.e.
+            // we have a search parameter and load an external subpage,
+            // then angular does not parse the given hashbang url correctly.
+            // Here, we correct the wrong parsing.
+
+            // TODO file a bug report in angular for this!
+            var hash = $location.hash();
+            if (hash && hash.indexOf('!') === 0) {
+                $location.search({});
+                $location.url(hash.substring(1));
+            }
+
             return $location;
         }
     }
@@ -1105,11 +1111,6 @@ factory(window.jQuery, window.angular);
         $.mobile.hashListeningEnabled = false;
         $.mobile.linkBindingEnabled = false;
         $.mobile.changePage.defaults.changeHash = false;
-        if ($.support.dynamicBaseTag) {
-            $.support.dynamicBaseTag = false;
-            $.mobile.base.set = function () {
-            };
-        }
         $.mobile._handleHashChange = function () {
         };
     }
@@ -1209,8 +1210,7 @@ factory(window.jQuery, window.angular);
                     return;
                 }
                 var url = $location.url();
-                // Use the href that also contains the search part.
-                var baseHref = $browser.baseHrefWithSearch();
+                var baseHref = $browser.baseHref();
                 if (url.indexOf('/') === -1) {
                     url = baseHref + url;
                 } else {
@@ -1368,9 +1368,11 @@ factory(window.jQuery, window.angular);
         // Solution part2: patch the listener for clicks in angular that updates $location to only be executed
         // when the href-Attribute of a link is not equal to "#". Otherwise still prevent the default action,
         // so that the browser does not update the browser location directly.
+        // Here we just prevent angular from installing it's default click handler
+        // and create our own.
         mod.config(['$locationProvider', function ($locationProvider) {
             var orig$get = $locationProvider.$get;
-            $locationProvider.$get = ['$injector', '$rootElement', '$rootScope', function ($injector, $rootElement, $rootScope) {
+            $locationProvider.$get = ['$injector', '$rootElement', '$rootScope', '$browser', function ($injector, $rootElement, $rootScope, $browser) {
                 var $location = preventClickHandlersOnRootElementWhileCalling($rootElement,
                     function () {
                         return $injector.invoke(orig$get, $locationProvider);

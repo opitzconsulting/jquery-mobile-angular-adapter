@@ -130,10 +130,11 @@ describe("ngmRouting", function () {
                 });
             });
 
-            it('should load external pages without changing the base tag but adjusting link urls', function () {
+            it('should be able to load external pages in a different folder, adjust the base tag correctly and go back again', function () {
                 var startUrl;
                 init();
                 runs(function () {
+                    win.tag = true;
                     startUrl = win.location.href;
                     expect($.mobile.activePage.attr("id")).toBe("start");
                     $location.path("/someFolder/externalPage.html");
@@ -142,8 +143,15 @@ describe("ngmRouting", function () {
                 waitsForAsync();
                 runs(function () {
                     expect(win.location.pathname).toBe('/jqmng/ui/someFolder/externalPage.html');
-                    expect($("base").attr("href")).toBe(startUrl);
                     expect($("#basePageLink").prop("href")).toBe(startUrl);
+                    expect($("base").prop("href")).toBe(win.location.href);
+                    expect(win.tag).toBe(true);
+                    $("#basePageLink").click();
+                });
+                waitsForAsync();
+                runs(function () {
+                    expect(win.tag).toBe(true);
+                    expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
                 });
             });
         });
@@ -203,18 +211,26 @@ describe("ngmRouting", function () {
                 });
             });
 
-            it('should be able to change to external pages', function () {
+            it('should be able to load external pages in a different folder, adjust the base tag correctly and go back again', function () {
                 init();
                 runs(function () {
+                    win.tag = true;
                     expect($.mobile.activePage.attr("id")).toBe("start");
                     $location.path("/externalPage.html");
                     scope.$apply();
                 });
                 waitsForAsync();
                 runs(function () {
+                    expect(win.tag).toBe(true);
                     expect($.mobile.activePage.attr("id")).toBe("externalPage");
                     expect($location.path()).toBe('/externalPage.html');
                     expect($location.hash()).toBe('');
+                    expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
+                    $("#basePageLink").click();
+                });
+                waitsForAsync();
+                runs(function () {
+                    expect(win.tag).toBe(true);
                     expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
                 });
             });

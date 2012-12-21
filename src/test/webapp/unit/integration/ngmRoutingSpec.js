@@ -175,53 +175,18 @@ describe('ngmRouting', function () {
             });
         });
 
-        it('should not change the base tag during jqm navigation, as angular does not like this (see following bug test)', inject(function ($browser, $location) {
-            expect($.support.dynamicBaseTag).toBe(false);
-            var oldHref = $.mobile.base.element.attr("href");
-            $.mobile.base.set("somePage");
-            expect($.mobile.base.element.attr("href")).toBe(oldHref);
-        }));
-
-        it('should still contain the angular bug: changing the $location.path in a click function of an anchor when the base tag is different to the document location results in a wrong location', inject(function ($browser, $location) {
-            var initUrl = $browser.$$url;
-
-            var c = testutils.compileInPage('<a href="someRef" ng-click="click()">Link</a>');
-
-            var base = $("base");
-            var oldBase = base.attr("href");
-            base.attr('href', initUrl + 'test.html');
-
-            var link = c.element;
-            var scope = link.scope();
-            scope.click = function () {
-                $location.path("/someLink");
-            };
-            link.click();
-            // This is the bug: This should really be equal if everything would work as it should be!
-            expect($location.path()).not.toEqual("/someLink");
-
-            base.attr('href', oldBase);
-        }));
-
-        it('should return the url without the search when calling $browser.baseHref()', function () {
-            inject(function ($browser) {
-                $browser.$$baseHref = 'http://someUrl/somePage?a=b';
-                expect($browser.baseHref()).toBe('http://someUrl/somePage');
-                expect($browser.baseHrefWithSearch()).toBe($browser.$$baseHref);
-
-                $browser.$$baseHref = 'http://someUrl/somePage';
-                expect($browser.baseHref()).toBe('http://someUrl/somePage');
-                expect($browser.baseHrefWithSearch()).toBe($browser.$$baseHref);
-            });
-        });
-
         it('should return the url without protocol for file urls when calling $browser.baseHref()', function () {
             inject(function ($browser) {
-                $browser.$$baseHref = 'file:///someUrl/somePage?a=b';
-                expect($browser.baseHref()).toBe('/someUrl/somePage');
-                expect($browser.baseHrefWithSearch()).toBe('/someUrl/somePage?a=b');
+                $browser.initialBaseHref = 'file:///someUrl/somePage?a=b';
+                expect($browser.baseHref()).toBe('/someUrl/somePage?a=b');
             });
         });
+
+        it('should not change $browser.baseHref when the base tag changes', inject(function($browser) {
+            var oldBaseHref = $browser.baseHref();
+            $browser.$$baseHref = 'someOtherUrl';
+            expect($browser.baseHref()).toBe(oldBaseHref);
+        }));
     });
 
     describe('not supported angular routing features', function () {

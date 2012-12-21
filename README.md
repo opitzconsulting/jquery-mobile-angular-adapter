@@ -190,12 +190,14 @@ Default routing: `basePath+$location.url()`
 
 Notes:
 
-- We always enable `$locationProvider.html5Mode`. By this, we are compatible to the default jquery mobile behaviour,
+- We always enable `$locationProvider.html5Mode` and set `$locationProvider.hashPrefix('!')`.
+  By this, we are compatible to the default jquery mobile behaviour,
   e.g. links like `<a href="somePage.html">` are possible and do not reload the whole page but use AJAX.
 - If you want to start an app directly on a subpage, use the following url:
-  * For an external page that should be loaded using ajax: `index.html#/somePage.html`
-  * For an internal page that is also contained in the `index.html: `index.html#/index.html#someOtherPage` (yes, this url contains
-    2 hashes).
+  * For an external page that should be loaded using ajax: `index.html#!/somePage.html`
+  * For an internal page that is also contained in the `index.html: `index.html#/!index.html#someOtherPage` (yes, this url contains
+    2 hashes). If you are sure that all browsers that you use support the new history API, you can also use the url
+    `index.html#someOtherPage` to start at an internal page.
 - jQuery mobile automatically creates a `<base>` tag for the main page and sets it's href-attribute to the main page.
   There are some parts of angular that use this fact, so keep it in mind when debugging errors.
 
@@ -391,7 +393,7 @@ Notes on the integration of some jqm widgets
 
 - The attribute `data-collapsed` has bidirectional data binding, e.g.
 
-    <div data-role="collapsible" data-collapsed="someProperty">...</div>
+        <div data-role="collapsible" data-collapsed="someProperty">...</div>
 
 
 Integration strategy

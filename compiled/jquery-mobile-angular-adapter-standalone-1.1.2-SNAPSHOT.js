@@ -34130,6 +34130,7 @@ factory(window.jQuery, window.angular);
     // <a href="somePage.html"> to load external pages.
     mod.config(['$locationProvider', function ($locationProvider) {
         $locationProvider.html5Mode(true);
+        $locationProvider.hashPrefix('!');
     }]);
 
     mod.directive('ngView', function () {

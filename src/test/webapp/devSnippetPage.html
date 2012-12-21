@@ -45,7 +45,7 @@ var mod = angular.module("ngm", []);
 
 mod.config(['$provide', function ($provide) {
     $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
-        $sniffer.history = true;
+        $sniffer.history = false;
         return $sniffer;
     }]);
 }]);

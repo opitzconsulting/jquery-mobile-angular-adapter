@@ -46,8 +46,19 @@ describe("ngmRouting", function () {
 
         describe('initial page', function () {
 
-            it('should be able to start at an internal subpage', function () {
-                init('#/test-fixture.html#page2');
+            it('should be able to start at an internal subpage without hashbang', function () {
+                init('#page2');
+                waits(500);
+                runs(function () {
+                    expect($.mobile.activePage.attr("id")).toBe("page2");
+                    expect($location.path()).toBe('/test-fixture.html');
+                    expect($location.hash()).toBe('page2');
+                    expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
+                });
+            });
+
+            it('should be able to start at an internal subpage with hashbang', function () {
+                init('#!/test-fixture.html#page2');
                 waits(500);
                 runs(function () {
                     expect($.mobile.activePage.attr("id")).toBe("page2");
@@ -58,7 +69,7 @@ describe("ngmRouting", function () {
             });
 
             it('should call $.mobile.changePage only once with the subpage if a subpage is given', function () {
-                init('#/test-fixture.html#page2');
+                init('#!/test-fixture.html#page2');
                 waits(500);
                 runs(function () {
                     expect($.mobile.changePage.callCount).toBe(2);
@@ -68,7 +79,7 @@ describe("ngmRouting", function () {
             });
 
             it('should be able to start at an external subpage', function () {
-                init('#/externalPage.html');
+                init('#!/externalPage.html');
                 runs(function () {
                     expect($.mobile.activePage.attr("id")).toBe("externalPage");
                     expect($location.path()).toBe('/externalPage.html');
@@ -78,7 +89,7 @@ describe("ngmRouting", function () {
             });
 
             it('should be able to start at an internal page when search parameters are used', function () {
-                init('?a=b#/test-fixture.html?a=b#page2');
+                init('?a=b#!/test-fixture.html?a=b#page2');
                 runs(function () {
                     expect($.mobile.activePage.attr("id")).toBe("page2");
                 });
@@ -145,8 +156,8 @@ describe("ngmRouting", function () {
 
         describe('initial page', function () {
 
-            it('should be able to start at an internal subpage', function () {
-                init('#/test-fixture.html#page2');
+            it('should be able to start at an internal subpage with hashbang', function () {
+                init('#!/test-fixture.html#page2');
                 waits(500);
                 runs(function () {
                     expect($.mobile.activePage.attr("id")).toBe("page2");
@@ -157,7 +168,7 @@ describe("ngmRouting", function () {
             });
 
             it('should be able to start at an external subpage', function () {
-                init('#/externalPage.html');
+                init('#!/externalPage.html');
                 runs(function () {
                     expect($.mobile.activePage.attr("id")).toBe("externalPage");
                     expect($location.path()).toBe('/externalPage.html');
@@ -167,7 +178,7 @@ describe("ngmRouting", function () {
             });
 
             it('should be able to start at an internal page when search parameters are used', function () {
-                init('?a=b#/test-fixture.html?a=b#page2');
+                init('?a=b#!/test-fixture.html?a=b#page2');
                 runs(function () {
                     expect($.mobile.activePage.attr("id")).toBe("page2");
                 });
@@ -212,7 +223,7 @@ describe("ngmRouting", function () {
 
     describe('$location.back', function () {
         it('should go back in history when $location.back is used', function () {
-            initWithHistorySupport('#/test-fixture.html#start', true);
+            initWithHistorySupport('#start', true);
             waits(500);
             runs(function () {
                 expect($.mobile.activePage.attr("id")).toBe("start");
@@ -256,7 +267,7 @@ describe("ngmRouting", function () {
             var onActivateArguments, onActivateArgumentsOnBeforeShow,
                 expectedArgs = {a:2};
             var beforeShowCallCount = 0;
-            visitPage("#/test-fixture.html#start", function ($scope) {
+            visitPage("#start", function ($scope) {
                 $scope.onActivate = function (locals) {
                     onActivateArguments = locals;
                 };
@@ -288,7 +299,7 @@ describe("ngmRouting", function () {
         it("should call the given function on the target page on back navigation", function () {
             var onActivateArguments,
                 expectedArgs = {a:2};
-            visitPage("#/test-fixture.html#page2", function ($scope) {
+            visitPage("#page2", function ($scope) {
                 $scope.onActivate = function (locals) {
                     onActivateArguments = locals;
                 }
@@ -319,7 +330,7 @@ describe("ngmRouting", function () {
         var el;
 
         function init(hrefValue) {
-            initWithHistorySupport('#/test-fixture.html#start', true, function (win) {
+            initWithHistorySupport('#start', true, function (win) {
                 win.$("#start").append('<div data-role="content"><a href="' + hrefValue + '" id="link"></a></div>');
                 el = win.$("#link");
             });

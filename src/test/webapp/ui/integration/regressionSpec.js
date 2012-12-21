@@ -117,7 +117,7 @@ describe("regression", function () {
     describe('navigation', function () {
         it("should navigate correctly when angular is loaded before jqm", function () {
             var $, win;
-            loadHtml('/jqmng/ui/test-fixture-ngBeforeJqm.html#/page1.html');
+            loadHtml('/jqmng/ui/test-fixture-ngBeforeJqm.html#!/page1.html');
             runs(function () {
                 win = testframe();
                 $ = win.$;

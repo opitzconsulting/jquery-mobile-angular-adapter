@@ -3,17 +3,27 @@ Changelog
 
 1.1.2
 -------------
-- updated to angular 1.0.3 and jqm 1.2.0
-- support for angular routes for external jqm pages
-- general `$history` service and extensions to the `$location` service to
-  control history and route parameters for a single route call.
+Breaking changes:
+
+- The url to start an app at a specific page (i.e. not the first page) changed.
 - `$navigate` now only supports one parameter for the activation function. See `$location.routeOverride` for
   the general concept.
+- Changed `ngm-click` to `ngm-vclick` as this matches directly to the jqm docs.
+- Location for Wait-Dialog default messages changed.
+
+New features:
+
+- support for angular routes for jqm pages.
+- general `$history` service and extensions to the `$location` service to
+  control history and route parameters for a single route call.
+- added missing event directives.
+
+Internal changes:
+
+- updated to angular 1.0.3 and jqm 1.2.0
 - internal refactorings and simplifications.
-- added missing event directives. Changed `ngm-click` to `ngm-vclick` as this matches directly to the jqm docs.
 - Checkboxes/Radio buttons: We always wrap them into a `<fieldset>` element, if not already done. This ok from
   jquery mobile perspective and fixes problems when there is a ng-repeat on the `<input>`.
-- Location for Wait-Dialog default messages changed.
 
 1.1.1
 -------------

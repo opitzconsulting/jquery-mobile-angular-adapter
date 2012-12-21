@@ -132,4 +132,55 @@ describe("checkbox", function () {
         content = page.find("fieldset");
         expect(content.children('div.ui-checkbox').length).toEqual(1);
     });
+
+    it('should allow ng-repeat on the checkbox', function() {
+        var c = testutils.compileInPage(
+            '<div id="container"><input type="checkbox" id="check1" ng-repeat="l in [1,2]"><label for="check1">{{l}}</label></div>');
+        var page = c.page;
+        var container = page.find("#container");
+        var wrapperDivs = container.children("div.ui-checkbox");
+        expect(wrapperDivs.length).toBe(2);
+        var i, input, label;
+        for (i=0; i<2; i++) {
+            input = wrapperDivs.eq(i).children("input");
+            label = wrapperDivs.eq(i).children("label");
+            expect(input.length).toBe(1);
+            expect(label.length).toBe(1);
+            expect(label.find(".ui-btn-text").text()).toEqual(''+(i+1));
+        }
+    });
+
+    it('should allow ng-repeat on the label', function() {
+        var c = testutils.compileInPage(
+            '<div id="container"><input type="checkbox" id="check1" ><label ng-repeat="l in [1,2]" for="check1">{{l}}</label></div>');
+        var page = c.page;
+        var container = page.find("#container");
+        var wrapperDivs = container.children("div.ui-checkbox");
+        expect(wrapperDivs.length).toBe(2);
+        var i, input, label;
+        for (i=0; i<2; i++) {
+            input = wrapperDivs.eq(i).children("input");
+            label = wrapperDivs.eq(i).children("label");
+            expect(input.length).toBe(1);
+            expect(label.length).toBe(1);
+            expect(label.find(".ui-btn-text").text()).toEqual(''+(i+1));
+        }
+    });
+
+    it('should allow ng-repeat on a label that contains an input', function() {
+        var c = testutils.compileInPage(
+            '<div id="container"><label ng-repeat="l in [1,2]"><input type="checkbox">{{l}}</label></div>');
+        var page = c.page;
+        var container = page.find("#container");
+        var wrapperDivs = container.children("div.ui-checkbox");
+        expect(wrapperDivs.length).toBe(2);
+        var i, input, label;
+        for (i=0; i<2; i++) {
+            input = wrapperDivs.eq(i).children("input");
+            label = wrapperDivs.eq(i).children("label");
+            expect(input.length).toBe(1);
+            expect(label.length).toBe(1);
+            expect(label.find(".ui-btn-text").text()).toEqual(''+(i+1));
+        }
+    });
 });

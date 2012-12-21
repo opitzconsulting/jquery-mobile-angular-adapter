@@ -22,8 +22,6 @@ Internal changes:
 
 - updated to angular 1.0.3 and jqm 1.2.0
 - internal refactorings and simplifications.
-- Checkboxes/Radio buttons: We always wrap them into a `<fieldset>` element, if not already done. This ok from
-  jquery mobile perspective and fixes problems when there is a ng-repeat on the `<input>`.
 
 Migration for the old `$navigate` service:
 

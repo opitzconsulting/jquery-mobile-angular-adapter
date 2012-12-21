@@ -8,51 +8,23 @@ Test page during development.
     <link rel="stylesheet" href="lib/jquery.mobile.css"/>
 
     <script src="lib/jquery.js"></script>
-    <script src="lib/angular.js"></script>
     <script src="lib/jquery.mobile.js"></script>
+    <script src="lib/angular.js"></script>
     <script src="jqm-angular.jsp"></script>
 
 
 </head>
-<body ng-app="ngm">
+<body ng-app>
 ​
     <div id="page1" data-role="page" >
         <div data-role="content">
-            <a href="#page2">Page2</a>
+
+                <input type="checkbox" name="checkbox-0" id="checkbox-lan-discovery" ng-model="Server.lan" />
+                <label ng-repeat="l in [1,2]" for="checkbox-lan-discovery">LAN Discovery</label>
         </div>
+
+
     </div>
-
-<div id="page3" data-role="page" >
-    <div data-role="content">
-        <a href="#page2">Page3</a>
-    </div>
-</div>
-
-<div id="page2" data-role="dialog" ng-controller="MainController">
-        <div data-role="header">
-            <h1>Dialog</h1>
-        </div>
-        <div data-role="content">
-            <a href="#" ngm-vclick="go('#page3')">Page1</a>
-            <a href="#page3">Page1</a>
-        </div>
-    </div>
-
-<script type='text/javascript'>//<![CDATA[
-
-var mod = angular.module("ngm", []);
-
-mod.controller('MainController', function($scope, $location) {
-    $scope.go = function(url) {
-        $location.url(url);
-    }
-});
-
-//]]>
-
-</script>
-
-
 ​
 </body>
 

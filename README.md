@@ -379,6 +379,14 @@ Notes on the integration of some jqm widgets
 
         <div data-role="collapsible" data-collapsed="someProperty">...</div>
 
+### widget checkboxradio
+
+- using `ng-repeat` with a checkbox or radio button without a wrapper element can be done like the following:
+
+        <label ng-repeat="l in [1,2]">
+            {{l}}
+            <input type="checkbox">
+        </label>
 
 Integration strategy
 ---------------------

@@ -686,14 +686,8 @@ factory(window.jQuery, window.angular);
         origCreate.apply(slider, initArgs);
     }
 
-    // Checkboxradio requires a label for every checkbox input. From the jqm perspective, the label
-    // can be at different locations in the DOM tree. However, if the
-    // label is not under the same parent as the checkbox, this could change the DOM structure
-    // too much for angular's compiler.
-    // So we dynamically create a parent <fieldset> and move the label into that tag if needed.
-    // Also, the checkboxradio widget changes dom elements in the neighbouring label element,
-    // which is also a no-go for the angular compiler. For this, we create the checkboxradio widget
-    // when we are linking the <fieldset> element, as changing children is fine for the compiler.
+    // Checkboxradio requires a label for every checkbox input and wraps itself as well as the label
+    // into that div. Angular does not like those changes in the DOM, so we do it in advance.
     function checkboxRadioPrecompile(origElement, initArgs) {
         // See the checkboxradio-Plugin in jqm for the selectors used to locate the label.
         var parentLabel = $(origElement).closest("label");
@@ -702,25 +696,31 @@ factory(window.jQuery, window.angular);
             container = origElement.parent();
         }
         var label = parentLabel.length ? parentLabel : container.find("label").filter("[for='" + origElement[0].id + "']");
-        var parent = origElement.parent();
-        if (parent[0].tagName.toUpperCase() !== 'FIELDSET') {
-            origElement.wrap("<fieldset></fieldset>");
+        if (label.length===0) {
+            origElement.attr("ng-non-bindable", "true");
+        } else {
+            var wrapper = wrapIntoDivPrecompile(label);
+            moveCloningDirectives(origElement, wrapper);
+            wrapper.append(origElement);
+            return wrapper;
         }
-        // ensure that the label is after the input element in each case.
-        var wrapper = origElement.parent();
-        wrapper.append(label);
-        moveCloningDirectives(origElement, wrapper);
-        return wrapper;
     }
 
     function checkboxRadioCreate(origCreate, element, initArgs) {
-        // we ensured in precompile that the label is after the checkbox and both are within a <fieldset>
-        var checkbox = element.children().eq(0);
-        origCreate.apply(checkbox, initArgs);
+        // wrap the input into it's label. By this, the jqm widget will always
+        // use this label, even if there are other labels with the same id on the same page.
+        // This is important if we use ng-repeat on checkboxes, as this could
+        // create multiple checkboxes with the same id!
+        var label = element.children("label");
+        var input = element.children("input");
+        label.append(input);
+        return unwrapFromDivCreate(function() {
+            return origCreate.apply(input, arguments);
+        }, element, initArgs);
     }
 
     function buttonPrecompile(origElement, initArgs) {
-        var wrapper = wrapIntoDivPrecompile(origElement, initArgs);
+        var wrapper = wrapIntoDivPrecompile(origElement);
         // Add a text node with the value content,
         // so that angular bindings work for the value too
 
@@ -749,10 +749,10 @@ factory(window.jQuery, window.angular);
         if (!origElement.is("[type='search'],:jqmData(type='search')")) {
             return origElement;
         }
-        return wrapIntoDivPrecompile(origElement, initArgs);
+        return wrapIntoDivPrecompile(origElement);
     }
 
-    function wrapIntoDivPrecompile(origElement, initArgs) {
+    function wrapIntoDivPrecompile(origElement) {
         origElement.wrapAll("<div></div>");
         var wrapper = origElement.parent();
         moveCloningDirectives(origElement, wrapper);

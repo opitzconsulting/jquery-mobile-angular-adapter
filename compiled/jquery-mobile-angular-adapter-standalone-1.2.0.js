@@ -1,5 +1,5 @@
 /**
-* jQuery Mobile angularJS adaper standalone v1.1.2
+* jQuery Mobile angularJS adaper standalone v1.2.0
 * http://github.com/tigbro/jquery-mobile-angular-adapter
 *
 * Copyright 2011, Tobias Bosch (OPITZ CONSULTING GmbH)

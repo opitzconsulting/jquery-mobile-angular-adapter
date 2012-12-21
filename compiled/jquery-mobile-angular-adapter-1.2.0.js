@@ -1869,7 +1869,10 @@ factory(window.jQuery, window.angular);
                         lastElement.remove();
                         lastElement = null;
                     }
-                    lastScope && lastScope.$destroy();
+                    if (lastScope) {
+                        lastScope.$destroy();
+                        lastScope = null;
+                    }
                     if (newValue) {
                         lastScope = scope.$new();
                         linker(lastScope, function (clone) {

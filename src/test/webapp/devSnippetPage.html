@@ -17,9 +17,7 @@ Test page during development.
     var mod = angular.module("ngm", []);
 
     mod.controller( "MainController", function( $scope, $location ) {
-        $scope.handler = function($event){
-            console.log($event);
-        }
+        $scope.model = {};
     });
 </script>
 
@@ -34,20 +32,9 @@ Test page during development.
     </div>
 
     <div data-role="content">
-        <a href="#page2" data-transition="slide">Page2</a>
-    </div>
+        <h3 ngm-if="!model.secondary" >Primary</h3>
 
-</div>
-
-<div data-role="page" id="page2" ng-controller="MainController" >
-
-    <div data-role="header">
-        <h1>Page2</h1>
-    </div>
-
-    <div data-role="content">
-        <a href="#" data-rel="back">Back1</a>
-        <a href="#" onclick="history.back()">Back2</a>
+        <input type="text" ng-model="model.secondary">
     </div>
 
 </div>

@@ -34,6 +34,17 @@ describe("dialog", function () {
             c.dialog("close");
             expect($location.goBack).toHaveBeenCalled();
         }));
+        it('should be able to go to a next page with a hash location from within a dialog', inject(function($rootScope, $location) {
+            var c = testutils.compileInPage('<div></div>');
+            var page = $.mobile.activePage = c.page;
+            page.jqmData("role", "dialog");
+            $location.url('/someUrl#page1');
+            $rootScope.$broadcast('jqmPagebeforeshow');
+            expect($location.url()).toEqual("/&ui-state=dialog");
+            $location.hash("page2");
+            $rootScope.$apply();
+            expect($location.url()).toBe('/someUrl#page2');
+        }));
 
     });
 });

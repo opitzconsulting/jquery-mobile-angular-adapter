@@ -108,6 +108,7 @@
         $rootScope.$on('$routeChangeStart', onRouteChangeStart);
         $rootScope.$on('jqmPagebeforeshow', onPagebeforeshow);
         $rootScope.$on('$routeChangeSuccess', onRouteChangeSuccess);
+        removeDialogUrlWhenLocationHashChanges($rootScope, $location);
         instrumentPopupCloseToNavigateBackWhenDialogUrlIsSet();
         instrumentDialogCloseToNavigateBackWhenDialogUrlIsSet();
 
@@ -190,6 +191,17 @@
             }
         }
 
+        function removeDialogUrlWhenLocationHashChanges($rootScope, $location) {
+            $rootScope.$on('$locationChangeStart', function() {
+                var hash = $location.hash();
+                if (dialogUrl() && hash) {
+                    $location.url($location.$$urlBeforeDialog);
+                    delete $location.$$urlBeforeDialog;
+                    $location.hash(hash);
+                }
+            });
+        }
+
         function instrumentPopupCloseToNavigateBackWhenDialogUrlIsSet() {
             var popupProto = $.mobile.popup.prototype;
             var _close = popupProto._close;
@@ -228,9 +240,10 @@
         function dialogUrl() {
             if (arguments.length === 0) {
                 // getter
-                return $location.url() === _dialogUrl;
+                return $location.path() === _dialogUrl;
             }
             // setter
+            $location.$$urlBeforeDialog = $location.url();
             $location.url(_dialogUrl);
             $location.replace();
         }

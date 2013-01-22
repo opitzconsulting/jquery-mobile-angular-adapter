@@ -1,81 +1,71 @@
-<html>
-<!--
-Test page during development.
--->
+<!DOCTYPE html>
+<html ng-app="amovens">
 <head>
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
-
-    <link rel="stylesheet" href="lib/jquery.mobile.css"/>
-
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
     <script src="lib/jquery.js"></script>
-    <script>
-        $(document).bind("mobileinit", function() {
-            $.support.dynamicBaseTag = false;
-        });
-
-    </script>
+    <script src="lib/jquery.mobile.js"></script>
     <script src="lib/angular.js"></script>
 
-
+    <script>
+        var module = angular.module("amovens", []);
+        module.config(['$provide', function ($provide) {
+            $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
+                $sniffer.history = false;
+                return $sniffer;
+            }]);
+        }]);
+        module.config(['$provide', function ($provide) {
+            $provide.decorator("$browser", ['$delegate', function ($browser) {
+                var _url = $browser.url;
+                $browser.url = function() {
+                    var res = _url.apply(this, arguments);
+                    if (arguments.length===0) {
+                        res = res.replace(/%23/g,'#');
+                    }
+                    return res;
+                };
+                return $browser;
+            }]);
+        }]);
+    </script>
+    <script src="jqm-angular.jsp"></script>
 </head>
-<body ng-app="ngm">
-​
-<div id="main" data-role="page">
+<body>
+
+<!-- Start of first page -->
+<div data-role="page" id="foo">
+
     <div data-role="header">
-        <h1>Page1</h1>
-        <a href="#page2">Page2</a>
-    </div>
+        <h1>Foo</h1>
+    </div><!-- /header -->
+
     <div data-role="content">
+        <p>I'm first in the source order so I'm shown as the page.</p>
+        <p>View internal page called <a href="#bar">bar</a></p>
+    </div><!-- /content -->
 
-    </div>
-</div>
+    <div data-role="footer">
+        <h4>Page Footer</h4>
+    </div><!-- /footer -->
+</div><!-- /page -->
 
-<div id="page2" data-role="page">
+
+<!-- Start of second page -->
+<div data-role="page" id="bar">
+
     <div data-role="header">
-        <h1>Page2</h1>
-        <a href="" data-rel="back">Back</a>
-    </div>
+        <h1>Bar</h1>
+        <a href="#" data-role="button" data-rel="back" data-icon="arrow-l">Back</a>
+    </div><!-- /header -->
+
     <div data-role="content">
+        <p>I'm the second in the source order so I'm hidden when the page loads. I'm just shown if a link that references my id is beeing clicked.</p>
+        <p><a href="#foo">Back to foo</a></p>
+    </div><!-- /content -->
 
-    </div>
-</div>
-
-​
-
-​
-
-<script type='text/javascript'>//<![CDATA[
-
-var mod = angular.module("ngm", []);
-
-mod.config(['$provide', function ($provide) {
-    $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
-        $sniffer.history = false;
-        return $sniffer;
-    }]);
-}]);
-
- mod.config(['$locationProvider', function ($locationProvider) {
-    $locationProvider.hashPrefix('!');
-     $locationProvider.html5Mode(true);
- }]);
-
- mod.run(function($location, $route) {
-
- });
-
-mod.controller('MainController', function($scope) {
-
-    $scope.buttonText = "Dies ist ein Button";
-
-});
-
-//]]>
-
-</script>
-
-
-​
+    <div data-role="footer">
+        <h4>Page Footer</h4>
+    </div><!-- /footer -->
+</div><!-- /page -->
 </body>
-
 </html>

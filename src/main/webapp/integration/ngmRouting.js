@@ -220,15 +220,13 @@
             var dialogProto = $.mobile.dialog.prototype;
             dialogProto.origClose = dialogProto.close;
             dialogProto.close = function () {
-                if (this._isCloseable) {
+                if (this._isCloseable && dialogUrl()) {
                     this._isCloseable = false;
-                    if (dialogUrl()) {
-                        $rootScope.$apply(function () {
-                            $location.goBack();
-                        });
-                    } else {
-                        this.origClose();
-                    }
+                    $rootScope.$apply(function () {
+                        $location.goBack();
+                    });
+                } else {
+                    this.origClose();
                 }
             };
         }

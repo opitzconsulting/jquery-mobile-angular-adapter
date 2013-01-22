@@ -31,8 +31,8 @@ describe("selectmenu", function () {
             var options = popup.find("li");
             var option = $(options[1]);
             option.trigger('click');
-            select.selectmenu('close');
             expect(scope.mysel).toEqual("v2");
+            expect(select.data("selectmenu").isOpen).toBe(false);
         });
 
         it('should save the model value into the ui', function () {

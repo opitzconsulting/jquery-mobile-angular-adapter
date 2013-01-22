@@ -10,33 +10,65 @@ Test page during development.
 
     <script src="lib/jquery.js"></script>
     <script src="lib/jquery.mobile.js"></script>
+    <!--
     <script src="lib/angular.js"></script>
     <script src="jqm-angular.jsp"></script>
 
 <script>
     var mod = angular.module("ngm", []);
-
-    mod.controller( "MainController", function( $scope, $location ) {
-        $scope.model = {};
+    mod.controller("TestCtrl", function($scope) {
+        var i;
+        $scope.list = [];
+        for (i=0; i<100; i++) {
+            $scope.list.push(i);
+        }
     });
-</script>
 
+</script>
+    -->
 
 </head>
-<body ng-app="ngm">
+<body>
 ​
-<div data-role="page" id="mainPage" ng-controller="MainController" >
-
+<div id="main" data-role="page" ng-controller="TestCtrl">
     <div data-role="header">
-        <h1>Main Page</h1>
+        <h1>Page1</h1>
     </div>
-
     <div data-role="content">
-        <h3 ngm-if="!model.secondary" >Primary</h3>
+        <select ng-model="test" data-native-menu="false">
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+            <option>1</option>
+        </select>
 
-        <input type="text" ng-model="model.secondary">
     </div>
-
 </div>
 
 </body>

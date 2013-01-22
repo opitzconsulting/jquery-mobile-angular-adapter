@@ -10,66 +10,45 @@ Test page during development.
 
     <script src="lib/jquery.js"></script>
     <script src="lib/jquery.mobile.js"></script>
-    <!--
     <script src="lib/angular.js"></script>
     <script src="jqm-angular.jsp"></script>
 
 <script>
     var mod = angular.module("ngm", []);
-    mod.controller("TestCtrl", function($scope) {
-        var i;
-        $scope.list = [];
-        for (i=0; i<100; i++) {
-            $scope.list.push(i);
-        }
+    mod.controller("MainController", function($scope) {
     });
 
 </script>
-    -->
 
 </head>
-<body>
+<body ng-app="ngm">
 ​
-<div id="main" data-role="page" ng-controller="TestCtrl">
-    <div data-role="header">
-        <h1>Page1</h1>
-    </div>
+<div id="main" data-role="page" ng-controller="MainController">
     <div data-role="content">
-        <select ng-model="test" data-native-menu="false">
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-            <option>1</option>
-        </select>
+        <div data-role="fieldcontain">
+            <label for="myslider">Slider</label>
+            <select name="myslider" id="myslider" data-role="slider">
+                <option value="off">No</option>
+                <option value="on">Yes</option>
+            </select>
 
+            <input type="range" name="slider-step" id="slider-step" value="150" min="0" max="500" step="50" />
+        </div>
+        <div data-role="fieldcontain">
+            <fieldset data-role="controlgroup">
+                <legend>Checkboxes</legend>
+                <input type="checkbox" name="one" id="one" class="custom" />
+                <label for="one">One</label>
+                <input type="checkbox" name="two" id="two" class="custom" />
+                <label for="two">Two</label>
+                <input type="checkbox" name="three" id="three" class="custom" />
+                <label for="three">Three</label>
+            </fieldset>
+        </div>
     </div>
 </div>
+
+
 
 </body>
 

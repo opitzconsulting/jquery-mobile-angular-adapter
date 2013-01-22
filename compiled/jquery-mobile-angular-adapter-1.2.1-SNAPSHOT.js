@@ -682,6 +682,8 @@ factory(window.jQuery, window.angular);
     // Slider appends a new element after the input/select element for which it was created.
     // The angular compiler does not like this, so we wrap the two elements into a new parent node.
     function sliderCreate(origCreate, element, initArgs) {
+        // This is important, as the contained div als uses inline-block!
+        element[0].style.display = 'inline-block';
         var slider = element.children().eq(0);
         origCreate.apply(slider, initArgs);
     }

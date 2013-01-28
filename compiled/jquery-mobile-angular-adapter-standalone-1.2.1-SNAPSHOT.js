@@ -34141,6 +34141,7 @@ factory(window.jQuery, window.angular);
     });
 
     var DEFAULT_JQM_PAGE = 'DEFAULT_JQM_PAGE';
+    var DIALOG_URL = '/' + $.mobile.dialogHashKey;
 
     mod.config(['$routeProvider', function ($routeProvider) {
         var _when = $routeProvider.when;
@@ -34154,6 +34155,10 @@ factory(window.jQuery, window.angular);
             return _when.apply(this, arguments);
         };
 
+        $routeProvider.when(DIALOG_URL, {
+            templateUrl:DEFAULT_JQM_PAGE
+        });
+
         $routeProvider.otherwise({
             templateUrl:DEFAULT_JQM_PAGE
         });
@@ -34164,7 +34169,6 @@ factory(window.jQuery, window.angular);
     }
 
     mod.run(['$route', '$rootScope', '$location', '$browser', '$history', function ($route, $rootScope, $location, $browser, $history) {
-        var _dialogUrl = '/' + $.mobile.dialogHashKey;
 
         $rootScope.$on('$routeChangeStart', onRouteChangeStart);
         $rootScope.$on('jqmPagebeforeshow', onPagebeforeshow);
@@ -34299,11 +34303,11 @@ factory(window.jQuery, window.angular);
         function dialogUrl() {
             if (arguments.length === 0) {
                 // getter
-                return $location.path() === _dialogUrl;
+                return $location.path() === DIALOG_URL;
             }
             // setter
             $location.$$urlBeforeDialog = $location.url();
-            $location.url(_dialogUrl);
+            $location.url(DIALOG_URL);
             $location.replace();
         }
     }]);

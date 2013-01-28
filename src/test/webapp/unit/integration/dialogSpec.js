@@ -45,6 +45,18 @@ describe("dialog", function () {
             $rootScope.$apply();
             expect($location.url()).toBe('/someUrl#page2');
         }));
+        it('should keep dialog urls even when a default routing rule is used', function() {
+            module(function($routeProvider) {
+                $routeProvider.otherwise({
+                    redirectTo:"/test"
+                });
+            });
+            inject(function ($location, $rootScope) {
+                $location.url('/&ui-state=dialog');
+                $rootScope.$apply();
+                expect($location.url()).toEqual("/&ui-state=dialog");
+            })
+        });
 
     });
 });

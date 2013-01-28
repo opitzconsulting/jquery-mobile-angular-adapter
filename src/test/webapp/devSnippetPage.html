@@ -15,8 +15,21 @@ Test page during development.
 
 <script>
     var mod = angular.module("ngm", []);
-    mod.controller("MainController", function($scope) {
+
+    mod.config(function ($routeProvider) {
+        $routeProvider
+                .when('/dlg', { templateUrl: '#dlg' })
+                .when('/test', {templateUrl: '#main'})
+                .otherwise({redirectTo:"/test"});
     });
+
+    mod.controller('MainController', function($scope) {
+
+    });
+    mod.controller('DlgController', function($scope) {
+
+    });
+
 
 </script>
 
@@ -25,28 +38,20 @@ Test page during development.
 ​
 <div id="main" data-role="page" ng-controller="MainController">
     <div data-role="content">
-        <div data-role="fieldcontain">
-            <label for="myslider">Slider</label>
-            <select name="myslider" id="myslider" data-role="slider">
-                <option value="off">No</option>
-                <option value="on">Yes</option>
-            </select>
-
-            <input type="range" name="slider-step" id="slider-step" value="150" min="0" max="500" step="50" />
-        </div>
-        <div data-role="fieldcontain">
-            <fieldset data-role="controlgroup">
-                <legend>Checkboxes</legend>
-                <input type="checkbox" name="one" id="one" class="custom" />
-                <label for="one">One</label>
-                <input type="checkbox" name="two" id="two" class="custom" />
-                <label for="two">Two</label>
-                <input type="checkbox" name="three" id="three" class="custom" />
-                <label for="three">Three</label>
-            </fieldset>
-        </div>
+        Hello mobile world!<br/>
+        <a href="dlg" data-role="button" >Open Dlg</a>
     </div>
 </div>
+<div id="dlg" data-role="dialog" ng-controller="DlgController">
+    <div data-role="header">
+        <h1>Pop-Up Dialog</h1>
+    </div>
+    <div data-role="content">
+        I am a dialog field and should have a close button above, see
+        <a href="http://jquerymobile.com/test/docs/pages/dialog/index.html">jQuery Mobile examples</a>
+    </div>
+</div>
+
 
 
 

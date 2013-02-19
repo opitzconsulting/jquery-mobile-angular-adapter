@@ -191,17 +191,23 @@
                     // so we can check them right after calling $.mobile.changePage!
                     dialogUrl(true);
                 }
-
             }
         }
 
         function removeDialogUrlWhenLocationHashChanges($rootScope, $location) {
             $rootScope.$on('$locationChangeStart', function() {
                 var hash = $location.hash();
-                if (dialogUrl() && hash) {
-                    $location.$$parse($location.$$urlBeforeDialog);
+                if (dialogUrl()) {
+                    if (hash) {
+                        $location.$$parse($location.$$urlBeforeDialog);
+                        $location.hash(hash);
+                    }
+                    $location.replace();
+                }
+            });
+            $rootScope.$on('$locationChangeSuccess', function(event, newLocation, oldLocation) {
+                if (oldLocation && oldLocation.indexOf(DIALOG_URL)!==-1) {
                     delete $location.$$urlBeforeDialog;
-                    $location.hash(hash);
                 }
             });
         }

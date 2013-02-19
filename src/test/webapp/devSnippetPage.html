@@ -17,16 +17,9 @@ Test page during development.
     var mod = angular.module("ngm", []);
 
     mod.config(['$provide', function ($provide) {
-        $provide.decorator("$browser", ['$delegate', function ($browser) {
-            var _url = $browser.url;
-            $browser.url = function() {
-                var res = _url.apply(this, arguments);
-                if (arguments.length===0) {
-                    res = res.replace(/%23/g,'#');
-                }
-                return res;
-            };
-            return $browser;
+        $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
+            $sniffer.history = false;
+            return $sniffer;
         }]);
     }]);
 
@@ -34,10 +27,10 @@ Test page during development.
         var _nextRedirect;
 
         $rootScope.$on("$locationChangeStart", function(event, newLocation) {
+            return;
             if (_nextRedirect && newLocation.indexOf('&ui-state=dialog')===-1) {
                 event.preventDefault();
                 $rootScope.$evalAsync(function() {
-                    console.log("prevented redirect "+_nextRedirect);
                     $location.url(_nextRedirect);
                     _nextRedirect = null;
                 });
@@ -63,13 +56,17 @@ Test page during development.
                     afterClose: afterUrl
                 }
             });
-        }
+        };
+
 
     });
-    mod.controller('DlgController', function($scope, redirectService) {
+    mod.controller('DlgController', function($scope, $location, redirectService) {
         $scope.initRedirect = function(newPage) {
             redirectService.redirectOnNextNavigateTo(newPage);
         };
+        $scope.nav = function(url) {
+            $location.url(url);
+        }
     });
 
 
@@ -88,6 +85,7 @@ Test page during development.
 <div id="dlg" data-role="dialog" ng-controller="DlgController">
     <div data-role="header">
         <h1>Dialog</h1>
+        <a href="" ng-click="nav('#page2')">Page2</a>
     </div>
 
 </div>

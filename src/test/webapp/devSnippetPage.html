@@ -16,18 +16,60 @@ Test page during development.
 <script>
     var mod = angular.module("ngm", []);
 
-    mod.config(function ($routeProvider) {
-        $routeProvider
-                .when('/dlg', { templateUrl: '#dlg' })
-                .when('/test', {templateUrl: '#main'})
-                .otherwise({redirectTo:"/test"});
+    mod.config(['$provide', function ($provide) {
+        $provide.decorator("$browser", ['$delegate', function ($browser) {
+            var _url = $browser.url;
+            $browser.url = function() {
+                var res = _url.apply(this, arguments);
+                if (arguments.length===0) {
+                    res = res.replace(/%23/g,'#');
+                }
+                return res;
+            };
+            return $browser;
+        }]);
+    }]);
+
+    mod.factory('redirectService', function($rootScope, $location) {
+        var _nextRedirect;
+
+        $rootScope.$on("$locationChangeStart", function(event, newLocation) {
+            if (_nextRedirect && newLocation.indexOf('&ui-state=dialog')===-1) {
+                event.preventDefault();
+                $rootScope.$evalAsync(function() {
+                    console.log("prevented redirect "+_nextRedirect);
+                    $location.url(_nextRedirect);
+                    _nextRedirect = null;
+                });
+            }
+        });
+
+        return {
+            redirectOnNextNavigateTo: redirectOnNextNavigateTo
+        };
+
+        function redirectOnNextNavigateTo(newPath) {
+            _nextRedirect = newPath;
+        }
     });
 
-    mod.controller('MainController', function($scope) {
+
+    mod.controller('MainController', function($scope, $location) {
+        $scope.openDialog = function(url, afterUrl) {
+            $location.url(url);
+            $location.routeOverride({
+                onActivate: 'initRedirect(afterClose)',
+                locals: {
+                    afterClose: afterUrl
+                }
+            });
+        }
 
     });
-    mod.controller('DlgController', function($scope) {
-
+    mod.controller('DlgController', function($scope, redirectService) {
+        $scope.initRedirect = function(newPage) {
+            redirectService.redirectOnNextNavigateTo(newPage);
+        };
     });
 
 
@@ -39,21 +81,23 @@ Test page during development.
 <div id="main" data-role="page" ng-controller="MainController">
     <div data-role="content">
         Hello mobile world!<br/>
-        <a href="dlg" data-role="button" >Open Dlg</a>
+        <a href="" ng-click="openDialog('#dlg', '#page2')" data-role="button" >Open Dlg and after close navigate to Page2</a>
     </div>
 </div>
+
 <div id="dlg" data-role="dialog" ng-controller="DlgController">
     <div data-role="header">
-        <h1>Pop-Up Dialog</h1>
+        <h1>Dialog</h1>
     </div>
-    <div data-role="content">
-        I am a dialog field and should have a close button above, see
-        <a href="http://jquerymobile.com/test/docs/pages/dialog/index.html">jQuery Mobile examples</a>
-    </div>
+
 </div>
 
+<div id="page2" data-role="page">
+    <div data-role="header">
+        <h1>Page2</h1>
+    </div>
 
-
+</div>
 
 </body>
 

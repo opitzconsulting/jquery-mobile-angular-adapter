@@ -199,7 +199,7 @@
             $rootScope.$on('$locationChangeStart', function() {
                 var hash = $location.hash();
                 if (dialogUrl() && hash) {
-                    $location.url($location.$$urlBeforeDialog);
+                    $location.$$parse($location.$$urlBeforeDialog);
                     delete $location.$$urlBeforeDialog;
                     $location.hash(hash);
                 }
@@ -245,7 +245,7 @@
                 return $location.path() === DIALOG_URL;
             }
             // setter
-            $location.$$urlBeforeDialog = $location.url();
+            $location.$$urlBeforeDialog = $location.absUrl();
             $location.url(DIALOG_URL);
             $location.replace();
         }

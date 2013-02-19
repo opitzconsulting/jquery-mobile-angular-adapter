@@ -34260,7 +34260,7 @@ factory(window.jQuery, window.angular);
             $rootScope.$on('$locationChangeStart', function() {
                 var hash = $location.hash();
                 if (dialogUrl() && hash) {
-                    $location.url($location.$$urlBeforeDialog);
+                    $location.$$parse($location.$$urlBeforeDialog);
                     delete $location.$$urlBeforeDialog;
                     $location.hash(hash);
                 }
@@ -34306,7 +34306,7 @@ factory(window.jQuery, window.angular);
                 return $location.path() === DIALOG_URL;
             }
             // setter
-            $location.$$urlBeforeDialog = $location.url();
+            $location.$$urlBeforeDialog = $location.absUrl();
             $location.url(DIALOG_URL);
             $location.replace();
         }
@@ -34448,8 +34448,8 @@ factory(window.jQuery, window.angular);
     function registerBrowserDecorator($provide) {
         $provide.decorator('$rootScope', ['$delegate', rootScopeSuppressEventInDigestCycleDecorator]);
         $provide.decorator('$location', ['$delegate', '$history', locationBackDecorator]);
+        $provide.decorator('$browser', ['$delegate', browserHashReplaceDecorator]);
         $provide.decorator('$browser', ['$delegate', '$history', '$rootScope', '$injector', browserHistoryDecorator]);
-
 
         function rootScopeSuppressEventInDigestCycleDecorator($rootScope) {
             var suppressedEvents = {};
@@ -34486,6 +34486,18 @@ factory(window.jQuery, window.angular);
                 return this;
             };
             return $location;
+        }
+
+        function browserHashReplaceDecorator($browser) {
+            var _url = $browser.url;
+            $browser.url = function() {
+                var res = _url.apply(this, arguments);
+                if (arguments.length===0) {
+                    res = res.replace(/%23/g,'#');
+                }
+                return res;
+            };
+            return $browser;
         }
 
         function browserHistoryDecorator($browser, $history, $rootScope, $injector) {

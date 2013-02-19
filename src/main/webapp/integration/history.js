@@ -5,8 +5,8 @@
     function registerBrowserDecorator($provide) {
         $provide.decorator('$rootScope', ['$delegate', rootScopeSuppressEventInDigestCycleDecorator]);
         $provide.decorator('$location', ['$delegate', '$history', locationBackDecorator]);
+        $provide.decorator('$browser', ['$delegate', browserHashReplaceDecorator]);
         $provide.decorator('$browser', ['$delegate', '$history', '$rootScope', '$injector', browserHistoryDecorator]);
-
 
         function rootScopeSuppressEventInDigestCycleDecorator($rootScope) {
             var suppressedEvents = {};
@@ -43,6 +43,18 @@
                 return this;
             };
             return $location;
+        }
+
+        function browserHashReplaceDecorator($browser) {
+            var _url = $browser.url;
+            $browser.url = function() {
+                var res = _url.apply(this, arguments);
+                if (arguments.length===0) {
+                    res = res.replace(/%23/g,'#');
+                }
+                return res;
+            };
+            return $browser;
         }
 
         function browserHistoryDecorator($browser, $history, $rootScope, $injector) {

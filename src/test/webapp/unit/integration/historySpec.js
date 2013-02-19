@@ -1,4 +1,11 @@
 describe('history', function () {
+
+    describe('urlPatchForAndroid', function() {
+        it('should decode urls with %23 instead of hash', inject(function($browser) {
+            expect($browser.url('a%23b').url()).toBe('a#b');
+        }));
+    });
+
     describe('go', function () {
         it('should call window.history.go asynchronously', inject(function ($history) {
             // Why asynchronously?

@@ -7,13 +7,11 @@
 
     function registerBrowserDecorator($provide) {
         $provide.decorator('$browser', ['$delegate', function ($browser) {
-            // Always return the same base href, as jquery mobile changes
-            // the base tag depending on which pages it is loading!
-            $browser.initialBaseHref = $browser.baseHref();
+            var _baseHref = $browser.baseHref;
             $browser.baseHref = function () {
                 // Patch for baseHref to return the correct path also for file-urls.
                 // See bug https://github.com/angular/angular.js/issues/1690
-                var href = $browser.initialBaseHref;
+                var href = _baseHref.call(this);
                 return href ? href.replace(/^file?\:\/\/[^\/]*/, '') : href;
             };
             return $browser;
@@ -80,6 +78,14 @@
         $.mobile.changePage.defaults.changeHash = false;
         $.mobile._handleHashChange = function () {
         };
+        // We deactivate dynamic base tag,
+        // e.g. so that xhrs are always against the
+        // url with which the app was started!
+        if ($.support.dynamicBaseTag) {
+            $.support.dynamicBaseTag = false;
+            $.mobile.base.set = function () {
+            };
+        }
     }
 
     disableJqmHashChange();

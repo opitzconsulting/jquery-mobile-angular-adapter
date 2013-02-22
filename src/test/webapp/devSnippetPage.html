@@ -16,33 +16,31 @@ Test page during development.
 <script>
     var mod = angular.module("ngm", []);
 
+    mod.controller( "MainController", function( $scope ) {
+        $scope.registerUser = function(){
+            console.log("custom submit");
+        }
+    });
 </script>
 
 </head>
 <body ng-app="ngm">
 ​
-<div id="main" data-role="page">
+<div data-role="page" id="foo" ng-controller="MainController">
+
     <div data-role="header">
-        <h1>Page1</h1>
+        <h1>Foo</h1>
     </div>
+
     <div data-role="content">
-        <a href="#page2" id="test">To Page2</a>
-
-    </div>
-</div>
-
-<div id="page2" data-role="dialog">
-    <div data-role="header">
-        <h1>Page2</h1>
-    </div>
-    <div data-role="content">
-        <a href="#page3">To Page3</a>
-    </div>
-</div>
-
-<div id="page3" data-role="page">
-    <div data-role="header">
-        <h1>Page3</h1>
+        <a href="ui/someFolder/externalPage.html">bar</a>
+        <form name="registrationForm" ng-submit="registerUser()" data-ajax="false">
+            <div data-role="fieldcontain">
+                <label for="name">Name: *</label>
+                <input type="text" ng-model="user.Name" name="name" id="name" required maxlength="100" />
+                <button type="submit" id="registerUser">Submit</button>
+            </div>
+        </form>
     </div>
 </div>
 

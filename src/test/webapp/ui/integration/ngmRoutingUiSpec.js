@@ -9,18 +9,11 @@ describe("ngmRouting", function () {
         expect(errors).toEqual([]);
     });
 
-    function initWithHistorySupport(hash, historySupport, beforeLoadCallback) {
-        loadHtml('/jqmng/ui/test-fixture.html' + (hash || ''), function (win) {
+    function initWithErrorWatching(url, beforeLoadCallback) {
+        loadHtml(url, function (win) {
             win.onerror = function (event) {
                 errors.push(event);
             };
-            var ng = win.angular.module("ng");
-            ng.config(['$provide', function ($provide) {
-                $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
-                    $sniffer.history = historySupport;
-                    return $sniffer;
-                }]);
-            }]);
             $ = win.$;
             if (beforeLoadCallback) {
                 beforeLoadCallback(win);
@@ -32,6 +25,22 @@ describe("ngmRouting", function () {
             scope = $("body").scope();
             $location = injector.get("$location");
             $history = injector.get("$history");
+        });
+
+    }
+
+    function initWithHistorySupport(hash, historySupport, beforeLoadCallback) {
+        initWithErrorWatching('/jqmng/ui/test-fixture.html' + (hash || ''), function (win) {
+            var ng = win.angular.module("ng");
+            ng.config(['$provide', function ($provide) {
+                $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
+                    $sniffer.history = historySupport;
+                    return $sniffer;
+                }]);
+            }]);
+            if (beforeLoadCallback) {
+                beforeLoadCallback(win);
+            }
         });
     }
 
@@ -130,7 +139,7 @@ describe("ngmRouting", function () {
                 });
             });
 
-            it('should be able to load external pages in a different folder, adjust the base tag correctly and go back again', function () {
+            it('should be able to load external pages in a different folder, adjust the links in the page and go back again', function () {
                 var startUrl;
                 init();
                 runs(function () {
@@ -144,7 +153,6 @@ describe("ngmRouting", function () {
                 runs(function () {
                     expect(win.location.pathname).toBe('/jqmng/ui/someFolder/externalPage.html');
                     expect($("#basePageLink").prop("href")).toBe(startUrl);
-                    expect($("base").prop("href")).toBe(win.location.href);
                     expect(win.tag).toBe(true);
                     $("#basePageLink").click();
                 });
@@ -211,7 +219,7 @@ describe("ngmRouting", function () {
                 });
             });
 
-            it('should be able to load external pages in a different folder, adjust the base tag correctly and go back again', function () {
+            it('should be able to load external pages in a different folder, adjust the links in that page and go back again', function () {
                 init();
                 runs(function () {
                     win.tag = true;
@@ -421,6 +429,25 @@ describe("ngmRouting", function () {
                 expect($location.hash()).toBe('someHash2');
             });
 
+        });
+    });
+
+    describe('form with empty action', function() {
+        it('allows to register a custom click handler', function() {
+            var clickSpy, submit;
+            initWithErrorWatching('/jqmng/ui/test-fixture.html', function(win) {
+                var page = win.$("#start");
+                page.append('<div data-role="content"><form data-ajax="false" ng-click="click()"><inputy type="submit" id="submit"></div>');
+                page.attr("ng-controller", "MainCtrl");
+                win.MainCtrl = function($scope) {
+                    $scope.click = clickSpy = jasmine.createSpy('click');
+                };
+                submit = page.find("#submit");
+            });
+            runs(function() {
+                submit.click();
+                expect(clickSpy).toHaveBeenCalled();
+            });
         });
     });
 });

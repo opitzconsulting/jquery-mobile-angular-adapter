@@ -1,7 +1,14 @@
 Changelog
 =====================
 
-1.1.2
+1.2.1
+-----
+Internal changes:
+
+- dynamicBaseTag of jQuery mobile is now deactivated as it lead to problems with XHRs, ...
+
+
+1.2.0
 -------------
 Breaking changes:
 

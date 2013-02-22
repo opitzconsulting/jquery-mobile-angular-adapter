@@ -168,16 +168,10 @@ describe('ngmRouting', function () {
 
         it('should return the url without protocol for file urls when calling $browser.baseHref()', function () {
             inject(function ($browser) {
-                $browser.initialBaseHref = 'file:///someUrl/somePage?a=b';
+                $browser.$$baseHref = 'file:///someUrl/somePage?a=b';
                 expect($browser.baseHref()).toBe('/someUrl/somePage?a=b');
             });
         });
-
-        it('should not change $browser.baseHref when the base tag changes', inject(function($browser) {
-            var oldBaseHref = $browser.baseHref();
-            $browser.$$baseHref = 'someOtherUrl';
-            expect($browser.baseHref()).toBe(oldBaseHref);
-        }));
     });
 
     describe('not supported angular routing features', function () {

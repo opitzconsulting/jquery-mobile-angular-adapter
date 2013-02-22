@@ -139,7 +139,7 @@ describe("ngmRouting", function () {
                 });
             });
 
-            it('should be able to load external pages in a different folder, adjust the links in the page and go back again', function () {
+            it('should be able to load external pages in a different folder, adjust the links in the page, go back again and the same again', function () {
                 var startUrl;
                 init();
                 runs(function () {
@@ -161,6 +161,15 @@ describe("ngmRouting", function () {
                     expect(win.tag).toBe(true);
                     expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
                 });
+                runs(function () {
+                    $location.path("/someFolder/externalPage.html");
+                    scope.$apply();
+                });
+                waitsForAsync();
+                runs(function () {
+                    expect($.mobile.activePage.attr("id")).toBe("externalPage");
+                });
+
             });
         });
     });
@@ -219,7 +228,7 @@ describe("ngmRouting", function () {
                 });
             });
 
-            it('should be able to load external pages in a different folder, adjust the links in that page and go back again', function () {
+            it('should be able to load external pages in a different folder, adjust the links in that page, go back again and the same again', function () {
                 init();
                 runs(function () {
                     win.tag = true;
@@ -240,6 +249,14 @@ describe("ngmRouting", function () {
                 runs(function () {
                     expect(win.tag).toBe(true);
                     expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
+                });
+                runs(function () {
+                    $location.path("/externalPage.html");
+                    scope.$apply();
+                });
+                waitsForAsync();
+                runs(function () {
+                    expect($.mobile.activePage.attr("id")).toBe("externalPage");
                 });
             });
         });

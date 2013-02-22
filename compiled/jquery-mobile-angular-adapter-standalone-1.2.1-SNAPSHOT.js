@@ -34367,7 +34367,7 @@ factory(window.jQuery, window.angular);
         return path.substr(0, path.lastIndexOf('/'));
     }
 
-    mod.run(['$route', '$rootScope', '$location', '$browser', '$history', function ($route, $rootScope, $location, $browser, $history) {
+    mod.run(['$route', '$rootScope', '$location', '$browser', '$history', '$routeParams', function ($route, $rootScope, $location, $browser, $history, $routeParams) {
 
         $rootScope.$on('$routeChangeStart', onRouteChangeStart);
         $rootScope.$on('jqmPagebeforeshow', onPagebeforeshow);
@@ -34403,9 +34403,11 @@ factory(window.jQuery, window.angular);
 
 
         function onPagebeforeshow(event) {
-            var current = $route.current;
+            var current = $route.current,
+                onActivateParams;
             if (current && current.onActivate) {
-                event.targetScope.$eval(current.onActivate, current.locals);
+                onActivateParams = angular.extend({}, current.locals, $routeParams);
+                event.targetScope.$eval(current.onActivate, onActivateParams);
             }
             var isDialog = $.mobile.activePage && $.mobile.activePage.jqmData("role") === "dialog";
             if (isDialog) {

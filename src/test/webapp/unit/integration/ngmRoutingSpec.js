@@ -239,16 +239,17 @@ describe('ngmRouting', function () {
     });
 
     describe('onActivate', function () {
-        it('should eval the onActivate expresion on the current route on pagebeforeshow event using $route.current.locals as extra variables', inject(function ($route) {
+        it('should eval the onActivate expresion on the current route on pagebeforeshow event using $route.current.locals and $routeParams as extra variables', inject(function ($route, $routeParams) {
             var c = testutils.compileInPage('<div></div>');
             var page = c.page;
             var currentRoute = $route.current;
-            currentRoute.onActivate = 'someFn(a)';
+            currentRoute.onActivate = 'someFn(a, c)';
             currentRoute.locals = {a:'b'};
+            $routeParams.c = 'd';
             var scope = page.scope();
             scope.someFn = jasmine.createSpy('someFn');
             page.trigger('pagebeforeshow');
-            expect(scope.someFn).toHaveBeenCalledWith(currentRoute.locals.a);
+            expect(scope.someFn).toHaveBeenCalledWith('b', 'd');
         }));
     });
 

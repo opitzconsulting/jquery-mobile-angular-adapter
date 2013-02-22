@@ -6,6 +6,8 @@ Changelog
 Internal changes:
 
 - dynamicBaseTag of jQuery mobile is now deactivated as it lead to problems with XHRs, ...
+- onActivate in routes: Now all properties of `$routeParams` can be accessed as local variables
+  in the expression.
 
 
 1.2.0

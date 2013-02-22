@@ -160,17 +160,17 @@ The adapter integrates angular routes with jquery mobile in the following way:
   it will be evaluated in the scope of the page to which the route navigates to,
   before the `pagebeforeshow` event.
 
-  This expression can also use the properties from `$route.current.locals`, which are calculates by the `resolve` entry
+  This expression can also use the properties from `$routeParams` and `$route.current.locals`, which are calculates by the `resolve` entry
   of the route. E.g.
 
-        $routeProvider.when('/somePage', {
+        $routeProvider.when('/somePage/:name', {
             templateUrl:'someTemplate.html',
-            onActivate: 'someFn(someParam)',
+            onActivate: 'someFn(someParam, name)',
             resolve: {someParam: function() { return 'hello'; }}
         });
 
         function SomePageController($scope) {
-           $scope.someFn = function(someParam) {
+           $scope.someFn = function(someParam, name) {
               expect(someParam).toBe('hello');
            }
         }

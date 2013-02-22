@@ -19,7 +19,7 @@ Test page during development.
     mod.config(['$routeProvider', function ($routeProvider) {
         $routeProvider.when('/hello/:name', {
             templateUrl: '#hello',
-            onActivate: 'onActivate()'
+            onActivate: 'onActivate(name)'
         })
     }]);
 
@@ -27,9 +27,9 @@ Test page during development.
 
     });
 
-    mod.controller('ControllerTwo', function ($scope, $routeParams) {
-        $scope.onActivate = function () {
-            // this.name = $routeParams.name;
+    mod.controller('ControllerTwo', function ($scope) {
+        $scope.onActivate = function (name) {
+            this.name = name;
         }
 
     });</script>

@@ -29,6 +29,16 @@ describe('popup', function () {
             c.popup("close");
             expect($location.goBack).toHaveBeenCalled();
         }));
+        it('should not go back in history when a popup in a dialog is closed and the url is the special dialog url', inject(function ($location) {
+            spyOn($location, 'goBack');
+            var page = testutils.compile('<div data-role="dialog"><div data-role="popup"></div></div>');
+            $.mobile.activePage = page;
+            var p = page.find(":jqmData(role=popup)");
+            $location.url("/&ui-state=dialog");
+            p.popup("open");
+            p.popup("close");
+            expect($location.goBack).not.toHaveBeenCalled();
+        }));
         it('should not replace the $location with a special dialog url when a popup is opened without routing', inject(function ($location, $rootScope) {
             var c = testutils.compileInPage('<div data-role="popup" id="popup1"></div>');
             var popup = c.page.find("#popup1");
@@ -49,7 +59,6 @@ describe('popup', function () {
             var closeBtn = popup.find("#close");
             closeBtn.click();
             expect($location.url()).toEqual("/");
-
         }));
     });
 });

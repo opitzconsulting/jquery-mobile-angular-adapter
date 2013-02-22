@@ -16,37 +16,34 @@ Test page during development.
 <script>
     var mod = angular.module("ngm", []);
 
-    mod.config(['$routeProvider', function ($routeProvider) {
-        $routeProvider.when('/hello/:name', {
-            templateUrl: '#hello',
-            onActivate: 'onActivate(name)'
-        })
-    }]);
 
-    mod.controller('MainController', function ($scope) {
-
-    });
-
-    mod.controller('ControllerTwo', function ($scope) {
-        $scope.onActivate = function (name) {
-            this.name = name;
-        }
-
-    });</script>
+</script>
 
 </head>
 <body ng-app="ngm">
 ​
-<div id="main" data-role="page" ng-controller="MainController">
-    <div data-role="content"> <a href="hello/Tobias">Say Hello</a>
-        <a href="hello/Tobias_Again">Say Hello Again</a>
-
+<div id="main" data-role="page">
+    <div data-role="content">
+        <a href="#dialog">Show Dialog</a>
     </div>
 </div>
-<div id="hello" data-role="page" ng-controller="ControllerTwo">
-    <div data-role="header">Hello {{ name }}!</div>
-    <div data-role="content"> <a href="hello/Tobias_Again">Say Hello Again</a>
+
+<div id="dialog" data-role="dialog">
+    <div data-role="content">
+        <a href="#dialog2">Show dialog2</a>
+        <select data-native-menu="false">
+            <option>1</option>
+            <option>2</option>
+
+        </select>
     </div>
+</div>
+
+<div id="dialog2" data-role="dialog">
+    <div data-role="content">
+    </div>
+</div>
+
 </body>
 
 

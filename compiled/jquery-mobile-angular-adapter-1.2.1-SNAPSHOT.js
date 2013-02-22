@@ -1399,10 +1399,13 @@ factory(window.jQuery, window.angular);
                 onActivateParams = angular.extend({}, current.locals, $routeParams);
                 event.targetScope.$eval(current.onActivate, onActivateParams);
             }
-            var isDialog = $.mobile.activePage && $.mobile.activePage.jqmData("role") === "dialog";
-            if (isDialog) {
+            if (activePageIsDialog()) {
                 dialogUrl(true);
             }
+        }
+
+        function activePageIsDialog() {
+            return $.mobile.activePage && $.mobile.activePage.jqmData("role") === "dialog";
         }
 
         function onRouteChangeSuccess() {
@@ -1465,9 +1468,14 @@ factory(window.jQuery, window.angular);
 
         function instrumentPopupCloseToNavigateBackWhenDialogUrlIsSet() {
             var popupProto = $.mobile.popup.prototype;
+            var _open = popupProto._open;
+            popupProto._open = function() {
+                this.firstPopup = !activePageIsDialog();
+                return _open.apply(this, arguments);
+            };
             var _close = popupProto._close;
             popupProto._close = function () {
-                if (dialogUrl()) {
+                if (dialogUrl() && this.firstPopup) {
                     $rootScope.$apply(function () {
                         $location.goBack();
                     });

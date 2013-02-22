@@ -374,13 +374,13 @@ Note: `pagerId.cache` stores the last result that was returns for a `list | page
 Notes on the integration of some jqm widgets
 ----------------
 
-### widget collapsible
+### widget `collapsible`
 
 - The attribute `data-collapsed` has bidirectional data binding, e.g.
 
         <div data-role="collapsible" data-collapsed="someProperty">...</div>
 
-### widget checkboxradio
+### widget `checkboxradio`
 
 - using `ng-repeat` with a checkbox or radio button without a wrapper element can be done like the following:
 
@@ -388,6 +388,25 @@ Notes on the integration of some jqm widgets
             {{l}}
             <input type="checkbox">
         </label>
+
+### widget `dialog`
+
+- Same as in Jqm: if a page is navigated to from a dialog, and the user hits the back button, then the browser
+  navigates to the page before the dialog.
+
+- Different to Jqm: if a dialog/popup is opened in another dialog, and the user hits the back button, then the browser navigates
+  to the page before the first dialog (same strategy as for normal pages).
+  In plain jquery mobile, this will only close the second dialog/popup.
+  This behaviour is due to the following implementation detail:
+      - We call `$.mobile.changePage` using routes in angular. When a route is executed, angular already updated the
+        browser url to a new value (after the `$locationChangeSuccess` event). To remove the dialog from the browser history
+        (for a link from a dialog to a normal page), we also need to do this when angular updates the browser url.
+      - However, the calculation whether a target page of a link is a dialog or a normal page is done
+        using routes.
+      - As a consequence, we are only able to implement one strategy for links to pages in dialogs,
+        no matter if the link goes to a dialog or a normal page.
+
+
 
 Integration strategy
 ---------------------

@@ -1313,6 +1313,7 @@ factory(window.jQuery, window.angular);
             $.mobile.base.set = function () {
             };
         }
+        $.mobile.changePage.defaults.allowSamePageTransition = true;
     }
 
     disableJqmHashChange();

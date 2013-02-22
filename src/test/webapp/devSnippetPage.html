@@ -16,34 +16,37 @@ Test page during development.
 <script>
     var mod = angular.module("ngm", []);
 
-    mod.controller( "MainController", function( $scope ) {
-        $scope.registerUser = function(){
-            console.log("custom submit");
-        }
+    mod.config(['$routeProvider', function ($routeProvider) {
+        $routeProvider.when('/hello/:name', {
+            templateUrl: '#hello',
+            onActivate: 'onActivate()'
+        })
+    }]);
+
+    mod.controller('MainController', function ($scope) {
+
     });
-</script>
+
+    mod.controller('ControllerTwo', function ($scope, $routeParams) {
+        $scope.onActivate = function () {
+            // this.name = $routeParams.name;
+        }
+
+    });</script>
 
 </head>
 <body ng-app="ngm">
 ​
-<div data-role="page" id="foo" ng-controller="MainController">
+<div id="main" data-role="page" ng-controller="MainController">
+    <div data-role="content"> <a href="hello/Tobias">Say Hello</a>
+        <a href="hello/Tobias_Again">Say Hello Again</a>
 
-    <div data-role="header">
-        <h1>Foo</h1>
-    </div>
-
-    <div data-role="content">
-        <a href="ui/someFolder/externalPage.html">bar</a>
-        <form name="registrationForm" ng-submit="registerUser()" data-ajax="false">
-            <div data-role="fieldcontain">
-                <label for="name">Name: *</label>
-                <input type="text" ng-model="user.Name" name="name" id="name" required maxlength="100" />
-                <button type="submit" id="registerUser">Submit</button>
-            </div>
-        </form>
     </div>
 </div>
-
+<div id="hello" data-role="page" ng-controller="ControllerTwo">
+    <div data-role="header">Hello {{ name }}!</div>
+    <div data-role="content"> <a href="hello/Tobias_Again">Say Hello Again</a>
+    </div>
 </body>
 
 

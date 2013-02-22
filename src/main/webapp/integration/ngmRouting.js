@@ -86,6 +86,7 @@
             $.mobile.base.set = function () {
             };
         }
+        $.mobile.changePage.defaults.allowSamePageTransition = true;
     }
 
     disableJqmHashChange();

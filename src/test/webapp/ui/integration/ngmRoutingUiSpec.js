@@ -45,11 +45,12 @@ describe("ngmRouting", function () {
     }
 
     describe('history support true', function () {
-        function init(hash) {
+        function init(hash, callback) {
             initWithHistorySupport(hash, true, function(win) {
                 var _changePage = win.$.mobile.changePage;
                 spyOn(win.$.mobile, 'changePage').andCallThrough();
                 $.mobile.changePage.defaults = _changePage.defaults;
+                callback && callback(win);
             });
         }
 
@@ -122,6 +123,30 @@ describe("ngmRouting", function () {
                     expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
                 });
             });
+            it('should be able to change to the active page again, calling $activate', function() {
+                var activateSpy;
+                init('', function(win) {
+                    var ng = win.angular.module("ng");
+                    ng.config(['$routeProvider', function ($routeProvider) {
+                        $routeProvider.when('/hello/:name', {
+                            templateUrl: '#page2',
+                            onActivate: 'onActivate()'
+                        });
+                    }]);
+                    ng.controller("Page2Ctrl", function($scope) {
+                        $scope.onActivate = activateSpy = jasmine.createSpy('activateSpy');
+                    });
+                    win.$("#page2").attr("ng-controller", "Page2Ctrl");
+                });
+                runs(function() {
+                    $location.path('/hello/page1');
+                    scope.$apply();
+                    expect(activateSpy.callCount).toBe(1);
+                    $location.path('/hello/page2');
+                    scope.$apply();
+                    expect(activateSpy.callCount).toBe(2);
+                });
+            });
 
             it('should be able to change to external pages', function () {
                 init();
@@ -175,8 +200,8 @@ describe("ngmRouting", function () {
     });
 
     describe('history support false', function () {
-        function init(hash) {
-            initWithHistorySupport(hash, false);
+        function init(hash, cb) {
+            initWithHistorySupport(hash, false, cb);
         }
 
         describe('initial page', function () {

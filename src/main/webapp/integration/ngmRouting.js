@@ -19,6 +19,24 @@
             return $browser;
         }]);
 
+        $provide.decorator('$browser', ['$delegate', function ($browser) {
+            // Always set replace to true if leaving a dialog-url
+            // Attention: This needs to be AFTER the decorator for $browser.url in history.js,
+            // so our internal history is also up-to-date. There is a test for this though...
+            var _url = $browser.url;
+            $browser.url = function (url, replace) {
+                var oldUrl;
+                if (url) {
+                    oldUrl = _url.call(this);
+                    if (oldUrl.indexOf(DIALOG_URL)!=-1) {
+                        replace = true;
+                    }
+                    return _url.call(this, url, replace);
+                }
+                return _url.apply(this, arguments);
+            };
+            return $browser;
+        }]);
 
         $provide.decorator('$location', ['$delegate', locationRouteOverrideDecorator]);
 
@@ -36,8 +54,6 @@
             // we have a search parameter and load an external subpage,
             // then angular does not parse the given hashbang url correctly.
             // Here, we correct the wrong parsing.
-
-            // TODO file a bug report in angular for this!
             var hash = $location.hash();
             if (hash && hash.indexOf('!') === 0) {
                 $location.search({});
@@ -202,7 +218,6 @@
                         $location.$$parse($location.$$urlBeforeDialog);
                         $location.hash(hash);
                     }
-                    $location.replace();
                 }
             });
             $rootScope.$on('$locationChangeSuccess', function(event, newLocation, oldLocation) {

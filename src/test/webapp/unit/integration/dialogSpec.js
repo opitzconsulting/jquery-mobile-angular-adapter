@@ -18,13 +18,15 @@ describe("dialog", function () {
     });
 
     describe('routing for dialogs', function () {
-        it('should replace the $location with a special dialog url when a dialog is opened', inject(function ($location, $rootScope) {
+        it('should replace the $location with a special dialog url when a dialog is opened', inject(function ($location, $rootScope, $browser) {
             var c = testutils.compileInPage('<div></div>');
             var page = $.mobile.activePage = c.page;
             page.jqmData("role", "dialog");
             $rootScope.$broadcast('jqmPagebeforeshow');
-            expect($location.url()).toEqual("/&ui-state=dialog");
-            expect($location.$$replace).toBe(true);
+            $rootScope.$apply();
+
+            expect(angular.mock.$Browser.prototype.url).toHaveBeenCalledWith('http://server/&ui-state=dialog', true);
+            expect($browser.url()).toBe('http://server/&ui-state=dialog');
         }));
         it('should go back in history when a dialog is closed and the url is the special dialog url', inject(function ($location) {
             spyOn($location, 'goBack');
@@ -34,7 +36,7 @@ describe("dialog", function () {
             c.dialog("close");
             expect($location.goBack).toHaveBeenCalled();
         }));
-        it('should be able to go to a next page with a hash location from within a dialog with empty initial path', inject(function($rootScope, $location) {
+        it('should be able to go to a next page with a hash location from within a dialog with empty initial path', inject(function($rootScope, $location, $browser) {
             var c = testutils.compileInPage('<div></div>');
             var page = $.mobile.activePage = c.page;
             page.jqmData("role", "dialog");
@@ -44,12 +46,13 @@ describe("dialog", function () {
             $rootScope.$broadcast('jqmPagebeforeshow');
             $rootScope.$apply();
 
-            expect($location.url()).toEqual("/&ui-state=dialog");
+            expect($browser.url()).toBe('http://server/&ui-state=dialog');
+
             $location.hash("page2");
             $rootScope.$apply();
-            expect($location.url()).toBe('/#page2');
+            expect($browser.url()).toBe('http://server/#page2');
         }));
-        it('should be able to go to a next page with a hash location from within a dialog with non empty initial path', inject(function($rootScope, $location) {
+        it('should be able to go to a next page with a hash location from within a dialog with non empty initial path', inject(function($rootScope, $location, $browser) {
             var c = testutils.compileInPage('<div></div>');
             var page = $.mobile.activePage = c.page;
             page.jqmData("role", "dialog");
@@ -57,12 +60,12 @@ describe("dialog", function () {
             $rootScope.$broadcast('jqmPagebeforeshow');
             $rootScope.$apply();
 
-            expect($location.url()).toEqual("/&ui-state=dialog");
+            expect($browser.url()).toBe('http://server/&ui-state=dialog');
             $location.hash("page2");
             $rootScope.$apply();
-            expect($location.url()).toBe('/someUrl#page2');
+            expect($browser.url()).toBe('http://server/someUrl#page2');
         }));
-        it('should be able to go the a next page with a hash location if the first $locationChangeStart event was prevented', inject(function($rootScope, $location) {
+        it('should be able to go the a next page with a hash location if the first $locationChangeStart event was prevented', inject(function($rootScope, $location, $browser) {
             var prevent = true;
             var c = testutils.compileInPage('<div></div>');
             var page = $.mobile.activePage = c.page;
@@ -75,12 +78,12 @@ describe("dialog", function () {
             });
             $location.hash("page2");
             $rootScope.$apply();
-            expect($location.url()).toEqual("/&ui-state=dialog");
+            expect($browser.url()).toBe('http://server/&ui-state=dialog');
             prevent = false;
 
-            $location.hash("page2");
+            $location.hash("page3");
             $rootScope.$apply();
-            expect($location.url()).toBe('/someUrl#page2');
+            expect($browser.url()).toBe('http://server/someUrl#page3');
         }));
 
         it('should keep dialog urls even when a default routing rule is used', function() {
@@ -89,12 +92,32 @@ describe("dialog", function () {
                     redirectTo:"/test"
                 });
             });
-            inject(function ($location, $rootScope) {
+            inject(function ($location, $rootScope, $browser) {
                 $location.url('/&ui-state=dialog');
                 $rootScope.$apply();
-                expect($location.url()).toEqual("/&ui-state=dialog");
+                expect($browser.url()).toBe('http://server/&ui-state=dialog');
             })
         });
+
+        it('should remove the dialog from browser history when leaving a dialog', inject(function($location, $browser, $rootScope, $history) {
+            var c = testutils.compileInPage('<div></div>');
+            var page = $.mobile.activePage = c.page;
+            page.jqmData("role", "dialog");
+            $location.url('/someUrl#page1');
+            $rootScope.$broadcast('jqmPagebeforeshow');
+            $rootScope.$apply();
+
+            expect(angular.mock.$Browser.prototype.url).toHaveBeenCalledWith('http://server/&ui-state=dialog', true);
+            expect($browser.url()).toBe('http://server/&ui-state=dialog');
+            expect($history.urlStack).toEqual(["http://server/&ui-state=dialog"]);
+
+            $location.hash("page2");
+            $rootScope.$apply();
+            expect(angular.mock.$Browser.prototype.url).toHaveBeenCalledWith('http://server/someUrl#page2', true);
+            expect($browser.url()).toBe('http://server/someUrl#page2');
+            expect($history.urlStack).toEqual(["http://server/someUrl#page2"]);
+
+        }));
 
     });
 });

@@ -47,8 +47,8 @@ factory(window.jQuery, window.angular);
 <jsp:include page="integration/scopeReentrance.js"/>
 <jsp:include page="integration/compileIntegration.js"/>
 <jsp:include page="integration/jqmAngularWidgets.js"/>
-<jsp:include page="integration/ngmRouting.js"/>
 <jsp:include page="integration/history.js"/>
+<jsp:include page="integration/ngmRouting.js"/>
 <jsp:include page="integration/ngRepeatPatch.js"/>
 <jsp:include page="integration/ngOptionsPatch.js"/>
 <jsp:include page="integration/option.js"/>

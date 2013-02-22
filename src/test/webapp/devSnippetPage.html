@@ -16,85 +16,34 @@ Test page during development.
 <script>
     var mod = angular.module("ngm", []);
 
-    mod.config(['$provide', function ($provide) {
-        $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
-            $sniffer.history = false;
-            return $sniffer;
-        }]);
-    }]);
-
-    mod.factory('redirectService', function($rootScope, $location) {
-        var _nextRedirect;
-
-        $rootScope.$on("$locationChangeStart", function(event, newLocation) {
-            return;
-            if (_nextRedirect && newLocation.indexOf('&ui-state=dialog')===-1) {
-                event.preventDefault();
-                $rootScope.$evalAsync(function() {
-                    $location.url(_nextRedirect);
-                    _nextRedirect = null;
-                });
-            }
-        });
-
-        return {
-            redirectOnNextNavigateTo: redirectOnNextNavigateTo
-        };
-
-        function redirectOnNextNavigateTo(newPath) {
-            _nextRedirect = newPath;
-        }
-    });
-
-
-    mod.controller('MainController', function($scope, $location) {
-        $scope.openDialog = function(url, afterUrl) {
-            $location.url(url);
-            $location.routeOverride({
-                onActivate: 'initRedirect(afterClose)',
-                locals: {
-                    afterClose: afterUrl
-                }
-            });
-        };
-
-
-    });
-    mod.controller('DlgController', function($scope, $location, redirectService) {
-        $scope.initRedirect = function(newPage) {
-            redirectService.redirectOnNextNavigateTo(newPage);
-        };
-        $scope.nav = function(url) {
-            $location.url(url);
-        }
-    });
-
-
 </script>
 
 </head>
 <body ng-app="ngm">
 ​
-<div id="main" data-role="page" ng-controller="MainController">
-    <div data-role="content">
-        Hello mobile world!<br/>
-        <a href="" ng-click="openDialog('#dlg', '#page2')" data-role="button" >Open Dlg and after close navigate to Page2</a>
-    </div>
-</div>
-
-<div id="dlg" data-role="dialog" ng-controller="DlgController">
+<div id="main" data-role="page">
     <div data-role="header">
-        <h1>Dialog</h1>
-        <a href="" ng-click="nav('#page2')">Page2</a>
+        <h1>Page1</h1>
     </div>
+    <div data-role="content">
+        <a href="#page2" id="test">To Page2</a>
 
+    </div>
 </div>
 
-<div id="page2" data-role="page">
+<div id="page2" data-role="dialog">
     <div data-role="header">
         <h1>Page2</h1>
     </div>
+    <div data-role="content">
+        <a href="#page3">To Page3</a>
+    </div>
+</div>
 
+<div id="page3" data-role="page">
+    <div data-role="header">
+        <h1>Page3</h1>
+    </div>
 </div>
 
 </body>

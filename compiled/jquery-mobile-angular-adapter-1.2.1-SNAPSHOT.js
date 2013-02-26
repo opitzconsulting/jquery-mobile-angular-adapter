@@ -1529,9 +1529,10 @@ factory(window.jQuery, window.angular);
             event.preventDefault();
         } else {
             var absHref = iElement.prop('href'),
-                rewrittenUrl = $location.$$rewriteAppUrl(absHref);
+                rewrittenUrl = $location.$$rewriteAppUrl(absHref),
+                ajax = iElement.jqmData("ajax");
 
-            if (absHref && !iElement.attr('target') && rel !== 'external' && rewrittenUrl) {
+            if (absHref && !iElement.attr('target') && ajax !== false && rel !== 'external' && rewrittenUrl) {
                 // See original angular default click handler:
                 // update location manually
                 $location.$$parse(rewrittenUrl);
@@ -1645,6 +1646,7 @@ factory(window.jQuery, window.angular);
 
 
 })(angular, $);
+
 (function ($, angular) {
     // Patch for ng-repeat to fire an event whenever the children change.
     // Only watching Scope create/destroy is not enough here, as ng-repeat

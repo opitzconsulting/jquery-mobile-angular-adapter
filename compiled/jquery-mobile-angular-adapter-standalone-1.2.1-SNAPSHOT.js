@@ -34793,12 +34793,89 @@ factory(window.jQuery, window.angular);
                     }
                     return optionGroups;
                 }
+            },
+            // Slider labels are create at widget creation and need to have the options
+            // available, do this here since link step will empty the options
+            post:function (scope, iterStartElement, attr, ctrls) {
+
+                // We assume that we are not a multiple selection
+                // if ngModel is not defined, we don't need to do anything
+                if (!ctrls[1]) return;
+
+                // Nothing to do if not a slider
+                if( attr.role !== 'slider' ) return;
+
+                var match;
+                var optionsExp = attr.ngOptions;
+
+                if (! (match = optionsExp.match(NG_OPTIONS_REGEXP))) {
+                throw Error(
+                    "Expected ngOptions in form of '_select_ (as _label_)? for (_key_,)?_value_ in _collection_'" +
+                    " but got '" + optionsExp + "'.");
+                }
+
+                var displayFn = $parse(match[2] || match[1]),
+                    valueName = match[4] || match[6],
+                    keyName = match[5],
+                    groupByFn = $parse(match[3] || ''),
+                    valueFn = $parse(match[2] ? match[1] : valueName),
+                    valuesFn = $parse(match[7]);
+
+
+                function sortedKeys(obj) {
+                    var keys = [];
+                    for (var key in obj) {
+                        if (obj.hasOwnProperty(key)) {
+                        keys.push(key);
+                        }
+                    }
+                    return keys.sort();
+                }
+
+                // Algorithm from angularjs Options()
+                var options = [];
+                var locals = {};
+                var values = valuesFn(scope) || [];
+                var keys = keyName ? sortedKeys(values) : values;
+                var length = keys.length;
+                for(var index = 0; index < length; index++) {
+
+                    locals[valueName] = values[keyName ? locals[keyName]=keys:index];
+
+                    var label = displayFn(scope, locals);
+                    label = label === undefined ? '' : label;
+
+                    var value = keyName ? keys[index] : index;
+
+                    var opt = document.createElement('option');
+                    opt.setAttribute("value", value);
+                    opt.text = label;
+
+                    options.push(opt);
+                    iterStartElement[0].appendChild(opt);
+                }
+
+
+                // We need to remove our options since Angular will blindly
+                // append the model options since it assumes that it is in
+                // full control
+                unregister = scope.$watch(function () {
+                    return 0;
+                }, function () {
+                    for(var index = 0; index < length; index++){
+                        iterStartElement[0].removeChild(options[index]);
+                    }
+                    unregister();
+                });
+
+
             }
         };
     }]);
 
 
 })($, angular);
+
 (function (angular) {
     var ng = angular.module("ng");
     ng.directive('option', ['$interpolate', function ($interpolate) {

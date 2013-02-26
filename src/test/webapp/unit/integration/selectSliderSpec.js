@@ -87,4 +87,15 @@ describe("selectSlider", function () {
         scope.$root.$digest();
         expect(container.children('div').length).toEqual(1);
     });
+
+    it('should have labels if ng-options is used', function () {
+        var d = testutils.compileInPage('<div ng-init="list=[{s:\'1\',l:\'on\'},{s:\'0\',l:\'off\'}]">' +
+            '<select data-role="slider" ng-model="slider_test" ng-options="e.s as e.l for e in list"></select>' +
+            '</div>');
+        var div = d.element;
+        var spans =div.children("div").eq(0).children("div[role='application']").eq(0).children("span");
+        expect(spans.length).toBe(2);
+        expect(spans.eq(0).text()).toEqual("off");
+        expect(spans.eq(1).text()).toEqual("on");
+    });
 });

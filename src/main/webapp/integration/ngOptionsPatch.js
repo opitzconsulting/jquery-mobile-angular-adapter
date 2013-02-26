@@ -62,7 +62,46 @@
                             optionGroup: optionGroupName
                         });
                     }
+
                     return optionGroups;
+                }
+
+                if( attr.role === 'slider' ) {
+                    // Slider labels are create at widget creation and need to have the options
+                    // available, do this here since default link step will empty the options
+
+                    // Algorithm from angularjs Options()
+                    var options = [];
+                    var locals = {};
+                    var values = valuesFn(scope) || [];
+                    var keys = keyName ? sortedKeys(values) : values;
+                    var length = keys.length;
+                    for(var index = 0; index < length; index++) {
+
+                        locals[valueName] = values[keyName ? locals[keyName]=keys:index];
+
+                        var label = displayFn(scope, locals);
+                        label = label === undefined ? '' : label;
+
+                        var value = keyName ? keys[index] : index;
+
+                        var opt = document.createElement('option');
+                        opt.setAttribute("value", value);
+                        opt.text = label;
+
+                        options.push(opt);
+                        element[0].appendChild(opt);
+                    }
+
+                    // We need to remove our options since Angular will blindly
+                    // append the model options since it assumes that it is in
+                    // full control
+                    unregister = scope.$watch(function () {
+                        for(var index = 0; index < length; index++){
+                            element[0].removeChild(options[index]);
+                        }
+                        unregister();
+                    });
                 }
             }
         };

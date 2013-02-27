@@ -3,11 +3,21 @@ Changelog
 
 1.2.1
 -----
+Breaking changes:
+- Slider: ng-repeat or other conditional directives are no more allowed
+  on sliders, as jquery mobile internally appends another element to them
+  and does not use a wrapper div. This restriction is removed in jqm 1.3.0...
+- checkbox/radiobox: ng-repeat or other conditional directives are no more allowed on checkboxes/radioboxes,
+  as they also need their corresponding labels. Instead, wrap the input into the label
+  and put the ng-repeat on the label.
+
 Internal changes:
 
+- Updated to angular 1.0.5, which helped in simplifying internal logic
 - dynamicBaseTag of jQuery mobile is now deactivated as it lead to problems with XHRs, ...
 - onActivate in routes: Now all properties of `$routeParams` can be accessed as local variables
   in the expression.
+- refactored the widget directives, so it is easier to add new widget directives.
 
 
 1.2.0

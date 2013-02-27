@@ -7,7 +7,7 @@ describe("radio", function () {
                 createCount++;
             }
         });
-        var c = testutils.compileInPage('<input type="radio" ng-repeat="l in list">');
+        var c = testutils.compileInPage('<label ng-repeat="l in list"><input type="radio" ></label>');
         expect(spy.callCount).toBe(0);
         var scope = c.page.scope();
         scope.list = [1,2];

@@ -637,13 +637,11 @@ factory(window.jQuery, window.angular);
         },
         textinput:{
             handlers:[disabledHandler],
-            precompile:textinputPrecompile,
-            create:unwrapFromDivCreate
+            create:delegateDomManipToWrapper
         },
         slider:{
             handlers:[disabledHandler, refreshAfterNgModelRender],
-            precompile:wrapIntoDivPrecompile,
-            create:sliderCreate
+            create:delegateDomManipToWrapper
         },
         listview:{
             handlers:[refreshOnChildrenChange]
@@ -655,8 +653,7 @@ factory(window.jQuery, window.angular);
         // Angular does not like this, so we do it in advance.
         selectmenu:{
             handlers:[disabledHandler, refreshAfterNgModelRender, refreshOnChildrenChange],
-            precompile:wrapIntoDivPrecompile,
-            create:unwrapFromDivCreate
+            create:delegateDomManipToWrapper
         },
         controlgroup:{
             handlers:[refreshControlgroupOnChildrenChange]
@@ -697,19 +694,14 @@ factory(window.jQuery, window.angular);
 
     // -------------------
     // precompile and create functions
-
-    // Slider appends a new element after the input/select element for which it was created.
-    // The angular compiler does not like this, so we wrap the two elements into a new parent node.
-    function sliderCreate(origCreate, element, initArgs) {
-        // This is important, as the contained div als uses inline-block!
-        element[0].style.display = 'inline-block';
-        var slider = element.children().eq(0);
-        origCreate.apply(slider, initArgs);
-    }
-
-    // Checkboxradio requires a label for every checkbox input and wraps itself as well as the label
-    // into that div. Angular does not like those changes in the DOM, so we do it in advance.
     function checkboxRadioPrecompile(origElement, initArgs) {
+        // wrap the input temporarily into it's label (will be undone by the widget).
+        // By this, the jqm widget will always
+        // use this label, even if there are other labels with the same id on the same page.
+        // This is important if we use ng-repeat on checkboxes, as this could
+        // create multiple checkboxes with the same id!
+        // This needs to be done in the precompile, as otherwise angular compiler could get into trouble
+        // when input and label are siblings!
         // See the checkboxradio-Plugin in jqm for the selectors used to locate the label.
         var parentLabel = $(origElement).closest("label");
         var container = $(origElement).closest("form,fieldset,:jqmData(role='page'),:jqmData(role='dialog')");
@@ -720,88 +712,47 @@ factory(window.jQuery, window.angular);
         if (label.length===0) {
             origElement.attr("ng-non-bindable", "true");
         } else {
-            var wrapper = wrapIntoDivPrecompile(label);
-            moveCloningDirectives(origElement, wrapper);
-            wrapper.append(origElement);
-            return wrapper;
+            label.append(origElement);
         }
+        return origElement;
     }
 
-    function checkboxRadioCreate(origCreate, element, initArgs) {
-        // wrap the input into it's label. By this, the jqm widget will always
-        // use this label, even if there are other labels with the same id on the same page.
-        // This is important if we use ng-repeat on checkboxes, as this could
-        // create multiple checkboxes with the same id!
-        var label = element.children("label");
-        var input = element.children("input");
-        label.append(input);
-        return unwrapFromDivCreate(function() {
+    function checkboxRadioCreate(origCreate, input, initArgs) {
+        var label = input.parent("label");
+        if (label.length===0) {
+            throw new Error("Don't use ng-repeat or other conditional directives on checkboxes/radiobuttons directly. Instead, wrap the input into a label and put the directive on that input!");
+        }
+        return delegateDomManipToWrapper(function() {
             return origCreate.apply(input, arguments);
-        }, element, initArgs);
+        }, label, initArgs);
     }
 
     function buttonPrecompile(origElement, initArgs) {
-        var wrapper = wrapIntoDivPrecompile(origElement);
         // Add a text node with the value content,
-        // so that angular bindings work for the value too
-
+        // as we need a text node later in the jqm button markup!
         if (origElement[0].nodeName === 'INPUT') {
             var value = origElement.val();
             origElement.append(document.createTextNode(value));
         }
-        return wrapper;
+        return origElement;
     }
 
     function buttonCreate(origCreate, element, initArgs) {
         // Button destroys the text node and recreates a new one. This does not work
         // if the text node contains angular expressions, so we move the
         // text node to the right place.
-        var button = element.children().eq(0);
-        var textNode = button.contents();
-        var res = unwrapFromDivCreate(origCreate, element, initArgs);
-        var textSpan = element.find(".ui-btn-text");
+        var textNode = element.contents();
+        var res = delegateDomManipToWrapper(origCreate, element, initArgs);
+        var textSpan = res.find(".ui-btn-text");
         textSpan.empty();
         textSpan.append(textNode);
         return res;
     }
 
-    // textinput for input-type "search" wraps itself into a new element
-    function textinputPrecompile(origElement, initArgs) {
-        if (!origElement.is("[type='search'],:jqmData(type='search')")) {
-            return origElement;
-        }
-        return wrapIntoDivPrecompile(origElement);
-    }
-
-    function wrapIntoDivPrecompile(origElement) {
-        origElement.wrapAll("<div></div>");
-        var wrapper = origElement.parent();
-        moveCloningDirectives(origElement, wrapper);
-        return wrapper;
-    }
-
-    function unwrapFromDivCreate(origCreate, element, initArgs) {
-        if (element[0].nodeName.toUpperCase() !== "DIV") {
-            // no wrapper existing.
-            return origCreate.apply(element, initArgs);
-        }
-
-        if (isMock(origCreate)) {
-            // spy that does not call through
-            return origCreate.apply(element, initArgs);
-        }
-
-        var child = element.children().eq(0);
-        child.insertBefore(element);
-        element.empty();
-        return useExistingElementsForNewElements(element, function () {
-            return origCreate.apply(child, initArgs);
-        });
-    }
-
     // Dialog: separate event binding and dom enhancement.
     // Note: We do need to add the close button during precompile,
-    // as the enhancement for the dialog header depends on it (calculation which button is left, right, ...)
+    // as the enhancement for the dialog header depends on it (calculation which button is left, right, ...),
+    // and that is executed when we create the page widget, which is before the dialog widget is created :-(
     // We cannot adjust the timing of the header enhancement as it is no jqm widget.
     function dialogPrecompile(origElement, initAttrs) {
         var options = $.mobile.dialog.prototype.options;
@@ -812,164 +763,15 @@ factory(window.jQuery, window.angular);
     }
 
     function dialogCreate(origCreate, element, initArgs) {
-        if (isMock(origCreate)) {
-            // During unit tests...
-            return origCreate.apply(element, initArgs);
-        }
-        var headerCloseButton = element.data('headerCloseButton');
-        return useExistingElementsForNewElements(headerCloseButton, function () {
-            return origCreate.apply(element, initArgs);
+        origCreate.apply(element, initArgs);
+        // add handler to enhanced close button manually (the one we added in precompile),
+        // and remove the other close button (the one the widget created).
+        var closeButtons = element.find(':jqmData(role="header") :jqmData(icon="delete")');
+        closeButtons.eq(1).bind("click", function() {
+            element.dialog("close");
         });
+        closeButtons.eq(0).remove();
     }
-
-    function isMock(origCreate) {
-        return origCreate.isSpy && origCreate.originalValue !== origCreate.plan;
-    }
-
-    function useExistingElementsForNewElements(existingElements, callback) {
-        var i, el, tagName;
-        var existingElementsHashByElementName = {};
-        for (i = 0; i < existingElements.length; i++) {
-            el = existingElements.eq(i);
-            // Do not use jQuery.fn.remove as this will fire a destroy event,
-            // which leads to unwanted side effects by it's listeners.
-            el[0].parentNode.removeChild(el[0]);
-            tagName = el[0].nodeName.toUpperCase();
-            existingElementsHashByElementName[tagName] = el;
-        }
-
-        function useExistingElementIfPossible(selector) {
-            if (selector) {
-                var template = $(selector);
-                var tagName = template[0].nodeName.toUpperCase();
-                var existingElement = existingElementsHashByElementName[tagName];
-                if (existingElement) {
-                    delete existingElementsHashByElementName[tagName];
-                    existingElement[0].className += ' ' + template[0].className;
-                    return existingElement;
-                }
-            }
-            return false;
-        }
-
-        var res = withPatches($.fn, {
-            init:function (_init, self, args) {
-                var selector = args[0];
-                if (typeof selector === "string" && selector.charAt(0) === '<') {
-                    var existingElement = useExistingElementIfPossible(selector);
-                    if (existingElement) {
-                        return existingElement;
-                    }
-                }
-                return _init.apply(self, args);
-            },
-            wrap:function (_wrap, self, args) {
-                var selector = args[0];
-                var wrapper = useExistingElementIfPossible(selector);
-                if (wrapper) {
-                    wrapper.insertBefore(self);
-                    wrapper.append(self);
-                    return self;
-                }
-                return _wrap.apply(self, args);
-            },
-            wrapAll:function (_wrapAll, self, args) {
-                var selector = args[0];
-                var wrapper = useExistingElementIfPossible(selector);
-                if (wrapper) {
-                    wrapper.insertBefore(self);
-                    wrapper.append(self);
-                    return self;
-                }
-                return _wrapAll.apply(self, args);
-            }
-        }, callback);
-        for (tagName in existingElementsHashByElementName) {
-            throw new Error("existing element with tagName " + tagName + " was not used!");
-        }
-        return res;
-    }
-
-    function withPatches(obj, patches, callback) {
-        var _old = {};
-        var executingCount = 0;
-
-        function patchProp(prop) {
-            var oldFn = _old[prop] = obj[prop];
-            oldFn.restore = function () {
-                obj[prop] = oldFn;
-                delete oldFn.restore;
-            };
-            obj[prop] = function () {
-                if (executingCount) {
-                    return oldFn.apply(this, arguments);
-                }
-                executingCount++;
-                try {
-                    return patches[prop](oldFn, this, arguments);
-                } finally {
-                    executingCount--;
-                }
-            };
-            obj[prop].prototype = oldFn.prototype;
-        }
-
-        var prop;
-        for (prop in patches) {
-            patchProp(prop);
-        }
-        try {
-            return callback();
-        } finally {
-            for (prop in _old) {
-                _old[prop].restore && _old[prop].restore();
-            }
-        }
-    }
-
-    var CLONING_DIRECTIVE_REGEXP = /(^|[\W])(repeat|switch-when|if)($|[\W])/;
-
-    function moveCloningDirectives(source, target) {
-        // iterate over the attributes
-        var cloningAttrNames = [];
-        var node = source[0];
-        var targetNode = target[0];
-        var nAttrs = node.attributes;
-        var attrCount = nAttrs && nAttrs.length;
-        if (attrCount) {
-            for (var attr, name,
-                     j = attrCount - 1; j >= 0; j--) {
-                attr = nAttrs[j];
-                name = attr.name;
-                if (CLONING_DIRECTIVE_REGEXP.test(name)) {
-                    node.removeAttributeNode(attr);
-                    targetNode.setAttributeNode(attr);
-                }
-            }
-        }
-
-        // iterate over the class names.
-        var targetClassName = '';
-        var className = node.className;
-        var match;
-        if (className) {
-            className = className.replace(/[^;]+;?/, function (match) {
-                if (CLONING_DIRECTIVE_REGEXP.test(match)) {
-                    targetClassName += match;
-                    return '';
-                }
-                return match;
-            });
-        }
-        if (targetClassName) {
-            targetNode.className = targetClassName;
-            node.className = className;
-        }
-    }
-
-    // Expose for tests.
-    $.mobile.moveCloningDirectives = moveCloningDirectives;
-
 
     // -------------------
     // link handlers
@@ -1065,9 +867,43 @@ factory(window.jQuery, window.angular);
         });
     }
 
+    // ----------------
+    // helper
+    function delegateDomManipToWrapper(origCreate, element, initArgs) {
+        var oldParent = element.parent();
+        origCreate.apply(element, initArgs);
+        var upperElement = element;
+        while (upperElement.length && upperElement.parent()[0]!==oldParent[0]) {
+            upperElement = upperElement.parent();
+        }
+        if (upperElement!==element) {
+            element.data("wrapperDelegate", upperElement);
+        }
+        return upperElement;
+    }
 
-})
-    (angular, $);
+    function enableDomManipDelegate(fnName, replaceThis) {
+        var old = $.fn[fnName];
+        $.fn[fnName] = function() {
+            var delegate;
+            if (replaceThis) {
+                delegate = this.data("wrapperDelegate");
+            }
+            var arg0 = arguments[0];
+            if (arg0 && typeof arg0.data === "function") {
+                var argDelegate = arg0.data("wrapperDelegate");
+                arguments[0] = argDelegate || arguments[0];
+            }
+            return old.apply(delegate||this, arguments);
+        };
+    }
+    enableDomManipDelegate("after", true);
+    enableDomManipDelegate("before", true);
+    enableDomManipDelegate("remove", true);
+    enableDomManipDelegate("append", false);
+    enableDomManipDelegate("prepend", false);
+
+})(angular, $);
 (function ($, angular) {
 
     var mod = angular.module("ng");

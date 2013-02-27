@@ -6,7 +6,7 @@ describe("checkbox", function () {
                 createCount++;
             }
         });
-        var c = testutils.compileInPage('<input type="checkbox" ng-repeat="l in list">');
+        var c = testutils.compileInPage('<label ng-repeat="l in list"><input type="checkbox"></label>');
         expect(spy.callCount).toBe(0);
         var scope = c.page.scope();
         scope.list = [1,2];
@@ -133,21 +133,11 @@ describe("checkbox", function () {
         expect(content.children('div.ui-checkbox').length).toEqual(1);
     });
 
-    it('should allow ng-repeat on the checkbox', function() {
-        var c = testutils.compileInPage(
-            '<div id="container"><input type="checkbox" id="check1" ng-repeat="l in [1,2]"><label for="check1">{{l}}</label></div>');
-        var page = c.page;
-        var container = page.find("#container");
-        var wrapperDivs = container.children("div.ui-checkbox");
-        expect(wrapperDivs.length).toBe(2);
-        var i, input, label;
-        for (i=0; i<2; i++) {
-            input = wrapperDivs.eq(i).children("input");
-            label = wrapperDivs.eq(i).children("label");
-            expect(input.length).toBe(1);
-            expect(label.length).toBe(1);
-            expect(label.find(".ui-btn-text").text()).toEqual(''+(i+1));
-        }
+    it('should not allow ng-repeat on the checkbox', function() {
+        expect(function() {
+            testutils.compileInPage(
+                '<div id="container"><input type="checkbox" id="check1" ng-repeat="l in [1,2]"><label for="check1">{{l}}</label></div>');
+        }).toThrow(new Error("Don't use ng-repeat or other conditional directives on checkboxes/radiobuttons directly. Instead, wrap the input into a label and put the directive on that input!"));
     });
 
     it('should allow ng-repeat on the label', function() {

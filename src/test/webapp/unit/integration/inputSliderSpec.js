@@ -14,7 +14,7 @@ describe("inputSlider", function () {
         expect(createCount).toBe(2);
     });
 
-    it("should create an textinput and slider widget for the element", function() {
+    it("should create a textinput and slider widget for the element", function() {
         var sliderSpy = testutils.spyOnJq('slider').andCallThrough();
         var textinputSpy = testutils.spyOnJq('textinput').andCallThrough();
         testutils.compileInPage('<input type="number" data-type="range">');
@@ -24,7 +24,7 @@ describe("inputSlider", function () {
 
     it('should save the ui text value into the model', function () {
         var d = testutils.compileInPage('<input type="number" data-type="range"  ng-model="mysel" min="0" max="300">');
-        var input = d.element.find("input");
+        var input = d.page.find("input");
         var scope = input.scope();
         input.val(100);
         testutils.triggerInputEvent(input);
@@ -33,7 +33,7 @@ describe("inputSlider", function () {
 
     it("should save the ui slider value into the model", function() {
         var d = testutils.compileInPage('<input type="number" data-type="range"  ng-model="mysel" min="0" max="100">');
-        var input = d.element.find("input");
+        var input = d.page.find("input");
         var slider = input.data("slider").slider;
         var event = jQuery.Event("mousedown");
         var expectedValue = 50;
@@ -47,7 +47,7 @@ describe("inputSlider", function () {
 
     it('should save the model value into the ui and refresh', function () {
         var d = testutils.compileInPage('<input type="number" data-type="range"  ng-model="mysel" min="0" max="300">');
-        var input = d.element.find("input");
+        var input = d.page.find("input");
         var container = input.parent();
         var scope = input.scope();
         scope.mysel = "100";
@@ -58,7 +58,7 @@ describe("inputSlider", function () {
 
     it('should use the disabled attribute', function () {
         var d = testutils.compileInPage('<input type="number" data-type="range"  ng-model="mysel" value="150" min="0" max="300" ng-disabled="disabled">');
-        var input = d.element.find("input");
+        var input = d.page.find("input");
         var scope = input.scope();
         scope.disabled = false;
         scope.$root.$digest();
@@ -71,21 +71,8 @@ describe("inputSlider", function () {
 
     });
 
-    it('should wrap the element and the slider into a new parent div so that it does not confuse the angular compiler', function() {
-        // If we have two sliders after each other, and allow the slider to append
-        // elements after the input elements, the angular compiler gets confused...
-        var c = testutils.compileInPage('<div>' +
-            '<input type="number" data-type="range" value="150" min="0" max="300">' +
-            '<input type="number" data-type="range" value="150" min="0" max="300">' +
-            '</div>');
-        var div = c.element;
-        expect(div.children("div").eq(0).children("input").length).toBe(1);
-        expect(div.children("div").eq(0).children("div[role='application']").length).toBe(1);
-        expect(div.children("div").eq(1).children("input").length).toBe(1);
-        expect(div.children("div").eq(1).children("div[role='application']").length).toBe(1);
-    });
-
-    it('should be removable', function () {
+    // TODO uncomment this in jqm 1.3!
+    xit('should be removable', function () {
         var d = testutils.compileInPage('<div ng-init="list=[1,2]">' +
             '<input type="number" data-type="range" value="150" min="0" max="300" ng-repeat="l in list">' +
             '</div>');

@@ -11,10 +11,13 @@ describe("dialog", function () {
 
     it("should enhance the close button", function () {
         var dialog = testutils.compile('<div data-role="dialog"><div data-role="header"></div></div>');
+        var closeSpy = spyOn(dialog.data("dialog"), "close");
         var closeButton = dialog.find("a");
         expect(closeButton.length).toBe(1);
         expect(closeButton.hasClass("ui-btn")).toBe(true);
         expect(closeButton.hasClass("ui-btn-up-a")).toBe(true);
+        closeButton.click();
+        expect(closeSpy).toHaveBeenCalled();
     });
 
     describe('routing for dialogs', function () {

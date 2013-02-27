@@ -16,32 +16,22 @@ Test page during development.
 <script>
     var mod = angular.module("ngm", []);
 
-
 </script>
 
 </head>
 <body ng-app="ngm">
 ​
 <div id="main" data-role="page">
-    <div data-role="content">
-        <a href="#dialog">Show Dialog</a>
-    </div>
-</div>
+     <div data-role="content" ng-init="list = [1,2]">
+         <label for="input"  ng-repeat="l in list">
+             {{name}}
+         </label>
+         <input type="checkbox" id="input" ng-model="$parent.test">
 
-<div id="dialog" data-role="dialog">
-    <div data-role="content">
-        <a href="#dialog2">Show dialog2</a>
-        <select data-native-menu="false">
-            <option>1</option>
-            <option>2</option>
+         <input type="text" ng-model="name">
+         {{test}}
 
-        </select>
-    </div>
-</div>
-
-<div id="dialog2" data-role="dialog">
-    <div data-role="content">
-    </div>
+     </div>
 </div>
 
 </body>

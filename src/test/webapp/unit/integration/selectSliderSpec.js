@@ -18,7 +18,7 @@ describe("selectSlider", function () {
         var d = testutils.compileInPage(
             '<select ng-model="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>'
         );
-        var select = d.element.find('select');
+        var select = d.page.find('select');
         var scope = select.scope();
         scope.mysel = "v1";
         scope.$root.$digest();
@@ -32,7 +32,7 @@ describe("selectSlider", function () {
 
     it('should save the model value into the ui', function () {
         var d = testutils.compileInPage('<select ng-model="mysel" data-role="slider"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
-        var select = d.element.find('select');
+        var select = d.page.find('select');
         var scope = d.page.scope();
         scope.mysel = "v1";
         scope.$root.$digest();
@@ -50,7 +50,7 @@ describe("selectSlider", function () {
     it('should use the disabled attribute', function () {
         var d = testutils.compileInPage(
             '<select ng-model="mysel" data-role="slider" ng-disabled="disabled"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>');
-        var select = d.element.find('select');
+        var select = d.page.find('select');
         var scope = select.scope();
         scope.disabled = false;
         scope.$root.$digest();
@@ -62,21 +62,8 @@ describe("selectSlider", function () {
         expect(disabled).toEqual(true);
     });
 
-    it('should wrap the element and the slider into a new parent div so that it does not confuse the angular compiler', function() {
-        // If we have two sliders after each other, and allow the slider to append
-        // elements after the input elements, the angular compiler gets confused...
-        var c = testutils.compileInPage('<div>' +
-            '<select data-role="slider"><option value="v1" default="true">v1</option></select>' +
-            '<select data-role="slider"><option value="v1" default="true">v1</option></select>' +
-            '</div>');
-        var div = c.element;
-        expect(div.children("div").eq(0).children("select").length).toBe(1);
-        expect(div.children("div").eq(0).children("div[role='application']").length).toBe(1);
-        expect(div.children("div").eq(1).children("select").length).toBe(1);
-        expect(div.children("div").eq(1).children("div[role='application']").length).toBe(1);
-    });
-
-    it('should be removable', function () {
+    // TODO uncomment this in jqm 1.3!
+    xit('should be removable', function () {
         var d = testutils.compileInPage('<div ng-init="list=[1,2]">' +
             '<select data-role="slider" ng-repeat="l in list"><option value="v1" default="true">v1</option></select>' +
             '</div>');

@@ -191,56 +191,33 @@
 
     var jqmWidgets = {};
     /**
-     * Directive for calling the create function of a jqm widget.
-     * For elements that wrap themselves into new elements (like `<input type="checked">`) ngmCreate will be called
-     * on the wrapper element for the input and the label, which is created during precompile.
-     * ngmLink will be called on the actual input element, so we have access to the ngModel and attrs for $observe calls.
+     * Directive for creating jqm widgets.
      */
-    ng.directive("ngmCreate", function () {
+    ng.directive("ngmWidget", ["$injector", function ($injector) {
         return {
             restrict:'A',
             // after the normal angular widgets like input, ngModel, ...
             priority:0,
+            require:['?ngModel'],
             compile:function (tElement, tAttrs) {
-                var widgets = JSON.parse(tAttrs.ngmCreate);
+                var widgets = JSON.parse(tAttrs.ngmWidget);
                 return {
                     post:function (scope, iElement, iAttrs, ctrls) {
                         var widgetName, widgetSpec, initArgs, origCreate;
                         for (widgetName in widgets) {
                             widgetSpec = jqmWidgets[widgetName];
                             initArgs = widgets[widgetName];
-                            origCreate = $.fn.orig[widgetName];
-                            if (widgetSpec.create) {
-                                widgetSpec.create(origCreate, iElement, initArgs);
-                            } else {
-                                origCreate.apply(iElement, initArgs);
-                            }
+                            origCreate = createFn(widgetName, iElement, initArgs);
+                            widgetSpec.link(widgetName, origCreate, scope, iElement, iAttrs, ctrls, $injector);
                         }
                     }
                 };
             }
-        }
-    });
+        };
 
-    /**
-     * Directive for connecting widgets with angular. See ngmCreate.
-     */
-    ng.directive("ngmLink", ["$injector", function ($injector) {
-        return {
-            restrict:'A',
-            priority:0,
-            require:['?ngModel'],
-            compile:function (tElement, tAttrs) {
-                var widgets = JSON.parse(tAttrs.ngmLink);
-                return {
-                    post:function (scope, iElement, iAttrs, ctrls) {
-                        var widgetName, widgetSpec;
-                        for (widgetName in widgets) {
-                            widgetSpec = jqmWidgets[widgetName];
-                            widgetSpec.link(scope, iElement, iAttrs, ctrls, $injector);
-                        }
-                    }
-                };
+        function createFn(widgetName, iElement, initArgs) {
+            return function() {
+                $.fn.orig[widgetName].apply(iElement, initArgs);
             }
         }
     }]);
@@ -252,19 +229,13 @@
                 var self = this;
                 for (var k = 0; k < self.length; k++) {
                     var element = self.eq(k);
-                    var createElement = element;
                     if (precompileFn) {
-                        createElement = precompileFn(element, args) || createElement;
+                        precompileFn(element, args);
                     }
-                    var ngmCreateStr = createElement.attr("ngm-create") || '{}';
+                    var ngmCreateStr = element.attr("ngm-widget") || '{}';
                     var ngmCreate = JSON.parse(ngmCreateStr);
                     ngmCreate[widgetName] = args;
-                    createElement.attr("ngm-create", JSON.stringify(ngmCreate));
-                    // attribute needs to be after the ngm-create attribute!
-                    var ngmLinkStr = element.attr("ngm-link") || '{}';
-                    var ngmLink = JSON.parse(ngmLinkStr);
-                    ngmLink[widgetName] = true;
-                    element.attr("ngm-link", JSON.stringify(ngmLink));
+                    element.attr("ngm-widget", JSON.stringify(ngmCreate));
                 }
             }
             if (preventJqmWidgetCreation()) {

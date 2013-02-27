@@ -23,13 +23,8 @@ Test page during development.
 ​
 <div id="main" data-role="page">
      <div data-role="content" ng-init="list = [1,2]">
-         <label for="input"  ng-repeat="l in list">
-             {{name}}
-         </label>
-         <input type="checkbox" id="input" ng-model="$parent.test">
-
-         <input type="text" ng-model="name">
-         {{test}}
+         <input type="range" min=0 max="10" ng-model="data">
+         {{data}}
 
      </div>
 </div>

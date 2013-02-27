@@ -10,6 +10,7 @@ Breaking changes:
 - checkbox/radiobox: ng-repeat or other conditional directives are no more allowed on checkboxes/radioboxes,
   as they also need their corresponding labels. Instead, wrap the input into the label
   and put the ng-repeat on the label.
+- Does no more work with angular 1.0.3, 1.0.4 or higher is required!
 
 Internal changes:
 

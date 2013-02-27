@@ -1,66 +1,53 @@
 (function (angular, $) {
     var widgetConfig = {
         checkboxradio:{
-            handlers:[disabledHandler, refreshAfterNgModelRender, checkedHandler],
             precompile:checkboxRadioPrecompile,
-            create:checkboxRadioCreate
+            link:[checkboxRadioCreate, disabledHandler, refreshAfterNgModelRender, checkedHandler]
         },
-        // Button wraps itself into a new element.
-        // Angular does not like this, so we do it in advance.
         button:{
-            handlers:[disabledHandler],
             precompile:buttonPrecompile,
-            create:buttonCreate
+            link:[buttonCreate, disabledHandler]
         },
         collapsible:{
-            handlers:[disabledHandler, collapsedHandler]
+            link:[defaultCreate, disabledHandler, collapsedHandler]
         },
         textinput:{
-            handlers:[disabledHandler],
-            create:delegateDomManipToWrapper
+            link:[defaultCreate, disabledHandler],
         },
         slider:{
-            handlers:[disabledHandler, refreshAfterNgModelRender],
-            create:delegateDomManipToWrapper
+            link:[defaultCreate, disabledHandler, refreshAfterNgModelRender],
         },
         listview:{
-            handlers:[refreshOnChildrenChange]
+            link:[defaultCreate, refreshOnChildrenChange]
         },
         collapsibleset:{
-            handlers:[refreshOnChildrenChange]
+            link:[defaultCreate, refreshOnChildrenChange]
         },
-        // selectmenu wraps itself into a button and an outer div.
-        // Angular does not like this, so we do it in advance.
         selectmenu:{
-            handlers:[disabledHandler, refreshAfterNgModelRender, refreshOnChildrenChange],
-            create:delegateDomManipToWrapper
+            link:[defaultCreate, disabledHandler, refreshAfterNgModelRender, refreshOnChildrenChange],
         },
         controlgroup:{
-            handlers:[refreshControlgroupOnChildrenChange]
+            link:[defaultCreate, refreshControlgroupOnChildrenChange]
         },
         navbar:{
-            handlers:[refreshOnChildrenChange]
+            link:[defaultCreate, refreshOnChildrenChange]
         },
         dialog:{
-            handlers:[],
-            precompile:dialogPrecompile,
-            create:dialogCreate
+            link:[dialogCreate],
+            precompile:dialogPrecompile
         },
         fixedtoolbar:{
-            handlers:[]
+            link:[defaultCreate]
         },
         popup:{
-            handlers:[]
+            link:[defaultCreate]
         }
     };
 
-    function mergeHandlers(widgetName, list) {
-        return function ($injector) {
-            var args = Array.prototype.slice.call(arguments);
-            args.unshift(widgetName);
-            args.push($injector);
-            for (var i = 0; i < list.length; i++) {
-                list[i].apply(this, args);
+    function mergeArrayFn(fnList) {
+        return function () {
+            for (var i = 0; i < fnList.length; i++) {
+                fnList[i].apply(this, arguments);
             }
         }
     }
@@ -68,12 +55,16 @@
     var config;
     for (var widgetName in widgetConfig) {
         config = widgetConfig[widgetName];
-        config.link = mergeHandlers(widgetName, config.handlers);
+        config.link = mergeArrayFn(config.link);
         $.mobile.registerJqmNgWidget(widgetName, config);
     }
 
     // -------------------
     // precompile and create functions
+    function defaultCreate(widgetName, origCreate, scope, element) {
+        delegateDomManipToWrapper(origCreate, element);
+    }
+
     function checkboxRadioPrecompile(origElement, initArgs) {
         // wrap the input temporarily into it's label (will be undone by the widget).
         // By this, the jqm widget will always
@@ -94,17 +85,14 @@
         } else {
             label.append(origElement);
         }
-        return origElement;
     }
 
-    function checkboxRadioCreate(origCreate, input, initArgs) {
+    function checkboxRadioCreate(widgetName, origCreate, scope, input) {
         var label = input.parent("label");
         if (label.length===0) {
             throw new Error("Don't use ng-repeat or other conditional directives on checkboxes/radiobuttons directly. Instead, wrap the input into a label and put the directive on that input!");
         }
-        return delegateDomManipToWrapper(function() {
-            return origCreate.apply(input, arguments);
-        }, label, initArgs);
+        delegateDomManipToWrapper(origCreate, label);
     }
 
     function buttonPrecompile(origElement, initArgs) {
@@ -114,19 +102,17 @@
             var value = origElement.val();
             origElement.append(document.createTextNode(value));
         }
-        return origElement;
     }
 
-    function buttonCreate(origCreate, element, initArgs) {
+    function buttonCreate(widgetName, origCreate, scope, element) {
         // Button destroys the text node and recreates a new one. This does not work
         // if the text node contains angular expressions, so we move the
         // text node to the right place.
         var textNode = element.contents();
-        var res = delegateDomManipToWrapper(origCreate, element, initArgs);
-        var textSpan = res.find(".ui-btn-text");
+        delegateDomManipToWrapper(origCreate, element);
+        var textSpan = element.parent().find(".ui-btn-text");
         textSpan.empty();
         textSpan.append(textNode);
-        return res;
     }
 
     // Dialog: separate event binding and dom enhancement.
@@ -139,11 +125,10 @@
         var headerCloseButton = $("<a href='#' data-" + $.mobile.ns + "icon='delete' data-" + $.mobile.ns + "iconpos='notext'>" + options.closeBtnText + "</a>");
         origElement.find(":jqmData(role='header')").prepend(headerCloseButton);
         origElement.data('headerCloseButton', headerCloseButton);
-        return origElement;
     }
 
-    function dialogCreate(origCreate, element, initArgs) {
-        origCreate.apply(element, initArgs);
+    function dialogCreate(widgetName, origCreate, scope, element) {
+        origCreate();
         // add handler to enhanced close button manually (the one we added in precompile),
         // and remove the other close button (the one the widget created).
         var closeButtons = element.find(':jqmData(role="header") :jqmData(icon="delete")');
@@ -155,7 +140,7 @@
 
     // -------------------
     // link handlers
-    function disabledHandler(widgetName, scope, iElement, iAttrs, ctrls) {
+    function disabledHandler(widgetName, origCreate, scope, iElement, iAttrs, ctrls) {
         iAttrs.$observe("disabled", function (value) {
             if (value) {
                 iElement[widgetName]("disable");
@@ -165,7 +150,7 @@
         });
     }
 
-    function collapsedHandler(widgetName, scope, iElement, iAttrs, ctrls, $inject) {
+    function collapsedHandler(widgetName, origCreate, scope, iElement, iAttrs, ctrls, $inject) {
         var $parse = $inject.get("$parse");
         if (iAttrs.collapsed) {
             var collapsedGetter = $parse(iAttrs.collapsed);
@@ -192,7 +177,7 @@
         }
     }
 
-    function checkedHandler(widgetName, scope, iElement, iAttrs, ctrls) {
+    function checkedHandler(widgetName, origCreate, scope, iElement, iAttrs, ctrls) {
         iAttrs.$observe("checked", function (value) {
             triggerAsyncRefresh(widgetName, scope, iElement, "refresh");
         });
@@ -214,7 +199,7 @@
         ctrl[listenersName].push(fn);
     }
 
-    function refreshAfterNgModelRender(widgetName, scope, iElement, iAttrs, ctrls) {
+    function refreshAfterNgModelRender(widgetName, origCreate, scope, iElement, iAttrs, ctrls) {
         var ngModelCtrl = ctrls[0];
         if (ngModelCtrl) {
             addCtrlFunctionListener(ngModelCtrl, "$render", function () {
@@ -223,14 +208,14 @@
         }
     }
 
-    function refreshControlgroupOnChildrenChange(widgetName, scope, iElement, iAttrs, ctrls) {
+    function refreshControlgroupOnChildrenChange(widgetName, origCreate, scope, iElement, iAttrs, ctrls) {
         iElement.bind("$childrenChanged", function () {
             triggerAsyncRefresh(widgetName, scope, iElement, {});
         });
     }
 
 
-    function refreshOnChildrenChange(widgetName, scope, iElement, iAttrs, ctrls) {
+    function refreshOnChildrenChange(widgetName, origCreate, scope, iElement, iAttrs, ctrls) {
         iElement.bind("$childrenChanged", function () {
             triggerAsyncRefresh(widgetName, scope, iElement, "refresh");
         });
@@ -249,10 +234,11 @@
 
     // ----------------
     // helper
-    function delegateDomManipToWrapper(origCreate, element, initArgs) {
-        var oldParent = element.parent();
-        origCreate.apply(element, initArgs);
-        var upperElement = element;
+    function delegateDomManipToWrapper(origCreate, element) {
+        var oldParent = element.parent(),
+            upperElement = element;
+
+        origCreate();
         while (upperElement.length && upperElement.parent()[0]!==oldParent[0]) {
             upperElement = upperElement.parent();
         }
@@ -265,13 +251,14 @@
     function enableDomManipDelegate(fnName, replaceThis) {
         var old = $.fn[fnName];
         $.fn[fnName] = function() {
-            var delegate;
+            var delegate,
+                arg0 = arguments[0],
+                argDelegate;
             if (replaceThis) {
                 delegate = this.data("wrapperDelegate");
             }
-            var arg0 = arguments[0];
             if (arg0 && typeof arg0.data === "function") {
-                var argDelegate = arg0.data("wrapperDelegate");
+                argDelegate = arg0.data("wrapperDelegate");
                 arguments[0] = argDelegate || arguments[0];
             }
             return old.apply(delegate||this, arguments);

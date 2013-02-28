@@ -6,21 +6,29 @@
  */
 (function ($, angular) {
     var ng = angular.module('ng');
-    ng.factory("$precompile", function() {
+    ng.factory("$precompile", noopPrecompileFactory);
+    ng.config(['$provide', precompileCompileDecorator]);
+    ng.config(['$compileProvider', '$provide', precompileTemplateDirectives]);
+
+    return;
+
+    // ------------------
+
+    function noopPrecompileFactory() {
         return function(element) {
             // This is empty and can be decorated using $provide.decorator.
             return element;
         }
-    });
+    }
 
-    ng.config(['$provide', function ($provide) {
+    function precompileCompileDecorator($provide) {
         $provide.decorator('$compile', ['$precompile', '$delegate', function ($precompile, $compile) {
             return function () {
                 arguments[0] = $precompile(arguments[0]);
                 return $compile.apply(this, arguments);
             }
         }]);
-    }]);
+    }
 
     function precompileHtmlString(html, $precompile) {
         var $template = $('<div>' + html + '</div>');
@@ -28,7 +36,7 @@
         return $template.html();
     }
 
-    ng.config(['$compileProvider', '$provide', function ($compileProvider, $provide) {
+    function precompileTemplateDirectives ($compileProvider, $provide) {
         var directiveTemplateUrls = {};
 
         // Hook into the registration of directives to:
@@ -68,6 +76,6 @@
             };
             return $http;
         }]);
-    }]);
+    }
 
 })($, angular);

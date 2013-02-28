@@ -2,6 +2,19 @@
 
     var mod = angular.module("ng");
 
+    $.mobile._registerBrowserDecorators = $.mobile._registerBrowserDecorators || [];
+    $.mobile._registerBrowserDecorators.push(registerBrowserDecorator);
+
+    mod.config(['$provide', function ($provide) {
+        registerBrowserDecorator($provide);
+    }]);
+    mod.factory('$history', $historyFactory);
+
+    return;
+
+    // ---------------
+    // implementation functions
+
     function registerBrowserDecorator($provide) {
         $provide.decorator('$rootScope', ['$delegate', rootScopeSuppressEventInDigestCycleDecorator]);
         $provide.decorator('$location', ['$delegate', '$history', locationBackDecorator]);
@@ -91,14 +104,7 @@
         }
     }
 
-    $.mobile._registerBrowserDecorators = $.mobile._registerBrowserDecorators || [];
-    $.mobile._registerBrowserDecorators.push(registerBrowserDecorator);
-
-    mod.config(['$provide', function ($provide) {
-        registerBrowserDecorator($provide);
-    }]);
-
-    mod.factory('$history', [function ($timeout) {
+    function $historyFactory() {
         var $history;
 
         function go(relativeIndex) {
@@ -153,5 +159,5 @@
             onUrlChangeProgrammatically:onUrlChangeProgrammatically,
             onUrlChangeBrowser:onUrlChangeBrowser
         };
-    }]);
+    }
 })(window.jQuery, window.angular);

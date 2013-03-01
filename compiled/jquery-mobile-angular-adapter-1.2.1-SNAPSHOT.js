@@ -179,7 +179,7 @@ factory(window.jQuery, window.angular);
  */
 (function ($, angular) {
     var ng = angular.module('ng');
-    ng.factory("$precompile", noopPrecompileFactory);
+    ng.provider("$precompile", $precompileProvider);
     ng.config(['$provide', precompileCompileDecorator]);
     ng.config(['$compileProvider', '$provide', precompileTemplateDirectives]);
 
@@ -187,11 +187,22 @@ factory(window.jQuery, window.angular);
 
     // ------------------
 
-    function noopPrecompileFactory() {
-        return function(element) {
-            // This is empty and can be decorated using $provide.decorator.
-            return element;
-        }
+    function $precompileProvider() {
+        var handlers = [];
+        return {
+            addHandler: function(handler) {
+                handlers.push(handler);
+            },
+            $get: ["$injector", function($injector) {
+                return function(element) {
+                    var i;
+                    for (i=0; i<element.length; i++) {
+                        element = $injector.invoke(handlers[i], this, {element: element});
+                    }
+                    return element;
+                }
+            }]
+        };
     }
 
     function precompileCompileDecorator($provide) {
@@ -327,7 +338,9 @@ factory(window.jQuery, window.angular);
         $provide.decorator('$rootScope', ['$delegate', digestOnlyCurrentScopeDecorator]);
     }]);
 
-    ng.factory('$precompile', ["jqmNgWidget", precompilePageAndWidgets]);
+    ng.config(["$precompileProvider", function($precompile) {
+        $precompile.addHandler(["jqmNgWidget", "element", precompilePageAndWidgets]);
+    }]);
     ng.run(['$rootScope', '$compile', 'jqmNgWidget', initExternalJqmPagesOnLoad]);
 
     ng.directive('ngmPage', ["jqmNgWidget", ngmPageDirective]);
@@ -385,52 +398,50 @@ factory(window.jQuery, window.angular);
     }
 
     /**
-     * This directive will enhance the dom during compile
+     * This $precompile handler will enhance the dom during compile
      * with non widget markup. This will also mark elements that contain
      * jqm widgets.
      */
-    function precompilePageAndWidgets(jqmNgWidget) {
-        return function(element) {
-            var pageSelector = ':jqmData(role="page"), :jqmData(role="dialog")';
-            // save the old parent
-            var oldParentNode = element[0].parentNode;
+    function precompilePageAndWidgets(jqmNgWidget, element) {
+        var pageSelector = ':jqmData(role="page"), :jqmData(role="dialog")';
+        // save the old parent
+        var oldParentNode = element[0].parentNode;
 
-            // if the element is not connected with the document element,
-            // the enhancements of jquery mobile do not work (uses event listeners for the document).
-            // So temporarily connect it...
-            connectToDocument(element[0], markPagesAndWidgetsAndApplyNonWidgetMarkup);
+        // if the element is not connected with the document element,
+        // the enhancements of jquery mobile do not work (uses event listeners for the document).
+        // So temporarily connect it...
+        connectToDocument(element[0], markPagesAndWidgetsAndApplyNonWidgetMarkup);
 
-            // If the element wrapped itself into a new element,
-            // return the element that is under the same original parent
-            while (element[0].parentNode !== oldParentNode) {
-                element = element.eq(0).parent();
-            }
+        // If the element wrapped itself into a new element,
+        // return the element that is under the same original parent
+        while (element[0].parentNode !== oldParentNode) {
+            element = element.eq(0).parent();
+        }
 
-            return element;
+        return element;
 
-            // --------------
-            function markPagesAndWidgetsAndApplyNonWidgetMarkup() {
-                var pages = element.find(pageSelector).add(element.filter(pageSelector));
-                pages.attr("ngm-page", "true");
+        // --------------
+        function markPagesAndWidgetsAndApplyNonWidgetMarkup() {
+            var pages = element.find(pageSelector).add(element.filter(pageSelector));
+            pages.attr("ngm-page", "true");
 
-                // enhance non-widgets markup.
-                jqmNgWidget.markJqmWidgetCreation(function () {
-                    jqmNgWidget.preventJqmWidgetCreation(function () {
-                        if (pages.length > 0) {
-                            // element contains pages.
-                            // create temporary pages for the non widget markup, that we destroy afterwards.
-                            // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
-                            pages.page();
-                        } else {
-                            element.parent().trigger("create");
-                        }
-                    });
+            // enhance non-widgets markup.
+            jqmNgWidget.markJqmWidgetCreation(function () {
+                jqmNgWidget.preventJqmWidgetCreation(function () {
+                    if (pages.length > 0) {
+                        // element contains pages.
+                        // create temporary pages for the non widget markup, that we destroy afterwards.
+                        // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
+                        pages.page();
+                    } else {
+                        element.parent().trigger("create");
+                    }
                 });
+            });
 
-                // Destroy the temporary pages again
-                pages.page("destroy");
-            }
-        };
+            // Destroy the temporary pages again
+            pages.page("destroy");
+        }
     }
 
     function connectToDocument(node, callback) {
@@ -538,11 +549,9 @@ factory(window.jQuery, window.angular);
         jqmNgWidget._init();
     }]);
 
-    enableDomManipDelegate("after", true);
-    enableDomManipDelegate("before", true);
-    enableDomManipDelegate("remove", true);
-    enableDomManipDelegate("append", false);
-    enableDomManipDelegate("prepend", false);
+    enableDomManipDelegate("after");
+    enableDomManipDelegate("before");
+    enableDomManipDelegate("remove");
 
     return;
 
@@ -686,15 +695,13 @@ factory(window.jQuery, window.angular);
         }
     }
 
-    function enableDomManipDelegate(fnName, replaceThis) {
+    function enableDomManipDelegate(fnName) {
         var old = $.fn[fnName];
         $.fn[fnName] = function() {
             var delegate,
                 arg0 = arguments[0],
                 argDelegate;
-            if (replaceThis) {
-                delegate = this.data("wrapperDelegate");
-            }
+            delegate = this.data("wrapperDelegate");
             if (arg0 && typeof arg0.data === "function") {
                 argDelegate = arg0.data("wrapperDelegate");
                 arguments[0] = argDelegate || arguments[0];

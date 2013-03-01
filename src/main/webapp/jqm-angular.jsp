@@ -12,13 +12,13 @@ define(["jquery", "angular", "jquery.mobile"], factory);
 factory(window.jQuery, window.angular);
 }
 })(function($, angular) {
-<jsp:include page="integration/jqmWidgetPatches.js"/>
+<jsp:include page="integration/widgetPatches.js"/>
 <jsp:include page="integration/precompileSupport.js"/>
 <jsp:include page="integration/scopeReconnect.js"/>
 <jsp:include page="integration/scopeReentrance.js"/>
 <jsp:include page="integration/compileIntegration.js"/>
 <jsp:include page="integration/jqmNgWidgetProvider.js"/>
-<jsp:include page="integration/jqmAngularWidgets.js"/>
+<jsp:include page="integration/widgetAdapters.js"/>
 <jsp:include page="integration/history.js"/>
 <jsp:include page="integration/ngmRouting.js"/>
 <jsp:include page="integration/ngRepeatPatch.js"/>

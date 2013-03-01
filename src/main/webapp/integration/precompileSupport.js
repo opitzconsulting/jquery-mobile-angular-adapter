@@ -6,7 +6,7 @@
  */
 (function ($, angular) {
     var ng = angular.module('ng');
-    ng.factory("$precompile", noopPrecompileFactory);
+    ng.provider("$precompile", $precompileProvider);
     ng.config(['$provide', precompileCompileDecorator]);
     ng.config(['$compileProvider', '$provide', precompileTemplateDirectives]);
 
@@ -14,11 +14,22 @@
 
     // ------------------
 
-    function noopPrecompileFactory() {
-        return function(element) {
-            // This is empty and can be decorated using $provide.decorator.
-            return element;
-        }
+    function $precompileProvider() {
+        var handlers = [];
+        return {
+            addHandler: function(handler) {
+                handlers.push(handler);
+            },
+            $get: ["$injector", function($injector) {
+                return function(element) {
+                    var i;
+                    for (i=0; i<element.length; i++) {
+                        element = $injector.invoke(handlers[i], this, {element: element});
+                    }
+                    return element;
+                }
+            }]
+        };
     }
 
     function precompileCompileDecorator($provide) {

@@ -9,7 +9,9 @@
         $provide.decorator('$rootScope', ['$delegate', digestOnlyCurrentScopeDecorator]);
     }]);
 
-    ng.factory('$precompile', ["jqmNgWidget", precompilePageAndWidgets]);
+    ng.config(["$precompileProvider", function($precompile) {
+        $precompile.addHandler(["jqmNgWidget", "element", precompilePageAndWidgets]);
+    }]);
     ng.run(['$rootScope', '$compile', 'jqmNgWidget', initExternalJqmPagesOnLoad]);
 
     ng.directive('ngmPage', ["jqmNgWidget", ngmPageDirective]);
@@ -67,52 +69,50 @@
     }
 
     /**
-     * This directive will enhance the dom during compile
+     * This $precompile handler will enhance the dom during compile
      * with non widget markup. This will also mark elements that contain
      * jqm widgets.
      */
-    function precompilePageAndWidgets(jqmNgWidget) {
-        return function(element) {
-            var pageSelector = ':jqmData(role="page"), :jqmData(role="dialog")';
-            // save the old parent
-            var oldParentNode = element[0].parentNode;
+    function precompilePageAndWidgets(jqmNgWidget, element) {
+        var pageSelector = ':jqmData(role="page"), :jqmData(role="dialog")';
+        // save the old parent
+        var oldParentNode = element[0].parentNode;
 
-            // if the element is not connected with the document element,
-            // the enhancements of jquery mobile do not work (uses event listeners for the document).
-            // So temporarily connect it...
-            connectToDocument(element[0], markPagesAndWidgetsAndApplyNonWidgetMarkup);
+        // if the element is not connected with the document element,
+        // the enhancements of jquery mobile do not work (uses event listeners for the document).
+        // So temporarily connect it...
+        connectToDocument(element[0], markPagesAndWidgetsAndApplyNonWidgetMarkup);
 
-            // If the element wrapped itself into a new element,
-            // return the element that is under the same original parent
-            while (element[0].parentNode !== oldParentNode) {
-                element = element.eq(0).parent();
-            }
+        // If the element wrapped itself into a new element,
+        // return the element that is under the same original parent
+        while (element[0].parentNode !== oldParentNode) {
+            element = element.eq(0).parent();
+        }
 
-            return element;
+        return element;
 
-            // --------------
-            function markPagesAndWidgetsAndApplyNonWidgetMarkup() {
-                var pages = element.find(pageSelector).add(element.filter(pageSelector));
-                pages.attr("ngm-page", "true");
+        // --------------
+        function markPagesAndWidgetsAndApplyNonWidgetMarkup() {
+            var pages = element.find(pageSelector).add(element.filter(pageSelector));
+            pages.attr("ngm-page", "true");
 
-                // enhance non-widgets markup.
-                jqmNgWidget.markJqmWidgetCreation(function () {
-                    jqmNgWidget.preventJqmWidgetCreation(function () {
-                        if (pages.length > 0) {
-                            // element contains pages.
-                            // create temporary pages for the non widget markup, that we destroy afterwards.
-                            // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
-                            pages.page();
-                        } else {
-                            element.parent().trigger("create");
-                        }
-                    });
+            // enhance non-widgets markup.
+            jqmNgWidget.markJqmWidgetCreation(function () {
+                jqmNgWidget.preventJqmWidgetCreation(function () {
+                    if (pages.length > 0) {
+                        // element contains pages.
+                        // create temporary pages for the non widget markup, that we destroy afterwards.
+                        // This is ok as non widget markup does not hold state, i.e. no permanent reference to the page.
+                        pages.page();
+                    } else {
+                        element.parent().trigger("create");
+                    }
                 });
+            });
 
-                // Destroy the temporary pages again
-                pages.page("destroy");
-            }
-        };
+            // Destroy the temporary pages again
+            pages.page("destroy");
+        }
     }
 
     function connectToDocument(node, callback) {

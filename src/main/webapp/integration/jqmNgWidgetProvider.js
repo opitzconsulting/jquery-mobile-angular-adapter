@@ -9,11 +9,9 @@
         jqmNgWidget._init();
     }]);
 
-    enableDomManipDelegate("after", true);
-    enableDomManipDelegate("before", true);
-    enableDomManipDelegate("remove", true);
-    enableDomManipDelegate("append", false);
-    enableDomManipDelegate("prepend", false);
+    enableDomManipDelegate("after");
+    enableDomManipDelegate("before");
+    enableDomManipDelegate("remove");
 
     return;
 
@@ -157,15 +155,13 @@
         }
     }
 
-    function enableDomManipDelegate(fnName, replaceThis) {
+    function enableDomManipDelegate(fnName) {
         var old = $.fn[fnName];
         $.fn[fnName] = function() {
             var delegate,
                 arg0 = arguments[0],
                 argDelegate;
-            if (replaceThis) {
-                delegate = this.data("wrapperDelegate");
-            }
+            delegate = this.data("wrapperDelegate");
             if (arg0 && typeof arg0.data === "function") {
                 argDelegate = arg0.data("wrapperDelegate");
                 arguments[0] = argDelegate || arguments[0];

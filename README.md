@@ -407,6 +407,23 @@ Notes on the integration of some jqm widgets
         no matter if the link goes to a dialog or a normal page.
 
 
+Integrating custom jquery mobile plugins with angular
+---------------------
+All integration work is done using the `jqmNgWidget` provider. See src/main/webapp/widgetAdapters.js.
+
+Example for a default widget:
+
+    ng.config(["jqmNgWidgetProvider", function(jqmNgWidgetProvider) {
+        jqmNgWidgetProvider.widget("somePlugin", ["jqmNgWidget", function(jqmNgWidget) {
+            return {
+                link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl) {
+                    jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
+                    jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
+                }
+            }
+        }]);
+    }]);
+
 
 Integration strategy
 ---------------------

@@ -13,7 +13,7 @@ Breaking changes:
 - Does no more work with angular 1.0.3, 1.0.4 or higher is required!
 
 Internal changes:
-
+- Added provider `jqmNgWidget` for adapting jqm plugins with angular.
 - Updated to angular 1.0.5, which helped in simplifying internal logic
 - dynamicBaseTag of jQuery mobile is now deactivated as it lead to problems with XHRs, ...
 - onActivate in routes: Now all properties of `$routeParams` can be accessed as local variables

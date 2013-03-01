@@ -21,20 +21,22 @@ describe('popup', function () {
             $rootScope.$apply();
             expect($location.url()).toEqual("/&ui-state=dialog");
         }));
-        it('should go back in history when a popup is closed and the url is the special dialog url', inject(function ($location) {
+        it('should go back in history when a popup is closed and the url is the special dialog url', inject(function ($location, $rootScope) {
             spyOn($location, 'goBack');
             var c = testutils.compile('<div data-role="popup"></div>');
             $location.url("/&ui-state=dialog");
+            $rootScope.$apply();
             c.popup("open");
             c.popup("close");
             expect($location.goBack).toHaveBeenCalled();
         }));
-        it('should not go back in history when a popup in a dialog is closed and the url is the special dialog url', inject(function ($location) {
+        it('should not go back in history when a popup in a dialog is closed and the url is the special dialog url', inject(function ($location, $rootScope) {
             spyOn($location, 'goBack');
             var page = testutils.compile('<div data-role="dialog"><div data-role="popup"></div></div>');
             $.mobile.activePage = page;
             var p = page.find(":jqmData(role=popup)");
             $location.url("/&ui-state=dialog");
+            $rootScope.$apply();
             p.popup("open");
             p.popup("close");
             expect($location.goBack).not.toHaveBeenCalled();

@@ -345,9 +345,10 @@
             event.preventDefault();
         } else {
             var absHref = iElement.prop('href'),
-                rewrittenUrl = $location.$$rewriteAppUrl(absHref);
+                rewrittenUrl = $location.$$rewriteAppUrl(absHref),
+                ajax = iElement.jqmData("ajax");
 
-            if (absHref && !iElement.attr('target') && rel !== 'external' && rewrittenUrl) {
+            if (absHref && !iElement.attr('target') && ajax !== false && rel !== 'external' && rewrittenUrl) {
                 // See original angular default click handler:
                 // update location manually
                 $location.$$parse(rewrittenUrl);

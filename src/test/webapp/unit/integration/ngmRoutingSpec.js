@@ -128,6 +128,13 @@ describe('ngmRouting', function () {
                 expect(event.isDefaultPrevented()).toBe(false);
                 expect(event.isPropagationStopped()).toBe(false);
             }));
+            it('data-ajax=false should execute the default url action', inject(function ($browser, $location) {
+                var c = testutils.compileInPage('<a href="http://server/someLink" data-ajax="false"/>');
+                var event = $.Event("click");
+                c.element.trigger(event);
+                expect(event.isDefaultPrevented()).toBe(false);
+                expect(event.isPropagationStopped()).toBe(false);
+            }));
         });
     });
 

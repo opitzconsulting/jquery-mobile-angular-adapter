@@ -16,27 +16,24 @@ Test page during development.
 <script>
     var mod = angular.module("ngm", []);
 
+    mod.controller('MainController', function($scope) {
+
+        $scope.options = [{'select' : "1", 'label':'yes'},
+            {'select' : "0", 'label':'no'}]
+    });
+
 </script>
 
 </head>
 <body ng-app="ngm">
 ​
-    <div id="main" data-role="page">
-         <div data-role="content">
-             <ul data-role="listview" id="list">
-                 <li id="line1">
-                     Some Text
-                     <a href="somePage" ngm-if="visible"></a>
-                 </li>
-                 <li id="line1">
-                     Some Text
-                     <a href="somePage" ngm-if="true"></a>
-                 </li>
-             </ul>
-
-             <button id="addLink" ng-click="visible = true">Add Link</button>
-         </div>
+<div id="main" data-role="page" ng-controller="MainController">
+    <div data-role="content">
+            <a href="sample.pdf" data-role="button" data-ajax="false">Pdf file</a>
     </div>
+</div>
+
+
 
 </body>
 

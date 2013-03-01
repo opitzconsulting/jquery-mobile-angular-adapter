@@ -64,12 +64,17 @@ describe("listview", function () {
         expect($(":jqmData(role='page')").length).toEqual(1);
     });
 
-    it("should remove the ui-li css class form <li>s when they get a $childrenChanged event", function () {
+    it("should remove all ui-* css classes form <li>s when they get a $childrenChanged event", function () {
         var d = testutils.compileInPage('<ul data-role="listview"><li></li></ul>');
         var lis = d.element.children("li");
         expect(lis.hasClass("ui-li")).toBe(true);
+        lis.addClass("ui-someClass");
+        lis.addClass("someClass");
         lis.trigger("$childrenChanged");
         expect(lis.hasClass("ui-li")).toBe(false);
+        expect(lis.hasClass("ui-someClass")).toBe(false);
+        expect(lis.hasClass("someClass")).toBe(true);
+
     });
 
     it("should remove the button markup form <li>s that contain anchors when they get a $childrenChanged event", function () {

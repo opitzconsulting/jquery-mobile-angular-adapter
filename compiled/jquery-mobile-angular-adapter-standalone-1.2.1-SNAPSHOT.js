@@ -34939,7 +34939,7 @@ factory(window.jQuery, window.angular);
             compile:function (tElement, tAttrs) {
                 return function (scope, iElement, iAttrs) {
                     iElement.bind("$childrenChanged", function () {
-                        iElement.removeClass("ui-li");
+                        iElement.removeClass(function(a,css) { return (css.match (/\bui-\S+/g) || []).join(' '); });
                         var buttonElements = iElement.data("buttonElements");
                         if (buttonElements) {
                             var text = buttonElements.text;

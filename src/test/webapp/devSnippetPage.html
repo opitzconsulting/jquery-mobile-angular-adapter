@@ -21,17 +21,22 @@ Test page during development.
 </head>
 <body ng-app="ngm">
 ​
-<div id="main" data-role="page">
-     <div data-role="content" ng-init="list = [1,2]">
+    <div id="main" data-role="page">
+         <div data-role="content">
+             <ul data-role="listview" id="list">
+                 <li id="line1">
+                     Some Text
+                     <a href="somePage" ngm-if="visible"></a>
+                 </li>
+                 <li id="line1">
+                     Some Text
+                     <a href="somePage" ngm-if="true"></a>
+                 </li>
+             </ul>
 
-         <label ng-repeat="l in list">
-             <input type="checkbox">
-             {{l}}
-
-         </label>
-
-     </div>
-</div>
+             <button id="addLink" ng-click="visible = true">Add Link</button>
+         </div>
+    </div>
 
 </body>
 

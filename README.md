@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/tigbro/jquery-mobile-angular-adapter.png)](https://travis-ci.org/tigbro/jquery-mobile-angular-adapter)
 #JQuery Mobile Angular Adapter
 
 ##Description

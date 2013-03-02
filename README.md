@@ -1,8 +1,6 @@
-JQuery Mobile Angular Adapter
-=====================
+#JQuery Mobile Angular Adapter
 
-Description
--------------
+##Description
 
 Integration between jquery mobile and angular.js. Needed as jquery mobile
 enhances the pages with new elements and styles and so does angular. With this adapter,
@@ -13,28 +11,24 @@ If you are interested in how to build mobile web apps with this adapter, have a 
 [Mobile Web-Apps mit JavaScript](http://www.opitz-consulting.com/go_javascriptbuch).
 
 
-Dependencies
-----------------
-- angular 1.0.3
+##Dependencies
+- angular 1.0.5
 - jquery 1.7.1
-- jquery mobile 1.2.0 Final
+- jquery mobile 1.2.1 Final
 
-Examples
-------------
+##Examples
 - See the [wiki page](wiki/Projects-using-the-adapter)
 - [Todo mobile](http://jsfiddle.net/tigbro/Du2DY/): JsFiddle
 - [Todo mobile](https://github.com/tigbro/todo-mobile): Single source app for jquery-mobile and sencha touch:
 - [Rent Your Legacy Car](https://github.com/mjswa/rylc-html5): A more complex example from the german book [Mobile Web-Apps mit JavaScript](http://www.opitz-consulting.com/go_javascriptbuch).
 
 
-Reporting Issues
--------------
+##Reporting Issues
 - Issues can be reported at the Github project.
 - Please provide a jsfiddle, using [this template](http://jsfiddle.net/tigbro/ZHKBA/).
 
 
-Usage
----------
+##Usage
 Note: The directive `ng-app` for the html element is required, as in all angular applications.
 
 
@@ -103,42 +97,27 @@ Notes:
 - Usage of manual bootstrap of angular does not work well with jquery-mobile, as jquery-mobile relies on the
   jQuery ready event to be fired at the right time.
 
-Directory layout
--------------------
-This project follows the usual maven directory layout:
+## Build
+Directory structure
 
-- src/main/webapp: The production code
-- src/test/webapp: The test code
-- compiled: The result of the javascript compilation
-- compiled/min: Contains the minified files.
+- compiled: The created versions of the adapter.
+    - jquery-mobile-angular-adapter.js: The adapter.
+    - jquery-mobile-angular-adapter-standalone.js: Version of the adapter that includes jquery,   angular and jquery mobile. If you want to do something during the initialization of jquery- mobile, use the following callback:
+    `window.mobileinit = function() { ... }`
 
+- src: The main files of uitest.js
+- test/ui: The ui self tests for uitest.js
+- test/unit: The unit tests of uitest.js
 
-Build
---------------------------
-The build is done using maven and node js.
+Install the dependencies: `npm install`.
 
-- `mvn clean package`: This will create a new version of the adapter and put it into `/compiled`.
-- `mvn clean package -Ptest -Dbrowser=<path to your browser>`: As above, but will also execute the unit and ui tests.
+Build it: `./node_modules/.bin/grunt`
 
-Results of the build:
+- set the right browser in the Gruntfile.js before (testacular -> ci -> browsers)!
 
-- `compiled/jquery-mobile-angular-adapter-<version>.js`: The adapter in one file, without dependencies.
-- `compiled/jquery-mobile-angular-adapter-standalone-<version>.js`: The adapter in one file including jquery, jquery-mobile and angular.
-   If you want to do something during the initialization of jquery-mobile, use the following callback:
-  `window.mobileinit = function() { ... }`
+Auto-Run tests when file change: `./node_modules/.bin/grunt dev`
 
-Running the tests
--------------------
-
-- `mvn clean integration-test -Ptest`: This will do a build and execute the tests using js-test-driver.
-  The browser that is used can be specified in the pom.xml.
-- `mvn clean package jetty:run`: This will start a webserver under `localhost:8080/jqmng`.
-  The unit-tests can be run via the url `localhost:8080/jqmng/UnitSpecRunner.html`
-  The ui-tests can be run via the url `localhost:8080/jqmng/UiSpecRunner.html`
-
-
-Navigation and routes
----------------------
+##Navigation and routes
 
 The adapter integrates angular routes with jquery mobile in the following way:
 
@@ -220,15 +199,13 @@ Restrictions:
   a `templateUrl` property.
 
 
-Scopes
------------
+##Scopes
 Every page of jquery mobile gets a separate scope. The `$digest` of the global scope only evaluates the currently active page,
 so there is no performance interaction between pages.
 
 For communicating between the pages use the `ngm-shared-controller` directive (see below).
 
-Directives, Filters and Services
------------
+##Directives, Filters and Services
 
 ### Directive `ngm-shared-controller`
 
@@ -371,8 +348,7 @@ The following example shows an example for a paged list for the data in the vari
 Note: `pagerId.cache` stores the last result that was returns for a `list | paged:'pagerId'` expression. This can be
   used to check whether the paged list is empty, .. without refiltering the list.
 
-Notes on the integration of some jqm widgets
-----------------
+## Notes on the integration of some jqm widgets
 
 ### widget `collapsible`
 
@@ -407,8 +383,8 @@ Notes on the integration of some jqm widgets
         no matter if the link goes to a dialog or a normal page.
 
 
-Integrating custom jquery mobile plugins with angular
----------------------
+##Integrating custom jquery mobile plugins with angular
+
 All integration work is done using the `jqmNgWidget` provider. See src/main/webapp/widgetAdapters.js.
 
 Example for a default widget:
@@ -425,8 +401,7 @@ Example for a default widget:
     }]);
 
 
-Integration strategy
----------------------
+##Integration strategy
 
 Jquery mobile has two kinds of markup:
 

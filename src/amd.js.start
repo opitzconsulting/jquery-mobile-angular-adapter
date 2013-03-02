@@ -1,0 +1,7 @@
+(function(factory) {
+if (typeof define === "function" && define.amd) {
+define(["jquery", "angular", "jquery.mobile"], factory);
+} else {
+factory(window.jQuery, window.angular);
+}
+})(function($, angular) {

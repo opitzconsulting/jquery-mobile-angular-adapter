@@ -1,10 +1,39 @@
 {
-    "name":"jquery-mobile-angular-adapter",
-    "version":"1.2.1-SNAPSHOT",
-    "private":true,
-    "dependencies":{
+    "name": "jquery-mobile-angular-adapter",
+    "description": "jquery-mobile-angular-adapter is able to load a webpage into a frame or popup, instrument that page and the javascript in that page (e.g. add additional scripts at the end of the document, ...) and execute actions on that page.",
+    "version": "1.2.1-SNAPSHOT",
+    "private": true,
+    "homepage": "https://github.com/tigbro/jquery-mobile-angular-adapter",
+    "author": {
+        "name": "Tobias Bosch",
+        "email": "tobias.bosch@opitz-consulting.com"
     },
-    "devDependencies":{
-        "uglify-js":"latest"
+    "devDependencies": {
+        "grunt": "0.4.x",
+        "grunt-cli": "latest",
+        "grunt-contrib-concat": "latest",
+        "grunt-contrib-connect": "latest",
+        "grunt-contrib-watch": "latest",
+        "grunt-contrib-jshint": "latest",
+        "grunt-contrib-uglify": "latest",
+        "grunt-testacular": "latest",
+        "mocha": "latest",
+        "qunit": "latest"
+    },
+    "engine": "node *",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tigbro/jquery-mobile-angular-adapter.git"
+    },
+    "bugs": {
+        "url": "https://github.com/tigbro/jquery-mobile-angular-adapter/issues"
+    },
+    "licenses": [{
+        "type": "MIT",
+        "url": "https://github.com/tigbro/jquery-mobile-angular-adapter/blob/master/LICENSE-MIT"
+    }],
+    "keywords": [],
+    "scripts": {
+        "test": "grunt travis --verbose"
     }
 }

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html ng-app>
+<head>
+    <title>MobileToys</title>
+    <script>parent.uitest && parent.uitest.instrument(window);</script>
+    <link rel="stylesheet" href="../../../lib/jquery.mobile.css"/>
+
+    <script src="../../lib/require.js"></script>
+    <script>
+        require.config({
+            paths:{
+                'jquery':'../../../lib/jquery',
+                'angular':'../../../lib/angular',
+                'jquery.mobile':'../../../lib/jquery.mobile'
+            },
+            shim:{
+                'angular':{
+                    deps:['jquery'],
+                    exports:'angular'
+                }
+            }
+        });
+        function tryHoldReady() {
+            if (!tryHoldReady.executed && window.jQuery) {
+                window.jQuery.holdReady(true);
+                tryHoldReady.executed = true;
+            }
+        }
+        tryHoldReady();
+        require.onResourceLoad = tryHoldReady;
+        require([
+            "jquery",
+            "../../../compiled/jquery-mobile-angular-adapter"
+        ], function (jquery) {
+            jquery.holdReady(false);
+        });
+    </script>
+</head>
+<body>
+    <div id="start" data-role="page">
+        <div data-role="header">
+            <h1>Hello World</h1>
+        </div>
+    </div>
+
+</body>
+</html>

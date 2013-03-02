@@ -30,7 +30,61 @@ beforeEach(function() {
         return -1;
     }
 
+    function isArray(value) {
+        return Object.prototype.toString.call(value) == '[object Array]';
+    }
+
+    function endsWith(haystack, needle) {
+        if (isArray(haystack)) {
+            return arrayEndsWith(haystack, needle);
+        } else {
+            return stringEndsWith(haystack, needle);
+        }
+    }
+
+    function startsWith(haystack, needle) {
+        if (isArray(haystack)) {
+            return arrayStartsWith(haystack, needle);
+        } else {
+            return stringStartsWith(haystack, needle);
+        }
+    }
+
+    function stringEndsWith(haystack, needle) {
+        return haystack.substr(-needle.length) == needle;
+    }
+
+    function stringStartsWith(haystack, needle) {
+        return haystack.substr(0, needle.length) == needle;
+    }
+
+    function arrayEndsWith(haystack, needle) {
+        if (isArray(needle)) {
+            var offset = haystack.length - needle.length;
+            return needle.every(function(val, idx) {
+                return val == haystack[idx + offset];
+            });
+        }
+        return haystack.indexOf(needle) == haystack.length-1;
+    }
+
+    function arrayStartsWith(haystack, needle) {
+        if (isArray(needle)) {
+            return needle.every(function(val, idx) {
+                return val == haystack[idx];
+            });
+        }
+        return haystack.indexOf(needle) === 0;
+    }
+
     this.addMatchers({
+        toEndWith: function(value) {
+            return endsWith(this.actual, value);
+        },
+
+        toStartWith: function(value) {
+            return startsWith(this.actual, value);
+        },
         toBeInvalid: cssMatcher('ng-invalid', 'ng-valid'),
         toBeValid: cssMatcher('ng-valid', 'ng-invalid'),
         toBeDirty: cssMatcher('ng-dirty', 'ng-pristine'),

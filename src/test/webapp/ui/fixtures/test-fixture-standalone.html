@@ -2,13 +2,13 @@
 <html ng-app>
 <head>
     <title>MobileToys</title>
-    <script>opener && opener.instrument && opener.instrument(window);</script>
+    <script>parent.uitest && parent.uitest.instrument(window);</script>
     <script>window.mobileinit = function() {
         window.mobileInitTest = true;
     }</script>
-    <link rel="stylesheet" href="../lib/jquery.mobile.css"/>
+    <link rel="stylesheet" href="../../lib/jquery.mobile.css"/>
 
-    <script src="../jqm-angular-standalone.jsp" type="text/javascript"></script>
+    <script src="../../jqm-angular-standalone.jsp" type="text/javascript"></script>
 </head>
 <body>
 

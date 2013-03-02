@@ -1,29 +1,26 @@
 describe('compileIntegration', function () {
 
     it("should call $.mobile.initializePage when the first page is compiled using angular", function () {
+        uit.url('../ui/fixtures/test-fixture.html');
         var rootScope;
-        loadHtml('/jqmng/ui/test-fixture.html', function (frame) {
-            var $ = frame.$;
+        uit.append(function ($) {
             var _old = $.mobile.initializePage;
             $.mobile.initializePage = function () {
                 rootScope = $("body").injector().get("$rootScope");
                 return _old.apply(this, arguments);
             }
         });
-        runs(function () {
+        uit.runs(function () {
             expect(rootScope).toBeTruthy();
         });
     });
 
     it("should angular compile pages loaded dynamically by jqm", function () {
-        loadHtml('/jqmng/ui/test-fixture.html');
-        runs(function () {
-            var $ = testframe().$;
-            $.mobile.changePage('/jqmng/ui/externalPage.html');
+        uit.url('../ui/fixtures/test-fixture.html');
+        uit.runs(function ($) {
+            $.mobile.changePage('externalPage.html');
         });
-        waitsForAsync();
-        runs(function () {
-            var $ = testframe().$;
+        uit.runs(function ($) {
             var page1Scope = $("#start").scope();
             var extPage = $("#externalPage");
             expect($.trim(extPage.text())).toBe('3');
@@ -35,26 +32,21 @@ describe('compileIntegration', function () {
     });
 
     it("should allow manual bootstrap using $compile on the document", function() {
-        loadHtml('/jqmng/ui/empty-fixture.html');
-        runs(function() {
-            var win = testframe();
-            var $ = win.$;
+        uit.url('../ui/fixtures/empty-fixture.html');
+        uit.runs(function(window,$) {
             $("body").append('<div id="somePage" data-role="page"></div>');
-            win.angular.bootstrap(win.document);
-            console.log("now");
+            window.angular.bootstrap(window.document);
             expect($("#somePage").hasClass("ui-page")).toBe(true);
-
-
         });
     });
 
     describe("page stamping", function() {
+        uit.url('../ui/fixtures/empty-fixture.html');
         it("should allow to use jqm pages with ng-repeat", function() {
-            loadHtml('/jqmng/ui/empty-fixture.html', function (win) {
-                var $ = win.$;
+            uit.append(function(window,$) {
                 $("body").attr("ng-controller", "PageController");
                 $("body").append('<div id="{{page.name}}" data-role="page" ng-repeat="page in pages"><div data-role="header"><h1>{{page.title}}</h1></div><div data-role="content"><a href="" class="addPage" ng-click="addPage()">Add page</a><a href="#{{page.next}}" class="nextPage">Next page</a></div></div>');
-                win.PageController = function($scope) {
+                window.PageController = function($scope) {
                     $scope.pages = [];
                     $scope.addPage = function() {
                         var count = $scope.pages.length;
@@ -63,8 +55,7 @@ describe('compileIntegration', function () {
                     $scope.addPage();
                 };
             });
-            runs(function() {
-                var $ = testframe().$;
+            uit.runs(function($) {
                 var pages = $("body").children('div[data-role="page"]');
                 expect(pages.length).toBe(1);
                 var page0 = pages.eq(0);
@@ -75,8 +66,7 @@ describe('compileIntegration', function () {
                 page0.find(".addPage").click();
                 page0.find(".nextPage").click();
             });
-            runs(function() {
-                var $ = testframe().$;
+            uit.runs(function($) {
                 var pages = $("body").children('div[data-role="page"]');
                 expect(pages.length).toBe(2);
                 var page1 = pages.eq(1);

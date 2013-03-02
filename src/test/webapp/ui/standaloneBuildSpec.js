@@ -1,17 +1,18 @@
 describe('standalone', function () {
+    uit.url('../ui/fixtures/test-fixture-standalone.html');
     it('should work in standalone mode and call the mobileInit function', function () {
-        loadHtml('/jqmng/ui/test-fixture-standalone.html', function (frame) {
-            var page = frame.$('#start');
+        uit.append(function($) {
+            var page = $('#start');
             page.append('<div data-role="content">' +
                 '<ul data-role="listview" ng-init="list=[1,2,3]" id="list">' +
                 '<li ng-repeat="l in list">{{l}}</li>' +
                 '</ul>' +
                 '</div>');
+
         });
-        runs(function () {
-            var win = testframe();
-            expect(win.mobileInitTest).toBe(true);
-            var list = win.$("#list");
+        uit.runs(function (window, $) {
+            expect(window.mobileInitTest).toBe(true);
+            var list = $("#list");
             var lis = list.children();
             expect(lis.length).toBe(3);
             for (var i = 0; i < 3; i++) {

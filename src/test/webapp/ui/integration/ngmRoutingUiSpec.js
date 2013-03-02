@@ -1,87 +1,45 @@
 describe("ngmRouting", function () {
-    var $, win, $location, scope, errors, $history;
+    var baseUrl = '../ui/fixtures/test-fixture.html';
 
-    beforeEach(function () {
-        errors = [];
-    });
-
-    afterEach(function () {
-        expect(errors).toEqual([]);
-    });
-
-    function initWithErrorWatching(url, beforeLoadCallback) {
-        loadHtml(url, function (win) {
-            win.onerror = function (event) {
-                errors.push(event);
-            };
-            $ = win.$;
-            if (beforeLoadCallback) {
-                beforeLoadCallback(win);
-            }
-        });
-        runs(function () {
-            win = testframe();
-            var injector = $("body").injector();
-            scope = $("body").scope();
-            $location = injector.get("$location");
-            $history = injector.get("$history");
-        });
-
-    }
-
-    function initWithHistorySupport(hash, historySupport, beforeLoadCallback) {
-        initWithErrorWatching('/jqmng/ui/test-fixture.html' + (hash || ''), function (win) {
-            var ng = win.angular.module("ng");
+    function initWithHistorySupport(historySupport) {
+        uit.append(function(angular) {
+            var ng = angular.module("ng");
             ng.config(['$provide', function ($provide) {
                 $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
                     $sniffer.history = historySupport;
                     return $sniffer;
                 }]);
             }]);
-            if (beforeLoadCallback) {
-                beforeLoadCallback(win);
-            }
         });
     }
 
     describe('history support true', function () {
-        function init(hash, callback) {
-            initWithHistorySupport(hash, true, function(win) {
-                var _changePage = win.$.mobile.changePage;
-                spyOn(win.$.mobile, 'changePage').andCallThrough();
-                $.mobile.changePage.defaults = _changePage.defaults;
-                callback && callback(win);
-            });
-        }
+        initWithHistorySupport(true);
 
         describe('initial page', function () {
-
             it('should be able to start at an internal subpage without hashbang', function () {
-                init('#page2');
-                waits(500);
-                runs(function () {
+                uit.url(baseUrl+'#page2');
+                uit.runs(function ($, $location, location) {
                     expect($.mobile.activePage.attr("id")).toBe("page2");
                     expect($location.path()).toBe('/test-fixture.html');
                     expect($location.hash()).toBe('page2');
-                    expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
+                    expect(location.pathname).toEndWith('/test-fixture.html');
                 });
             });
 
             it('should be able to start at an internal subpage with hashbang', function () {
-                init('#!/test-fixture.html#page2');
-                waits(500);
-                runs(function () {
+                uit.url(baseUrl+'#!/test-fixture.html?{now}#page2');
+                uit.runs(function ($, $location, location) {
                     expect($.mobile.activePage.attr("id")).toBe("page2");
                     expect($location.path()).toBe('/test-fixture.html');
                     expect($location.hash()).toBe('page2');
-                    expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
+                    expect(location.pathname).toEndWith('/test-fixture.html');
                 });
             });
 
             it('should call $.mobile.changePage only once with the subpage if a subpage is given', function () {
-                init('#!/test-fixture.html#page2');
-                waits(500);
-                runs(function () {
+                uit.url(baseUrl+'#!/test-fixture.html#page2');
+                uit.runs(function ($) {
                     expect($.mobile.changePage.callCount).toBe(2);
                     var pageStr = $.mobile.changePage.argsForCall[0][0];
                     expect(pageStr.indexOf('#page2')).not.toBe(-1);
@@ -89,18 +47,18 @@ describe("ngmRouting", function () {
             });
 
             it('should be able to start at an external subpage', function () {
-                init('#!/externalPage.html');
-                runs(function () {
+                uit.url(baseUrl+'#!/externalPage.html');
+                uit.runs(function ($, $location, location) {
                     expect($.mobile.activePage.attr("id")).toBe("externalPage");
                     expect($location.path()).toBe('/externalPage.html');
                     expect($location.hash()).toBe('');
-                    expect(win.location.pathname).toBe('/jqmng/ui/externalPage.html');
+                    expect(location.pathname).toEndWith('/externalPage.html');
                 });
             });
 
             it('should be able to start at an internal page when search parameters are used', function () {
-                init('?a=b#!/test-fixture.html?a=b#page2');
-                runs(function () {
+                uit.url(baseUrl+'?a=b#!/test-fixture.html?a=b&{now}#page2');
+                uit.runs(function ($) {
                     expect($.mobile.activePage.attr("id")).toBe("page2");
                 });
             });
@@ -108,25 +66,25 @@ describe("ngmRouting", function () {
         });
 
         describe('navigation in the app', function () {
+            uit.url(baseUrl);
+
             it('should be able to change to an internal page', function () {
-                init();
-                runs(function () {
+                uit.runs(function ($, $location, $rootScope) {
                     expect($.mobile.activePage.attr("id")).toBe("start");
                     $location.hash("page2");
-                    scope.$apply();
+                    $rootScope.$apply();
                 });
-                waitsForAsync();
-                runs(function () {
+                uit.runs(function ($, $location, location) {
                     expect($.mobile.activePage.attr("id")).toBe("page2");
                     expect($location.path()).toBe('/test-fixture.html');
                     expect($location.hash()).toBe('page2');
-                    expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
+                    expect(location.pathname).toEndWith('/test-fixture.html');
                 });
             });
             it('should be able to change to the active page again, calling $activate', function() {
                 var activateSpy;
-                init('', function(win) {
-                    var ng = win.angular.module("ng");
+                uit.append(function(angular, $) {
+                    var ng = angular.module("ng");
                     ng.config(['$routeProvider', function ($routeProvider) {
                         $routeProvider.when('/hello/:name', {
                             templateUrl: '#page2',
@@ -136,62 +94,56 @@ describe("ngmRouting", function () {
                     ng.controller("Page2Ctrl", function($scope) {
                         $scope.onActivate = activateSpy = jasmine.createSpy('activateSpy');
                     });
-                    win.$("#page2").attr("ng-controller", "Page2Ctrl");
+                    $("#page2").attr("ng-controller", "Page2Ctrl");
                 });
-                runs(function() {
+                uit.runs(function($location, $rootScope) {
                     $location.path('/hello/page1');
-                    scope.$apply();
+                    $rootScope.$apply();
                     expect(activateSpy.callCount).toBe(1);
                     $location.path('/hello/page2');
-                    scope.$apply();
+                    $rootScope.$apply();
                     expect(activateSpy.callCount).toBe(2);
                 });
             });
 
             it('should be able to change to external pages', function () {
-                init();
-                runs(function () {
+                uit.runs(function ($, $location, $rootScope) {
                     expect($.mobile.activePage.attr("id")).toBe("start");
                     $location.path("/externalPage.html");
-                    scope.$apply();
+                    $rootScope.$apply();
                 });
-                waitsForAsync();
-                runs(function () {
+                uit.runs(function ($, $location, location) {
                     expect($.mobile.activePage.attr("id")).toBe("externalPage");
                     expect($location.path()).toBe('/externalPage.html');
                     expect($location.hash()).toBe('');
-                    expect(win.location.pathname).toBe('/jqmng/ui/externalPage.html');
+                    expect(location.pathname).toEndWith('/externalPage.html');
                 });
             });
 
             it('should be able to load external pages in a different folder, adjust the links in the page, go back again and the same again', function () {
                 var startUrl;
-                init();
-                runs(function () {
-                    win.tag = true;
-                    startUrl = win.location.href;
+                uit.runs(function (window, location, $, $location, $rootScope) {
+                    window.tag = true;
+                    startUrl = location.href.substring(0, location.href.indexOf('?'));
                     expect($.mobile.activePage.attr("id")).toBe("start");
                     $location.path("/someFolder/externalPage.html");
-                    scope.$apply();
+                    $rootScope.$apply();
                 });
-                waitsForAsync();
-                runs(function () {
-                    expect(win.location.pathname).toBe('/jqmng/ui/someFolder/externalPage.html');
+                uit.runs(function (window, location, $) {
+                    expect(location.pathname).toEndWith('/externalPage.html');
                     expect($("#basePageLink").prop("href")).toBe(startUrl);
-                    expect(win.tag).toBe(true);
+                    expect(window.tag).toBe(true);
                     $("#basePageLink").click();
                 });
-                waitsForAsync();
-                runs(function () {
-                    expect(win.tag).toBe(true);
-                    expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
+                uit.runs(function (window, location) {
+                    expect(window.tag).toBe(true);
+                    expect(location.pathname).toEndWith('/test-fixture.html');
                 });
-                runs(function () {
+                uit.runs(function ($location, $rootScope) {
                     $location.path("/someFolder/externalPage.html");
-                    scope.$apply();
+                    $rootScope.$apply();
                 });
-                waitsForAsync();
-                runs(function () {
+                uit.runs(function ($) {
                     expect($.mobile.activePage.attr("id")).toBe("externalPage");
                 });
 
@@ -200,36 +152,33 @@ describe("ngmRouting", function () {
     });
 
     describe('history support false', function () {
-        function init(hash, cb) {
-            initWithHistorySupport(hash, false, cb);
-        }
+        initWithHistorySupport(false);
 
         describe('initial page', function () {
 
             it('should be able to start at an internal subpage with hashbang', function () {
-                init('#!/test-fixture.html#page2');
-                waits(500);
-                runs(function () {
+                uit.url(baseUrl+'#!/test-fixture.html?{now}#page2');
+                uit.runs(function ($, $location, location) {
                     expect($.mobile.activePage.attr("id")).toBe("page2");
                     expect($location.path()).toBe('/test-fixture.html');
                     expect($location.hash()).toBe('page2');
-                    expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
+                    expect(location.pathname).toEndWith('/test-fixture.html');
                 });
             });
 
             it('should be able to start at an external subpage', function () {
-                init('#!/externalPage.html');
-                runs(function () {
+                uit.url(baseUrl+'#!/externalPage.html');
+                uit.runs(function ($, $location, location) {
                     expect($.mobile.activePage.attr("id")).toBe("externalPage");
                     expect($location.path()).toBe('/externalPage.html');
                     expect($location.hash()).toBe('');
-                    expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
+                    expect(location.pathname).toEndWith('/test-fixture.html');
                 });
             });
 
             it('should be able to start at an internal page when search parameters are used', function () {
-                init('?a=b#!/test-fixture.html?a=b#page2');
-                runs(function () {
+                uit.url(baseUrl+'?a=b#!/test-fixture.html?a=b&{now}#page2');
+                uit.runs(function($) {
                     expect($.mobile.activePage.attr("id")).toBe("page2");
                 });
             });
@@ -237,50 +186,45 @@ describe("ngmRouting", function () {
         });
 
         describe('navigation in the app', function () {
+            uit.url(baseUrl);
             it('should be able to change to an internal page', function () {
-                init();
-                runs(function () {
+                uit.runs(function ($, $location, $rootScope) {
                     expect($.mobile.activePage.attr("id")).toBe("start");
                     $location.hash("page2");
-                    scope.$apply();
+                    $rootScope.$apply();
                 });
-                waitsForAsync();
-                runs(function () {
+                uit.runs(function ($, $location, location) {
                     expect($.mobile.activePage.attr("id")).toBe("page2");
-                    expect($location.path()).toBe('');
+                    expect($location.path()).toBe('/test-fixture.html');
                     expect($location.hash()).toBe('page2');
-                    expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
+                    expect(location.pathname).toEndWith('/test-fixture.html');
                 });
             });
 
             it('should be able to load external pages in a different folder, adjust the links in that page, go back again and the same again', function () {
-                init();
-                runs(function () {
-                    win.tag = true;
+                uit.runs(function (window, $, $location, $rootScope) {
+                    window.tag = true;
                     expect($.mobile.activePage.attr("id")).toBe("start");
                     $location.path("/externalPage.html");
-                    scope.$apply();
+                    $rootScope.$apply();
                 });
-                waitsForAsync();
-                runs(function () {
-                    expect(win.tag).toBe(true);
+                uit.runs(function (window, $, $location, location) {
+                    expect(window.tag).toBe(true);
                     expect($.mobile.activePage.attr("id")).toBe("externalPage");
                     expect($location.path()).toBe('/externalPage.html');
                     expect($location.hash()).toBe('');
-                    expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
+                    expect(location.pathname).toEndWith('/test-fixture.html');
                     $("#basePageLink").click();
                 });
-                waitsForAsync();
-                runs(function () {
-                    expect(win.tag).toBe(true);
-                    expect(win.location.pathname).toBe('/jqmng/ui/test-fixture.html');
+                uit.runs(function (window, location) {
+                    expect(window.tag).toBe(true);
+                    expect(location.pathname).toEndWith('/test-fixture.html');
                 });
-                runs(function () {
+                uit.runs(function ($location, $rootScope) {
                     $location.path("/externalPage.html");
-                    scope.$apply();
+                    $rootScope.$apply();
                 });
-                waitsForAsync();
-                runs(function () {
+                uit.runs(function ($) {
                     expect($.mobile.activePage.attr("id")).toBe("externalPage");
                 });
             });
@@ -289,44 +233,40 @@ describe("ngmRouting", function () {
 
     describe('$location.back', function () {
         it('should go back in history when $location.back is used', function () {
-            initWithHistorySupport('#start', true);
-            waits(500);
-            runs(function () {
+            uit.url(baseUrl+"#start");
+            uit.runs(function ($, $location, $rootScope) {
                 expect($.mobile.activePage.attr("id")).toBe("start");
                 $location.hash('page2');
-                scope.$apply();
+                $rootScope.$apply();
             });
-            waitsForAsync();
-            runs(function () {
+            uit.runs(function ($, $location, $rootScope) {
                 expect($.mobile.activePage.attr("id")).toBe("page2");
                 $location.hash("start");
                 $location.backMode();
-                scope.$apply();
+                $rootScope.$apply();
             });
-            waitsForAsync();
-            runs(function () {
+            uit.runs(function ($, $history) {
                 expect($.mobile.activePage.attr("id")).toBe("start");
                 $history.go(1);
             });
-            waitsForAsync();
-            runs(function () {
+            uit.runs(function ($) {
                 expect($.mobile.activePage.attr("id")).toBe("page2");
             });
         });
     });
 
     describe('onActivate', function () {
-        function visitPage(page, Page2Controller, attrs) {
-            initWithHistorySupport(page, true, function (frame) {
+        function initPage2(Page2Controller, attrs) {
+            uit.append(function($, window, angular) {
                 var page = $('#page2');
                 page.attr("ng-controller", "Page2Controller");
-                frame.Page2Controller = Page2Controller;
+                window.Page2Controller = Page2Controller;
                 if (attrs) {
                     for (var attr in attrs) {
                         page.attr(attr, attrs[attr]);
                     }
                 }
-                var mod = frame.angular.module("ng");
+                var mod = angular.module("ng");
                 mod.config(function($routeProvider) {
                     $routeProvider.when('/start', {
                         templateUrl: '#start'
@@ -343,7 +283,8 @@ describe("ngmRouting", function () {
             var onActivateArguments, onActivateArgumentsOnBeforeShow,
                 expectedArgs = {a:2};
             var beforeShowCallCount = 0;
-            visitPage("#start", function ($scope) {
+            uit.url(baseUrl+"#start");
+            initPage2(function ($scope) {
                 $scope.onActivate = function () {
                     onActivateArguments = arguments;
                 };
@@ -352,7 +293,7 @@ describe("ngmRouting", function () {
                     onActivateArgumentsOnBeforeShow = onActivateArguments;
                 }
             }, {'ngm-pagebeforeshow':"onBeforeShow()"});
-            runs(function () {
+            uit.runs(function ($location, $rootScope) {
                 beforeShowCallCount = 0;
                 onActivateArgumentsOnBeforeShow = undefined;
                 expect(onActivateArguments).toBeUndefined();
@@ -361,10 +302,9 @@ describe("ngmRouting", function () {
                 $location.routeOverride({
                     locals:expectedArgs
                 });
-                scope.$apply();
+                $rootScope.$apply();
             });
-            waitsForAsync();
-            runs(function () {
+            uit.runs(function () {
                 expect(onActivateArguments).toEqual([expectedArgs.a]);
                 expect(onActivateArgumentsOnBeforeShow).toBe(onActivateArguments);
                 expect(beforeShowCallCount).toBe(1);
@@ -374,27 +314,26 @@ describe("ngmRouting", function () {
         it("should call the onActivate function on the target page on back navigation", function () {
             var onActivateArguments,
                 expectedArgs = {a:2};
-            visitPage("#!/page2", function ($scope) {
+            uit.url(baseUrl+"#!/page2");
+            initPage2(function ($scope) {
                 $scope.onActivate = function () {
                     onActivateArguments = arguments;
                 }
             });
-            runs(function () {
+            uit.runs(function ($location, $rootScope) {
                 $location.path("/start");
-                scope.$apply();
+                $rootScope.$apply();
             });
-            waitsForAsync();
-            runs(function () {
+            uit.runs(function ($location, $rootScope) {
                 expect(onActivateArguments).toBeTruthy();
                 expect(onActivateArguments.a).toBeUndefined();
                 $location.goBack();
                 $location.routeOverride({
                     locals:expectedArgs
                 });
-                scope.$apply();
+                $rootScope.$apply();
             });
-            waitsForAsync();
-            runs(function () {
+            uit.runs(function () {
                 expect(onActivateArguments).toEqual([expectedArgs.a]);
             });
         });
@@ -403,17 +342,18 @@ describe("ngmRouting", function () {
 
     describe('vclick events on empty anchor tags', function () {
         var el;
+        uit.url(baseUrl+"#start");
 
         function init(hrefValue) {
-            initWithHistorySupport('#start', true, function (win) {
-                win.$("#start").append('<div data-role="content"><a href="' + hrefValue + '" id="link"></a></div>');
-                el = win.$("#link");
+            uit.append(function ($) {
+                $("#start").append('<div data-role="content"><a href="' + hrefValue + '" id="link"></a></div>');
+                el = $("#link");
             });
         }
 
         it('should execute a vclick handler when a click event occurs on empty links', function () {
             init("");
-            runs(function () {
+            uit.runs(function () {
                 var spy = jasmine.createSpy('vclick');
                 el.bind('vclick', spy);
                 el.trigger('click');
@@ -423,7 +363,7 @@ describe("ngmRouting", function () {
 
         it('should execute a vclick handler when a click event occurs on links with href="#"', function () {
             init("#");
-            runs(function () {
+            uit.runs(function () {
                 var spy = jasmine.createSpy('vclick');
                 el.bind('vclick', spy);
                 el.trigger('click');
@@ -433,7 +373,7 @@ describe("ngmRouting", function () {
 
         it('should execute a vclick handler when a click event occurs on a link with a filled href attribute', function() {
             init("#someHash");
-            runs(function () {
+            uit.runs(function () {
                 var spy = jasmine.createSpy('vclick');
                 el.bind('vclick', spy);
                 el.trigger('click');
@@ -444,9 +384,9 @@ describe("ngmRouting", function () {
 
         it('should not update $location nor window.location when an empty link is clicked', function () {
             init("");
-            runs(function () {
+            uit.runs(function ($location, $rootScope) {
                 $location.hash('someHash');
-                scope.$apply();
+                $rootScope.$apply();
                 el.trigger('click');
                 expect($location.hash()).toBe('someHash');
             });
@@ -454,9 +394,9 @@ describe("ngmRouting", function () {
 
         it('should not update $location nor window.location when a link with href="#" is clicked', function () {
             init("#");
-            runs(function () {
+            uit.runs(function ($location, $rootScope) {
                 $location.hash('someHash');
-                scope.$apply();
+                $rootScope.$apply();
                 el.trigger('click');
                 expect($location.hash()).toBe('someHash');
             });
@@ -464,9 +404,9 @@ describe("ngmRouting", function () {
 
         it('should update $location if a link with a filled href attribute is clicked', function() {
             init("#someHash2");
-            runs(function () {
+            uit.runs(function ($location, $rootScope) {
                 $location.hash('someHash');
-                scope.$apply();
+                $rootScope.$apply();
                 el.trigger('click');
                 expect($location.hash()).toBe('someHash2');
             });
@@ -477,16 +417,17 @@ describe("ngmRouting", function () {
     describe('form with empty action', function() {
         it('allows to register a custom click handler', function() {
             var clickSpy, submit;
-            initWithErrorWatching('/jqmng/ui/test-fixture.html', function(win) {
-                var page = win.$("#start");
+            uit.url(baseUrl);
+            uit.append(function(window, $) {
+                var page = $("#start");
                 page.append('<div data-role="content"><form data-ajax="false" ng-click="click()"><inputy type="submit" id="submit"></div>');
                 page.attr("ng-controller", "MainCtrl");
-                win.MainCtrl = function($scope) {
+                window.MainCtrl = function($scope) {
                     $scope.click = clickSpy = jasmine.createSpy('click');
                 };
                 submit = page.find("#submit");
             });
-            runs(function() {
+            uit.runs(function() {
                 submit.click();
                 expect(clickSpy).toHaveBeenCalled();
             });

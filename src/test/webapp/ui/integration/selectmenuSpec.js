@@ -1,16 +1,18 @@
 describe("selectmenu", function () {
     describe('non native menus and popups', function () {
-        var scope, dialogOpen;
+        var dialogOpen, scope;
+
+        uit.url('../ui/fixtures/test-fixture.html');
+        uit.append(function($) {
+            var page = $('#start');
+            page.append(
+                '<div data-role="content" ng-init="mysel=\'v1\'">' +
+                    '<select ng-model="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
+                    '</div>');
+        });
+
         beforeEach(function() {
-            loadHtml('/jqmng/ui/test-fixture.html', function (frame) {
-                var page = frame.$('#start');
-                page.append(
-                    '<div data-role="content" ng-init="mysel=\'v1\'">' +
-                        '<select ng-model="mysel" id="mysel" data-native-menu="false"><option value="v1" default="true">v1</option><option value="v2">v2</option></select>' +
-                        '</div>');
-            });
-            runs(function () {
-                var $ = testframe().$;
+            uit.runs(function ($, window) {
                 var page = $("#start");
                 var select = page.find("#mysel");
                 expect(select[0].value).toEqual("v1");
@@ -21,9 +23,9 @@ describe("selectmenu", function () {
                 };
                 expect(dialogOpen()).toBeFalsy();
                 // find the menu and click on the second entry
-                var oldHeight = testframe().$.fn.height;
-                testframe().$.fn.height = function () {
-                    if (this[0].window == testframe()) {
+                var oldHeight = $.fn.height;
+                $.fn.height = function () {
+                    if (this[0].window == window) {
                         return 10;
                     }
                     return oldHeight.apply(this, arguments);
@@ -35,8 +37,7 @@ describe("selectmenu", function () {
             });
         });
         it('should save the ui value into the model', function () {
-            runs(function () {
-                var $ = testframe().$;
+            uit.runs(function ($) {
                 var dialog = $(".ui-dialog");
                 dialog.find('li a').eq(1).trigger('click');
                 expect(scope.mysel).toEqual("v2");
@@ -46,8 +47,7 @@ describe("selectmenu", function () {
         });
 
         it('should close the popup when the cancel button is hit', function () {
-            runs(function () {
-                var $ = testframe().$;
+            uit.runs(function ($) {
                 var dialog = $(".ui-dialog");
                 dialog.find(':jqmData(role="header") a').trigger('click');
                 expect(scope.mysel).toEqual("v1");

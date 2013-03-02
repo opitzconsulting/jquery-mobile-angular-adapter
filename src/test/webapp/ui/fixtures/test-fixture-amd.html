@@ -2,16 +2,16 @@
 <html ng-app>
 <head>
     <title>MobileToys</title>
-    <script>opener && opener.instrument && opener.instrument(window);</script>
-    <link rel="stylesheet" href="../lib/jquery.mobile.css"/>
+    <script>parent.uitest && parent.uitest.instrument(window);</script>
+    <link rel="stylesheet" href="../../lib/jquery.mobile.css"/>
 
-    <script src="../lib/require.js"></script>
+    <script src="../../lib/require.js"></script>
     <script>
         require.config({
             paths:{
-                'jquery':'../lib/jquery',
-                'angular':'../lib/angular',
-                'jquery.mobile':'../lib/jquery.mobile'
+                'jquery':'../../lib/jquery',
+                'angular':'../../lib/angular',
+                'jquery.mobile':'../../lib/jquery.mobile'
             },
             shim:{
                 'angular':{
@@ -30,7 +30,7 @@
         require.onResourceLoad = tryHoldReady;
         require([
             "jquery",
-            "../jquery-mobile-angular-adapter"
+            "../../jquery-mobile-angular-adapter"
         ], function (jquery) {
             jquery.holdReady(false);
         });

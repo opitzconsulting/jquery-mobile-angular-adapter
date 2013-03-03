@@ -114,7 +114,7 @@ Install the dependencies: `npm install`.
 
 Build it: `./node_modules/.bin/grunt`
 
-- set the right browser in the Gruntfile.js before (testacular -> ci -> browsers)!
+- set the right path to phantomjs before, e.g. `export PHANTOMJS_BIN=./node_modules/.bin/phantomjs`.
 
 Auto-Run tests when file change: `./node_modules/.bin/grunt dev`
 

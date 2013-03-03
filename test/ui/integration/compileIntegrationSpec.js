@@ -41,17 +41,8 @@ describe('compileIntegration', function () {
     });
 
     describe("page stamping", function() {
-        uit.append(function(angular) {
-            var ng = angular.module("ng");
-            ng.config(['$provide', function ($provide) {
-                $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
-                    $sniffer.history = false;
-                    return $sniffer;
-                }]);
-            }]);
-        });
         uit.url('../ui/fixtures/empty-fixture.html');
-        iit("should allow to use jqm pages with ng-repeat", function() {
+        it("should allow to use jqm pages with ng-repeat", function() {
             uit.append(function(window,$) {
                 $("body").attr("ng-controller", "PageController");
                 $("body").append('<div id="{{page.name}}" data-role="page" ng-repeat="page in pages"><div data-role="header"><h1>{{page.title}}</h1></div><div data-role="content"><a href="" class="addPage" ng-click="addPage()">Add page</a><a href="#{{page.next}}" class="nextPage">Next page</a></div></div>');

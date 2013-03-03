@@ -10,6 +10,3 @@ before_script:
 
 script:
   - grunt travis
-
-branches:
-  only: travis-test  

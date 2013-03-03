@@ -134,7 +134,8 @@ module.exports = function(grunt) {
           configFile: 'testacular.conf.js',
           singleRun: true,
           browsers: [".travis/start-chrome.sh"],
-          keepalive: true
+          keepalive: true,
+          captureTimeout: 10000
         }
       },
       localBuild: {

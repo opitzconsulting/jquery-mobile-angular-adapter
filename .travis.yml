@@ -6,6 +6,9 @@ before_script:
   - ./.travis/scripts/install_chrome.sh
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
+  - ls /Applications/Google*
+  - which google-chrome
+  - ./.travis/chrome-start.sh
   - npm link
   - npm install -g grunt-cli
 

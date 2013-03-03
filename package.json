@@ -18,7 +18,8 @@
         "grunt-contrib-uglify": "latest",
         "grunt-testacular": "latest",
         "mocha": "latest",
-        "qunit": "latest"
+        "qunit": "latest",
+        "phantomjs": "latest"
     },
     "engine": "node *",
     "repository": {

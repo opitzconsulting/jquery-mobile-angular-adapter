@@ -2,14 +2,14 @@ language: node_js
 node_js:
   - 0.8
 
-before_install:
-  - ./.travis/scripts/install_chrome.sh
+before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
-
-before_script:
   - npm link
   - npm install -g grunt-cli
 
 script:
   - grunt travis
+
+branches:
+  only: travis-test  

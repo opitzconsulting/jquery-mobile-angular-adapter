@@ -55,7 +55,6 @@ describe('compileIntegration', function () {
                     $scope.addPage();
                 };
             });
-            waits(500);
             uit.runs(function($) {
                 var pages = $("body").children('div[data-role="page"]');
                 expect(pages.length).toBe(1);

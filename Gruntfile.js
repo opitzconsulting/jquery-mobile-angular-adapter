@@ -133,7 +133,7 @@ module.exports = function(grunt) {
         options: {
           configFile: 'testacular.conf.js',
           singleRun: true,
-          browsers: [".travis/chrome-start.sh"],
+          browsers: ["Chrome"],
           keepalive: true
         }
       },

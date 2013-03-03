@@ -1,4 +1,4 @@
-/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-02
+/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-03
 * https://github.com/tigbro/jquery-mobile-angular-adapter
 * Copyright (c) 2013 Tobias Bosch; Licensed MIT */
 (function(factory) {

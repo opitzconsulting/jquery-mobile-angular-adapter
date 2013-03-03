@@ -129,11 +129,11 @@ module.exports = function(grunt) {
           keepalive: false
         }
       },
-      ci: {
+      travis: {
         options: {
           configFile: 'testacular.conf.js',
           singleRun: true,
-          browsers: ['Firefox'],
+          browsers: [".travis/chrome-start.sh"],
           keepalive: true
         }
       },
@@ -159,7 +159,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('default', ['jshint','concat','connect','testacular:localBuild']);
 
-  grunt.registerTask('travis', ['jshint','concat','connect','testacular:ci']);
+  grunt.registerTask('travis', ['jshint','concat','connect','testacular:travis']);
 
   grunt.loadNpmTasks('grunt-testacular');
   grunt.loadNpmTasks('grunt-contrib-concat');

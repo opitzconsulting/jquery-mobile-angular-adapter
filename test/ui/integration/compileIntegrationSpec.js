@@ -42,7 +42,7 @@ describe('compileIntegration', function () {
 
     describe("page stamping", function() {
         uit.url('../ui/fixtures/empty-fixture.html');
-        it("should allow to use jqm pages with ng-repeat", function() {
+        iit("should allow to use jqm pages with ng-repeat", function() {
             uit.append(function(window,$) {
                 $("body").attr("ng-controller", "PageController");
                 $("body").append('<div id="{{page.name}}" data-role="page" ng-repeat="page in pages"><div data-role="header"><h1>{{page.title}}</h1></div><div data-role="content"><a href="" class="addPage" ng-click="addPage()">Add page</a><a href="#{{page.next}}" class="nextPage">Next page</a></div></div>');
@@ -55,6 +55,7 @@ describe('compileIntegration', function () {
                     $scope.addPage();
                 };
             });
+            waits(500);
             uit.runs(function($) {
                 var pages = $("body").children('div[data-role="page"]');
                 expect(pages.length).toBe(1);

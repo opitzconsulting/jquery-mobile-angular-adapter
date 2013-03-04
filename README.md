@@ -383,6 +383,12 @@ Note: `pagerId.cache` stores the last result that was returns for a `list | page
       - As a consequence, we are only able to implement one strategy for links to pages in dialogs,
         no matter if the link goes to a dialog or a normal page.
 
+### widget `slider` in a `<select>`
+
+jQuery Mobile does not yet support refreshing a `slider` widget when child `<option>` elements have changed. As a consequence, using `<select data-role="slider">` with `ng-options` only uses
+the initial state of the `ng-options` collection. Chaning the `ng-options` collection will not
+update the widget.
+
 
 ##Integrating custom jquery mobile plugins with angular
 

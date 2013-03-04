@@ -6,19 +6,20 @@ Test page during development.
 <head>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
 
-    <link rel="stylesheet" href="lib/jquery.mobile.css"/>
+    <link rel="stylesheet" href="../lib/jquery.mobile.css"/>
 
-    <script src="lib/jquery.js"></script>
-    <script src="lib/jquery.mobile.js"></script>
-    <script src="lib/angular.js"></script>
-    <script src="jqm-angular.jsp"></script>
+    <script src="../lib/jquery.js"></script>
+    <script src="../lib/jquery.mobile.js"></script>
+    <script src="../lib/angular.js"></script>
+    <script src="../compiled/jquery-mobile-angular-adapter.js"></script>
 
 <script>
     var mod = angular.module("ngm", []);
 
     mod.controller('MainController', function($scope) {
-
-        $scope.options = [{'select' : "1", 'label':'yes'},
+        $scope.labels = ['no','yes'];
+        $scope.options = [
+            {'select' : "1", 'label':'yes'},
             {'select' : "0", 'label':'no'}]
     });
 
@@ -29,7 +30,21 @@ Test page during development.
 ​
 <div id="main" data-role="page" ng-controller="MainController">
     <div data-role="content">
-            <a href="sample.pdf" data-role="button" data-ajax="false">Pdf file</a>
+        <form name="myForm" ng-init="options2=[1,2]" >
+            <!--
+            <select ng-model="mysel" data-role="slider" ng-options="o for o in options2"></select>
+            <select data-role="slider" ng-options='o.select as o.label for o in options' ng-model="name" name="name">
+            </select>    
+            {{name}}
+            <select data-role="slider" ng-model="name2" name="name2" ng-init="name2='0'">
+                <option value="0">{{labels[0]}}</option>
+                <option value="1">{{labels[1]}}</option>
+            </select>
+        -->
+        <select name="mysel" ng-model="mysel" data-role="slider"><option value="1">0</option><option value="2">1</option></select>
+            {{mysel}}
+            {{myForm | json}}
+        </form>
     </div>
 </div>
 

@@ -108,7 +108,8 @@ module.exports = function(grunt) {
           angular: true,
           inject: true,
           module: true,
-          uit: true
+          uit: true,
+          dump: true
         }
       }
     },

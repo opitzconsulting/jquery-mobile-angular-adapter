@@ -1,4 +1,4 @@
-/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-03
+/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-04
 * https://github.com/tigbro/jquery-mobile-angular-adapter
 * Copyright (c) 2013 Tobias Bosch; Licensed MIT */
 (function(factory) {
@@ -632,13 +632,19 @@ factory(window.jQuery, window.angular);
                 restrict:'A',
                 // after the normal angular widgets like input, ngModel, ...
                 priority:0,
-                require:['?ngModel'],
+                require:['?ngModel', '?select'],
                 compile:function (tElement, tAttrs) {
                     var initArgs = JSON.parse(tAttrs[directiveName]);
                     return {
+                        pre:function (scope, iElement, iAttrs, ctrls) {
+                            var widgetSpec = jqmNgWidget.lookup(widgetName);
+                            if (widgetSpec.preLink) {
+                                widgetSpec.preLink(widgetName, scope, iElement, iAttrs, ctrls[0], ctrls[1]);
+                            }
+                        },
                         post:function (scope, iElement, iAttrs, ctrls) {
                             var widgetSpec = jqmNgWidget.lookup(widgetName);
-                            widgetSpec.link(widgetName, scope, iElement, iAttrs, ctrls[0]);
+                            widgetSpec.link(widgetName, scope, iElement, iAttrs, ctrls[0], ctrls[1]);
                         }
                     };
                 }
@@ -804,7 +810,7 @@ factory(window.jQuery, window.angular);
         jqmNgWidgetProvider.widget("dialog", ["jqmNgWidget", dialogWidget]);
         jqmNgWidgetProvider.widget("controlgroup", ["jqmNgWidget", controlgroupWidget]);
         jqmNgWidgetProvider.widget("textinput", ["jqmNgWidget", defaultWidget]);
-        jqmNgWidgetProvider.widget("slider", ["jqmNgWidget", defaultWidget]);
+        jqmNgWidgetProvider.widget("slider", ["jqmNgWidget", "$timeout", sliderWidget]);
         jqmNgWidgetProvider.widget("listview", ["jqmNgWidget", defaultWidget]);
         jqmNgWidgetProvider.widget("collapsibleset", ["jqmNgWidget", defaultWidget]);
         jqmNgWidgetProvider.widget("selectmenu", ["jqmNgWidget", defaultWidget]);
@@ -813,12 +819,42 @@ factory(window.jQuery, window.angular);
         jqmNgWidgetProvider.widget("popup", ["jqmNgWidget", defaultWidget]);
     }]);
 
+    function sliderWidget(jqmNgWidet, $timeout) {
+        return {
+            link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
+                if (selectCtrl) {
+                    // Note: scope.$evalAsync is not enough here :-(
+                    $timeout(function() {
+                        selectSecondOptionIfFirstIsUnknownOption(iElement, ngModelCtrl);
+                        jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
+                        jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
+                    });
+                } else {
+                    jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
+                    jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
+                }
+            }
+        };
+
+        function selectSecondOptionIfFirstIsUnknownOption(iElement, ngModelCtrl) {
+            var options = iElement.children("option"),
+                initValue = options.eq(0).val(),
+                selectedIndex;
+            if (initValue === '?' || initValue.indexOf('? ')===0) {
+                options.eq(1).prop("selected", true);
+                var _$pristine = ngModelCtrl.$pristine;
+                ngModelCtrl.$pristine = false;
+                iElement.trigger("change");
+                ngModelCtrl.$pristine = _$pristine;
+            }
+        }
+    }
+
     function defaultWidget(jqmNgWidet) {
         return {
-            link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl) {
-                jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
-
-                jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
+            link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
+                    jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
+                    jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
             }
         };
     }

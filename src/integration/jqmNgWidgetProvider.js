@@ -76,13 +76,19 @@
                 restrict:'A',
                 // after the normal angular widgets like input, ngModel, ...
                 priority:0,
-                require:['?ngModel'],
+                require:['?ngModel', '?select'],
                 compile:function (tElement, tAttrs) {
                     var initArgs = JSON.parse(tAttrs[directiveName]);
                     return {
+                        pre:function (scope, iElement, iAttrs, ctrls) {
+                            var widgetSpec = jqmNgWidget.lookup(widgetName);
+                            if (widgetSpec.preLink) {
+                                widgetSpec.preLink(widgetName, scope, iElement, iAttrs, ctrls[0], ctrls[1]);
+                            }
+                        },
                         post:function (scope, iElement, iAttrs, ctrls) {
                             var widgetSpec = jqmNgWidget.lookup(widgetName);
-                            widgetSpec.link(widgetName, scope, iElement, iAttrs, ctrls[0]);
+                            widgetSpec.link(widgetName, scope, iElement, iAttrs, ctrls[0], ctrls[1]);
                         }
                     };
                 }

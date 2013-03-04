@@ -7,7 +7,7 @@
         jqmNgWidgetProvider.widget("dialog", ["jqmNgWidget", dialogWidget]);
         jqmNgWidgetProvider.widget("controlgroup", ["jqmNgWidget", controlgroupWidget]);
         jqmNgWidgetProvider.widget("textinput", ["jqmNgWidget", defaultWidget]);
-        jqmNgWidgetProvider.widget("slider", ["jqmNgWidget", defaultWidget]);
+        jqmNgWidgetProvider.widget("slider", ["jqmNgWidget", "$timeout", sliderWidget]);
         jqmNgWidgetProvider.widget("listview", ["jqmNgWidget", defaultWidget]);
         jqmNgWidgetProvider.widget("collapsibleset", ["jqmNgWidget", defaultWidget]);
         jqmNgWidgetProvider.widget("selectmenu", ["jqmNgWidget", defaultWidget]);
@@ -16,12 +16,42 @@
         jqmNgWidgetProvider.widget("popup", ["jqmNgWidget", defaultWidget]);
     }]);
 
+    function sliderWidget(jqmNgWidet, $timeout) {
+        return {
+            link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
+                if (selectCtrl) {
+                    // Note: scope.$evalAsync is not enough here :-(
+                    $timeout(function() {
+                        selectSecondOptionIfFirstIsUnknownOption(iElement, ngModelCtrl);
+                        jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
+                        jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
+                    });
+                } else {
+                    jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
+                    jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
+                }
+            }
+        };
+
+        function selectSecondOptionIfFirstIsUnknownOption(iElement, ngModelCtrl) {
+            var options = iElement.children("option"),
+                initValue = options.eq(0).val(),
+                selectedIndex;
+            if (initValue === '?' || initValue.indexOf('? ')===0) {
+                options.eq(1).prop("selected", true);
+                var _$pristine = ngModelCtrl.$pristine;
+                ngModelCtrl.$pristine = false;
+                iElement.trigger("change");
+                ngModelCtrl.$pristine = _$pristine;
+            }
+        }
+    }
+
     function defaultWidget(jqmNgWidet) {
         return {
-            link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl) {
-                jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
-
-                jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
+            link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
+                    jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
+                    jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
             }
         };
     }

@@ -48,6 +48,10 @@
                         var initArgs = JSON.parse(iAttrs[calcDirectiveName(widgetName)]);
                         delegateDomManipToWrapper(function() {
                             $.fn.orig[widgetName].apply(iElement, initArgs);
+                            var instance = iElement.data(widgetName);
+                            if (instance) {
+                                instance.createdByNg = true;
+                            }
                         }, iElement);
                     },
                     bindDefaultAttrsAndEvents: bindDefaultAttrsAndEvents,

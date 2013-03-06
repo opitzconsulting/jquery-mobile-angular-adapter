@@ -21,108 +21,38 @@ describe("dialog", function () {
     });
 
     describe('routing for dialogs', function () {
-        it('should replace the $location with a special dialog url when a dialog is opened', inject(function ($location, $rootScope, $browser) {
-            var c = testutils.compileInPage('<div></div>');
-            var page = $.mobile.activePage = c.page;
-            page.jqmData("role", "dialog");
-            $rootScope.$broadcast('jqmPagebeforeshow');
+        it('should mark the history entry with .tempUrl when the dialog is opened', inject(function ($location, $rootScope, $browser, $history) {
+            $location.url('/somePath#someHash');
             $rootScope.$apply();
-
-            expect(angular.mock.$Browser.prototype.url).toHaveBeenCalledWith('http://server/&ui-state=dialog', true);
-            expect($browser.url()).toBe('http://server/&ui-state=dialog');
+            var page = $.mobile.activePage = testutils.compile('<div data-role="dialog"></div>');
+            page.trigger("pagebeforeshow");
+            $rootScope.$apply();
+            expect($location.url()).toBe('/somePath#someHash');
+            expect($history.urlStack[$history.activeIndex].tempUrl).toBe(true);
         }));
-        it('should go back in history when a dialog is closed and the url is the special dialog url', inject(function ($location) {
-            spyOn($location, 'goBack');
-            var c = testutils.compile('<div data-role="dialog"></div>');
-            $location.url("/&ui-state=dialog");
-            c.trigger("pagebeforeshow");
-            c.dialog("close");
-            expect($location.goBack).toHaveBeenCalled();
+        it('should remove dialog history entries when a normal page is visited', inject(function ($location, $history, $rootScope) {
+            spyOn($history, 'removePastEntries');
+            var page = $.mobile.activePage = testutils.compile('<div data-role="page"></div>');
+            $history.urlStack = [{url: '/dialog1', tempUrl:true},{url: '/page1'},{url: '/dialog2', tempUrl: true},{url: '/page2'}];
+            $history.activeIndex = 3;
+            page.trigger("pagebeforeshow");
+            expect($history.removePastEntries).toHaveBeenCalledWith(1);
         }));
-        it('should be able to go to a next page with a hash location from within a dialog with empty initial path', inject(function($rootScope, $location, $browser) {
-            var c = testutils.compileInPage('<div></div>');
-            var page = $.mobile.activePage = c.page;
-            page.jqmData("role", "dialog");
-            // this happens e.g. with history support disabled when navigating to a dialog from the initial page.
-            $location.$$path = '';
-            $location.url('#page1');
-            $rootScope.$broadcast('jqmPagebeforeshow');
-            $rootScope.$apply();
-
-            expect($browser.url()).toBe('http://server/&ui-state=dialog');
-
-            $location.hash("page2");
-            $rootScope.$apply();
-            expect($browser.url()).toBe('http://server/#page2');
+        it('should go back on close if the dialog was created by angular', inject(function($location, $rootScope, $history) {
+            spyOn($history, 'goBack');
+            var page = $.mobile.activePage = testutils.compile('<div data-role="dialog"></div>');
+            page.trigger("pagebeforeshow");
+            page.dialog("close");
+            expect($history.goBack).toHaveBeenCalled();
         }));
-        it('should be able to go to a next page with a hash location from within a dialog with non empty initial path', inject(function($rootScope, $location, $browser) {
-            var c = testutils.compileInPage('<div></div>');
-            var page = $.mobile.activePage = c.page;
-            page.jqmData("role", "dialog");
-            $location.url('/someUrl#page1');
-            $rootScope.$broadcast('jqmPagebeforeshow');
-            $rootScope.$apply();
-
-            expect($browser.url()).toBe('http://server/&ui-state=dialog');
-            $location.hash("page2");
-            $rootScope.$apply();
-            expect($browser.url()).toBe('http://server/someUrl#page2');
-        }));
-        it('should be able to go the a next page with a hash location if the first $locationChangeStart event was prevented', inject(function($rootScope, $location, $browser) {
-            var prevent = true;
-            var c = testutils.compileInPage('<div></div>');
-            var page = $.mobile.activePage = c.page;
-            page.jqmData("role", "dialog");
-            $location.url('/someUrl#page1');
-            $rootScope.$broadcast('jqmPagebeforeshow');
-            $rootScope.$apply();
-            $rootScope.$on("$locationChangeStart", function(event) {
-                if (prevent) {
-                    event.preventDefault();
-                }
-            });
-            $location.hash("page2");
-            $rootScope.$apply();
-            expect($browser.url()).toBe('http://server/&ui-state=dialog');
-            prevent = false;
-
-            $location.hash("page3");
-            $rootScope.$apply();
-            expect($browser.url()).toBe('http://server/someUrl#page3');
+        it('should not go back on close if the dialog was not created by angular', inject(function($location, $rootScope, $history) {
+            spyOn($history, 'goBack');
+            var dialog = $('<div data-role="dialog"></div>');
+            dialog.dialog();
+            dialog.dialog("close");
+            expect($history.goBack).not.toHaveBeenCalled();
         }));
 
-        it('should keep dialog urls even when a default routing rule is used', function() {
-            module(function($routeProvider) {
-                $routeProvider.otherwise({
-                    redirectTo:"/test"
-                });
-            });
-            inject(function ($location, $rootScope, $browser) {
-                $location.url('/&ui-state=dialog');
-                $rootScope.$apply();
-                expect($browser.url()).toBe('http://server/&ui-state=dialog');
-            });
-        });
-
-        it('should remove the dialog from browser history when leaving a dialog', inject(function($location, $browser, $rootScope, $history) {
-            var c = testutils.compileInPage('<div></div>');
-            var page = $.mobile.activePage = c.page;
-            page.jqmData("role", "dialog");
-            $location.url('/someUrl#page1');
-            $rootScope.$broadcast('jqmPagebeforeshow');
-            $rootScope.$apply();
-
-            expect(angular.mock.$Browser.prototype.url).toHaveBeenCalledWith('http://server/&ui-state=dialog', true);
-            expect($browser.url()).toBe('http://server/&ui-state=dialog');
-            expect($history.urlStack).toEqual(["http://server/&ui-state=dialog"]);
-
-            $location.hash("page2");
-            $rootScope.$apply();
-            expect(angular.mock.$Browser.prototype.url).toHaveBeenCalledWith('http://server/someUrl#page2', true);
-            expect($browser.url()).toBe('http://server/someUrl#page2');
-            expect($history.urlStack).toEqual(["http://server/someUrl#page2"]);
-
-        }));
 
     });
 });

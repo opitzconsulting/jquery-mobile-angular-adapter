@@ -1,4 +1,4 @@
-/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-04
+/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-06
 * https://github.com/tigbro/jquery-mobile-angular-adapter
 * Copyright (c) 2013 Tobias Bosch; Licensed MIT */
 (function(factory) {
@@ -604,6 +604,10 @@ factory(window.jQuery, window.angular);
                         var initArgs = JSON.parse(iAttrs[calcDirectiveName(widgetName)]);
                         delegateDomManipToWrapper(function() {
                             $.fn.orig[widgetName].apply(iElement, initArgs);
+                            var instance = iElement.data(widgetName);
+                            if (instance) {
+                                instance.createdByNg = true;
+                            }
                         }, iElement);
                     },
                     bindDefaultAttrsAndEvents: bindDefaultAttrsAndEvents,
@@ -1023,46 +1027,28 @@ factory(window.jQuery, window.angular);
     // implementation functions
 
     function registerBrowserDecorator($provide) {
-        $provide.decorator('$rootScope', ['$delegate', rootScopeSuppressEventInDigestCycleDecorator]);
-        $provide.decorator('$location', ['$delegate', '$history', locationBackDecorator]);
         $provide.decorator('$browser', ['$delegate', browserHashReplaceDecorator]);
+        $provide.decorator('$browser', ['$delegate', allowFileUrlsInBaseHref]);
         $provide.decorator('$browser', ['$delegate', '$history', '$rootScope', '$injector', browserHistoryDecorator]);
-
-        function rootScopeSuppressEventInDigestCycleDecorator($rootScope) {
-            var suppressedEvents = {};
-            $rootScope.suppressEventInDigestCycle = function (eventName) {
-                suppressedEvents[eventName] = true;
-            };
-            var _$broadcast = $rootScope.$broadcast;
-            $rootScope.$broadcast = function (eventName) {
-                if (suppressedEvents[eventName]) {
-                    return {};
-                }
-                return _$broadcast.apply(this, arguments);
-            };
-            var _$digest = $rootScope.$digest;
-            $rootScope.$digest = function () {
-                var res = _$digest.apply(this, arguments);
-                suppressedEvents = {};
-                return res;
-            };
-            return $rootScope;
-        }
+        $provide.decorator('$location', ['$delegate', '$history', locationBackDecorator]);
 
         function locationBackDecorator($location, $history) {
-            $location.backMode = function () {
+            $location.back = function () {
                 $location.$$replace = "back";
                 return this;
             };
-            $location.goBack = function () {
-                if ($history.activeIndex <= 0) {
-                    throw new Error("There is no page in the history to go back to!");
-                }
-                this.$$parse($history.urlStack[$history.activeIndex - 1]);
-                this.backMode();
-                return this;
-            };
             return $location;
+        }
+
+        function allowFileUrlsInBaseHref($browser) {
+            var _baseHref = $browser.baseHref;
+            $browser.baseHref = function () {
+                // Patch for baseHref to return the correct path also for file-urls.
+                // See bug https://github.com/angular/angular.js/issues/1690
+                var href = _baseHref.call(this);
+                return href ? href.replace(/^file?\:\/\/[^\/]*/, '') : href;
+            };
+            return $browser;
         }
 
         function browserHashReplaceDecorator($browser) {
@@ -1078,97 +1064,138 @@ factory(window.jQuery, window.angular);
         }
 
         function browserHistoryDecorator($browser, $history, $rootScope, $injector) {
-            var _url = $browser.url;
+            var _url = $browser.url,
+                _onUrlChange = $browser.onUrlChange,
+                _stopOnUrlChangeListeners;
             var cachedRouteOverride = null;
-            $browser.url = function (url, replace) {
-                if (url) {
-                    // setter
-                    var res = $history.onUrlChangeProgrammatically(url, replace === true, replace === 'back');
-                    if (res === false) {
-                        // cancel navigation and rely on the callback
-                        // from browser history.
-                        var $location = $injector.get('$location');
-                        cachedRouteOverride = $location.routeOverride();
-                        $location.$$parse(_url.call(this));
-                        // suppress $locationChangeSuccess and $locationChangeStart event in this eval loop,
-                        // so the routes don't get updated!
-                        $rootScope.suppressEventInDigestCycle('$locationChangeStart');
-                        $rootScope.suppressEventInDigestCycle('$locationChangeSuccess');
-                        return;
-                    }
-                }
-                return _url.apply(this, arguments);
-            };
-            var _onUrlChange = $browser.onUrlChange;
-            $browser.onUrlChange(function (newUrl) {
+
+            _onUrlChange.call($browser, function(newUrl) {
                 if (cachedRouteOverride) {
                     var $location = $injector.get('$location');
                     $location.routeOverride(cachedRouteOverride);
                 }
                 $history.onUrlChangeBrowser(newUrl);
+                if (_stopOnUrlChangeListeners) {
+                    _stopOnUrlChangeListeners.apply(this, arguments);
+                }
             });
+            $browser.onUrlChange = function(cb) {
+                _onUrlChange.call(this, function() {
+                    if (!_stopOnUrlChangeListeners) {
+                        cb.apply(this, arguments);
+                    }
+                });
+            };
+
+            $browser.stopOnUrlChangeListeners = function(replaceCallack) {
+                _stopOnUrlChangeListeners = replaceCallack;
+            };
+
+            $history.removePastEntries = function(number) {
+                var current = $history.urlStack[$history.activeIndex];
+                $browser.stopOnUrlChangeListeners(function() {
+                    if (current) {
+                        $browser.url(current.url, true);
+                        $history.urlStack[$history.activeIndex] = current;
+                        current = null;
+                    } else {
+                        $browser.stopOnUrlChangeListeners(null);
+                    }
+                });
+                $history.go(-number);
+            };
+
+
+            $browser.url = function (url, replace) {
+                if (url) {
+                    // setter
+                    var res = _url.call(this, url, replace === true);
+                    $history.onUrlChangeProgrammatically(url, replace === true, replace==='back');
+                    return res;
+                } else {
+                    // getter
+                    return _url.apply(this, arguments);
+                }
+            };
             return $browser;
         }
     }
 
     function $historyFactory() {
         var $history;
+        return $history = {
+            go:go,
+            goBack:goBack,
+            urlStack:[],
+            indexOf: indexOf,
+            activeIndex:-1,
+            fromUrlChange:false,
+            onUrlChangeProgrammatically:onUrlChangeProgrammatically,
+            onUrlChangeBrowser:onUrlChangeBrowser
+        };
 
         function go(relativeIndex) {
             // Always execute history.go asynchronously.
             // This is required as firefox and IE10 trigger the popstate event
-            // in sync, which would result in problems, as
-            // in backMode we stop the normal navigation by stopping the $locationChangeSuccess event.
-            // However, if we would trigger a popstate event here in sync,
-            // the $locationChangeSuccess event from the poped state event would also be swallowed!
-            // We have a ui test for this (see ngmRoutingUiSpec#$location.back).
+            // in sync. By using a setTimeout we have the same behaviour everywhere.
+            // Don't use $defer here as we don't want to trigger another digest cycle.
             window.setTimeout(function() {
                 window.history.go(relativeIndex);
             },0);
         }
 
+        function goBack() {
+            $history.go(-1);
+        }
+
+        function indexOf(url) {
+            var i,
+                urlStack = $history.urlStack;
+            for (i=0; i<urlStack.length; i++) {
+                if (urlStack[i].url===url) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        function findInPast(url) {
+            var index = $history.activeIndex-1;
+            while (index >= 0 && $history.urlStack[index].url !== url) {
+                index--;
+            }
+            return index;
+        }
+
         function onUrlChangeBrowser(url) {
-            $history.activeIndex = $history.urlStack.indexOf(url);
+            var oldIndex = $history.activeIndex;
+            $history.activeIndex = indexOf(url);
             if ($history.activeIndex === -1) {
                 onUrlChangeProgrammatically(url, false);
             } else {
-                $history.fromUrlChange = true;
+                $history.lastIndexFromUrlChange = oldIndex;
             }
         }
 
         function onUrlChangeProgrammatically(url, replace, back) {
             if (back) {
                 var currIndex = $history.activeIndex;
-                var newIndex;
-                newIndex = currIndex - 1;
-                while (newIndex >= 0 && $history.urlStack[newIndex] !== url) {
-                    newIndex--;
-                }
+                var newIndex = findInPast(url);
                 if (newIndex !== -1 && currIndex !== -1) {
-                    $history.go(newIndex - currIndex);
-                    // stop the normal navigation!
-                    return false;
+                    $history.removePastEntries(currIndex - newIndex);
                 }
             }
-            if ($history.urlStack[$history.activeIndex] === url) {
+            var currentEntry = $history.urlStack[$history.activeIndex];
+            if (currentEntry && currentEntry.url === url) {
                 return;
             }
-            $history.fromUrlChange = false;
+            $history.lastIndexFromUrlChange = -1;
             if (!replace) {
                 $history.activeIndex++;
             }
             $history.urlStack.splice($history.activeIndex, $history.urlStack.length - $history.activeIndex);
-            $history.urlStack.push(url);
+            $history.urlStack.push({url: url});
         }
-
-        return $history = {
-            go:go,
-            urlStack:[],
-            activeIndex:-1,
-            fromUrlChange:false,
-            onUrlChangeProgrammatically:onUrlChangeProgrammatically,
-            onUrlChangeBrowser:onUrlChangeBrowser
-        };
     }
 })(window.jQuery, window.angular);
 /**
@@ -1177,15 +1204,7 @@ factory(window.jQuery, window.angular);
  */
 (function (angular, $) {
     var DEFAULT_JQM_PAGE = 'DEFAULT_JQM_PAGE',
-        DIALOG_URL = '/' + $.mobile.dialogHashKey,
         mod = angular.module("ng");
-
-    $.mobile._registerBrowserDecorators = $.mobile._registerBrowserDecorators || [];
-    $.mobile._registerBrowserDecorators.push(registerBrowserDecorator);
-
-    mod.config(['$provide', function ($provide) {
-        registerBrowserDecorator($provide);
-    }]);
 
     disableJqmHashChange();
 
@@ -1204,18 +1223,12 @@ factory(window.jQuery, window.angular);
 
     mod.config(['$routeProvider', configMobileRoutes]);
     mod.run(["$rootScope", "$location", applyRouteOverrideOnRouteChangeStart]);
-    mod.run(["$rootScope", "$location", navigateToDialgUrlOnDialogShow]);
-    mod.run(["$rootScope", "$route", "$routeParams", evalOnActivateOnPageShow]);
+    mod.run(["$rootScope", "$route", "$routeParams", "$location", "$history", onPageShowEvalOnActivateAndUpdateDialogUrls]);
     mod.run(["$rootScope", "$route", "$location", "$browser", "$history",applyDefaultNavigationOnRouteChangeSuccess]);
-    mod.run(["$rootScope", "$location", removeDialogUrlWhenLocationHashChangesInDialog]);
-    mod.run(["$rootScope", "$location", instrumentPopupCloseToNavigateBackWhenDialogUrlIsSet]);
-    mod.run(["$rootScope", "$location", instrumentDialogCloseToNavigateBackWhenDialogUrlIsSet]);
-
-    function registerBrowserDecorator($provide) {
+    mod.run(["$rootScope", "$location", "$history", instrumentDialogCloseToNavigateBackWhenOpenedByRouting]);
+    mod.config(['$provide', function ($provide) {
         $provide.decorator('$location', ['$delegate', locationRouteOverrideDecorator]);
-        $provide.decorator('$browser', ['$delegate', allowFileUrlsInBaseHref]);
-        $provide.decorator('$browser', ['$delegate', removeDialogUrlOnUrlChange]);
-    }
+    }]);
 
     function patchAngularToAllowVclicksOnEmptyAnchorTags() {
         // Problem 1:
@@ -1247,37 +1260,6 @@ factory(window.jQuery, window.angular);
 
 
     // ------------------
-
-    function allowFileUrlsInBaseHref($browser) {
-        var _baseHref = $browser.baseHref;
-        $browser.baseHref = function () {
-            // Patch for baseHref to return the correct path also for file-urls.
-            // See bug https://github.com/angular/angular.js/issues/1690
-            var href = _baseHref.call(this);
-            return href ? href.replace(/^file?\:\/\/[^\/]*/, '') : href;
-        };
-        return $browser;
-    }
-
-
-    function removeDialogUrlOnUrlChange($browser) {
-        // Always set replace to true if leaving a dialog-url
-        // Attention: This needs to be AFTER the decorator for $browser.url in history.js,
-        // so our internal history is also up-to-date. There is a test for this though...
-        var _url = $browser.url;
-        $browser.url = function (url, replace) {
-            var oldUrl;
-            if (url) {
-                oldUrl = _url.call(this);
-                if (oldUrl.indexOf(DIALOG_URL)!==-1) {
-                    replace = true;
-                }
-                return _url.call(this, url, replace);
-            }
-            return _url.apply(this, arguments);
-        };
-        return $browser;
-    }
 
     function locationRouteOverrideDecorator($location) {
         $location.routeOverride = function (routeOverride) {
@@ -1319,6 +1301,21 @@ factory(window.jQuery, window.angular);
             };
         }
         $.mobile.changePage.defaults.allowSamePageTransition = true;
+        var _addNew = $.mobile.urlHistory.addNew;
+        $.mobile.urlHistory.addNew = function() {
+            var res = _addNew.apply(this, arguments);
+            var history = $.mobile.urlHistory,
+                stack = history.stack,
+                removeEntries = stack.length-3;
+            if (stack.length>3) {
+                stack.splice(0, removeEntries);
+                history.activeIndex -= removeEntries;
+                if (history.activeIndex<0) {
+                    history.activeIndex = 0;
+                }
+            }
+            return res;
+        };
     }
 
 
@@ -1333,10 +1330,6 @@ factory(window.jQuery, window.angular);
             }
             return _when.apply(this, arguments);
         };
-
-        $routeProvider.when(DIALOG_URL, {
-            templateUrl:DEFAULT_JQM_PAGE
-        });
 
         $routeProvider.otherwise({
             templateUrl:DEFAULT_JQM_PAGE
@@ -1372,28 +1365,39 @@ factory(window.jQuery, window.angular);
         });
     }
 
-
-    function navigateToDialgUrlOnDialogShow($rootScope, $location) {
-        $rootScope.$on('jqmPagebeforeshow', function() {
-            if (activePageIsDialog()) {
-                dialogUrl($location, true);
-            }
-        });
-    }
-
-    function evalOnActivateOnPageShow($rootScope, $route, $routeParams) {
+    function onPageShowEvalOnActivateAndUpdateDialogUrls($rootScope, $route, $routeParams, $location, $history) {
         $rootScope.$on('jqmPagebeforeshow', function(event) {
             var current = $route.current,
                 onActivateParams;
+            if (activePageIsDialog()) {
+                $history.urlStack[$history.activeIndex].tempUrl = true;
+            } else if (activePageIsNormalePage()) {
+                removePastTempPages($history);
+            }
             if (current && current.onActivate) {
                 onActivateParams = angular.extend({}, current.locals, $routeParams);
                 event.targetScope.$eval(current.onActivate, onActivateParams);
             }
         });
+
+        function removePastTempPages($history) {
+            var i = $history.activeIndex-1, removeCount = 0;
+            while (i>=0 && $history.urlStack[i].tempUrl) {
+                removeCount++;
+                i--;
+            }
+            if (removeCount>0) {
+                $history.removePastEntries(removeCount);
+            }
+        }
     }
 
     function activePageIsDialog() {
         return $.mobile.activePage && $.mobile.activePage.jqmData("role") === "dialog";
+    }
+
+    function activePageIsNormalePage() {
+        return $.mobile.activePage && $.mobile.activePage.jqmData("role") === "page";
     }
 
     function applyDefaultNavigationOnRouteChangeSuccess($rootScope, $route, $location, $browser, $history) {
@@ -1403,10 +1407,8 @@ factory(window.jQuery, window.angular);
 
             var url = newRoute.ngmTemplateUrl;
             if (url === DEFAULT_JQM_PAGE) {
-                if (dialogUrl($location)) {
-                    return;
-                }
                 url = $location.url();
+
                 var baseHref = $browser.baseHref();
                 if (url.indexOf('/') === -1) {
                     url = baseHref + url;
@@ -1417,10 +1419,8 @@ factory(window.jQuery, window.angular);
             if (!url) {
                 return;
             }
-            var navConfig = newRoute.jqmOptions = newRoute.jqmOptions || {};
-            if ($history.fromUrlChange) {
-                navConfig.fromHashChange = true;
-            }
+            var navConfig = newRoute.jqmOptions || {};
+            restoreOrSaveTransitionForUrlChange(navConfig);
 
             if (!$.mobile.firstPage) {
                 $rootScope.$on("jqmInit", startNavigation);
@@ -1430,59 +1430,35 @@ factory(window.jQuery, window.angular);
 
             function startNavigation() {
                 $.mobile.changePage(url, navConfig);
-                if ($.mobile.popup.active) {
-                    // Popup are available without loading,
-                    // so we can check them right after calling $.mobile.changePage!
-                    dialogUrl($location, true);
+            }
+
+            function restoreOrSaveTransitionForUrlChange(navConfig) {
+                if ($history.lastIndexFromUrlChange >=0 ) {
+                    var templateEntry;
+                    if ($history.lastIndexFromUrlChange > $history.activeIndex) {
+                        navConfig.reverse = true;
+                        templateEntry = $history.urlStack[$history.lastIndexFromUrlChange];
+                    } else {
+                        templateEntry = $history.urlStack[$history.activeIndex];
+                    }
+                    if (templateEntry && templateEntry.jqmOptions) {
+                        navConfig.transition = templateEntry.jqmOptions.transition;
+                    }
+                } else {
+                    $history.urlStack[$history.activeIndex].jqmOptions = navConfig;
                 }
             }
         });
     }
 
-    function removeDialogUrlWhenLocationHashChangesInDialog($rootScope, $location) {
-        $rootScope.$on('$locationChangeStart', function() {
-            var hash = $location.hash();
-            if (dialogUrl($location)) {
-                if (hash) {
-                    $location.$$parse($location.$$urlBeforeDialog);
-                    $location.hash(hash);
-                }
-            }
-        });
-        $rootScope.$on('$locationChangeSuccess', function(event, newLocation, oldLocation) {
-            if (oldLocation && oldLocation.indexOf(DIALOG_URL)!==-1) {
-                delete $location.$$urlBeforeDialog;
-            }
-        });
-    }
-
-    function instrumentPopupCloseToNavigateBackWhenDialogUrlIsSet($rootScope, $location) {
-        var popupProto = $.mobile.popup.prototype;
-        var _open = popupProto._open;
-        popupProto._open = function() {
-            this.firstPopup = !activePageIsDialog();
-            return _open.apply(this, arguments);
-        };
-        var _close = popupProto._close;
-        popupProto._close = function () {
-            if (dialogUrl($location) && this.firstPopup) {
-                $rootScope.$apply(function () {
-                    $location.goBack();
-                });
-            } else {
-                _close.apply(this, arguments);
-            }
-        };
-    }
-
-    function instrumentDialogCloseToNavigateBackWhenDialogUrlIsSet($rootScope, $location) {
+    function instrumentDialogCloseToNavigateBackWhenOpenedByRouting($rootScope, $location, $history) {
         var dialogProto = $.mobile.dialog.prototype;
-        dialogProto.origClose = dialogProto.close;
+        dialogProto.origClose = dialogProto.origClose || dialogProto.close;
         dialogProto.close = function () {
-            if (this._isCloseable && dialogUrl($location)) {
+            if (this._isCloseable && this.createdByNg) {
                 this._isCloseable = false;
                 $rootScope.$apply(function () {
-                    $location.goBack();
+                    $history.goBack();
                 });
             } else {
                 this.origClose();
@@ -1490,29 +1466,24 @@ factory(window.jQuery, window.angular);
         };
     }
 
-    // gets or sets a dialog url.
-    // We use the same behaviour as in jQuery Mobile: dialog urls
-    // are here for allowing users to click "back" to close the dialog,
-    // but prevent him from opening them again via "forward".
-    function dialogUrl($location) {
-        if (arguments.length === 1) {
-            // getter
-            return $location.path() === DIALOG_URL;
-        }
-        // setter
-        $location.$$urlBeforeDialog = $location.absUrl();
-        $location.url(DIALOG_URL);
-        $location.replace();
-    }
-
-    function defaultClickHandler(event, iElement, $scope, $location) {
+    function defaultClickHandler(event, iElement, $scope, $location, $history) {
         // Attention: Do NOT stopPropagation, as otherwise
         // jquery Mobile will not generate a vclick event!
         var rel = iElement.jqmData("rel");
         if (rel === 'back') {
             event.preventDefault();
             $scope.$apply(function () {
-                $location.goBack();
+                $history.goBack();
+            });
+        } else if (rel === 'popup') {
+            // For popups, we don't want their hash in the url,
+            // but only open the popup
+            event.preventDefault();
+            $scope.$apply(function() {
+                var popup = $.mobile.activePage.find(iElement.attr('href'));
+                if (popup.length) {
+                    popup.popup("open");
+                }
             });
         } else if (isNoopLink(iElement)) {
             event.preventDefault();
@@ -1533,9 +1504,6 @@ factory(window.jQuery, window.angular);
                 var jqmOptions = override.jqmOptions = {
                     link:iElement
                 };
-                if (rel) {
-                    jqmOptions.role = rel;
-                }
                 var trans = iElement.jqmData("transition");
                 if (trans) {
                     jqmOptions.transition = trans;
@@ -1568,7 +1536,7 @@ factory(window.jQuery, window.angular);
 
     function replaceDefaultClickHandlerLocationDecorator($locationProvider) {
         var orig$get = $locationProvider.$get;
-        $locationProvider.$get = ['$injector', '$rootElement', '$rootScope', '$browser', function ($injector, $rootElement, $rootScope, $browser) {
+        $locationProvider.$get = ['$injector', '$rootElement', '$rootScope', '$browser', '$history', function ($injector, $rootElement, $rootScope, $browser, $history) {
             var $location = preventClickHandlersOnRootElementWhileCalling($rootElement,
                 function () {
                     return $injector.invoke(orig$get, $locationProvider);
@@ -1592,7 +1560,7 @@ factory(window.jQuery, window.angular);
                         return;
                     }
                 }
-                defaultClickHandler(event, elm, $rootScope, $location);
+                defaultClickHandler(event, elm, $rootScope, $location, $history);
             });
             return $location;
         }];

@@ -253,6 +253,8 @@ Methods and Properties:
 * `$history.go(relativeIndex)`: This will directly call `window.history.go(relativeIndex)`.
 * `$history.urlStack`: This contains the list of visited urls
 * `$history.activeIndex`: This defines the currently active index in the `urlStack`
+* `$history.removePastEntries(number)`: This will remove the given number of history entries
+  before the current entry. The current entry stays current. Used when leaving dialogs, or for `$location.back()`. Note: This does not fire any `$locationChange*` events.
 
 
 ### Service `$location` (extensions)
@@ -366,22 +368,10 @@ Note: `pagerId.cache` stores the last result that was returns for a `list | page
             <input type="checkbox">
         </label>
 
-### widget `dialog`
+### widget `popup`
 
-- Same as in Jqm: if a page is navigated to from a dialog, and the user hits the back button, then the browser
-  navigates to the page before the dialog.
+- the jqm adapter does not change the url when a popup is opened, and therefore does not go back when the popup is closed. This is due to the fact that popups cannot be addressed using a url, in contrast to dialogs.
 
-- Different to Jqm: if a dialog/popup is opened in another dialog, and the user hits the back button, then the browser navigates
-  to the page before the first dialog (same strategy as for normal pages).
-  In plain jquery mobile, this will only close the second dialog/popup.
-  This behaviour is due to the following implementation detail:
-      - We call `$.mobile.changePage` using routes in angular. When a route is executed, angular already updated the
-        browser url to a new value (after the `$locationChangeSuccess` event). To remove the dialog from the browser history
-        (for a link from a dialog to a normal page), we also need to do this when angular updates the browser url.
-      - However, the calculation whether a target page of a link is a dialog or a normal page is done
-        using routes.
-      - As a consequence, we are only able to implement one strategy for links to pages in dialogs,
-        no matter if the link goes to a dialog or a normal page.
 
 ### widget `slider` in a `<select>`
 

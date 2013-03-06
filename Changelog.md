@@ -4,6 +4,10 @@ Changelog
 1.2.1
 -----
 Breaking changes:
+- URLs for dialogs do no more redirect to the url `&ui-state=dialog`. However,
+  leaving a dialog will still remove it automatically from the history.
+- Popups do no more change the url when opened or closed (and by this, they cannot be
+  closed using the back browser button).
 - Slider: ng-repeat or other conditional directives are no more allowed
   on sliders, as jquery mobile internally appends another element to them
   and does not use a wrapper div. This restriction is removed in jqm 1.3.0...
@@ -11,15 +15,18 @@ Breaking changes:
   as they also need their corresponding labels. Instead, wrap the input into the label
   and put the ng-repeat on the label.
 - Does no more work with angular 1.0.3, 1.0.4 or higher is required!
+- `$location.goBack()` was moved to `$history.goBack()`.
+- `$location.backMode()` was replaced by `$location.back()` (so it is more similar to `$location.replace()`).
+
 
 Internal changes:
 - Refactored build system to grunt.js, testacular and travis-ci.
 - Added provider `jqmNgWidget` for adapting jqm plugins with angular.
+- Better and simpler history support.
 - Updated to angular 1.0.5, which helped in simplifying internal logic
 - dynamicBaseTag of jQuery mobile is now deactivated as it lead to problems with XHRs, ...
 - onActivate in routes: Now all properties of `$routeParams` can be accessed as local variables
   in the expression.
-- refactored the widget directives, so it is easier to add new widget directives.
 
 
 1.2.0

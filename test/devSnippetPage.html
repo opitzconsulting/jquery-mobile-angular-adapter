@@ -16,39 +16,28 @@ Test page during development.
 <script>
     var mod = angular.module("ngm", []);
 
-    mod.controller('MainController', function($scope) {
-        $scope.labels = ['no','yes'];
-        $scope.options = [
-            {'select' : "1", 'label':'yes'},
-            {'select' : "0", 'label':'no'}]
-    });
-
 </script>
 
 </head>
 <body ng-app="ngm">
 ​
-<div id="main" data-role="page" ng-controller="MainController">
+<div id="page1" data-role="page">
+    <div data-role="header">
+        <h1>Page1</h1>
+    </div>    
     <div data-role="content">
-        <form name="myForm" ng-init="options2=[1,2]" >
-            <!--
-            <select ng-model="mysel" data-role="slider" ng-options="o for o in options2"></select>
-            <select data-role="slider" ng-options='o.select as o.label for o in options' ng-model="name" name="name">
-            </select>    
-            {{name}}
-            <select data-role="slider" ng-model="name2" name="name2" ng-init="name2='0'">
-                <option value="0">{{labels[0]}}</option>
-                <option value="1">{{labels[1]}}</option>
-            </select>
-        -->
-        <select name="mysel" ng-model="mysel" data-role="slider"><option value="1">0</option><option value="2">1</option></select>
-            {{mysel}}
-            {{myForm | json}}
-        </form>
-    </div>
+        <a href="#page2" data-transition="slide">Page2</a>
+    </div>                
 </div>
 
-
+<div id="page2" data-role="page">
+    <div data-role="header">
+        <h1>Page2</h1>
+    </div>    
+    <div data-role="content">
+        <a href="#page1">Page1</a>
+    </div>                
+</div>
 
 </body>
 

@@ -232,7 +232,7 @@ describe("ngmRouting", function () {
     });
 
     describe('$location.back', function () {
-        it('should go back in history when $location.back is used', function () {
+        it('should go back in history when $location.back is used but no more forward', function () {
             uit.url(baseUrl+"#start");
             uit.runs(function ($, $location, $rootScope) {
                 expect($.mobile.activePage.attr("id")).toBe("start");
@@ -242,7 +242,7 @@ describe("ngmRouting", function () {
             uit.runs(function ($, $location, $rootScope) {
                 expect($.mobile.activePage.attr("id")).toBe("page2");
                 $location.hash("start");
-                $location.backMode();
+                $location.back();
                 $rootScope.$apply();
             });
             uit.runs(function ($, $history) {
@@ -250,7 +250,7 @@ describe("ngmRouting", function () {
                 $history.go(1);
             });
             uit.runs(function ($) {
-                expect($.mobile.activePage.attr("id")).toBe("page2");
+                expect($.mobile.activePage.attr("id")).toBe("start");
             });
         });
     });
@@ -324,10 +324,10 @@ describe("ngmRouting", function () {
                 $location.path("/start");
                 $rootScope.$apply();
             });
-            uit.runs(function ($location, $rootScope) {
+            uit.runs(function ($location, $rootScope, $history) {
                 expect(onActivateArguments).toBeTruthy();
                 expect(onActivateArguments.a).toBeUndefined();
-                $location.goBack();
+                $history.goBack();
                 $location.routeOverride({
                     locals:expectedArgs
                 });

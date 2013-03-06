@@ -66,11 +66,10 @@ describe('ngmRouting', function () {
 
     describe('navigation links', function () {
         describe('options for $.mobile.changePage from links', function () {
-            it('data-rel, data-transition, data-reverse, link', function () {
-                var c = testutils.compileInPage('<a href="http://server/someLink" data-rel="popup" data-transition="someTrans" data-direction="reverse"/>');
+            it('data-transition, data-reverse, link', function () {
+                var c = testutils.compileInPage('<a href="http://server/someLink" data-transition="someTrans" data-direction="reverse"/>');
                 c.element.click();
                 var args = $.mobile.changePage.mostRecentCall.args[1];
-                expect(args.role).toBe('popup');
                 expect(args.link[0]).toBe(c.element[0]);
                 expect(args.transition).toBe('someTrans');
                 expect(args.reverse).toBe(true);
@@ -147,6 +146,17 @@ describe('ngmRouting', function () {
             expect($.mobile.origChangePage.defaults.changeHash).toBe(false);
         });
 
+        it('should upper bound $.mobile.urlHistory to 3 entries', function() {
+            var hist = $.mobile.urlHistory;
+            hist.addNew("url1");
+            hist.addNew("url2");
+            hist.addNew("url3");
+            hist.addNew("url4");
+            expect(hist.stack.length).toBe(3);
+            expect(hist.stack[2].url).toBe('url4');
+            expect(hist.activeIndex).toBe(2);
+        });
+
         // The reason for this spec is that the "navigate" event
         // closes popups immediately when we use normal hash navigation
         // (i.e. without html5 history replaceState)
@@ -174,12 +184,6 @@ describe('ngmRouting', function () {
             });
         });
 
-        it('should return the url without protocol for file urls when calling $browser.baseHref()', function () {
-            inject(function ($browser) {
-                $browser.$$baseHref = 'file:///someUrl/somePage?a=b';
-                expect($browser.baseHref()).toBe('/someUrl/somePage?a=b');
-            });
-        });
     });
 
     describe('not supported angular routing features', function () {
@@ -301,21 +305,40 @@ describe('ngmRouting', function () {
             expect($.mobile.changePage).toHaveBeenCalledWith(getBasePath($browser.baseHref()) + '/somePath', someOptions);
         }));
 
-        it('should set the fromHashChange flag in $.mobile.changePage if the change was due to a hash change', function () {
-            inject(function ($browser, $rootScope, $location) {
-                $browser.url("http://someServer/someUrl");
-                $browser.poll();
-                expect($.mobile.changePage).toHaveBeenCalledWith('/someUrl', {fromHashChange:true});
-            });
-        });
+        it('should save the jqmOptions into the history if the url change was not a browser navigation', inject(function($location, $history, $rootScope) {
+            var someOptions = {transition: 'slide'};
+            $location.routeOverride({jqmOptions: someOptions});
+            $rootScope.$apply();
+            expect($history.urlStack[0].jqmOptions).toEqual(someOptions);
+        }));
 
-        it('should not set the fromHashChange flag in $.mobile.changePage if the change was not due to a hash change', function () {
-            inject(function ($browser, $rootScope, $location) {
-                $location.path("/someUrl");
-                $rootScope.$apply();
-                expect($.mobile.changePage).toHaveBeenCalledWith('/someUrl', {});
-            });
-        });
+        it('should take the transition from the last history and set the reverse flag if navigating back', inject(function($rootScope, $location, $browser, $history) {
+            var someOptions = {transition: 'slide'};
+            $location.path('/path1');
+            $rootScope.$apply();
+            $location.path('/path2');
+            $location.routeOverride({jqmOptions: someOptions});
+            $rootScope.$apply();
+            $.mobile.changePage.reset();
+            $browser.$$url = 'http://server/path1';
+            $browser.poll();
+            expect($.mobile.changePage).toHaveBeenCalledWith('/path1', { transition : 'slide', reverse: true });
+        }));
+
+        it('should take the transition from the current history and not the reverse flag if navigating forward', inject(function($rootScope, $location, $browser, $history) {
+            var someOptions = {transition: 'slide'};
+            $location.path('/path1');
+            $rootScope.$apply();
+            $location.path('/path2');
+            $location.routeOverride({jqmOptions: someOptions});
+            $rootScope.$apply();
+            $browser.$$url = 'http://server/path1';
+            $browser.poll();
+            $.mobile.changePage.reset();
+            $browser.$$url = 'http://server/path2';
+            $browser.poll();
+            expect($.mobile.changePage).toHaveBeenCalledWith('/path2', { transition : 'slide' });
+        }));
 
         it('should not call $http when using a route with templateUrl', function () {
             module(function ($routeProvider, $provide) {

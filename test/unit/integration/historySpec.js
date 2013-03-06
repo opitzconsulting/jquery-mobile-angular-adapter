@@ -3,11 +3,19 @@ describe('history', function () {
         jasmine.Clock.useMock();
     });
 
-    describe('urlPatchForAndroid', function() {
-        it('should decode urls with %23 instead of hash', inject(function($browser) {
+    describe('misc', function() {
+        it('should decode urls with %23 instead of hash for android', inject(function($browser) {
             expect($browser.url('a%23b').url()).toBe('a#b');
         }));
+
+        it('should return the url without protocol for file urls when calling $browser.baseHref()', function () {
+            inject(function ($browser) {
+                $browser.$$baseHref = 'file:///someUrl/somePage?a=b';
+                expect($browser.baseHref()).toBe('/someUrl/somePage?a=b');
+            });
+        });
     });
+
 
     describe('go', function () {
         it('should call window.history.go asynchronously', inject(function ($history) {
@@ -21,6 +29,14 @@ describe('history', function () {
         }));
     });
 
+    describe('goBack', function () {
+        it('should call $history.go(-1)', inject(function ($history) {
+            spyOn($history, 'go');
+            $history.goBack();
+            expect($history.go).toHaveBeenCalledWith(-1);
+        }));
+    });
+
     describe('changing the url programmatically', function () {
         it('should record successful url changes', inject(function ($history, $location, $rootScope) {
             expect($history.activeIndex).toBe(-1);
@@ -30,7 +46,9 @@ describe('history', function () {
             $location.path("path2");
             $rootScope.$apply();
             expect($history.activeIndex).toBe(1);
-            expect($history.urlStack).toEqual(['http://server/path1', 'http://server/path2']);
+            expect($history.urlStack[0].url).toEqual('http://server/path1');
+            expect($history.urlStack[1].url).toEqual('http://server/path2');
+            expect($history.urlStack.length).toBe(2);
         }));
 
         it('should remove trailing entries from the urlStack when adding new entries', inject(function ($history, $location, $rootScope) {
@@ -43,13 +61,14 @@ describe('history', function () {
             $rootScope.$apply();
             expect($history.activeIndex).toBe(0);
 
-            expect($history.urlStack).toEqual(['http://server/path2']);
+            expect($history.urlStack[0].url).toEqual('http://server/path2');
+            expect($history.urlStack.length).toBe(1);
         }));
 
         it('should record multiple url changes to the same url only once', inject(function ($history, $browser) {
             $browser.url("http://server/url1");
             $browser.url("http://server/url1");
-            expect($history.urlStack).toEqual(['http://server/url1']);
+            expect($history.urlStack).toEqual([{url: 'http://server/url1'}]);
         }));
 
         it('should not record url changes of aborted location changes', inject(function ($history, $location, $rootScope) {
@@ -61,19 +80,6 @@ describe('history', function () {
             expect($history.urlStack).toEqual([]);
         }));
 
-        it('should not record url changes due to hash changes', inject(function ($history, $location, $rootScope, $browser) {
-            $location.path("path1");
-            $rootScope.$apply();
-            $location.path("path2");
-            $rootScope.$apply();
-
-            $browser.$$url = 'http://server/path1';
-            $browser.poll();
-            $rootScope.$apply();
-            expect($history.activeIndex).toBe(0);
-            expect($history.urlStack).toEqual(['http://server/path1', 'http://server/path2']);
-        }));
-
         it('should replace the last entry if $location.replace is used', inject(function ($history, $location, $rootScope) {
             $location.path("path1");
             $rootScope.$apply();
@@ -82,7 +88,8 @@ describe('history', function () {
             $location.replace();
             $rootScope.$apply();
             expect($history.activeIndex).toBe(0);
-            expect($history.urlStack).toEqual(['http://server/path2']);
+            expect($history.urlStack[0].url).toEqual('http://server/path2');
+            expect($history.urlStack.length).toBe(1);
         }));
 
         it('should remove trailing entries from the urlStack when replacing the current entry', inject(function ($history, $location, $rootScope) {
@@ -97,14 +104,15 @@ describe('history', function () {
             $location.replace();
             $rootScope.$apply();
             expect($history.activeIndex).toBe(0);
-            expect($history.urlStack).toEqual(['http://server/path3']);
+            expect($history.urlStack[0].url).toEqual('http://server/path3');
+            expect($history.urlStack.length).toBe(1);
         }));
 
-        it('should set fromUrlChange to false', inject(function ($history, $location, $rootScope) {
-            $history.fromUrlChange = true;
+        it('should set lastIndexFromUrlChange to -1', inject(function ($history, $location, $rootScope) {
+            $history.lastIndexFromUrlChange = true;
             $location.path("path1");
             $rootScope.$apply();
-            expect($history.fromUrlChange).toBe(false);
+            expect($history.lastIndexFromUrlChange).toBe(-1);
         }));
 
     });
@@ -127,10 +135,10 @@ describe('history', function () {
             $browser.poll();
 
             expect($history.activeIndex).toBe(0);
-            expect($history.urlStack).toEqual(['http://server/path1']);
+            expect($history.urlStack[0].url).toBe('http://server/path1');
         }));
 
-        it('should set fromUrlChange to true', inject(function ($location, $rootScope, $browser, $history) {
+        it('should set lastIndexFromUrlChange to the last index before navigation', inject(function ($location, $rootScope, $browser, $history) {
             $location.path("path1");
             $rootScope.$apply();
             $location.path("path2");
@@ -139,179 +147,181 @@ describe('history', function () {
             $browser.$$url = 'http://server/path1';
             $browser.poll();
 
-            expect($history.fromUrlChange).toBe(true);
+            expect($history.lastIndexFromUrlChange).toBe(1);
         }));
     });
 
-    describe('$location.backMode', function () {
+    describe('removePastEntries', function() {
+        function createHistory(number) {
+            inject(function($location, $rootScope) {
+                var i;
+                for (i=0; i<number; i++) {
+                    $location.path("path"+i);
+                    $rootScope.$apply();
+                }
+            });
+        }
+        it('should remove the given number of entries from $history.urlStack', inject(function($browser, $history) {
+            var initialUrlStack;
+            createHistory(3);
+            initialUrlStack = $history.urlStack.slice();
+            expect($history.activeIndex).toBe(2);
+            expect(initialUrlStack.length).toBe(3);
+
+            $history.removePastEntries(2);
+            jasmine.Clock.tick(10);
+            $browser.$$url = $history.urlStack[0].url;
+            $browser.poll();
+
+            expect($history.activeIndex).toBe(0);
+            expect($history.urlStack).toEqual([initialUrlStack[2]]);
+        }));
+
+        it('should remove future entries', inject(function($history, $browser) {
+            var initialUrlStack;
+            createHistory(3);
+            initialUrlStack = $history.urlStack.slice();
+            $history.activeIndex = 1;
+            $history.removePastEntries(1);
+            jasmine.Clock.tick(10);
+            $browser.$$url = $history.urlStack[0].url;
+            $browser.poll();
+
+            expect($history.activeIndex).toBe(0);
+            expect($history.urlStack).toEqual([initialUrlStack[1]]);
+        }));
+        it('should go back the given number of steps in history', inject(function($history) {
+            createHistory(3);
+            $history.removePastEntries(2);
+            jasmine.Clock.tick(1);
+            expect(window.history.go).toHaveBeenCalledWith(-2);
+        }));
+        it('should replace the location with the old location, keeping the history entry', inject(function($browser, $history) {
+            var initialUrlStack;
+            createHistory(3);
+            initialUrlStack = $history.urlStack.slice();
+
+            $history.removePastEntries(2);
+            jasmine.Clock.tick(10);
+            $browser.$$url = initialUrlStack[0].url;
+            $browser.poll();
+
+            expect($browser.url()).toBe(initialUrlStack[2].url);
+            expect($history.urlStack[$history.activeIndex]).toEqual(initialUrlStack[2]);
+        }));
+        it('should not call other onUrlChange listeners while going back, but call them again afterwards', inject(function($browser, $history) {
+            var spy = jasmine.createSpy();
+            $browser.onUrlChange(spy);
+            createHistory(3);
+
+            $history.removePastEntries(2);
+            jasmine.Clock.tick(10);
+            $browser.poll();
+
+            expect(spy).not.toHaveBeenCalled();
+            $browser.$$url = 'http://server/someOtherUrl';
+            $browser.poll();
+            expect(spy).toHaveBeenCalled();
+        }));
+    });
+
+    describe('$location.back', function () {
+        beforeEach(inject(function($history) {
+            spyOn($history, 'removePastEntries');
+        }));
         describe('if the location is in the history', function () {
-            it('should cancel the current navigation without firing any locationChangeSuccess or locationChangeStart events before the hashchange event', inject(function ($location, $rootScope, $history) {
+            it('should update the browser url', inject(function ($location, $rootScope, $history, $browser) {
                 $location.path("path1");
                 $rootScope.$apply();
                 $location.path("path2");
                 $rootScope.$apply();
 
-                var locationChangeStartSpy = jasmine.createSpy('locationChangeStartSpy');
-                var locationChangeSuccessSpy = jasmine.createSpy('locationChangeSuccessSpy');
-                $rootScope.$on("$locationChangeStart", locationChangeStartSpy);
-                $rootScope.$on("$locationChangeSuccess", locationChangeSuccessSpy);
-
                 $location.path("path1");
-                $location.backMode();
+                $location.back();
                 $rootScope.$apply();
 
-                expect(locationChangeStartSpy.callCount).toBe(1);
-                var args = locationChangeStartSpy.mostRecentCall.args;
-                expect(args[1]).toBe('http://server/path1'); // new url
-                expect(args[2]).toBe('http://server/path2'); // old url
-                expect(args[0].defaultPrevented).toBe(false);
-
-                expect(locationChangeSuccessSpy.callCount).toBe(0);
-                expect($history.urlStack).toEqual(['http://server/path1', 'http://server/path2']);
-                expect($history.activeIndex).toBe(1);
+                expect($browser.url()).toBe("http://server/path1");
             }));
 
-            it('should go back to the nearest entry in history but no change $location immediately', inject(function ($location, $rootScope, $browser) {
-                $location.path("path1");
-                $rootScope.$apply();
-                $location.path("path2");
-                $rootScope.$apply();
+            it('should call $history.removePastEntries', inject(function ($location, $rootScope, $history) {
                 $location.path("path1");
                 $rootScope.$apply();
                 $location.path("path2");
                 $rootScope.$apply();
 
-                angular.mock.$Browser.prototype.url.reset();
                 $location.path("path1");
-                $location.backMode();
+                $location.back();
                 $rootScope.$apply();
-                jasmine.Clock.tick(1);
 
-                expect(window.history.go).toHaveBeenCalledWith(-1);
-                expect($location.path()).toBe("/path2");
-                angular.forEach(angular.mock.$Browser.prototype.url.argsForCall, function(args) {
-                    expect(args).toEqual([]);
-                });
+                expect($history.removePastEntries).toHaveBeenCalledWith(1);
             }));
 
-            it('should not go back if the $locationChangeStart event was canceled', inject(function ($location, $rootScope, $history) {
+            it('should go back to the nearest entry in history', inject(function ($location, $rootScope, $browser, $history) {
+                $location.path("path1");
+                $rootScope.$apply();
+                $location.path("path2");
+                $rootScope.$apply();
                 $location.path("path1");
                 $rootScope.$apply();
                 $location.path("path2");
                 $rootScope.$apply();
 
-                $rootScope.$on("$locationChangeStart", function(event) {
-                    event.preventDefault();
-                });
-
                 $location.path("path1");
-                $location.backMode();
+                $location.back();
                 $rootScope.$apply();
-                jasmine.Clock.tick(1);
 
-                expect(window.history.go).not.toHaveBeenCalled();
+                expect($history.removePastEntries).toHaveBeenCalledWith(1);
             }));
         });
 
         describe('if the location is not in the history', function() {
-            it('should add the url to the urlStack', inject(function ($location, $rootScope, $history) {
-                $location.path("path1");
-                $rootScope.$apply();
-
-                var locationChangeSuccessCounter = 0;
-                $rootScope.$on("$locationChangeSuccess", function () {
-                    locationChangeSuccessCounter++;
-                });
-
-                $location.path("path2");
-                $location.backMode();
-                $rootScope.$apply();
-                jasmine.Clock.tick(1);
-
-                expect(locationChangeSuccessCounter).toBe(1);
-                expect($history.urlStack).toEqual(['http://server/path1', 'http://server/path2']);
-                expect(window.history.go).not.toHaveBeenCalled();
-                expect($history.activeIndex).toBe(1);
-                expect($history.fromUrlChange).toBe(false);
-            }));
-
-            it('should update the $browser.url() immediately and keep it in sync with the browser', inject(function ($location, $rootScope, $browser, $history) {
+            it('should update the browser url and not call $history.removePastEntries', inject(function ($location, $rootScope, $history, $browser) {
                 $location.path("path1");
                 $rootScope.$apply();
 
                 $location.path("path2");
-                $location.backMode();
+                $location.back();
                 $rootScope.$apply();
+
                 expect($browser.url()).toBe('http://server/path2');
-
-                $browser.$$url = 'http://server/somePath';
-                expect($browser.url()).toBe('http://server/somePath');
+                expect($history.removePastEntries).not.toHaveBeenCalled();
             }));
-
-
         });
 
     });
 
-    describe('$location.goBack', function () {
-        it('should go back in history if the location is known', inject(function ($location, $rootScope, $history) {
-            $location.path("path1");
-            $rootScope.$apply();
-            $location.path("path2");
-            $rootScope.$apply();
-
-            $location.goBack();
-            expect($location.absUrl()).toBe('http://server/path1');
-            $rootScope.$apply();
-            jasmine.Clock.tick(1);
-
-            expect($history.urlStack).toEqual(['http://server/path1', 'http://server/path2']);
-            expect(window.history.go).toHaveBeenCalledWith(-1);
-            expect($history.activeIndex).toBe(1);
-        }));
-
-        it('should throw an Error if there is no previous entry in the urlStack', inject(function ($location, $rootScope, $history) {
-            try {
-                $location.goBack();
-                throw new Error("Error expected");
-            } catch (e) {
-                expect(e.message).toBe('There is no page in the history to go back to!');
-            }
-        }));
-    });
-
     describe('special cases', function () {
-        it('should not set the fromUrlChange flag if $route does a redirect', function () {
+        it('should not set the lastIndexFromUrlChange flag if $route does a redirect', function () {
             module(function ($routeProvider) {
                 $routeProvider.when('/someUrl', {
                     redirectTo:'/someRedirectUrl'
                 });
             });
             inject(function ($location, $rootScope, $browser, $history) {
-                $history.urlStack = ['http://server/someUrl'];
+                $history.urlStack = [{url: 'http://server/someUrl'}];
                 $history.activeIndex = 0;
 
                 $browser.$$url = 'http://server/someUrl';
                 $browser.poll();
                 expect($location.path()).toBe('/someRedirectUrl');
-                expect($history.fromUrlChange).toBe(false);
+                expect($history.lastIndexFromUrlChange).toBe(-1);
             });
         });
 
-        it('should set the fromUrlChange flag for a normal $route', function () {
+        it('should set the lastIndexFromUrlChange flag for a normal $route', function () {
             module(function ($routeProvider) {
                 $routeProvider.when('/someUrl', {
                     templateUrl:'someTemplate.html'
                 });
             });
             inject(function ($location, $rootScope, $browser, $history) {
-                $history.urlStack = ['http://server/someUrl'];
+                $history.urlStack = [{url: 'http://server/someUrl2'}, {url: 'http://server/someUrl'}];
                 $history.activeIndex = 0;
 
                 $browser.$$url = 'http://server/someUrl';
                 $browser.poll();
                 expect($location.path()).toBe('/someUrl');
-                expect($history.fromUrlChange).toBe(true);
+                expect($history.lastIndexFromUrlChange).toBe(0);
             });
         });
     });

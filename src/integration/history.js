@@ -16,46 +16,28 @@
     // implementation functions
 
     function registerBrowserDecorator($provide) {
-        $provide.decorator('$rootScope', ['$delegate', rootScopeSuppressEventInDigestCycleDecorator]);
-        $provide.decorator('$location', ['$delegate', '$history', locationBackDecorator]);
         $provide.decorator('$browser', ['$delegate', browserHashReplaceDecorator]);
+        $provide.decorator('$browser', ['$delegate', allowFileUrlsInBaseHref]);
         $provide.decorator('$browser', ['$delegate', '$history', '$rootScope', '$injector', browserHistoryDecorator]);
-
-        function rootScopeSuppressEventInDigestCycleDecorator($rootScope) {
-            var suppressedEvents = {};
-            $rootScope.suppressEventInDigestCycle = function (eventName) {
-                suppressedEvents[eventName] = true;
-            };
-            var _$broadcast = $rootScope.$broadcast;
-            $rootScope.$broadcast = function (eventName) {
-                if (suppressedEvents[eventName]) {
-                    return {};
-                }
-                return _$broadcast.apply(this, arguments);
-            };
-            var _$digest = $rootScope.$digest;
-            $rootScope.$digest = function () {
-                var res = _$digest.apply(this, arguments);
-                suppressedEvents = {};
-                return res;
-            };
-            return $rootScope;
-        }
+        $provide.decorator('$location', ['$delegate', '$history', locationBackDecorator]);
 
         function locationBackDecorator($location, $history) {
-            $location.backMode = function () {
+            $location.back = function () {
                 $location.$$replace = "back";
                 return this;
             };
-            $location.goBack = function () {
-                if ($history.activeIndex <= 0) {
-                    throw new Error("There is no page in the history to go back to!");
-                }
-                this.$$parse($history.urlStack[$history.activeIndex - 1]);
-                this.backMode();
-                return this;
-            };
             return $location;
+        }
+
+        function allowFileUrlsInBaseHref($browser) {
+            var _baseHref = $browser.baseHref;
+            $browser.baseHref = function () {
+                // Patch for baseHref to return the correct path also for file-urls.
+                // See bug https://github.com/angular/angular.js/issues/1690
+                var href = _baseHref.call(this);
+                return href ? href.replace(/^file?\:\/\/[^\/]*/, '') : href;
+            };
+            return $browser;
         }
 
         function browserHashReplaceDecorator($browser) {
@@ -71,96 +53,137 @@
         }
 
         function browserHistoryDecorator($browser, $history, $rootScope, $injector) {
-            var _url = $browser.url;
+            var _url = $browser.url,
+                _onUrlChange = $browser.onUrlChange,
+                _stopOnUrlChangeListeners;
             var cachedRouteOverride = null;
-            $browser.url = function (url, replace) {
-                if (url) {
-                    // setter
-                    var res = $history.onUrlChangeProgrammatically(url, replace === true, replace === 'back');
-                    if (res === false) {
-                        // cancel navigation and rely on the callback
-                        // from browser history.
-                        var $location = $injector.get('$location');
-                        cachedRouteOverride = $location.routeOverride();
-                        $location.$$parse(_url.call(this));
-                        // suppress $locationChangeSuccess and $locationChangeStart event in this eval loop,
-                        // so the routes don't get updated!
-                        $rootScope.suppressEventInDigestCycle('$locationChangeStart');
-                        $rootScope.suppressEventInDigestCycle('$locationChangeSuccess');
-                        return;
-                    }
-                }
-                return _url.apply(this, arguments);
-            };
-            var _onUrlChange = $browser.onUrlChange;
-            $browser.onUrlChange(function (newUrl) {
+
+            _onUrlChange.call($browser, function(newUrl) {
                 if (cachedRouteOverride) {
                     var $location = $injector.get('$location');
                     $location.routeOverride(cachedRouteOverride);
                 }
                 $history.onUrlChangeBrowser(newUrl);
+                if (_stopOnUrlChangeListeners) {
+                    _stopOnUrlChangeListeners.apply(this, arguments);
+                }
             });
+            $browser.onUrlChange = function(cb) {
+                _onUrlChange.call(this, function() {
+                    if (!_stopOnUrlChangeListeners) {
+                        cb.apply(this, arguments);
+                    }
+                });
+            };
+
+            $browser.stopOnUrlChangeListeners = function(replaceCallack) {
+                _stopOnUrlChangeListeners = replaceCallack;
+            };
+
+            $history.removePastEntries = function(number) {
+                var current = $history.urlStack[$history.activeIndex];
+                $browser.stopOnUrlChangeListeners(function() {
+                    if (current) {
+                        $browser.url(current.url, true);
+                        $history.urlStack[$history.activeIndex] = current;
+                        current = null;
+                    } else {
+                        $browser.stopOnUrlChangeListeners(null);
+                    }
+                });
+                $history.go(-number);
+            };
+
+
+            $browser.url = function (url, replace) {
+                if (url) {
+                    // setter
+                    var res = _url.call(this, url, replace === true);
+                    $history.onUrlChangeProgrammatically(url, replace === true, replace==='back');
+                    return res;
+                } else {
+                    // getter
+                    return _url.apply(this, arguments);
+                }
+            };
             return $browser;
         }
     }
 
     function $historyFactory() {
         var $history;
+        return $history = {
+            go:go,
+            goBack:goBack,
+            urlStack:[],
+            indexOf: indexOf,
+            activeIndex:-1,
+            fromUrlChange:false,
+            onUrlChangeProgrammatically:onUrlChangeProgrammatically,
+            onUrlChangeBrowser:onUrlChangeBrowser
+        };
 
         function go(relativeIndex) {
             // Always execute history.go asynchronously.
             // This is required as firefox and IE10 trigger the popstate event
-            // in sync, which would result in problems, as
-            // in backMode we stop the normal navigation by stopping the $locationChangeSuccess event.
-            // However, if we would trigger a popstate event here in sync,
-            // the $locationChangeSuccess event from the poped state event would also be swallowed!
-            // We have a ui test for this (see ngmRoutingUiSpec#$location.back).
+            // in sync. By using a setTimeout we have the same behaviour everywhere.
+            // Don't use $defer here as we don't want to trigger another digest cycle.
             window.setTimeout(function() {
                 window.history.go(relativeIndex);
             },0);
         }
 
+        function goBack() {
+            $history.go(-1);
+        }
+
+        function indexOf(url) {
+            var i,
+                urlStack = $history.urlStack;
+            for (i=0; i<urlStack.length; i++) {
+                if (urlStack[i].url===url) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        function findInPast(url) {
+            var index = $history.activeIndex-1;
+            while (index >= 0 && $history.urlStack[index].url !== url) {
+                index--;
+            }
+            return index;
+        }
+
         function onUrlChangeBrowser(url) {
-            $history.activeIndex = $history.urlStack.indexOf(url);
+            var oldIndex = $history.activeIndex;
+            $history.activeIndex = indexOf(url);
             if ($history.activeIndex === -1) {
                 onUrlChangeProgrammatically(url, false);
             } else {
-                $history.fromUrlChange = true;
+                $history.lastIndexFromUrlChange = oldIndex;
             }
         }
 
         function onUrlChangeProgrammatically(url, replace, back) {
             if (back) {
                 var currIndex = $history.activeIndex;
-                var newIndex;
-                newIndex = currIndex - 1;
-                while (newIndex >= 0 && $history.urlStack[newIndex] !== url) {
-                    newIndex--;
-                }
+                var newIndex = findInPast(url);
                 if (newIndex !== -1 && currIndex !== -1) {
-                    $history.go(newIndex - currIndex);
-                    // stop the normal navigation!
-                    return false;
+                    $history.removePastEntries(currIndex - newIndex);
                 }
             }
-            if ($history.urlStack[$history.activeIndex] === url) {
+            var currentEntry = $history.urlStack[$history.activeIndex];
+            if (currentEntry && currentEntry.url === url) {
                 return;
             }
-            $history.fromUrlChange = false;
+            $history.lastIndexFromUrlChange = -1;
             if (!replace) {
                 $history.activeIndex++;
             }
             $history.urlStack.splice($history.activeIndex, $history.urlStack.length - $history.activeIndex);
-            $history.urlStack.push(url);
+            $history.urlStack.push({url: url});
         }
-
-        return $history = {
-            go:go,
-            urlStack:[],
-            activeIndex:-1,
-            fromUrlChange:false,
-            onUrlChangeProgrammatically:onUrlChangeProgrammatically,
-            onUrlChangeBrowser:onUrlChangeBrowser
-        };
     }
 })(window.jQuery, window.angular);

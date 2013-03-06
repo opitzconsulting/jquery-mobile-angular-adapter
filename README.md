@@ -372,6 +372,11 @@ Note: `pagerId.cache` stores the last result that was returns for a `list | page
 
 - the jqm adapter does not change the url when a popup is opened, and therefore does not go back when the popup is closed. This is due to the fact that popups cannot be addressed using a url, in contrast to dialogs.
 
+- The new attribute `data-opened` has bidirectional data binding for opening/closing the popup, e.g.
+
+        <div data-role="popup" data-opened="someProperty">...</div>
+
+
 
 ### widget `slider` in a `<select>`
 

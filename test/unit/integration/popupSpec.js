@@ -26,7 +26,44 @@ describe('popup', function () {
         link.click();
         expect($browser.url()).toBe(oldUrl);
         expect($.mobile.popup.active).toBe(popup.data("popup"));
-
     }));
 
+    describe('data-opened', function() {
+        var popup, scope, popupSpy, widget;
+        beforeEach(function() {
+            popupSpy = testutils.spyOnJq('popup').andCallThrough();
+        });
+        function init(openedAttribute) {
+            var c = testutils.compileInPage('<div data-role="popup" id="popup1" data-opened="'+openedAttribute+'">test</div>');
+            popupSpy.reset();
+            popup = c.page.find("#popup1");
+            widget = popup.data("popup");
+            scope = c.page.scope();
+        }
+
+        it('should update the data-opened variable', function () {
+            init('openVar');
+            expect(scope.openVar).toBe(false);
+            expect(widget._isOpen).toBe(false);
+            popup.popup("open");
+            expect(scope.openVar).toBe(true);
+            expect(widget._isOpen).toBe(true);
+        });
+
+        it('should work with fixed data-opened value', function () {
+            init('true');
+            expect(widget._isOpen).toBe(true);
+            popup.popup("close");
+            // expect no exception here.
+            expect(widget._isOpen).toBe(false);
+        });
+
+        it("should update the ui when data-opened changes", function() {
+            init('openVar');
+            expect(widget._isOpen).toBe(false);
+            scope.openVar = true;
+            scope.$root.$digest();
+            expect(widget._isOpen).toBe(true);
+        });
+    });
 });

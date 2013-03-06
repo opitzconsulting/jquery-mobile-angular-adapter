@@ -3,6 +3,11 @@ Changelog
 
 1.2.1
 -----
+Features:
+- popup widget has bidi databinding for `data-opened` attribute.
+- Refactored build system to grunt.js, testacular and travis-ci.
+- Added provider `jqmNgWidget` for adapting jqm plugins with angular.
+
 Breaking changes:
 - URLs for dialogs do no more redirect to the url `&ui-state=dialog`. However,
   leaving a dialog will still remove it automatically from the history.
@@ -20,8 +25,6 @@ Breaking changes:
 
 
 Internal changes:
-- Refactored build system to grunt.js, testacular and travis-ci.
-- Added provider `jqmNgWidget` for adapting jqm plugins with angular.
 - Better and simpler history support.
 - Updated to angular 1.0.5, which helped in simplifying internal logic
 - dynamicBaseTag of jQuery mobile is now deactivated as it lead to problems with XHRs, ...

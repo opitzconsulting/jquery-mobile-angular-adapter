@@ -820,8 +820,61 @@ factory(window.jQuery, window.angular);
         jqmNgWidgetProvider.widget("selectmenu", ["jqmNgWidget", defaultWidget]);
         jqmNgWidgetProvider.widget("navbar", ["jqmNgWidget", defaultWidget]);
         jqmNgWidgetProvider.widget("fixedtoolbar", ["jqmNgWidget", defaultWidget]);
-        jqmNgWidgetProvider.widget("popup", ["jqmNgWidget", defaultWidget]);
+        jqmNgWidgetProvider.widget("popup", ["jqmNgWidget", "$parse", popupWidget]);
     }]);
+
+    function defaultWidget(jqmNgWidet) {
+        return {
+            link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
+                jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
+                jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
+            }
+        };
+    }
+
+    function popupWidget(jqmNgWidet, $parse) {
+        return {
+            link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
+                jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
+                jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
+                bindOpenedAttribute(scope, iElement, iAttrs);
+            }
+        };
+
+        function bindOpenedAttribute(scope, iElement, iAttrs) {
+            if (iAttrs.opened) {
+                var openedGetter = $parse(iAttrs.opened),
+                    openedSetter = openedGetter.assign,
+                    widget = iElement.data("popup");
+                scope.$watch(openedGetter, function (value) {
+                    if (value) {
+                        iElement.popup("open");
+                    } else {
+                        iElement.popup("close");
+                    }
+                });
+                if (widget && openedSetter) {
+                    openedSetter(scope, widget._isOpen);
+                    var _open = widget._open,
+                        _close = widget._close;
+                    widget._open = function() {
+                        var res = _open.apply(this, arguments);
+                        scope.$apply(function () {
+                            openedSetter(scope, true);
+                        });
+                        return res;
+                    };
+                    widget._close = function() {
+                        var res = _close.apply(this, arguments);
+                        scope.$apply(function () {
+                            openedSetter(scope, false);
+                        });
+                        return res;
+                    };
+                }
+            }
+        }
+    }
 
     function sliderWidget(jqmNgWidet, $timeout) {
         return {
@@ -854,14 +907,7 @@ factory(window.jQuery, window.angular);
         }
     }
 
-    function defaultWidget(jqmNgWidet) {
-        return {
-            link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
-                    jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
-                    jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
-            }
-        };
-    }
+
 
     function checkboxRadioWidget(jqmNgWidet) {
         return {

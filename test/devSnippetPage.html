@@ -25,17 +25,12 @@ Test page during development.
     <div data-role="header">
         <h1>Page1</h1>
     </div>    
-    <div data-role="content">
-        <a href="#page2" data-transition="slide">Page2</a>
-    </div>                
-</div>
+    <div data-role="content" ng-init="opened=false">
+        <div data-role="popup" data-opened="opened">Hello</div>
 
-<div id="page2" data-role="page">
-    <div data-role="header">
-        <h1>Page2</h1>
-    </div>    
-    <div data-role="content">
-        <a href="#page1">Page1</a>
+        <button ng-click="opened=!opened">Open/close</button>
+
+        {{opened}}
     </div>                
 </div>
 

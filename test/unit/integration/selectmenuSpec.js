@@ -32,7 +32,7 @@ describe("selectmenu", function () {
             var option = $(options[1]);
             option.trigger('click');
             expect(scope.mysel).toEqual("v2");
-            expect(select.data("selectmenu").isOpen).toBe(false);
+            expect(select.data($.mobile.selectmenu.prototype.widgetFullName).isOpen).toBe(false);
         });
 
         it('should save the model value into the ui', function () {
@@ -150,7 +150,7 @@ describe("selectmenu", function () {
             c = testutils.compileInPage(
                 '<select data-native-menu="false"><option ng-repeat="l in list" value="{{l}}">{{l}}</option></select>');
             select = c.element.find('select');
-            selectmenu = select.data("selectmenu");
+            selectmenu = select.data($.mobile.selectmenu.prototype.widgetFullName);
             spyOn(selectmenu, 'refresh').andCallThrough();
             scope = c.element.scope();
         });
@@ -176,7 +176,7 @@ describe("selectmenu", function () {
             c = testutils.compileInPage(
                 '<select data-native-menu="false"><option value="{{v}}">{{l}}</option></select>');
             select = c.element.find('select');
-            selectmenu = select.data("selectmenu");
+            selectmenu = select.data($.mobile.selectmenu.prototype.widgetFullName);
             spyOn(selectmenu, 'refresh').andCallThrough();
             scope = c.element.scope();
         });
@@ -209,7 +209,7 @@ describe("selectmenu", function () {
             c = testutils.compileInPage(
                 '<select ng-init="data=1" list="1" ng-model="data" data-native-menu="false" ng-options="value.v as value.l group by value.g for value in list"></select>');
             select = c.element.find('select');
-            selectmenu = select.data("selectmenu");
+            selectmenu = select.data($.mobile.selectmenu.prototype.widgetFullName);
             scope = c.element.scope();
             spyOn(selectmenu, 'refresh').andCallThrough();
         });
@@ -286,7 +286,7 @@ describe("selectmenu", function () {
             c = testutils.compileInPage(
                 '<select ng-init="data=1" list="1" ng-model="data" data-native-menu="false" ng-options="value.v as value.l group by value.g for (key,value) in list"></select>');
             select = c.element.find('select');
-            selectmenu = select.data("selectmenu");
+            selectmenu = select.data($.mobile.selectmenu.prototype.widgetFullName);
             scope = c.element.scope();
             spyOn(selectmenu, 'refresh').andCallThrough();
         });

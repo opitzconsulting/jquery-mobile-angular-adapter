@@ -17,17 +17,17 @@ describe("collapsibleset", function () {
         var entries = list.children("div");
         expect(entries.length).toBe(0);
         var scope = d.element.scope();
-        var collapsibleset = list.data("collapsibleset");
+        var collapsibleset = list.data($.mobile.collapsibleset.prototype.widgetFullName);
         spyOn(collapsibleset, 'refresh').andCallThrough();
         scope.list = [1,2];
         scope.$digest();
         expect(collapsibleset.refresh.callCount).toBe(1);
         entries = list.children("div");
         expect(entries.length).toBe(2);
-        expect(entries.eq(0).find("a").hasClass("ui-corner-top")).toBe(true);
-        expect(entries.eq(0).find("a").hasClass("ui-corner-bottom")).toBe(false);
-        expect(entries.eq(1).find("a").hasClass("ui-corner-top")).toBe(false);
-        expect(entries.eq(1).find("a").hasClass("ui-corner-bottom")).toBe(true);
+        expect(entries.eq(0).hasClass("ui-first-child")).toBe(true);
+        expect(entries.eq(0).hasClass("ui-last-child")).toBe(false);
+        expect(entries.eq(1).hasClass("ui-first-child")).toBe(false);
+        expect(entries.eq(1).hasClass("ui-last-child")).toBe(true);
     });
 
     it("should refresh only once when child entries are removed by angular", function() {
@@ -39,14 +39,14 @@ describe("collapsibleset", function () {
         expect(lis.length).toBe(3);
         var scope = d.element.scope();
         scope.list = [1];
-        var collapsibleset = list.data("collapsibleset");
+        var collapsibleset = list.data($.mobile.collapsibleset.prototype.widgetFullName);
         spyOn(collapsibleset, 'refresh').andCallThrough();
         scope.$digest();
         expect(collapsibleset.refresh.callCount).toBe(1);
         lis = list.children("div");
         expect(lis.length).toBe(1);
-        expect(lis.eq(0).find("a").hasClass("ui-corner-top")).toBe(true);
-        expect(lis.eq(0).find("a").hasClass("ui-corner-bottom")).toBe(true);
+        expect(lis.eq(0).hasClass("ui-first-child")).toBe(true);
+        expect(lis.eq(0).hasClass("ui-last-child")).toBe(true);
     });
 
 });

@@ -17,7 +17,7 @@ describe("textInput", function () {
 
     it('should save the ui value into the model', function () {
         var d = testutils.compileInPage('<input ng-model="mysel" type="text">');
-        var input = d.element;
+        var input = d.element.find("input");
         var scope = input.scope();
         expect(scope.mysel).toBeFalsy();
         input[0].value = 'test';
@@ -27,7 +27,7 @@ describe("textInput", function () {
 
     it('should save the model value into the ui', function () {
         var d = testutils.compileInPage('<input ng-model="mysel" type="text">');
-        var input = d.element;
+        var input = d.element.find("input");
         var scope = input.scope();
         expect(input[0].value).toEqual('');
         scope.mysel = 'test';
@@ -37,19 +37,19 @@ describe("textInput", function () {
 
     it('should use the disabled attribute', function () {
         var d = testutils.compileInPage('<input ng-model="mysel" type="text" ng-disabled="disabled">');
-        var input = d.element;
+        var input = d.element.find("input");
         var scope = input.scope();
         scope.disabled = false;
         scope.$root.$digest();
-        expect(input.hasClass('ui-disabled')).toBeFalsy();
+        expect(input.parent().hasClass('ui-disabled')).toBeFalsy();
         scope.disabled = true;
         scope.$root.$digest();
-        expect(input.hasClass('ui-disabled')).toBeTruthy();
+        expect(input.parent().hasClass('ui-disabled')).toBeTruthy();
     });
 
     it('should work with type="tel"', function () {
         var d = testutils.compileInPage('<input ng-model="mysel" type="tel">');
-        var input = d.element;
+        var input = d.element.find("input");
         expect(input.attr('type')).toEqual('tel');
         var scope = input.scope();
         expect(scope.mysel).toBeFalsy();
@@ -60,7 +60,7 @@ describe("textInput", function () {
 
     it('should work with type="number"', function () {
         var d = testutils.compileInPage('<input ng-model="mysel" type="number">');
-        var input = d.element;
+        var input = d.element.find("input");
         expect(input.attr('type')).toEqual('number');
         var scope = input.scope();
         expect(scope.mysel).toBeFalsy();
@@ -71,7 +71,7 @@ describe("textInput", function () {
 
     it('should work with type="date"', function () {
         var d = testutils.compileInPage('<input ng-model="mysel" type="date">');
-        var input = d.element;
+        var input = d.element.find("input");
         expect(input.attr('type')).toEqual('date');
         var scope = input.scope();
         expect(scope.mysel).toBeFalsy();
@@ -93,6 +93,18 @@ describe("textInput", function () {
         scope.data = 'test2';
         scope.$root.$digest();
         expect(input[0].value).toEqual('test2');
+    });
+
+    it('should be removable', function () {
+        // normal input wraps itself into a parent div
+        var d = testutils.compileInPage('<div ng-init="list=[1,2]"><input type="text" ng-repeat="l in list"></div>');
+        var page = d.page;
+        var container = d.element;
+        var scope = container.scope();
+        expect(container.children('div').length).toEqual(2);
+        scope.list = [1];
+        scope.$root.$digest();
+        expect(container.children('div').length).toEqual(1);
     });
 
     describe("search input", function() {

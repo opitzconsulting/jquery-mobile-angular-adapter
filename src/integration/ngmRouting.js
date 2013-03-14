@@ -101,9 +101,9 @@
             };
         }
         $.mobile.changePage.defaults.allowSamePageTransition = true;
-        var _addNew = $.mobile.urlHistory.addNew;
-        $.mobile.urlHistory.addNew = function() {
-            var res = _addNew.apply(this, arguments);
+        var _add = $.mobile.urlHistory.add;
+        $.mobile.urlHistory.add = function() {
+            var res = _add.apply(this, arguments);
             var history = $.mobile.urlHistory,
                 stack = history.stack,
                 removeEntries = stack.length-3;
@@ -166,7 +166,26 @@
     }
 
     function onPageShowEvalOnActivateAndUpdateDialogUrls($rootScope, $route, $routeParams, $location, $history) {
-        $rootScope.$on('jqmPagebeforeshow', function(event) {
+        $(document).on("pagebeforechange", saveLastNavInfoIntoActivePage);
+
+        // Note: We need to attach our event handler
+        // directly to the page widget, 
+        // so that we are the first who get the event!
+        var pageProto = $.mobile.page.prototype;
+        pageProto._oldHandlePageBeforeShow = pageProto._oldHandlePageBeforeShow || pageProto._handlePageBeforeShow;
+        pageProto._handlePageBeforeShow = function() {
+            var res = pageProto._oldHandlePageBeforeShow.apply(this, arguments);
+            pageBeforeShowHandler();
+            return res;
+        };
+        function pageBeforeShowHandler() {
+            var activePage = $.mobile.activePage;
+            var jqmNavInfo = activePage.data("lastNavProps");
+            if (!jqmNavInfo || !jqmNavInfo.navByNg) {
+                // TODO do a unit-test for this:
+                // open a page manually without angular!
+                return;
+            }
             var current = $route.current,
                 onActivateParams;
             if (activePageIsDialog()) {
@@ -176,9 +195,15 @@
             }
             if (current && current.onActivate) {
                 onActivateParams = angular.extend({}, current.locals, $routeParams);
-                event.targetScope.$eval(current.onActivate, onActivateParams);
+                activePage.scope().$eval(current.onActivate, onActivateParams);
             }
-        });
+        }
+
+        function saveLastNavInfoIntoActivePage(event, data) {
+            if (typeof data.toPage === 'object') {
+                data.toPage.data("lastNavProps", data.options);
+            }
+        }
 
         function removePastTempPages($history) {
             var i = $history.activeIndex-1, removeCount = 0;
@@ -221,6 +246,7 @@
             }
             var navConfig = newRoute.jqmOptions || {};
             restoreOrSaveTransitionForUrlChange(navConfig);
+            navConfig.navByNg = true;
 
             if (!$.mobile.firstPage) {
                 $rootScope.$on("jqmInit", startNavigation);
@@ -255,7 +281,8 @@
         var dialogProto = $.mobile.dialog.prototype;
         dialogProto.origClose = dialogProto.origClose || dialogProto.close;
         dialogProto.close = function () {
-            if (this._isCloseable && this.createdByNg) {
+            var jqmNavInfo = $.mobile.activePage.data("lastNavProps");
+            if (this._isCloseable && jqmNavInfo && jqmNavInfo.navByNg) {
                 this._isCloseable = false;
                 $rootScope.$apply(function () {
                     $history.goBack();

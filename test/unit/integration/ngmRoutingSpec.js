@@ -32,7 +32,7 @@ describe('ngmRouting', function () {
                 });
                 $rootScope.$digest();
                 expect($route.current.jqmOptions).toEqual({
-                    a:1, b:3
+                    a:1, b:3, navByNg: true
                 });
             });
         });
@@ -148,10 +148,10 @@ describe('ngmRouting', function () {
 
         it('should upper bound $.mobile.urlHistory to 3 entries', function() {
             var hist = $.mobile.urlHistory;
-            hist.addNew("url1");
-            hist.addNew("url2");
-            hist.addNew("url3");
-            hist.addNew("url4");
+            hist.add("url1");
+            hist.add("url2");
+            hist.add("url3");
+            hist.add("url4");
             expect(hist.stack.length).toBe(3);
             expect(hist.stack[2].url).toBe('url4');
             expect(hist.activeIndex).toBe(2);
@@ -260,8 +260,20 @@ describe('ngmRouting', function () {
             $routeParams.c = 'd';
             var scope = page.scope();
             scope.someFn = jasmine.createSpy('someFn');
+            page.trigger("pagebeforechange", {toPage: page, options: {navByNg: true}});
             page.trigger('pagebeforeshow');
             expect(scope.someFn).toHaveBeenCalledWith('b', 'd');
+        }));
+        it('should not eval the onActivate expression on the current route on pagebeforeshow if the navigation was not done by angular', inject(function ($route, $routeParams) {
+            var c = testutils.compileInPage('<div></div>');
+            var page = c.page;
+            var currentRoute = $route.current;
+            currentRoute.onActivate = 'someFn(a, c)';
+            var scope = page.scope();
+            scope.someFn = jasmine.createSpy('someFn');
+            page.trigger("pagebeforechange", {toPage: page, options: {}});
+            page.trigger('pagebeforeshow');
+            expect(scope.someFn).not.toHaveBeenCalled();
         }));
     });
 
@@ -282,7 +294,7 @@ describe('ngmRouting', function () {
             $location.path('/somePath');
             $location.hash('someHash');
             $rootScope.$apply();
-            expect($.mobile.changePage).toHaveBeenCalledWith(getBasePath($browser.baseHref()) + '/somePath#someHash', { });
+            expect($.mobile.changePage).toHaveBeenCalledWith(getBasePath($browser.baseHref()) + '/somePath#someHash', { navByNg : true });
 
             $.mobile.changePage.reset();
             // Note: In hashbang-mode, we initially have an empty path. However,
@@ -292,7 +304,7 @@ describe('ngmRouting', function () {
             expect($location.path()).toBe('');
             $location.hash('someHash');
             $rootScope.$apply();
-            expect($.mobile.changePage).toHaveBeenCalledWith($browser.baseHref() + '#someHash', { });
+            expect($.mobile.changePage).toHaveBeenCalledWith($browser.baseHref() + '#someHash', { navByNg : true });
         }));
 
         it('should forward the jqmOptions to $.mobile.changePage', inject(function ($location, $rootScope, $browser) {
@@ -302,6 +314,7 @@ describe('ngmRouting', function () {
                 jqmOptions:someOptions
             });
             $rootScope.$apply();
+            $.extend(someOptions, {navByNg: true});
             expect($.mobile.changePage).toHaveBeenCalledWith(getBasePath($browser.baseHref()) + '/somePath', someOptions);
         }));
 
@@ -309,6 +322,7 @@ describe('ngmRouting', function () {
             var someOptions = {transition: 'slide'};
             $location.routeOverride({jqmOptions: someOptions});
             $rootScope.$apply();
+            $.extend(someOptions, {navByNg: true});
             expect($history.urlStack[0].jqmOptions).toEqual(someOptions);
         }));
 
@@ -322,7 +336,7 @@ describe('ngmRouting', function () {
             $.mobile.changePage.reset();
             $browser.$$url = 'http://server/path1';
             $browser.poll();
-            expect($.mobile.changePage).toHaveBeenCalledWith('/path1', { transition : 'slide', reverse: true });
+            expect($.mobile.changePage).toHaveBeenCalledWith('/path1', { transition : 'slide', reverse: true, navByNg : true });
         }));
 
         it('should take the transition from the current history and not the reverse flag if navigating forward', inject(function($rootScope, $location, $browser, $history) {
@@ -337,7 +351,7 @@ describe('ngmRouting', function () {
             $.mobile.changePage.reset();
             $browser.$$url = 'http://server/path2';
             $browser.poll();
-            expect($.mobile.changePage).toHaveBeenCalledWith('/path2', { transition : 'slide' });
+            expect($.mobile.changePage).toHaveBeenCalledWith('/path2', { transition : 'slide', navByNg : true });
         }));
 
         it('should not call $http when using a route with templateUrl', function () {
@@ -351,7 +365,7 @@ describe('ngmRouting', function () {
                 $location.path("/test");
                 $rootScope.$apply();
                 expect($http).not.toHaveBeenCalled();
-                expect($.mobile.changePage).toHaveBeenCalledWith('someUrl', {});
+                expect($.mobile.changePage).toHaveBeenCalledWith('someUrl', {navByNg : true});
             });
         });
     });

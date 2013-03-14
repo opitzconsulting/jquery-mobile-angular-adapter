@@ -15,7 +15,7 @@ describe('popup', function () {
         popup.popup("open");
         var closeBtn = popup.find("#close");
         closeBtn.click();
-        expect(popup.data("popup")._isOpen).toBe(false);
+        expect(popup.data($.mobile.popup.prototype.widgetFullName)._isOpen).toBe(false);
     }));
 
     it('should open popups when a link with data-rel="popup" is clicked, but not change the location', inject(function($browser) {
@@ -25,7 +25,7 @@ describe('popup', function () {
         var link = c.page.find("#link");
         link.click();
         expect($browser.url()).toBe(oldUrl);
-        expect($.mobile.popup.active).toBe(popup.data("popup"));
+        expect($.mobile.popup.active).toBe(popup.data($.mobile.popup.prototype.widgetFullName));
     }));
 
     describe('data-opened', function() {
@@ -37,7 +37,7 @@ describe('popup', function () {
             var c = testutils.compileInPage('<div data-role="popup" id="popup1" data-opened="'+openedAttribute+'">test</div>');
             popupSpy.reset();
             popup = c.page.find("#popup1");
-            widget = popup.data("popup");
+            widget = popup.data($.mobile.popup.prototype.widgetFullName);
             scope = c.page.scope();
         }
 

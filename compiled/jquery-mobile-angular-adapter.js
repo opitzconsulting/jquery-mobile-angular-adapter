@@ -1,4 +1,4 @@
-/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-06
+/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-14
 * https://github.com/tigbro/jquery-mobile-angular-adapter
 * Copyright (c) 2013 Tobias Bosch; Licensed MIT */
 (function(factory) {
@@ -16,145 +16,101 @@ factory(window.jQuery, window.angular);
         };
     }
 
-    // patch for selectmenu when it opens a menu in an own page
-    $( document ).bind( "selectmenubeforecreate", function( event ) {
-        var selectmenuWidget = $( event.target ).data( "selectmenu" );
-        patch(selectmenuWidget, 'close', function (old, self, args) {
-            if (self.options.disabled || !self.isOpen) {
-                return;
-            }
-            if (self.menuType === "page") {
-                // See mobile.dialog#close for the same logic as here!
-                var dst = $.mobile.urlHistory.getPrev().url;
-                if (!$.mobile.path.isPath(dst)) {
-                    dst = $.mobile.path.makeUrlAbsolute("#" + dst);
-                }
+    function collectEventListeners(callback) {
+        var unbindCalls = [],
+            cleanupCalls = [],
+            recursive = false,
+            i;
 
-                $.mobile.changePage(dst, { changeHash:false, fromHashChange:true });
-                self.isOpen = false;
-            } else {
-                old.apply(self, args);
+        patchBindFn("on", "off");
+        try {
+            callback();
+        } finally {
+            for (i=0; i<cleanupCalls.length; i++) {
+                cleanupCalls[i]();
             }
-        });
-    });
+        }
+
+        return unbind;
+
+        function unbind() {
+            for (i=0; i<unbindCalls.length; i++) {
+                unbindCalls[i]();
+            }
+        }
+
+        function patchBindFn(bindName, unbindName) {
+            var _old = $.fn[bindName];
+            $.fn[bindName] = patched;
+            cleanupCalls.push(function() {
+                $.fn[bindName] = _old;
+            });
+
+            function patched() {
+                if (!recursive) {
+                    var el = this,
+                        args = arguments;
+                    unbindCalls.push(function() {
+                        el[unbindName].apply(el, args);
+                    });
+                }
+                recursive = true;
+                try {
+                    return _old.apply(this, arguments);
+                } finally {
+                    recursive = false;
+                }
+            }
+        }
+    }
 
     // selectmenu may create parent elements and extra pages
     patch($.mobile.selectmenu.prototype, 'destroy', function (old, self, args) {
         old.apply(self, args);
         var menuPage = self.menuPage;
-        var screen = self.screen;
-        var listbox = self.listbox;
         if (menuPage) {
             menuPage.remove();
-        }
-        if (screen) {
-            screen.remove();
-        }
-        if (listbox) {
-            listbox.remove();
-        }
-    });
-
-    // native selectmenu throws an error is no option is contained!
-    $.mobile.selectmenu.prototype.placeholder = "";
-
-
-    // Listview may create subpages that need to be removed when the widget is destroyed.
-    patch($.mobile.listview.prototype, "destroy", function (old, self, args) {
-        // Destroy the widget instance first to prevent
-        // a stack overflow.
-        // Note: If there are more than 1 listview on the page, childPages will return
-        // the child pages of all listviews.
-        var id = self.element.attr('id');
-        var childPageRegex = new RegExp($.mobile.subPageUrlKey + "=" + id + "-");
-        var childPages = self.childPages();
-        old.apply(self, args);
-        for (var i = 0; i < childPages.length; i++) {
-            var childPage = $(childPages[i]);
-            var dataUrl = childPage.attr('data-url');
-            if (dataUrl.match(childPageRegex)) {
-                childPage.remove();
-            }
-        }
-    });
-
-    // refresh of listview should refresh also non visible entries if the
-    // listview itself is not visible
-    patch($.mobile.listview.prototype, "refresh", function (old, self, args) {
-        if (self.element.filter(":visible").length === 0) {
-            return old.call(self, true);
-        } else {
-            return old.apply(self, args);
         }
     });
 
     // Copy of the initialization code from jquery mobile for controlgroup.
-    // Needed in jqm 1.1, as we want to do a manual initialization.
-    // See the open task in jqm 1.1 for controlgroup.
+    // Needed as jqm does not do this before the ready event.
+    // And if angular is included before jqm, angular will process the first page
+    // on ready event before the controlgroup is listening for pagecreate event.
     if ($.fn.controlgroup) {
-        $(document).bind("pagecreate create", function (e) {
-            $(":jqmData(role='controlgroup')", e.target)
-                .jqmEnhanceable()
-                .controlgroup({ excludeInvisible:false });
+        $.mobile.document.bind( "pagecreate create", function( e )  {
+            $.mobile.controlgroup.prototype.enhanceWithin( e.target, true );
         });
     }
 
-    // Patch 1: controlgroup should not exclude invisible children
-    // as long as it is not visible itself!
-    patch($.fn, "controlgroup", function (old, self, args) {
-        if (self.filter(":visible").length === 0) {
-            var options = args[0] || {};
-            options.excludeInvisible = false;
-            return old.call(self, options);
+    // $.fn.grid throws an error if it contains no children
+    patch($.fn, 'grid', function(old, self, args) {
+        if (self.children().length===0) {
+            return;
         }
         return old.apply(self, args);
     });
 
-    // collapsible has problems when a collapsible is created with a nested collapsible,
-    // if the nested collapsible is created before the outside collapsible.
-    var _c = $.fn.collapsible;
-    var nestedContentClass = "ui-collapsible-content";
-    $.fn.collapsible = function () {
-        var nestedContent = this.find(".ui-collapsible-content");
-        nestedContent.removeClass(nestedContentClass);
-        try {
-            return _c.apply(this, arguments);
-        } finally {
-            nestedContent.addClass(nestedContentClass);
-        }
-    };
-
     // navbar does not contain a refresh function, so we add it here.
-
-    patch($.mobile.navbar.prototype, '_create', function (old, self, args) {
-        var _find = $.fn.find;
-        var navbar = self.element;
-        var navbarBtns;
-        $.fn.find = function (selector) {
-            var res = _find.apply(this, arguments);
-            if (selector === 'a') {
-                navbar.data('$navbtns', res);
-            }
-            return res;
-        };
-        try {
-            return old.apply(self, args);
-        } finally {
-            $.fn.find = _find;
-        }
+    patch($.mobile.navbar.prototype, '_create', function captureClickListener(old, self, args) {
+        // In the _create function, navbar binds listeners to elements.
+        // We need to capture that listener so that we can unbind it later.
+        var res;
+        self.unbindListeners = collectEventListeners(function() {
+            res = old.apply(self, args);
+        });
+        return res;
     });
 
     $.mobile.navbar.prototype.refresh = function () {
+        // clean up.
+        // old listeners
+        if (this.unbindListeners) {
+            this.unbindListeners();
+            this.unbindListeners = null;
+        }
+        // old css classes
         var $navbar = this.element;
-
-        var $navbtns = $navbar.data("$navbtns");
-        $navbtns.splice(0, $navbtns.length);
-        $.each($navbar.find("a"), function (key, value) {
-            $navbtns.push(value);
-        });
-        var iconpos = $navbtns.filter(":jqmData(icon)").length ?
-            this.options.iconpos : undefined;
-
         var list = $navbar.find("ul");
         var listEntries = list.children("li");
         list.removeClass(function (index, css) {
@@ -163,14 +119,8 @@ factory(window.jQuery, window.angular);
         listEntries.removeClass(function (index, css) {
             return (css.match(/\bui-block-\S+/g) || []).join(' ');
         });
-        list.jqmEnhanceable().grid({ grid:this.options.grid });
-
-        $navbtns.buttonMarkup({
-            corners:false,
-            shadow:false,
-            inline:true,
-            iconpos:iconpos
-        });
+        // recreate
+        this._create();
     };
 })(window.jQuery);
 /**
@@ -359,7 +309,7 @@ factory(window.jQuery, window.angular);
     }]);
     ng.run(['$rootScope', '$compile', 'jqmNgWidget', initExternalJqmPagesOnLoad]);
 
-    ng.directive('ngmPage', ["jqmNgWidget", ngmPageDirective]);
+    ng.directive('ngmPage', ["jqmNgWidget", "$timeout", ngmPageDirective]);
 
     return;
 
@@ -484,7 +434,7 @@ factory(window.jQuery, window.angular);
     /**
      * Special directive for pages, as they need an own scope.
      */
-    function ngmPageDirective(jqmNgWidget) {
+    function ngmPageDirective(jqmNgWidget, $timeout) {
         return {
             restrict:'A',
             scope:true,
@@ -502,8 +452,10 @@ factory(window.jQuery, window.angular);
                         lastCreatedPages.push(scope);
                         iElement.bind('pagebeforeshow', function (event) {
                             var page = $(event.target);
-                            scope.$emit("jqmPagebeforeshow", page);
-                            scope.$root.$digest();
+                            // do a digest using $timeout,
+                            // so that other pagebeforeshow handlers have a chance
+                            // to react on this!
+                            $timeout(angular.noop);
                         });
                     }
                 };
@@ -523,7 +475,7 @@ factory(window.jQuery, window.angular);
     // If jqm loads a page from an external source, angular needs to compile it too!
     function initExternalJqmPagesOnLoad($rootScope, $compile, jqmNgWidget) {
         jqmNgWidget.patchJq('page', function () {
-            if (!jqmNgWidget.preventJqmWidgetCreation() && !this.data("page")) {
+            if (!jqmNgWidget.preventJqmWidgetCreation() && !this.data($.mobile.page.prototype.widgetFullName)) {
                 if (this.attr("data-" + $.mobile.ns + "external-page")) {
                     correctRelativeLinks(this);
                     $compile(this)($rootScope);
@@ -604,10 +556,6 @@ factory(window.jQuery, window.angular);
                         var initArgs = JSON.parse(iAttrs[calcDirectiveName(widgetName)]);
                         delegateDomManipToWrapper(function() {
                             $.fn.orig[widgetName].apply(iElement, initArgs);
-                            var instance = iElement.data(widgetName);
-                            if (instance) {
-                                instance.createdByNg = true;
-                            }
                         }, iElement);
                     },
                     bindDefaultAttrsAndEvents: bindDefaultAttrsAndEvents,
@@ -724,21 +672,31 @@ factory(window.jQuery, window.angular);
     function enableDomManipDelegate(fnName) {
         var old = $.fn[fnName];
         $.fn[fnName] = function() {
-            var args = Array.prototype.slice.call(arguments),
-                delegate,
-                arg0 = args[0],
-                argDelegate;
-            delegate = this.data("wrapperDelegate");
-            if (arg0 && typeof arg0.data === "function") {
-                argDelegate = arg0.data("wrapperDelegate");
-                args[0] = argDelegate || args[0];
+            try {
+                var args = Array.prototype.slice.call(arguments),
+                    delegate,
+                    arg0 = args[0],
+                    argDelegate;
+                delegate = this.data("wrapperDelegate");
+                if (delegate && fnName==='remove') {
+                    this.removeData("wrapperDelegate");
+                    old.apply(this, args);
+                }
+                if (arg0 && typeof arg0.data === "function") {
+                    argDelegate = arg0.data("wrapperDelegate");
+                    args[0] = argDelegate || args[0];
+                }
+                if (delegate) {
+                    window.top.console.log("delegate ",fnName,delegate,argDelegate);
+                }
+                return old.apply(delegate||this, args);
+            } finally {
             }
-            return old.apply(delegate||this, args);
         };
     }
 
     function bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl) {
-        var widgetInstance = iElement.data(widgetName);
+        var widgetInstance = iElement.data($.mobile[widgetName].prototype.widgetFullName);
         if (!widgetInstance) {
             return;
         }
@@ -845,7 +803,7 @@ factory(window.jQuery, window.angular);
             if (iAttrs.opened) {
                 var openedGetter = $parse(iAttrs.opened),
                     openedSetter = openedGetter.assign,
-                    widget = iElement.data("popup");
+                    widget = iElement.data($.mobile.popup.prototype.widgetFullName);
                 scope.$watch(openedGetter, function (value) {
                     if (value) {
                         iElement.popup("open");
@@ -1347,9 +1305,9 @@ factory(window.jQuery, window.angular);
             };
         }
         $.mobile.changePage.defaults.allowSamePageTransition = true;
-        var _addNew = $.mobile.urlHistory.addNew;
-        $.mobile.urlHistory.addNew = function() {
-            var res = _addNew.apply(this, arguments);
+        var _add = $.mobile.urlHistory.add;
+        $.mobile.urlHistory.add = function() {
+            var res = _add.apply(this, arguments);
             var history = $.mobile.urlHistory,
                 stack = history.stack,
                 removeEntries = stack.length-3;
@@ -1412,7 +1370,26 @@ factory(window.jQuery, window.angular);
     }
 
     function onPageShowEvalOnActivateAndUpdateDialogUrls($rootScope, $route, $routeParams, $location, $history) {
-        $rootScope.$on('jqmPagebeforeshow', function(event) {
+        $(document).on("pagebeforechange", saveLastNavInfoIntoActivePage);
+
+        // Note: We need to attach our event handler
+        // directly to the page widget, 
+        // so that we are the first who get the event!
+        var pageProto = $.mobile.page.prototype;
+        pageProto._oldHandlePageBeforeShow = pageProto._oldHandlePageBeforeShow || pageProto._handlePageBeforeShow;
+        pageProto._handlePageBeforeShow = function() {
+            var res = pageProto._oldHandlePageBeforeShow.apply(this, arguments);
+            pageBeforeShowHandler();
+            return res;
+        };
+        function pageBeforeShowHandler() {
+            var activePage = $.mobile.activePage;
+            var jqmNavInfo = activePage.data("lastNavProps");
+            if (!jqmNavInfo || !jqmNavInfo.navByNg) {
+                // TODO do a unit-test for this:
+                // open a page manually without angular!
+                return;
+            }
             var current = $route.current,
                 onActivateParams;
             if (activePageIsDialog()) {
@@ -1422,9 +1399,15 @@ factory(window.jQuery, window.angular);
             }
             if (current && current.onActivate) {
                 onActivateParams = angular.extend({}, current.locals, $routeParams);
-                event.targetScope.$eval(current.onActivate, onActivateParams);
+                activePage.scope().$eval(current.onActivate, onActivateParams);
             }
-        });
+        }
+
+        function saveLastNavInfoIntoActivePage(event, data) {
+            if (typeof data.toPage === 'object') {
+                data.toPage.data("lastNavProps", data.options);
+            }
+        }
 
         function removePastTempPages($history) {
             var i = $history.activeIndex-1, removeCount = 0;
@@ -1467,6 +1450,7 @@ factory(window.jQuery, window.angular);
             }
             var navConfig = newRoute.jqmOptions || {};
             restoreOrSaveTransitionForUrlChange(navConfig);
+            navConfig.navByNg = true;
 
             if (!$.mobile.firstPage) {
                 $rootScope.$on("jqmInit", startNavigation);
@@ -1501,7 +1485,8 @@ factory(window.jQuery, window.angular);
         var dialogProto = $.mobile.dialog.prototype;
         dialogProto.origClose = dialogProto.origClose || dialogProto.close;
         dialogProto.close = function () {
-            if (this._isCloseable && this.createdByNg) {
+            var jqmNavInfo = $.mobile.activePage.data("lastNavProps");
+            if (this._isCloseable && jqmNavInfo && jqmNavInfo.navByNg) {
                 this._isCloseable = false;
                 $rootScope.$apply(function () {
                     $history.goBack();
@@ -2115,7 +2100,7 @@ factory(window.jQuery, window.angular);
          * jquery mobile hides the wait dialog when pages are transitioned.
          * This immediately closes wait dialogs that are opened in the pagebeforeshow event.
          */
-        $('div').live('pageshow', function (event, ui) {
+        $(document).on('pageshow', 'div', function (event, ui) {
             updateUi();
         });
 

@@ -47,7 +47,7 @@
          * jquery mobile hides the wait dialog when pages are transitioned.
          * This immediately closes wait dialogs that are opened in the pagebeforeshow event.
          */
-        $('div').live('pageshow', function (event, ui) {
+        $(document).on('pageshow', 'div', function (event, ui) {
             updateUi();
         });
 

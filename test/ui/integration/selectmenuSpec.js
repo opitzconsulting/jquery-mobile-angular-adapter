@@ -1,6 +1,6 @@
 describe("selectmenu", function () {
     describe('non native menus and popups', function () {
-        var dialogOpen, scope;
+        var dialogOpen, scope, select;
 
         uit.url('../ui/fixtures/test-fixture.html');
         uit.append(function($) {
@@ -14,12 +14,12 @@ describe("selectmenu", function () {
         beforeEach(function() {
             uit.runs(function ($, window) {
                 var page = $("#start");
-                var select = page.find("#mysel");
+                select = page.find("#mysel");
                 expect(select[0].value).toEqual("v1");
                 scope = select.scope();
                 expect(scope.mysel).toEqual("v1");
                 dialogOpen = function () {
-                    return select.data('selectmenu').isOpen;
+                    return select.data($.mobile.selectmenu.prototype.widgetFullName).isOpen;
                 };
                 expect(dialogOpen()).toBeFalsy();
                 // find the menu and click on the second entry
@@ -52,6 +52,17 @@ describe("selectmenu", function () {
                 dialog.find(':jqmData(role="header") a').trigger('click');
                 expect(scope.mysel).toEqual("v1");
                 expect($.mobile.activePage.attr('id')).toBe('start');
+            });
+        });
+
+        it('should be removeable',function() {
+            uit.runs(function ($) {
+                select.selectmenu('close');
+            });
+            uit.runs(function ($) {
+                select.remove();
+                expect($(':jqmData(role="content") div').length).toBe(0);
+                expect($(':jqmData(role="dialog")').length).toBe(0);
             });
         });
 

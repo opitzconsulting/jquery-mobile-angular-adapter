@@ -43,10 +43,10 @@ describe("regression", function () {
             });
             uit.runs(function ($) {
                 var btns = $("#list1 li");
-                expect(btns.eq(0).hasClass("ui-corner-top")).toBe(true);
-                expect(btns.eq(0).hasClass("ui-corner-bottom")).toBe(false);
-                expect(btns.eq(1).hasClass("ui-corner-top")).toBe(false);
-                expect(btns.eq(1).hasClass("ui-corner-bottom")).toBe(true);
+                expect(btns.eq(0).hasClass("ui-first-child")).toBe(true);
+                expect(btns.eq(0).hasClass("ui-last-child")).toBe(false);
+                expect(btns.eq(1).hasClass("ui-first-child")).toBe(false);
+                expect(btns.eq(1).hasClass("ui-last-child")).toBe(true);
 
             });
         });
@@ -68,10 +68,10 @@ describe("regression", function () {
             });
             uit.runs(function ($) {
                 var btns = $("#group1").children("div").children("a");
-                expect(btns.eq(0).hasClass("ui-corner-top")).toBe(true);
-                expect(btns.eq(0).hasClass("ui-corner-bottom")).toBe(false);
-                expect(btns.eq(1).hasClass("ui-corner-top")).toBe(false);
-                expect(btns.eq(1).hasClass("ui-corner-bottom")).toBe(true);
+                expect(btns.eq(0).hasClass("ui-first-child")).toBe(true);
+                expect(btns.eq(0).hasClass("ui-last-child")).toBe(false);
+                expect(btns.eq(1).hasClass("ui-first-child")).toBe(false);
+                expect(btns.eq(1).hasClass("ui-last-child")).toBe(true);
             });
         });
 
@@ -86,10 +86,10 @@ describe("regression", function () {
             });
             uit.runs(function ($) {
                 var btns = $("#group1").children("div").children("a");
-                expect(btns.eq(0).hasClass("ui-corner-top")).toBe(true);
-                expect(btns.eq(0).hasClass("ui-corner-bottom")).toBe(false);
-                expect(btns.eq(1).hasClass("ui-corner-top")).toBe(false);
-                expect(btns.eq(1).hasClass("ui-corner-bottom")).toBe(true);
+                expect(btns.eq(0).hasClass("ui-first-child")).toBe(true);
+                expect(btns.eq(0).hasClass("ui-last-child")).toBe(false);
+                expect(btns.eq(1).hasClass("ui-first-child")).toBe(false);
+                expect(btns.eq(1).hasClass("ui-last-child")).toBe(true);
 
             });
         });

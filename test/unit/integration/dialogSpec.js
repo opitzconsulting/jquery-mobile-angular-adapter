@@ -11,7 +11,7 @@ describe("dialog", function () {
 
     it("should enhance the close button", function () {
         var dialog = testutils.compile('<div data-role="dialog"><div data-role="header"></div></div>');
-        var closeSpy = spyOn(dialog.data("dialog"), "close");
+        var closeSpy = spyOn(dialog.data($.mobile.dialog.prototype.widgetFullName), "close");
         var closeButton = dialog.find("a");
         expect(closeButton.length).toBe(1);
         expect(closeButton.hasClass("ui-btn")).toBe(true);
@@ -21,10 +21,11 @@ describe("dialog", function () {
     });
 
     describe('routing for dialogs', function () {
-        it('should mark the history entry with .tempUrl when the dialog is opened', inject(function ($location, $rootScope, $browser, $history) {
+        it('should mark the history entry with .tempUrl when the dialog is opened', inject(function ($location, $rootScope, $browser, $history, $timeout) {
             $location.url('/somePath#someHash');
             $rootScope.$apply();
-            var page = $.mobile.activePage = testutils.compile('<div data-role="dialog"></div>');
+            var page = $.mobile.activePage = testutils.compile('<div data-role="dialog" id="someHash"></div>');
+            page.trigger("pagebeforechange", {toPage: page, options: {navByNg: true}});
             page.trigger("pagebeforeshow");
             $rootScope.$apply();
             expect($location.url()).toBe('/somePath#someHash');
@@ -35,21 +36,24 @@ describe("dialog", function () {
             var page = $.mobile.activePage = testutils.compile('<div data-role="page"></div>');
             $history.urlStack = [{url: '/dialog1', tempUrl:true},{url: '/page1'},{url: '/dialog2', tempUrl: true},{url: '/page2'}];
             $history.activeIndex = 3;
+            page.trigger("pagebeforechange", {toPage: page, options: {navByNg: true}});
             page.trigger("pagebeforeshow");
             expect($history.removePastEntries).toHaveBeenCalledWith(1);
         }));
-        it('should go back on close if the dialog was created by angular', inject(function($location, $rootScope, $history) {
+        it('should go back on close if the dialog was navigated to by angular', inject(function($location, $rootScope, $history) {
             spyOn($history, 'goBack');
             var page = $.mobile.activePage = testutils.compile('<div data-role="dialog"></div>');
+            page.trigger("pagebeforechange", {toPage: page, options: {navByNg: true}});
             page.trigger("pagebeforeshow");
             page.dialog("close");
             expect($history.goBack).toHaveBeenCalled();
         }));
-        it('should not go back on close if the dialog was not created by angular', inject(function($location, $rootScope, $history) {
+        it('should not go back on close if the dialog was not navigated to by angular', inject(function($location, $rootScope, $history) {
             spyOn($history, 'goBack');
-            var dialog = $('<div data-role="dialog"></div>');
-            dialog.dialog();
-            dialog.dialog("close");
+            var page = $.mobile.activePage = testutils.compile('<div data-role="dialog"></div>');
+            page.trigger("pagebeforechange", {toPage: page, options: {}});
+            page.trigger("pagebeforeshow");
+            page.dialog("close");
             expect($history.goBack).not.toHaveBeenCalled();
         }));
 

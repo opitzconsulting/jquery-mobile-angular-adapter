@@ -50,6 +50,5 @@ describe("navbar", function () {
         expect(navbar.find("li")[1].className).toBe('ng-scope ui-block-b');
         expect(navbar.find("a").eq(0).hasClass("ui-btn")).toBe(true);
         expect(navbar.find("a").eq(1).hasClass("ui-btn")).toBe(true);
-
     });
 });

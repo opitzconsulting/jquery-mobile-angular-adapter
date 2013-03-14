@@ -38,7 +38,7 @@
             if (iAttrs.opened) {
                 var openedGetter = $parse(iAttrs.opened),
                     openedSetter = openedGetter.assign,
-                    widget = iElement.data("popup");
+                    widget = iElement.data($.mobile.popup.prototype.widgetFullName);
                 scope.$watch(openedGetter, function (value) {
                     if (value) {
                         iElement.popup("open");

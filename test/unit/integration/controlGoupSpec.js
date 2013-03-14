@@ -30,16 +30,10 @@ describe("controlgroup", function () {
         expect(spy.callCount).toBe(1);
         buttons = list.children("div").children("a");
         expect(buttons.length).toBe(2);
-        expect(buttons.eq(0).hasClass("ui-corner-top")).toBe(true);
-        expect(buttons.eq(0).hasClass("ui-corner-bottom")).toBe(false);
-        expect(buttons.eq(1).hasClass("ui-corner-top")).toBe(false);
-        expect(buttons.eq(1).hasClass("ui-corner-bottom")).toBe(true);
-    });
-
-    it("should use the default jqm init parameter (excludeInvisible) during initialization", function() {
-        var spy = testutils.spyOnJq('controlgroup');
-        var c = testutils.compileInPage('<div data-role="controlgroup"></div>');
-        expect(spy).toHaveBeenCalledWith({ excludeInvisible : false });
+        expect(buttons.eq(0).hasClass("ui-first-child")).toBe(true);
+        expect(buttons.eq(0).hasClass("ui-last-child")).toBe(false);
+        expect(buttons.eq(1).hasClass("ui-first-child")).toBe(false);
+        expect(buttons.eq(1).hasClass("ui-last-child")).toBe(true);
     });
 
     it("should refresh only once when child entries are removed by angular", function () {
@@ -56,7 +50,7 @@ describe("controlgroup", function () {
         expect(spy.callCount).toBe(1);
         buttons = list.children("div").children("a");
         expect(buttons.length).toBe(1);
-        expect(buttons.eq(0).hasClass("ui-corner-top")).toBe(true);
-        expect(buttons.eq(0).hasClass("ui-corner-bottom")).toBe(true);
+        expect(buttons.eq(0).hasClass("ui-first-child")).toBe(true);
+        expect(buttons.eq(0).hasClass("ui-last-child")).toBe(true);
     });
 });

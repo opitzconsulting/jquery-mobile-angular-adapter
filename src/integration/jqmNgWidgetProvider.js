@@ -48,10 +48,6 @@
                         var initArgs = JSON.parse(iAttrs[calcDirectiveName(widgetName)]);
                         delegateDomManipToWrapper(function() {
                             $.fn.orig[widgetName].apply(iElement, initArgs);
-                            var instance = iElement.data(widgetName);
-                            if (instance) {
-                                instance.createdByNg = true;
-                            }
                         }, iElement);
                     },
                     bindDefaultAttrsAndEvents: bindDefaultAttrsAndEvents,
@@ -168,21 +164,31 @@
     function enableDomManipDelegate(fnName) {
         var old = $.fn[fnName];
         $.fn[fnName] = function() {
-            var args = Array.prototype.slice.call(arguments),
-                delegate,
-                arg0 = args[0],
-                argDelegate;
-            delegate = this.data("wrapperDelegate");
-            if (arg0 && typeof arg0.data === "function") {
-                argDelegate = arg0.data("wrapperDelegate");
-                args[0] = argDelegate || args[0];
+            try {
+                var args = Array.prototype.slice.call(arguments),
+                    delegate,
+                    arg0 = args[0],
+                    argDelegate;
+                delegate = this.data("wrapperDelegate");
+                if (delegate && fnName==='remove') {
+                    this.removeData("wrapperDelegate");
+                    old.apply(this, args);
+                }
+                if (arg0 && typeof arg0.data === "function") {
+                    argDelegate = arg0.data("wrapperDelegate");
+                    args[0] = argDelegate || args[0];
+                }
+                if (delegate) {
+                    window.top.console.log("delegate ",fnName,delegate,argDelegate);
+                }
+                return old.apply(delegate||this, args);
+            } finally {
             }
-            return old.apply(delegate||this, args);
         };
     }
 
     function bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl) {
-        var widgetInstance = iElement.data(widgetName);
+        var widgetInstance = iElement.data($.mobile[widgetName].prototype.widgetFullName);
         if (!widgetInstance) {
             return;
         }

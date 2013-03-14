@@ -34,7 +34,7 @@ describe("inputSlider", function () {
     it("should save the ui slider value into the model", function() {
         var d = testutils.compileInPage('<input type="number" data-type="range"  ng-model="mysel" min="0" max="100">');
         var input = d.page.find("input");
-        var slider = input.data("slider").slider;
+        var slider = input.data($.mobile.slider.prototype.widgetFullName).slider;
         var event = $.Event("mousedown");
         var expectedValue = 50;
         event.pageX = (expectedValue * slider.width() / 100) + slider.offset().left;

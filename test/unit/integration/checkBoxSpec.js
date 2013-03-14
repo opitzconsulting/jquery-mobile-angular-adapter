@@ -67,16 +67,20 @@ describe("checkbox", function () {
                 '</div>');
         var page = d.page;
         var input = page.find("#mysel");
+        var label = page.find("label");
         var scope = input.scope();
         expect(input[0].checked).toBeFalsy();
         // jquery mobile creates a new span
         // that displays the actual value of the selection.
         var iconSpan = page.find(".ui-icon");
         expect(iconSpan.hasClass('ui-icon-checkbox-on')).toBeFalsy();
+        expect(label.hasClass('ui-checkbox-on')).toBeFalsy();
         scope.mysel = true;
         scope.$root.$digest();
+        iconSpan = page.find(".ui-icon");
         expect(input[0].checked).toBeTruthy();
         expect(iconSpan.hasClass('ui-icon-checkbox-on')).toBeTruthy();
+        expect(label.hasClass('ui-checkbox-on')).toBeTruthy();
     });
 
     it('should save the ng-checked value into the ui and refresh', function() {
@@ -94,6 +98,7 @@ describe("checkbox", function () {
         expect(iconSpan.hasClass('ui-icon-checkbox-on')).toBeFalsy();
         scope.mysel = true;
         scope.$root.$digest();
+        iconSpan = page.find(".ui-icon");
         expect(input[0].checked).toBeTruthy();
         expect(iconSpan.hasClass('ui-icon-checkbox-on')).toBeTruthy();
     });

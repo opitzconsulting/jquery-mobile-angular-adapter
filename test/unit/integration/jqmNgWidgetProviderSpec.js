@@ -9,16 +9,6 @@ describe('jqmNgWidgetProvider', function () {
             expect($.fn.orig.someWidget).toHaveBeenCalledWith(initParams[0]);
         }));
 
-        it('should add a parameter to the widget that it has been created by angular', inject(function(jqmNgWidget) {
-            var initParams = [{a:1}];
-            var el = $("<div></div>");
-            $.fn.orig.someWidget = jasmine.createSpy('someWidget').andCallFake(function() {
-                this.data("someWidget", {});
-            });
-            jqmNgWidget.createWidget('someWidget', el, {ngmSomeWidget: JSON.stringify(initParams)});
-            expect(el.data("someWidget").createdByNg).toBe(true);
-        }));
-
         describe('wrapping widgets', function() {
             it('should apply after, before, remove to the wrapper if applied to the element', inject(function(jqmNgWidget) {
                 var root = $('<div class="root"><div class="sibling"></div><div class="el"></div>');

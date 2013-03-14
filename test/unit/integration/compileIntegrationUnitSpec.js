@@ -46,8 +46,8 @@ describe('compileIntegrationUnit', function () {
         var childWrapper = c.element.children("div.ui-btn");
         expect(childWrapper.length).toBe(2);
         var childButtons = c.element.find("button");
-        var btn1 = childButtons.eq(0).data("button");
-        var btn2 = childButtons.eq(1).data("button");
+        var btn1 = childButtons.eq(0).data($.mobile.button.prototype.widgetFullName);
+        var btn2 = childButtons.eq(1).data($.mobile.button.prototype.widgetFullName);
         expect(btn1).toBeTruthy();
         expect(btn2).toBeTruthy();
         expect(btn1).not.toBe(btn2);
@@ -132,8 +132,8 @@ describe('compileIntegrationUnit', function () {
             var childWrapper = c.container.children("div").children("div.ui-btn");
             expect(childWrapper.length).toBe(2);
             var childButtons = c.container.find("button");
-            var btn1 = childButtons.eq(0).data("button");
-            var btn2 = childButtons.eq(1).data("button");
+            var btn1 = childButtons.eq(0).data($.mobile.button.prototype.widgetFullName);
+            var btn2 = childButtons.eq(1).data($.mobile.button.prototype.widgetFullName);
             expect(btn1).toBeTruthy();
             expect(btn2).toBeTruthy();
             expect(btn1).not.toBe(btn2);
@@ -261,11 +261,12 @@ describe('compileIntegrationUnit', function () {
         var oldDegrade = $.mobile.page.prototype.options.degradeInputs.number;
         $.mobile.page.prototype.options.degradeInputs.number = "text";
         var c = testutils.compileInPage('<input type="number" ng-model="name">');
-        expect(c.element.attr("type")).toBe("text");
-        var scope = c.element.scope();
+        var input = c.element.find("input");
+        expect(input.attr("type")).toBe("text");
+        var scope = input.scope();
         scope.name = 123;
         scope.$digest();
-        expect(c.element.val()).toBe('123');
+        expect(input.val()).toBe('123');
         $.mobile.page.prototype.options.degradeInputs.number = oldDegrade;
     });
 
@@ -280,10 +281,10 @@ describe('compileIntegrationUnit', function () {
             expect(pages.length).toBe(2);
             var page1 = pages.eq(0);
             expect(page1.attr("id")).toBe("page1");
-            expect(page1.data("page")).toBeTruthy();
+            expect(page1.data($.mobile.page.prototype.widgetFullName)).toBeTruthy();
             var page2 = pages.eq(1);
             expect(page2.attr("id")).toBe("page2");
-            expect(page2.data("page")).toBeTruthy();
+            expect(page2.data($.mobile.page.prototype.widgetFullName)).toBeTruthy();
 
         });
     });
@@ -299,7 +300,7 @@ describe('compileIntegrationUnit', function () {
             expect(c.scope()).toBe(c.scope().$root);
         });
 
-        it("should digest on pagebeforeshow", function() {
+        it("should digest on pagebeforeshow after timeout", inject(function($timeout) {
             var c = testutils.compileInPage('<div></div>');
             var scope = c.page.scope();
             var counter = 0;
@@ -307,8 +308,10 @@ describe('compileIntegrationUnit', function () {
                 counter++;
             });
             c.page.trigger("pagebeforeshow");
+            expect(counter).toBe(0);
+            $timeout.flush();
             expect(counter).toBe(2);
-        });
+        }));
 
         it("should digest only the $.mobile.activePage and no other pages when rootScope.$digest is called", function() {
             var c = testutils.compile('<div data-role="page" id="page1"></div><div data-role="page" id="page2"></div>');

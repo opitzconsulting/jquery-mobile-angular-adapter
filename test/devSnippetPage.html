@@ -15,7 +15,6 @@ Test page during development.
 
 <script>
     var mod = angular.module("ngm", []);
-
 </script>
 
 </head>
@@ -25,13 +24,9 @@ Test page during development.
     <div data-role="header">
         <h1>Page1</h1>
     </div>    
-    <div data-role="content" ng-init="opened=false">
-        <div data-role="popup" data-opened="opened">Hello</div>
-
-        <button ng-click="opened=!opened">Open/close</button>
-
-        {{opened}}
-    </div>                
+    <div data-role="content" ng-init="o=false;o2=false">
+        <input type="range" min="0" max="10" ng-repeat="l in [1,2]" ng-model="$parent.range">
+    </div>    
 </div>
 
 </body>

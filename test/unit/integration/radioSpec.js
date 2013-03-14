@@ -47,6 +47,7 @@ describe("radio", function () {
         scope.mysel = 'v1';
         scope.$root.$digest();
         expect(input[0].checked).toBeTruthy();
+        iconSpan = page.find(".ui-icon");
         expect(iconSpan.hasClass('ui-icon-radio-on')).toBeTruthy();
     });
 
@@ -66,6 +67,7 @@ describe("radio", function () {
         scope.mysel = 'v1';
         scope.$root.$digest();
         expect(input[0].checked).toBeTruthy();
+        iconSpan = page.find(".ui-icon");
         expect(iconSpan.hasClass('ui-icon-radio-on')).toBeTruthy();
     });
 

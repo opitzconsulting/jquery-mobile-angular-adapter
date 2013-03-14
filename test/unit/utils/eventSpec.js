@@ -31,7 +31,7 @@ describe('events', function () {
 
         it("should work together with ng-model", function () {
             var d = testutils.compileInPage('<input ngm-vclick="executed=true" type="text" ng-model="data">');
-            var element = d.element;
+            var element = d.element.find("input");
             var scope = element.scope();
             element.trigger('vclick');
             expect(scope.executed).toEqual(true);

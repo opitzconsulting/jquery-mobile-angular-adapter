@@ -14,7 +14,7 @@
     }]);
     ng.run(['$rootScope', '$compile', 'jqmNgWidget', initExternalJqmPagesOnLoad]);
 
-    ng.directive('ngmPage', ["jqmNgWidget", ngmPageDirective]);
+    ng.directive('ngmPage', ["jqmNgWidget", "$timeout", ngmPageDirective]);
 
     return;
 
@@ -139,7 +139,7 @@
     /**
      * Special directive for pages, as they need an own scope.
      */
-    function ngmPageDirective(jqmNgWidget) {
+    function ngmPageDirective(jqmNgWidget, $timeout) {
         return {
             restrict:'A',
             scope:true,
@@ -157,8 +157,10 @@
                         lastCreatedPages.push(scope);
                         iElement.bind('pagebeforeshow', function (event) {
                             var page = $(event.target);
-                            scope.$emit("jqmPagebeforeshow", page);
-                            scope.$root.$digest();
+                            // do a digest using $timeout,
+                            // so that other pagebeforeshow handlers have a chance
+                            // to react on this!
+                            $timeout(angular.noop);
                         });
                     }
                 };
@@ -178,7 +180,7 @@
     // If jqm loads a page from an external source, angular needs to compile it too!
     function initExternalJqmPagesOnLoad($rootScope, $compile, jqmNgWidget) {
         jqmNgWidget.patchJq('page', function () {
-            if (!jqmNgWidget.preventJqmWidgetCreation() && !this.data("page")) {
+            if (!jqmNgWidget.preventJqmWidgetCreation() && !this.data($.mobile.page.prototype.widgetFullName)) {
                 if (this.attr("data-" + $.mobile.ns + "external-page")) {
                     correctRelativeLinks(this);
                     $compile(this)($rootScope);

@@ -15,31 +15,18 @@ Test page during development.
 
 <script>
     var mod = angular.module("ngm", []);
+    mod.config(function($routeProvider) {
+        $routeProvider.when('/devSnippetPage.html', {
+            templateUrl: 'ui/fixtures/page1.html'
+        });
+    });
 </script>
 
 </head>
 <body ng-app="ngm">
-​
-<div id="page1" data-role="page">
-    <div data-role="header">
-        <h1>Page1</h1>
-    </div>    
-    <div data-role="content">
-        <label>Opened
-        <input type="checkbox" ng-model="opened">
-      </label>
-
-      <div data-role="popup" data-opened="opened">
-        Popup
-      </div>  
+​   <div data-role="page">
     </div>
- 
-    <div data-role="panel" id="defaultpanel" data-opened="opened">
-      <div class="panel-content">
-        Content
-      </div>
-    </div>    
-</div>
+
 
 </body>
 

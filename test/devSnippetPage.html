@@ -20,29 +20,25 @@ Test page during development.
 </head>
 <body ng-app="ngm">
 ​
-<div id="page1" data-role="dialog">
+<div id="page1" data-role="page">
     <div data-role="header">
         <h1>Page1</h1>
     </div>    
-    <div data-role="content" ng-init="o=false;o2=false">
-        <table data-role="table" data-mode="reflow">
-        <thead>
-        <tr>
-          <th data-priority="1">Rank</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr ng-repeat="l in [1,2]">
-          <th>{{l}}</th>
-          <td>Hello {{l}}</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>Hello 3</td>
-        </tr>
-        </table>    
+    <div data-role="content">
+        <label>Opened
+        <input type="checkbox" ng-model="opened">
+      </label>
+
+      <div data-role="popup" data-opened="opened">
+        Popup
+      </div>  
     </div>
-    
+ 
+    <div data-role="panel" id="defaultpanel" data-opened="opened">
+      <div class="panel-content">
+        Content
+      </div>
+    </div>    
 </div>
 
 </body>

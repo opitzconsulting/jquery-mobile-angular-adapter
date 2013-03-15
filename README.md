@@ -370,12 +370,19 @@ Note: `pagerId.cache` stores the last result that was returns for a `list | page
 
 ### widget `popup`
 
-- the jqm adapter does not change the url when a popup is opened, and therefore does not go back when the popup is closed. This is due to the fact that popups cannot be addressed using a url, in contrast to dialogs.
+- the jqm adapter does not change the url when a popup is opened/closed. This is due to the fact that the jqm adatper assumes that urls represent routings for pages, and not parts of pages.
 
 - The new attribute `data-opened` has bidirectional data binding for opening/closing the popup, e.g.
 
         <div data-role="popup" data-opened="someProperty">...</div>
 
+### widget `panel`
+
+- the jqm adapter does not change the url when a panel is opened/closed. This is due to the fact that the jqm adatper assumes that urls represent routings for pages, and not parts of pages.
+
+- The new attribute `data-opened` has bidirectional data binding for opening/closing the panel, e.g.
+
+        <div data-role="panel" data-opened="someProperty">...</div>
 
 
 ### widget `slider` in a `<select>`

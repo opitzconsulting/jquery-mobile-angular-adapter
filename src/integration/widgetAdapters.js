@@ -18,6 +18,7 @@
         jqmNgWidgetProvider.widget("controlgroup", ["jqmNgWidget", controlgroupWidget]);
         jqmNgWidgetProvider.widget("slider", ["jqmNgWidget", "$timeout", sliderWidget]);
         jqmNgWidgetProvider.widget("popup", ["jqmNgWidget", "$parse", popupWidget]);
+        jqmNgWidgetProvider.widget("panel", ["jqmNgWidget", "$parse", panelWidget]);
     }]);
 
     function defaultWidget(jqmNgWidet) {
@@ -34,51 +35,61 @@
             link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
                 jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
                 jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
-                bindOpenedAttribute(scope, iElement, iAttrs);
+                addOpenedBinding("popup", $parse, scope, iElement, iAttrs, '_');
             }
         };
+    }
 
-        function bindOpenedAttribute(scope, iElement, iAttrs) {
-            var syncing = false;
-            if (iAttrs.opened) {
-                var openedGetter = $parse(iAttrs.opened),
-                    openedSetter = openedGetter.assign;
-
-                scope.$watch(openedGetter, updateWidget);
-                if (openedSetter) {
-                    updateScopeOn("_open", true);
-                    updateScopeOn("_close", false);
-                }
+    function panelWidget(jqmNgWidet, $parse) {
+        return {
+            link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
+                jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
+                jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
+                addOpenedBinding("panel", $parse, scope, iElement, iAttrs, '');
             }
+        };
+    }
 
-            function updateScopeOn(methodName, scopeValue) {
-                var widget = iElement.data($.mobile.popup.prototype.widgetFullName),
-                    _old = widget[methodName];
-                widget[methodName] = function() {
-                    var res = _old.apply(this, arguments);
-                    if (!syncing) {
-                        syncing = true;
-                        scope.$apply(function () {
-                            openedSetter(scope, scopeValue);
-                        });
-                        syncing = false;
-                    }
-                    return res;
-                };
-            }
+    function addOpenedBinding(widgetName, $parse, scope, iElement, iAttrs, openCloseMethodPrefix) {
+        var syncing = false;
+        if (iAttrs.opened) {
+            var openedGetter = $parse(iAttrs.opened),
+                openedSetter = openedGetter.assign;
 
-            function updateWidget(opened) {
-                if (syncing) {
-                    return;
-                }
-                syncing = true;
-                if (opened) {
-                    iElement.popup("open");
-                } else {
-                    iElement.popup("close");
-                }
-                syncing = false;
+            scope.$watch(openedGetter, updateWidget);
+            if (openedSetter) {
+                updateScopeOn(openCloseMethodPrefix+"open", true);
+                updateScopeOn(openCloseMethodPrefix+"close", false);
             }
+        }
+
+        function updateScopeOn(methodName, scopeValue) {
+            var widget = iElement.data($.mobile[widgetName].prototype.widgetFullName),
+                _old = widget[methodName];
+            widget[methodName] = function() {
+                var res = _old.apply(this, arguments);
+                if (!syncing) {
+                    syncing = true;
+                    scope.$apply(function () {
+                        openedSetter(scope, scopeValue);
+                    });
+                    syncing = false;
+                }
+                return res;
+            };
+        }
+
+        function updateWidget(opened) {
+            if (syncing) {
+                return;
+            }
+            syncing = true;
+            if (opened) {
+                iElement[widgetName]("open");
+            } else {
+                iElement[widgetName]("close");
+            }
+            syncing = false;
         }
     }
 

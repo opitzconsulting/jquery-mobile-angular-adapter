@@ -5,7 +5,9 @@ Changelog
 -----
 Features:
 - upgrade to angular 1.0.5, jqm 1.3 and jquery 1.9
+  * `table` widget does not refresh if new rows are added. Jqm will add this in jqm 1.3.1 (https://github.com/jquery/jquery-mobile/issues/5570).
 - popup widget has bidi databinding for `data-opened` attribute.
+- panel widget has bidi databinding for `data-opened` attribute.
 - Refactored build system to grunt.js, testacular and travis-ci.
 - Added provider `jqmNgWidget` to easily adapter new jqm plugins with angular.
   Also automatically detects widgets of jqm plugins and registers angular directives for them.

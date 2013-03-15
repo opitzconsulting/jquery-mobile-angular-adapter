@@ -35,36 +35,45 @@
         };
 
         function bindOpenedAttribute(scope, iElement, iAttrs) {
+            var syncing = false;
             if (iAttrs.opened) {
                 var openedGetter = $parse(iAttrs.opened),
-                    openedSetter = openedGetter.assign,
-                    widget = iElement.data($.mobile.popup.prototype.widgetFullName);
-                scope.$watch(openedGetter, function (value) {
-                    if (value) {
-                        iElement.popup("open");
-                    } else {
-                        iElement.popup("close");
-                    }
-                });
-                if (widget && openedSetter) {
-                    openedSetter(scope, widget._isOpen);
-                    var _open = widget._open,
-                        _close = widget._close;
-                    widget._open = function() {
-                        var res = _open.apply(this, arguments);
-                        scope.$apply(function () {
-                            openedSetter(scope, true);
-                        });
-                        return res;
-                    };
-                    widget._close = function() {
-                        var res = _close.apply(this, arguments);
-                        scope.$apply(function () {
-                            openedSetter(scope, false);
-                        });
-                        return res;
-                    };
+                    openedSetter = openedGetter.assign;
+
+                scope.$watch(openedGetter, updateWidget);
+                if (openedSetter) {
+                    updateScopeOn("_open", true);
+                    updateScopeOn("_close", false);
                 }
+            }
+
+            function updateScopeOn(methodName, scopeValue) {
+                var widget = iElement.data($.mobile.popup.prototype.widgetFullName),
+                    _old = widget[methodName];
+                widget[methodName] = function() {
+                    var res = _old.apply(this, arguments);
+                    if (!syncing) {
+                        syncing = true;
+                        scope.$apply(function () {
+                            openedSetter(scope, scopeValue);
+                        });
+                        syncing = false;
+                    }
+                    return res;
+                };
+            }
+
+            function updateWidget(opened) {
+                if (syncing) {
+                    return;
+                }
+                syncing = true;
+                if (opened) {
+                    iElement.popup("open");
+                } else {
+                    iElement.popup("close");
+                }
+                syncing = false;
             }
         }
     }
@@ -148,7 +157,7 @@
             precompile: function(origElement, initArgs) {
                 // Add a text node with the value content,
                 // as we need a text node later in the jqm button markup!
-                if (origElement[0].nodeName === 'INPUT') {
+                if (origElement[0].nodeName.toUpperCase() === 'INPUT') {
                     var value = origElement.val();
                     origElement.append(document.createTextNode(value));
                 }
@@ -182,16 +191,14 @@
             if (iAttrs.collapsed) {
                 var collapsedGetter = $parse(iAttrs.collapsed);
                 var collapsedSetter = collapsedGetter.assign;
-                scope.$watch(collapsedGetter, function (value) {
-                    updateWidgetState(value);
-                });
+                scope.$watch(collapsedGetter, updateWidget);
                 if (collapsedSetter) {
-                    callCollapsedSetterOn("collapse", true);
-                    callCollapsedSetterOn("expand", false);
+                    updateScopeOn("collapse", true);
+                    updateScopeOn("expand", false);
                 }
             }
 
-            function updateWidgetState(collapsed) {
+            function updateWidget(collapsed) {
                 if (syncing) {
                     return;
                 }
@@ -204,7 +211,7 @@
                 syncing = false;
             }
 
-            function callCollapsedSetterOn(eventName, newCollapsedValue) {
+            function updateScopeOn(eventName, newCollapsedValue) {
                 iElement.bind(eventName, function (event) {
                     if (syncing) {
                         return;

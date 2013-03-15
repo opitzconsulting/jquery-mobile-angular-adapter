@@ -43,7 +43,7 @@ describe('popup', function () {
 
         it('should update the data-opened variable', function () {
             init('openVar');
-            expect(scope.openVar).toBe(false);
+            expect(scope.openVar).toBeUndefined();
             expect(widget._isOpen).toBe(false);
             popup.popup("open");
             expect(scope.openVar).toBe(true);

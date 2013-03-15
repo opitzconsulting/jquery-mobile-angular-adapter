@@ -25,9 +25,10 @@ Test page during development.
         <h1>Page1</h1>
     </div>    
     <div data-role="content" ng-init="o=false;o2=false">
-        <input type="range" min="0" max="10" ng-model="$parent.value" ng-show="show">
+        <input type="text" ng-model="text" data-clear-btn="true">
+        {{text}}
     </div>
-    <input type="text" ng-model="show">
+    
 </div>
 
 </body>

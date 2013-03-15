@@ -107,6 +107,17 @@ describe("textInput", function () {
         expect(container.children('div').length).toEqual(1);
     });
 
+    it('should clear the text with the clear button', function() {
+        var d = testutils.compileInPage('<input ng-model="mysel" type="text" data-clear-btn="true">');
+        var input = d.element.find("input");
+        var scope = input.scope();
+        scope.mysel = "someText";
+        scope.$apply();
+        var clearBtn = input.parent().find("a");
+        clearBtn.click();
+        expect(scope.mySel).toBeFalsy();
+    });
+
     describe("search input", function() {
         it('should be removable', function () {
             // search input wraps itself into a parent div

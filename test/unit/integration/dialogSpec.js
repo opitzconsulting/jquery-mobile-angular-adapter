@@ -9,15 +9,42 @@ describe("dialog", function () {
         expect(spy.callCount).toBe(2);
     });
 
-    it("should enhance the close button", function () {
-        var dialog = testutils.compile('<div data-role="dialog"><div data-role="header"></div></div>');
-        var closeSpy = spyOn(dialog.data($.mobile.dialog.prototype.widgetFullName), "close");
-        var closeButton = dialog.find("a");
-        expect(closeButton.length).toBe(1);
-        expect(closeButton.hasClass("ui-btn")).toBe(true);
-        expect(closeButton.hasClass("ui-btn-up-a")).toBe(true);
-        closeButton.click();
-        expect(closeSpy).toHaveBeenCalled();
+    describe('close button', function() {
+        var dialog, closeSpy, closeButton;
+        function init(dialogAttrs) {
+            dialog = testutils.compile('<div data-role="dialog"'+dialogAttrs+'><div data-role="header"></div></div>');
+            closeSpy = spyOn(dialog.data($.mobile.dialog.prototype.widgetFullName), "close");
+            closeButton = dialog.find("a");
+        }
+
+        it("should close the dialog when the close button is clicked", function () {
+            init('');
+            expect(closeButton.length).toBe(1);
+            closeButton.click();
+            expect(closeSpy).toHaveBeenCalled();
+        });
+
+        it("should he close button with defaults", function () {
+            init('');
+            expect(closeButton.length).toBe(1);
+            expect(closeButton.hasClass("ui-btn-left")).toBe(true);
+            expect(closeButton.hasClass("ui-btn-up-a")).toBe(true);
+            expect($.trim(closeButton.text())).toBe($.mobile.dialog.prototype.options.closeBtnText);
+        });
+
+        it("should show the button to the right if specified", function() {
+            init('data-close-btn="right" data-close-btn-text="someCloseText"');
+            expect(closeButton.length).toBe(1);
+            expect(closeButton.hasClass("ui-btn-right")).toBe(true);
+            expect(closeButton.hasClass("ui-btn-up-a")).toBe(true);
+            expect($.trim(closeButton.text())).toBe("someCloseText");
+        });
+
+        it('should show no buton if specified', function() {
+            init('data-close-btn="none"');
+            expect(closeButton.length).toBe(0);
+        });
+
     });
 
     describe('routing for dialogs', function () {

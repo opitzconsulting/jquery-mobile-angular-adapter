@@ -233,10 +233,9 @@
             precompile: dialogPrecompile,
             link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl) {
                 jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
-
                 // add handler to enhanced close button manually (the one we added in precompile),
                 // and remove the other close button (the one the widget created).
-                var closeButtons = iElement.find(':jqmData(role="header") :jqmData(icon="delete")');
+                var closeButtons = iElement.find(':jqmData(role="header") a:jqmData(icon="delete")');
                 closeButtons.eq(1).bind("click", function() {
                     iElement.dialog("close");
                 });
@@ -252,10 +251,27 @@
         // and that is executed when we create the page widget, which is before the dialog widget is created :-(
         // We cannot adjust the timing of the header enhancement as it is no jqm widget.
         function dialogPrecompile(origElement, initAttrs) {
-            var options = $.mobile.dialog.prototype.options;
-            var headerCloseButton = $("<a href='#' data-" + $.mobile.ns + "icon='delete' data-" + $.mobile.ns + "iconpos='notext'>" + options.closeBtnText + "</a>");
-            origElement.find(":jqmData(role='header')").prepend(headerCloseButton);
-            origElement.data('headerCloseButton', headerCloseButton);
+            FakeDialog.prototype = $.mobile.dialog.prototype;
+            var fakeDialog = new FakeDialog(origElement, {}),
+                options = fakeDialog.options,
+                value = options.closeBtn;
+
+            // The following code is adapted from $.mobile.dialog.prototype._setCloseBtn
+            if ( value !== "none" ) {
+                // Sanitize value
+                var location = ( value === "left" ? "left" : "right" );
+                var btn = $( "<a href='#' class='ui-btn-" + location + "' data-" + $.mobile.ns + "icon='delete' data-" + $.mobile.ns + "iconpos='notext'>"+ options.closeBtnText + "</a>" );
+                origElement.find( ":jqmData(role='header')" ).first().prepend( btn );
+            }
+
+            function FakeDialog(element, options) {
+                this.element = element;
+                this.options = $.widget.extend( {},
+                    this.options,
+                    this._getCreateOptions(),
+                    options
+                );
+            }
         }
     }
 

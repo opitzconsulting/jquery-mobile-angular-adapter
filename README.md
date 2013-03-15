@@ -384,6 +384,12 @@ jQuery Mobile does not yet support refreshing a `slider` widget when child `<opt
 the initial state of the `ng-options` collection. Chaning the `ng-options` collection will not
 update the widget.
 
+### widget `table`
+
+- Dynamically adding rows results in wrong styling:
+  The table widget of jQuery Mobile does not yet contain a refresh method. This will
+  be implemented in jqm 1.3.1, see here: https://github.com/jquery/jquery-mobile/issues/5570
+  
 
 ##Integrating custom jquery mobile plugins with angular
 

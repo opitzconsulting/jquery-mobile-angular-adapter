@@ -25,6 +25,22 @@ Test page during development.
         <h1>Page1</h1>
     </div>    
     <div data-role="content" ng-init="o=false;o2=false">
+        <table data-role="table" data-mode="reflow">
+        <thead>
+        <tr>
+          <th data-priority="1">Rank</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="l in [1,2]">
+          <th>{{l}}</th>
+          <td>Hello {{l}}</td>
+        </tr>
+        <tr>
+          <th>3</th>
+          <td>Hello 3</td>
+        </tr>
+        </table>    
     </div>
     
 </div>

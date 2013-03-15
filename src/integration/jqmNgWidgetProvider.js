@@ -11,6 +11,11 @@
 
     enableDomManipDelegate("after");
     enableDomManipDelegate("before");
+    enableDomManipDelegate("css", function(attrName, value) {
+        // if the element is shown/hidden, delegate this to the wrapper
+        // (see ng-show). Only catch the setter!
+        return attrName === 'display' && arguments.length>=2;
+    });
     enableDomManipDelegate("remove");
 
     return;
@@ -161,10 +166,13 @@
         }
     }
 
-    function enableDomManipDelegate(fnName) {
+    function enableDomManipDelegate(fnName, callFilter) {
         var old = $.fn[fnName];
         $.fn[fnName] = function() {
             try {
+                if (callFilter && !callFilter.apply(this, arguments)) {
+                    return old.apply(this, arguments);
+                }
                 var args = Array.prototype.slice.call(arguments),
                     delegate,
                     arg0 = args[0],

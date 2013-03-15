@@ -79,6 +79,30 @@ describe('jqmNgWidgetProvider', function () {
                 expect(root.children().eq(1).filter(".wrapper").length).toBe(1);
                 expect(root.children().eq(0).filter(".sibling").length).toBe(1);
             }));
+
+            it('should apply css-display changes to the wrapper', inject(function(jqmNgWidget) {
+                var root = $('<div class="root"><div class="sibling"></div><div class="el"></div>');
+                var el = root.children(".el");
+                $.fn.orig.someWidget = function() {
+                    this.wrap('<div class="wrapper"></div>');
+                };
+                jqmNgWidget.createWidget('someWidget', el, {ngmSomeWidget: "[]"});
+                var wrapper = el.parent();
+                el.css("display", 'none');
+                expect(wrapper.css("display")).toBe('none');
+                expect(el.css("display")).toBe('');
+            }));
+
+            it('should delegate ng-show to the wrapper', function() {
+                var d = testutils.compileInPage('<button ng-show="show">{{name}}</button>');
+                var input = d.element.find("button");
+                var wrapper = input.parent();
+                expect(wrapper.css("display")).toBe('none');
+                var scope = input.scope();
+                scope.show = true;
+                scope.$apply();
+                expect(wrapper.css("display")).toBe('block');
+            });
         });
     });
 

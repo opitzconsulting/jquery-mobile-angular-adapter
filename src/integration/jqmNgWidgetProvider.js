@@ -1,4 +1,4 @@
-(function($,angular) {
+(function($, angular) {
     var ng = angular.module('ng'),
         execFlags = {};
 
@@ -14,7 +14,7 @@
     enableDomManipDelegate("css", function(attrName, value) {
         // if the element is shown/hidden, delegate this to the wrapper
         // (see ng-show). Only catch the setter!
-        return attrName === 'display' && arguments.length>=2;
+        return attrName === 'display' && arguments.length >= 2;
     });
     enableDomManipDelegate("remove");
 
@@ -22,17 +22,43 @@
 
     // --------------
 
+    /**
+     * @ngdoc object
+     * @name ng.jqmNgWidgetProvider
+     *
+     * @description
+     * Helper service for creating a custom directive for a jqm widget.
+     * The provider contains a method for registering widgets,
+     * and the service provides methods for refreshing the widget.
+     */
     function jqmNgWidgetProvider($compileProvider) {
         var widgetDefs = {},
-            widgetInstances = {};
+        widgetInstances = {};
 
         var provider = {
+            /**
+             * @name ng.jgmNgWidgetProvider#widget
+             * @methodOf ng.jgmNgWidgetProvider
+             *
+             * @description
+             * Registers a directive for a jqm widget.
+             *
+             * @param {string} widgetName jqm widget name, e.g. 'dialog'.
+             * @param {function()} directive injectable function, that returns an object with the following properties:
+             * <ul>
+             * <li>{function(element)} precompile Optional will be called before angular compiles a html snippet.</li>
+             * <li>{function(element)} preLink Optional will be called just like normal directives `preLink` function.
+             * <li>{function(element)} link will be called just like normal directives `link`/`postLink` function.
+             */
             widget: function(name, spec) {
-                if (arguments.length===1) {
+                if (arguments.length === 1) {
                     return widgetDefs[name];
                 }
+                var override = !! widgetDefs[name];
                 widgetDefs[name] = spec;
-                addJqmNgWidgetDirective(name, $compileProvider);
+                if (!override) {
+                    addJqmNgWidgetDirective(name, $compileProvider);
+                }
             },
             $get: ["$injector", function($injector) {
                 return {
@@ -68,7 +94,7 @@
     }
 
     function calcDirectiveName(widgetName) {
-        return "ngm"+widgetName[0].toUpperCase()+widgetName.substring(1);
+        return "ngm" + widgetName[0].toUpperCase() + widgetName.substring(1);
     }
 
     function addJqmNgWidgetDirective(widgetName, $compileProvider) {
@@ -78,20 +104,20 @@
 
         function directiveImpl(jqmNgWidget) {
             return {
-                restrict:'A',
+                restrict: 'A',
                 // after the normal angular widgets like input, ngModel, ...
-                priority:0,
-                require:['?ngModel', '?select'],
-                compile:function (tElement, tAttrs) {
+                priority: 0,
+                require: ['?ngModel', '?select'],
+                compile: function(tElement, tAttrs) {
                     var initArgs = JSON.parse(tAttrs[directiveName]);
                     return {
-                        pre:function (scope, iElement, iAttrs, ctrls) {
+                        pre: function(scope, iElement, iAttrs, ctrls) {
                             var widgetSpec = jqmNgWidget.lookup(widgetName);
                             if (widgetSpec.preLink) {
                                 widgetSpec.preLink(widgetName, scope, iElement, iAttrs, ctrls[0], ctrls[1]);
                             }
                         },
-                        post:function (scope, iElement, iAttrs, ctrls) {
+                        post: function(scope, iElement, iAttrs, ctrls) {
                             var widgetSpec = jqmNgWidget.lookup(widgetName);
                             widgetSpec.link(widgetName, scope, iElement, iAttrs, ctrls[0], ctrls[1]);
                         }
@@ -102,8 +128,8 @@
     }
 
     function patchJqmWidget(widgetName, widgetInstance) {
-        var widgetAttr = "data-ngm-"+widgetName;
-        patchJq(widgetName, function () {
+        var widgetAttr = "data-ngm-" + widgetName;
+        patchJq(widgetName, function() {
             if (markJqmWidgetCreation()) {
                 var args = Array.prototype.slice.call(arguments);
                 var self = this;
@@ -149,17 +175,17 @@
     function delegateDomManipToWrapper(origCreate, element) {
         var oldParents = Array.prototype.slice.call(element.parents()),
             newParents,
-            i,oldParent, newParent;
+            i, oldParent, newParent;
 
         oldParents.unshift(element[0]);
         origCreate();
         newParents = Array.prototype.slice.call(element.parents());
         newParents.unshift(element[0]);
 
-        for (i=0; i<oldParents.length; i++) {
-            oldParent= oldParents[oldParents.length-i-1];
-            newParent = newParents[newParents.length-i-1];
-            if (oldParent!==newParent) {
+        for (i = 0; i < oldParents.length; i++) {
+            oldParent = oldParents[oldParents.length - i - 1];
+            newParent = newParents[newParents.length - i - 1];
+            if (oldParent !== newParent) {
                 $(oldParent).data("wrapperDelegate", $(newParent));
                 break;
             }
@@ -178,7 +204,7 @@
                     arg0 = args[0],
                     argDelegate;
                 delegate = this.data("wrapperDelegate");
-                if (delegate && fnName==='remove') {
+                if (delegate && fnName === 'remove') {
                     this.removeData("wrapperDelegate");
                     old.apply(this, args);
                 }
@@ -186,9 +212,8 @@
                     argDelegate = arg0.data("wrapperDelegate");
                     args[0] = argDelegate || args[0];
                 }
-                return old.apply(delegate||this, args);
-            } finally {
-            }
+                return old.apply(delegate || this, args);
+            } finally {}
         };
     }
 
@@ -209,7 +234,7 @@
     }
 
     function bindDisabledAttribute(widgetName, iElement, iAttrs) {
-        iAttrs.$observe("disabled", function (value) {
+        iAttrs.$observe("disabled", function(value) {
             if (value) {
                 iElement[widgetName]("disable");
             } else {
@@ -219,7 +244,7 @@
     }
 
     function refreshAfterNgModelRender(widgetName, scope, iElement, ngModelCtrl) {
-        addCtrlFunctionListener(ngModelCtrl, "$render", function () {
+        addCtrlFunctionListener(ngModelCtrl, "$render", function() {
             triggerAsyncRefresh(widgetName, scope, iElement, "refresh");
         });
     }
@@ -229,7 +254,7 @@
         if (!ctrl[listenersName]) {
             ctrl[listenersName] = [];
             var oldFn = ctrl[ctrlFnName];
-            ctrl[ctrlFnName] = function () {
+            ctrl[ctrlFnName] = function() {
                 var res = oldFn.apply(this, arguments);
                 for (var i = 0; i < ctrl[listenersName].length; i++) {
                     ctrl[listenersName][i]();
@@ -241,7 +266,7 @@
     }
 
     function refreshOnChildrenChange(widgetName, scope, iElement) {
-        iElement.bind("$childrenChanged", function () {
+        iElement.bind("$childrenChanged", function() {
             triggerAsyncRefresh(widgetName, scope, iElement, "refresh");
         });
     }
@@ -250,7 +275,7 @@
         var prop = "_refresh" + widgetName;
         var refreshId = (iElement.data(prop) || 0) + 1;
         iElement.data(prop, refreshId);
-        scope.$evalAsync(function () {
+        scope.$evalAsync(function() {
             if (iElement.data(prop) === refreshId) {
                 iElement[widgetName](options);
             }

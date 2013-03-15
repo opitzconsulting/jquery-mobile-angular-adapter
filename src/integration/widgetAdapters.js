@@ -1,18 +1,22 @@
 (function (angular, $) {
     var ng = angular.module("ng");
     ng.config(["jqmNgWidgetProvider", function(jqmNgWidgetProvider) {
+        // register a default handler for all widgets.
+        var widgetName, widget;
+        for (widgetName in $.mobile) {
+            widget = $.mobile[widgetName];
+            if (widgetName!=='page' && angular.isFunction(widget) && widget.prototype.widget) {
+                jqmNgWidgetProvider.widget(widgetName, ["jqmNgWidget", defaultWidget]);
+            }
+        }
+
+        // register special override handlers
         jqmNgWidgetProvider.widget("checkboxradio", ["jqmNgWidget", checkboxRadioWidget]);
         jqmNgWidgetProvider.widget("button", ["jqmNgWidget", buttonWidget]);
         jqmNgWidgetProvider.widget("collapsible", ["jqmNgWidget", "$parse", collapsibleWidget]);
         jqmNgWidgetProvider.widget("dialog", ["jqmNgWidget", dialogWidget]);
         jqmNgWidgetProvider.widget("controlgroup", ["jqmNgWidget", controlgroupWidget]);
-        jqmNgWidgetProvider.widget("textinput", ["jqmNgWidget", defaultWidget]);
         jqmNgWidgetProvider.widget("slider", ["jqmNgWidget", "$timeout", sliderWidget]);
-        jqmNgWidgetProvider.widget("listview", ["jqmNgWidget", defaultWidget]);
-        jqmNgWidgetProvider.widget("collapsibleset", ["jqmNgWidget", defaultWidget]);
-        jqmNgWidgetProvider.widget("selectmenu", ["jqmNgWidget", defaultWidget]);
-        jqmNgWidgetProvider.widget("navbar", ["jqmNgWidget", defaultWidget]);
-        jqmNgWidgetProvider.widget("fixedtoolbar", ["jqmNgWidget", defaultWidget]);
         jqmNgWidgetProvider.widget("popup", ["jqmNgWidget", "$parse", popupWidget]);
     }]);
 

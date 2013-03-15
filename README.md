@@ -387,21 +387,24 @@ update the widget.
 
 ##Integrating custom jquery mobile plugins with angular
 
-All integration work is done using the `jqmNgWidget` provider. See src/main/webapp/widgetAdapters.js.
+All integration work is done using the `jqmNgWidget` provider. 
 
-Example for a default widget:
+This will automatically create angular directives
+for all jqm widgets that are contained in `$.mobile` and use the jqm widget factory (e.g. $.mobile.dialog). If you want to specify a custom handler for a jqm directive,
+use the following pattern:
 
     ng.config(["jqmNgWidgetProvider", function(jqmNgWidgetProvider) {
         jqmNgWidgetProvider.widget("somePlugin", ["jqmNgWidget", function(jqmNgWidget) {
             return {
                 link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl) {
                     jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
-                    jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
+                    // Do additional binding work...
                 }
             }
         }]);
     }]);
 
+See src/main/webapp/widgetAdapters.js for more examples.
 
 ##Integration strategy
 

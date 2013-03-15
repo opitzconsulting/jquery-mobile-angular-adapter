@@ -33,6 +33,18 @@ describe("navbar", function () {
         expect(navbar.find("a").eq(1).hasClass("ui-btn")).toBe(true);
     });
 
+    it('should unregister the old click listener on refresh', function() {
+        var navbar = $('<div><ul><li><a href="#">One</a></li></ul></div>');
+        navbar.navbar();
+        var addClassSpy = spyOn($.fn, "addClass").andCallThrough();
+        navbar.find("a").trigger("vclick");
+        expect(addClassSpy.callCount).toBe(1);
+        navbar.navbar("refresh");
+        addClassSpy.reset();
+        navbar.find("a").trigger("vclick");
+        expect(addClassSpy.callCount).toBe(1);
+    });
+
     it('should refresh if children lis change', function() {
         var d = testutils.compileInPage('<div data-role="navbar"><ul><li ng-repeat="l in list"><a href="#">{{l}}</a></li></ul></div>');
         var scope = d.element.scope();

@@ -1,4 +1,4 @@
-/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-14
+/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-15
 * https://github.com/tigbro/jquery-mobile-angular-adapter
 * Copyright (c) 2013 Tobias Bosch; Licensed MIT */
 (function(factory) {
@@ -686,9 +686,6 @@ factory(window.jQuery, window.angular);
                     argDelegate = arg0.data("wrapperDelegate");
                     args[0] = argDelegate || args[0];
                 }
-                if (delegate) {
-                    window.top.console.log("delegate ",fnName,delegate,argDelegate);
-                }
                 return old.apply(delegate||this, args);
             } finally {
             }
@@ -943,28 +940,45 @@ factory(window.jQuery, window.angular);
         };
 
         function bindCollapsedAttribute(scope, iElement, iAttrs) {
+            var syncing = false;
             if (iAttrs.collapsed) {
                 var collapsedGetter = $parse(iAttrs.collapsed);
                 var collapsedSetter = collapsedGetter.assign;
                 scope.$watch(collapsedGetter, function (value) {
-                    if (value) {
-                        iElement.trigger("collapse");
-                    } else {
-                        iElement.trigger("expand");
-                    }
+                    updateWidgetState(value);
                 });
                 if (collapsedSetter) {
-                    iElement.bind("collapse", function () {
-                        scope.$apply(function () {
-                            collapsedSetter(scope, true);
-                        });
-                    });
-                    iElement.bind("expand", function () {
-                        scope.$apply(function () {
-                            collapsedSetter(scope, false);
-                        });
-                    });
+                    callCollapsedSetterOn("collapse", true);
+                    callCollapsedSetterOn("expand", false);
                 }
+            }
+
+            function updateWidgetState(collapsed) {
+                if (syncing) {
+                    return;
+                }
+                syncing = true;
+                if (collapsed) {
+                    iElement.triggerHandler("collapse");
+                } else {
+                    iElement.triggerHandler("expand");
+                }
+                syncing = false;
+            }
+
+            function callCollapsedSetterOn(eventName, newCollapsedValue) {
+                iElement.bind(eventName, function (event) {
+                    if (syncing) {
+                        return;
+                    }
+                    syncing = true;
+                    if ( iElement[0]===event.target ) {
+                        scope.$apply(function () {
+                            collapsedSetter(scope, newCollapsedValue);
+                        });
+                    }
+                    syncing = false;
+                });
             }
         }
     }

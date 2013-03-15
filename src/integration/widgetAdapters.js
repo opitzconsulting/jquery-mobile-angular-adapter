@@ -178,28 +178,45 @@
         };
 
         function bindCollapsedAttribute(scope, iElement, iAttrs) {
+            var syncing = false;
             if (iAttrs.collapsed) {
                 var collapsedGetter = $parse(iAttrs.collapsed);
                 var collapsedSetter = collapsedGetter.assign;
                 scope.$watch(collapsedGetter, function (value) {
-                    if (value) {
-                        iElement.trigger("collapse");
-                    } else {
-                        iElement.trigger("expand");
-                    }
+                    updateWidgetState(value);
                 });
                 if (collapsedSetter) {
-                    iElement.bind("collapse", function () {
-                        scope.$apply(function () {
-                            collapsedSetter(scope, true);
-                        });
-                    });
-                    iElement.bind("expand", function () {
-                        scope.$apply(function () {
-                            collapsedSetter(scope, false);
-                        });
-                    });
+                    callCollapsedSetterOn("collapse", true);
+                    callCollapsedSetterOn("expand", false);
                 }
+            }
+
+            function updateWidgetState(collapsed) {
+                if (syncing) {
+                    return;
+                }
+                syncing = true;
+                if (collapsed) {
+                    iElement.triggerHandler("collapse");
+                } else {
+                    iElement.triggerHandler("expand");
+                }
+                syncing = false;
+            }
+
+            function callCollapsedSetterOn(eventName, newCollapsedValue) {
+                iElement.bind(eventName, function (event) {
+                    if (syncing) {
+                        return;
+                    }
+                    syncing = true;
+                    if ( iElement[0]===event.target ) {
+                        scope.$apply(function () {
+                            collapsedSetter(scope, newCollapsedValue);
+                        });
+                    }
+                    syncing = false;
+                });
             }
         }
     }

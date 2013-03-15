@@ -25,8 +25,16 @@ Test page during development.
         <h1>Page1</h1>
     </div>    
     <div data-role="content" ng-init="o=false;o2=false">
-        <input type="range" min="0" max="10" ng-repeat="l in [1,2]" ng-model="$parent.range">
-    </div>    
+        <div data-role="collapsible" data-collapsed="p">
+                <h3 class="ph">header1</h3>
+                <div data-role="collapsible" data-collapsed="c">
+                    <h3 class="ch">header2</h3>
+                    <p>content</p>
+                </div>
+        </div>
+    </div>
+    {{p}}
+    {{c}}    
 </div>
 
 </body>

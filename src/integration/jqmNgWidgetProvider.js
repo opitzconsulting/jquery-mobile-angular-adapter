@@ -178,9 +178,6 @@
                     argDelegate = arg0.data("wrapperDelegate");
                     args[0] = argDelegate || args[0];
                 }
-                if (delegate) {
-                    window.top.console.log("delegate ",fnName,delegate,argDelegate);
-                }
                 return old.apply(delegate||this, args);
             } finally {
             }

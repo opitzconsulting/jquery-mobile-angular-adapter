@@ -52,7 +52,7 @@ describe("collapsible", function () {
 
         it('should update the data-collapsed variable', function () {
             init('collapsed');
-            expect(scope.collapsed).toBe(false);
+            expect(scope.collapsed).toBeUndefined();
             header.trigger('click');
             expect(scope.collapsed).toBe(true);
         });
@@ -69,6 +69,25 @@ describe("collapsible", function () {
             scope.collapsed = true;
             scope.$root.$digest();
             expect(input.hasClass(collapsedClass)).toBe(true);
+        });
+
+        it("should be able to trigger nested collapsibles without the parent", function() {
+            var d = testutils.compileInPage('<div data-role="collapsible" data-collapsed="p">' +
+                '<h3 class="ph">header1</h3>' +
+                '<div data-role="collapsible" data-collapsed="c">' +
+                '<h3 class="ch">header2</h3>' +
+                '<p>content</p>' +
+                '</div>' +
+                '</div>');
+            var input = d.element;
+            var scope = input.scope();
+            var parentHeader = input.find(".ph");
+            var childHeader = input.find(".ch");
+            expect(scope.p).toBeFalsy();
+            expect(scope.c).toBeFalsy();
+            childHeader.click();
+            expect(scope.p).toBeFalsy();
+            expect(scope.c).toBeTruthy();
         });
     });
 

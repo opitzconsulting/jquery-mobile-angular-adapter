@@ -37,6 +37,26 @@ describe('jqmNgWidgetProvider', function () {
                 expect(root.children().eq(0).filter(".sibling").length).toBe(1);
             }));
 
+            it('should be removable if the element unwraps itself during destroy', inject(function(jqmNgWidget) {
+                var root = $('<div class="root"><div class="el"></div>');
+                var el = root.children(".el");
+                var removeCounter = 0;
+                $.fn.orig.someWidget = function() {
+                    this.wrap('<div class="wrapper"></div>');
+                    var self = this;
+                    this.on("remove", function() {
+                        var wrapper = self.parent();
+                        self.insertAfter( wrapper );
+                        wrapper.remove();
+                        removeCounter++;
+                    });
+                };
+                jqmNgWidget.createWidget('someWidget', el, {ngmSomeWidget: "[]"});
+                el.remove();
+                expect(root.children().length).toBe(0);
+                expect(removeCounter).toBe(1);
+            }));
+
             it('should apply after, before to the wrapper if applied to another element with the element as argument', inject(function(jqmNgWidget) {
                 var root = $('<div class="root"><div class="sibling"></div><div class="el"></div>');
                 var el = root.children(".el");

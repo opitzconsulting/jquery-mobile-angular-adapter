@@ -81,7 +81,7 @@
         // if the element is not connected with the document element,
         // the enhancements of jquery mobile do not work (uses event listeners for the document).
         // So temporarily connect it...
-        connectToDocument(element[0], markPagesAndWidgetsAndApplyNonWidgetMarkup);
+        connectToDocumentAndPage(jqmNgWidget, element[0], markPagesAndWidgetsAndApplyNonWidgetMarkup);
 
         // If the element wrapped itself into a new element,
         // return the element that is under the same original parent
@@ -115,7 +115,8 @@
         }
     }
 
-    function connectToDocument(node, callback) {
+    var emptyPage;
+    function connectToDocumentAndPage(jqmNgWidget, node, callback) {
         if (!node.parentNode) {
             return callback();
         }
@@ -125,13 +126,21 @@
         }
         var oldParentNode = node.parentNode;
         if (oldParentNode !== document) {
-            document.documentElement.appendChild(node);
+            if (!emptyPage) {
+                emptyPage = $('<div data-role="page"></div>');
+                createPagesWithoutPageCreateEvent(jqmNgWidget, emptyPage);
+            }
+            $("body").append(emptyPage);
+            emptyPage.append(node);
         }
         try {
             return callback();
         } finally {
             if (oldParentNode !== document) {
                 oldParentNode.appendChild(node);
+                // Don't use remove, as this would destroy the page widget also,
+                // but we want to cache it!
+                emptyPage[0].parentNode.removeChild(emptyPage[0]);
             }
         }
     }

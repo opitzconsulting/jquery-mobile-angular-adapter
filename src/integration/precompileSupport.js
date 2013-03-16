@@ -23,7 +23,7 @@
             $get: ["$injector", function($injector) {
                 return function(element) {
                     var i;
-                    for (i=0; i<element.length; i++) {
+                    for (i=0; i<handlers.length; i++) {
                         element = $injector.invoke(handlers[i], this, {element: element});
                     }
                     return element;

@@ -219,7 +219,7 @@ describe('compileIntegrationUnit', function () {
 
             });
             inject(function ($httpBackend) {
-                $httpBackend.when('GET', /.*sampleUrl*/).respond('<a href="" data-role="button" class="sampleUrl"></a>');
+                $httpBackend.when('GET', /.*sampleUrl*/).respond('<div><a href="" data-role="button" class="sampleUrl"></a><select data-role="none"></select></div>');
                 _$httpBackend = $httpBackend;
             });
             var c = testutils.compileInPage('<div sample-url="true"></div>');
@@ -228,6 +228,8 @@ describe('compileIntegrationUnit', function () {
             expect(element.hasClass("ui-btn")).toBe(true);
             expect(element[0].nodeName.toUpperCase()).toBe('A');
             expect(element.hasClass("sampleUrl")).toBe(true);
+            var selectWithNoRole = c.page.find("select");
+            expect(selectWithNoRole.parent()[0].className).toBe('');
         });
 
         it("should enhance markup created by directives with templateUrl property and append mode", function() {

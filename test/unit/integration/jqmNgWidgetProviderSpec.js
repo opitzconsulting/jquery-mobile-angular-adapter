@@ -37,10 +37,40 @@ describe('jqmNgWidgetProvider', function () {
                 expect(root.children().eq(0).filter(".sibling").length).toBe(1);
             }));
 
-            it('should be removable if the element unwraps itself during destroy', inject(function(jqmNgWidget) {
+            describe('elements that unwrap themselves during destroy', function() {
+                var root, el, removeCounter;
+                beforeEach(inject(function(jqmNgWidget) {
+                    root = $('<div class="root"><div class="el"></div>');
+                    el = root.children(".el");
+                    removeCounter = 0;
+                    $.fn.orig.someWidget = function() {
+                        this.wrap('<div class="wrapper"></div>');
+                        var self = this;
+                        this.on("remove", function() {
+                            var wrapper = self.parent();
+                            self.insertAfter( wrapper );
+                            wrapper.remove();
+                            removeCounter++;
+                        });
+                    };
+                    jqmNgWidget.createWidget('someWidget', el, {ngmSomeWidget: "[]"});
+                }));
+                it('should be removable with the wrapper using el.remove ', function() {
+                    el.remove();
+                    expect(root.children().length).toBe(0);
+                    expect(removeCounter).toBe(1);
+                });
+                it('should get only one remove event if the wrapper parent is removed', function() {
+                    root.remove();
+                    expect(removeCounter).toBe(1);
+                });
+            });
+
+            it('should trigger only one remove event if the container is removed ', inject(function(jqmNgWidget) {
                 var root = $('<div class="root"><div class="el"></div>');
                 var el = root.children(".el");
-                var removeCounter = 0;
+                var removeCounter = 0,
+                    removeEventCounter = 0;
                 $.fn.orig.someWidget = function() {
                     this.wrap('<div class="wrapper"></div>');
                     var self = this;
@@ -52,9 +82,13 @@ describe('jqmNgWidgetProvider', function () {
                     });
                 };
                 jqmNgWidget.createWidget('someWidget', el, {ngmSomeWidget: "[]"});
-                el.remove();
-                expect(root.children().length).toBe(0);
-                expect(removeCounter).toBe(1);
+                el.bind("remove", function() {
+                    removeEventCounter++;
+                });
+                root.children().remove();
+                // expect(root.children().length).toBe(0);
+                // expect(removeCounter).toBe(1);
+                expect(removeEventCounter).toBe(1);
             }));
 
             it('should apply after, before to the wrapper if applied to another element with the element as argument', inject(function(jqmNgWidget) {

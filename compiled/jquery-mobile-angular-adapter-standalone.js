@@ -36159,25 +36159,27 @@ factory(window.jQuery, window.angular);
     function enableDomManipDelegate(fnName, callFilter) {
         var old = $.fn[fnName];
         $.fn[fnName] = function() {
+            if (enableDomManipDelegate.recurse || (callFilter && !callFilter.apply(this, arguments))) {
+                return old.apply(this, arguments);
+            }
             try {
-                if (callFilter && !callFilter.apply(this, arguments)) {
-                    return old.apply(this, arguments);
-                }
+                enableDomManipDelegate.recurse = true;
                 var args = Array.prototype.slice.call(arguments),
                     delegate,
                     arg0 = args[0],
                     argDelegate;
                 delegate = this.data("wrapperDelegate");
                 if (delegate && fnName === 'remove') {
-                    this.removeData("wrapperDelegate");
-                    old.apply(this, args);
+                    old.apply(this, arguments);
                 }
                 if (arg0 && typeof arg0.data === "function") {
                     argDelegate = arg0.data("wrapperDelegate");
                     args[0] = argDelegate || args[0];
                 }
                 return old.apply(delegate || this, args);
-            } finally {}
+            } finally {
+                enableDomManipDelegate.recurse = false;
+            }
         };
     }
 

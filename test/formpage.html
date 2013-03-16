@@ -1,0 +1,29 @@
+<div id="formpage" data-role="page">
+  <div data-role="content">
+    Click the following link to show the
+    <a href="#dialog">Dialog</a>.
+    <br>
+    Observe that the dialog cannot be dimissed immediately.
+    Commenting out the form will make allow the dialog to respond.
+
+    <form>
+      <ul data-role="listview" data-inset="true">
+        <!-- ng-repeat used as a convenience, the expanded
+           version will show the same behaviour.
+           The more element is added the longer the way
+           in the dialog
+        -->
+        <li ng-repeat="i in [0,1,2,3,4,5]">
+          <fieldset class="ui-grid-a">
+            <div class="ui-block-a" style="width:97%">
+              <div data-role="fieldcontain">
+                <label for="id_1 class="select">{{$index}}</label>
+                <select name="id_1" id="id_1"></select>
+              </div>
+            </div>
+          </fieldset>
+        </li>
+      </ul>
+    </form>
+  </div>
+</div>

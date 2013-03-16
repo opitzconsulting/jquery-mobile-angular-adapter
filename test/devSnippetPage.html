@@ -6,7 +6,6 @@ Test page during development.
 <head>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
     <link rel="stylesheet" href="../lib/jquery.mobile.css"/>
-    <base href="/">
 
     <script src="../lib/jquery.js"></script>
     <script src="../lib/jquery.mobile.js"></script>
@@ -15,40 +14,19 @@ Test page during development.
 
 <script>
 var ngm = angular.module('ngm',[]);
-ngm.config(function($routeProvider) {
-    $routeProvider.when('/page1', {
-        templateUrl: '#page1'
-    });
-    $routeProvider.when('/someFolder/page2.html', {
-        templateUrl: '#page2'
-    });
-});
 
 </script>
 
 </head>
 <body ng-app="ngm">
 
-<div data-role="page">
-    <div data-role="content">
-        <a href="ui/fixtures/someFolder/externalPage.html?test#asdf">Test</a>
-        <a href="page1">Page1</a>
-    </div>    
+<div id="main" data-role="page">
+  Click the following link <a href="formpage.html">Show Form Page</a>
 </div>
 
-<div data-role="page" id="page1">
-    <div data-role="header">
-        <h1>Page1</h1>
-        <a href="someFolder/page2.html">Page2</a>
-    </div>
-</div>    
-
-<div data-role="page" id="page2">
-    <div data-role="header">
-        <h1>Page2</h1>
-        <a href="page1">Page1</a>
-    </div>
-</div>    
+<div id="dialog" data-role="dialog">
+  <div data-role="header"> <h1>Dialog</h1> </div>
+</div>
 
 </body>
 

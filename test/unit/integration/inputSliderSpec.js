@@ -22,13 +22,26 @@ describe("inputSlider", function () {
         expect(textinputSpy).toHaveBeenCalled();
     });
 
+    it('should have pristine state after init at use the min value as initial value in the scope', function() {
+        var d = testutils.compileInPage('<form name="form"><input type="number" data-type="range" name="s1" ng-model="s1" min="0" max="300">'+
+            '<input type="number" data-type="range" name="s2" ng-model="s2" max="300"></form>');
+        var scope = d.page.scope();
+        expect(scope.form.$pristine).toBe(true);
+        expect(scope.form.s1.$pristine).toBe(true);
+        expect(scope.form.s2.$pristine).toBe(true);
+
+        expect(scope.s1).toBe(0);
+        var slider1 = d.page.find("input[name='s1']");
+        expect(slider1.val()).toBe('0');
+    });
+
     it('should save the ui text value into the model', function () {
         var d = testutils.compileInPage('<input type="number" data-type="range"  ng-model="mysel" min="0" max="300">');
         var input = d.page.find("input");
         var scope = input.scope();
         input.val(100);
         testutils.triggerInputEvent(input);
-        expect(scope.mysel).toEqual("100");
+        expect(scope.mysel).toBe(100);
     });
 
     it("should save the ui slider value into the model", function() {
@@ -42,7 +55,7 @@ describe("inputSlider", function () {
         expect(input.val()).toBe('50');
 
         var scope = input.scope();
-        expect(scope.mysel).toEqual("50");
+        expect(scope.mysel).toBe(50);
     });
 
     it('should save the model value into the ui and refresh', function () {
@@ -50,7 +63,7 @@ describe("inputSlider", function () {
         var input = d.page.find("input");
         var container = input.parent();
         var scope = input.scope();
-        scope.mysel = "100";
+        scope.mysel = 100;
         scope.$root.$digest();
         expect(input[0].value).toEqual("100");
         expect(container.find("a").eq(0).attr("aria-valuenow")).toBe("100");

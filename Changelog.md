@@ -20,12 +20,12 @@ https://github.com/jquery/jquery-mobile/issues/5657).
   leaving a dialog will still remove it automatically from the history.
 - Popups do no more change the url when opened or closed (and by this, they cannot be
   closed using the back browser button).
-- checkbox/radiobox: ng-repeat or other conditional directives are no more allowed on checkboxes/radioboxes,
+- checkbox/radiobox: ng-repeat or other conditional directives are no more allowed on the input of checkboxes/radioboxes,
   as they also need their corresponding labels. Instead, wrap the input into the label
   and put the ng-repeat on the label.
 - `$location.goBack()` was moved to `$history.goBack()`.
 - `$location.backMode()` was replaced by `$location.back()` (so it is more similar to `$location.replace()`).
-
+- `<input type="range">` now correctly uses numbers as value in the scope, not strings.
 
 Internal changes:
 - Better and simpler history support.

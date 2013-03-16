@@ -32,7 +32,7 @@ describe("rangeSlider", function () {
         var scope = input1.scope();
         input1.val(100);
         testutils.triggerInputEvent(input1);
-        expect(scope.r1).toEqual("100");
+        expect(scope.r1).toBe(100);
     });
 
     it("should save the ui slider value into the model", function() {
@@ -46,7 +46,7 @@ describe("rangeSlider", function () {
         expect(input.val()).toBe('50');
 
         var scope = input.scope();
-        expect(scope.r2).toEqual("50");
+        expect(scope.r2).toBe(50);
     });
 
     it('should save the model value into the ui and refresh', function () {
@@ -54,7 +54,7 @@ describe("rangeSlider", function () {
         var input = d.page.find("input#r2");
         var container = input.parent();
         var scope = input.scope();
-        scope.r2 = "100";
+        scope.r2 = 100;
         scope.$root.$digest();
         expect(input[0].value).toEqual("100");
         expect(container.find("a").eq(1).attr("aria-valuenow")).toBe("100");

@@ -15,14 +15,26 @@ Test page during development.
 
 <script>
     var mod = angular.module("ngm", []);
+    mod.controller("MainCtrl", function($scope) {
+        $scope.type = function(v) {
+            return typeof v;
+        }
+    });
 </script>
 
 </head>
 <body ng-app="ngm">
-    <div data-role="page" id="main">
-        <div ng-init="list=[1,2]">
-            <select data-role="slider" ng-repeat="l in list"><option value="v1" default="true">v1</option></select>
-            </div>
+    <div data-role="page" id="main" ng-controller="MainCtrl">
+<form name="myForm">
+        <input name="range_input"
+                      data-higlight="true" min="0" max="20" integer type="range"
+                      ng-model="num"/>
+        {{myForm.range_input.$pristine}}<br/>
+        <input name="input" id="input" ng-model="num2"/>
+          {{myForm.input.$pristine}}
+          {{myForm.$pristine}}
+        </form>
+        Num: {{num}}|{{type(num)}} Num2: {{num2}}|{{type(num2)}}
     </div>
 </body>
 

@@ -16,6 +16,7 @@
         jqmNgWidgetProvider.widget("collapsible", ["jqmNgWidget", "$parse", collapsibleWidget]);
         jqmNgWidgetProvider.widget("dialog", ["jqmNgWidget", dialogWidget]);
         jqmNgWidgetProvider.widget("controlgroup", ["jqmNgWidget", controlgroupWidget]);
+        jqmNgWidgetProvider.widget("textinput", ["jqmNgWidget", textinputWidget]);
         jqmNgWidgetProvider.widget("slider", ["jqmNgWidget", "$timeout", sliderWidget]);
         jqmNgWidgetProvider.widget("popup", ["jqmNgWidget", "$parse", popupWidget]);
         jqmNgWidgetProvider.widget("panel", ["jqmNgWidget", "$parse", panelWidget]);
@@ -26,6 +27,20 @@
             link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
                 jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
                 jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
+            }
+        };
+    }
+
+    function textinputWidget(jqmNgWidget) {
+        return {
+            preLink: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
+                if (iAttrs.type === 'range') {
+                    iAttrs.type = 'number';
+                }
+            },
+            link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
+                jqmNgWidget.createWidget(widgetName, iElement, iAttrs);
+                jqmNgWidget.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
             }
         };
     }
@@ -98,19 +113,35 @@
             link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
                 if (selectCtrl) {
                     // Note: scope.$evalAsync is not enough here :-(
-                    $timeout(function() {
-                        selectSecondOptionIfFirstIsUnknownOption(iElement, ngModelCtrl);
+                    waitForNgOptionsAndNgRepeatToCreateOptions(function() {
+                        selectSecondOptionIfFirstIsUnknownOptionToRemoveUnkownOption(iElement, ngModelCtrl);
                         jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
                         jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
                     });
                 } else {
+                    setMinValueInScopeIfNoValueInScopeAsJqmStartsWithMinValue(iAttrs, ngModelCtrl);
                     jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
                     jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
                 }
             }
         };
 
-        function selectSecondOptionIfFirstIsUnknownOption(iElement, ngModelCtrl) {
+        function waitForNgOptionsAndNgRepeatToCreateOptions(callback) {
+            // Note: scope.$evalAsync is not enough here :-(
+            $timeout(callback);
+        }
+
+        function setMinValueInScopeIfNoValueInScopeAsJqmStartsWithMinValue(iAttrs, ngModelCtrl) {
+            if (ngModelCtrl && typeof iAttrs.min !== "undefined") {
+                var _$pristine = ngModelCtrl.$pristine;
+                ngModelCtrl.$pristine = false;
+                ngModelCtrl.$setViewValue(iAttrs.min);
+                ngModelCtrl.$render();
+                ngModelCtrl.$pristine = _$pristine;
+            }
+        }
+
+        function selectSecondOptionIfFirstIsUnknownOptionToRemoveUnkownOption(iElement, ngModelCtrl) {
             var options = iElement.children("option"),
                 initValue = options.eq(0).val(),
                 selectedIndex;

@@ -196,10 +196,11 @@ describe('history', function () {
             jasmine.Clock.tick(1);
             expect(window.history.go).toHaveBeenCalledWith(-2);
         }));
-        it('should replace the location with the old location, keeping the history entry', inject(function($browser, $history) {
+        it('should replace the location with the old location, keeping the history entry when going back to a different location', inject(function($browser, $history) {
             var initialUrlStack;
             createHistory(3);
             initialUrlStack = $history.urlStack.slice();
+            initialUrlStack[2].test = true;
 
             $history.removePastEntries(2);
             jasmine.Clock.tick(10);
@@ -207,7 +208,26 @@ describe('history', function () {
             $browser.poll();
 
             expect($browser.url()).toBe(initialUrlStack[2].url);
-            expect($history.urlStack[$history.activeIndex]).toEqual(initialUrlStack[2]);
+            expect(angular.mock.$Browser.prototype.url).toHaveBeenCalledWith(initialUrlStack[2].url, true);
+            expect($history.urlStack[$history.activeIndex]).toBe(initialUrlStack[2]);
+        }));
+        it('should not replace the location, keeping the history entry when going back to the same location', inject(function($browser, $history, $location, $rootScope) {
+            var initialUrlStack;
+            createHistory(2);
+            $location.path("path0");
+            $rootScope.$apply();
+
+            initialUrlStack = $history.urlStack.slice();
+            initialUrlStack[2].test = true;
+
+            $history.removePastEntries(2);
+            jasmine.Clock.tick(10);
+            $browser.$$url = initialUrlStack[0].url;
+            $browser.poll();
+
+            expect($browser.url()).toBe(initialUrlStack[2].url);
+            expect(angular.mock.$Browser.prototype.url).not.toHaveBeenCalledWith(initialUrlStack[2].url, true);
+            expect($history.urlStack[$history.activeIndex]).toBe(initialUrlStack[2]);
         }));
         it('should not call other onUrlChange listeners while going back, but call them again afterwards', inject(function($browser, $history) {
             var spy = jasmine.createSpy();
@@ -253,7 +273,7 @@ describe('history', function () {
                 $location.back();
                 $rootScope.$apply();
 
-                expect($history.removePastEntries).toHaveBeenCalledWith(1);
+                expect($history.removePastEntries).toHaveBeenCalledWith(2);
             }));
 
             it('should go back to the nearest entry in history', inject(function ($location, $rootScope, $browser, $history) {
@@ -270,7 +290,7 @@ describe('history', function () {
                 $location.back();
                 $rootScope.$apply();
 
-                expect($history.removePastEntries).toHaveBeenCalledWith(1);
+                expect($history.removePastEntries).toHaveBeenCalledWith(2);
             }));
         });
 

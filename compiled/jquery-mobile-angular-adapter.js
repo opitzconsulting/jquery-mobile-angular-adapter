@@ -1234,16 +1234,28 @@ factory(window.jQuery, window.angular);
             };
 
             $history.removePastEntries = function(number) {
-                var current = $history.urlStack[$history.activeIndex];
-                $browser.stopOnUrlChangeListeners(function() {
-                    if (current) {
-                        $browser.url(current.url, true);
-                        $history.urlStack[$history.activeIndex] = current;
-                        current = null;
-                    } else {
-                        $browser.stopOnUrlChangeListeners(null);
-                    }
-                });
+                var current = $history.urlStack[$history.activeIndex],
+                    replacedIndex = $history.activeIndex-number,
+                    replaced = $history.urlStack[replacedIndex];
+                if (current.url !== replaced.url) {
+                    $browser.stopOnUrlChangeListeners(function() {
+                        if (current) {
+                            $browser.url(current.url, true);
+                            $history.urlStack[replacedIndex] = current;
+                            current = null;
+                        } else {
+                            $browser.stopOnUrlChangeListeners(null);
+                        }
+                    });
+                } else {
+                    // Attention: angular does not call
+                    // onUrlChanged listeners if we are going back 
+                    // in history to the same url where we already are.
+                    // Therefore we cannot use $browser.stopOnUrlChangeListeners
+                    // in this case!
+                    // Note: angular-mocks does not simulate this correctly :-(
+                    $history.urlStack[replacedIndex] = current;
+                }
                 $history.go(-number);
             };
 
@@ -1320,6 +1332,15 @@ factory(window.jQuery, window.angular);
         }
 
         function onUrlChangeProgrammatically(url, replace, back) {
+            var currentEntry = $history.urlStack[$history.activeIndex];
+            if (!currentEntry || currentEntry.url !== url) {
+                $history.lastIndexFromUrlChange = -1;
+                if (!replace) {
+                    $history.activeIndex++;
+                }
+                $history.urlStack.splice($history.activeIndex, $history.urlStack.length - $history.activeIndex);
+                $history.urlStack.push({url: url});
+            }
             if (back) {
                 var currIndex = $history.activeIndex;
                 var newIndex = findInPast(url);
@@ -1327,16 +1348,6 @@ factory(window.jQuery, window.angular);
                     $history.removePastEntries(currIndex - newIndex);
                 }
             }
-            var currentEntry = $history.urlStack[$history.activeIndex];
-            if (currentEntry && currentEntry.url === url) {
-                return;
-            }
-            $history.lastIndexFromUrlChange = -1;
-            if (!replace) {
-                $history.activeIndex++;
-            }
-            $history.urlStack.splice($history.activeIndex, $history.urlStack.length - $history.activeIndex);
-            $history.urlStack.push({url: url});
         }
     }
 })(window.jQuery, window.angular);

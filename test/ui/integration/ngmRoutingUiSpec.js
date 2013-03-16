@@ -234,23 +234,35 @@ describe("ngmRouting", function () {
     describe('$location.back', function () {
         it('should go back in history when $location.back is used but no more forward', function () {
             uit.url(baseUrl+"#start");
+            uit.append(function($, window) {
+                $("body").attr("ng-controller", "Ctrl");
+                window.Ctrl = function($scope, $location) {
+                    $scope.goBack = function() {
+                        $location.url("#page2");
+                        $location.back();
+                    };
+                };
+                $("body").append('<div data-role="page" id="page3"><a href="#" ng-click="goBack()" id="back">To start</a></div>');
+            });
             uit.runs(function ($, $location, $rootScope) {
                 expect($.mobile.activePage.attr("id")).toBe("start");
                 $location.hash('page2');
                 $rootScope.$apply();
-            });
-            uit.runs(function ($, $location, $rootScope) {
-                expect($.mobile.activePage.attr("id")).toBe("page2");
-                $location.hash("start");
-                $location.back();
+                $location.hash('page3');
                 $rootScope.$apply();
             });
-            uit.runs(function ($, $history) {
-                expect($.mobile.activePage.attr("id")).toBe("start");
-                $history.go(1);
+            uit.runs(function ($, $location, $rootScope) {
+                expect($.mobile.activePage.attr("id")).toBe("page3");
+                $("#back").click();
             });
-            uit.runs(function ($) {
+            uit.runs(function ($, $history, $browser) {
+                expect($.mobile.activePage.attr("id")).toBe("page2");
+                expect($browser.url()).toEndWith("#page2");
+                $history.go(-1);
+            });
+            uit.runs(function ($, $history, $browser) {
                 expect($.mobile.activePage.attr("id")).toBe("start");
+                expect($browser.url()).toEndWith("#start");
             });
         });
     });

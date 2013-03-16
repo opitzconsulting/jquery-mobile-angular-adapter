@@ -14,19 +14,29 @@ Test page during development.
 
 <script>
 var ngm = angular.module('ngm',[]);
+ngm.controller("Ctrl", function($scope, $location) {
+    $scope.goBack = function(url) {
+        $location.url(url);
+        $location.back();
+    };
+    $scope.go = function(url) {
+        $location.url(url);
+    };
+});
 
 </script>
 
 </head>
-<body ng-app="ngm">
+<body ng-app="ngm" ng-controller="Ctrl">
 
-<div id="main" data-role="page">
-  Click the following link <a href="formpage.html">Show Form Page</a>
+<div id="login" data-role="page">
+  <a href="#" ng-click="go('#page1')">To Page1</a>
 </div>
 
-<div id="dialog" data-role="dialog">
-  <div data-role="header"> <h1>Dialog</h1> </div>
+<div id="page1" data-role="page">
+  <a href="#" ng-click="goBack('#login')" id="click">To Start</a>
 </div>
+
 
 </body>
 

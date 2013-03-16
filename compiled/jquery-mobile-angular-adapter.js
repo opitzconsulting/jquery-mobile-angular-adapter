@@ -1,4 +1,4 @@
-/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-15
+/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-16
 * https://github.com/tigbro/jquery-mobile-angular-adapter
 * Copyright (c) 2013 Tobias Bosch; Licensed MIT */
 (function(factory) {
@@ -122,6 +122,14 @@ factory(window.jQuery, window.angular);
         // recreate
         this._create();
     };
+    // rangeslider enable/disable throws
+    // TypeError: Function.prototype.apply: Arguments list has wrong type
+    $.mobile.rangeslider.prototype._setOption = function( options ) {
+        // Old: this._superApply(options);
+        $.Widget.prototype._setOption.apply(this, arguments);
+        this.refresh();
+    };
+
 })(window.jQuery);
 /**
  * Helper that introduces the concept of precompilation: Preprocess the dom before
@@ -730,7 +738,7 @@ factory(window.jQuery, window.angular);
         if (!widgetInstance) {
             return;
         }
-        if (widgetInstance.disable && widgetInstance.enable) {
+        if (widgetInstance.disable && widgetInstance.enable && (iAttrs.disabled || iAttrs.ngDisabled)) {
             bindDisabledAttribute(widgetName, iElement, iAttrs);
         }
         if (widgetInstance.refresh) {

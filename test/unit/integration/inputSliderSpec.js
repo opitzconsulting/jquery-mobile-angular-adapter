@@ -68,11 +68,9 @@ describe("inputSlider", function () {
         scope.$root.$digest();
         disabled = input.slider('option', 'disabled');
         expect(disabled).toEqual(true);
-
     });
 
-    // TODO uncomment this in jqm 1.3!
-    xit('should be removable', function () {
+    it('should be removable', function () {
         var d = testutils.compileInPage('<div ng-init="list=[1,2]">' +
             '<input type="number" data-type="range" value="150" min="0" max="300" ng-repeat="l in list">' +
             '</div>');

@@ -129,7 +129,7 @@ describe("selectSlider", function () {
         });
     });
 
-    // TODO uncomment this in jqm 1.3!
+    /** TODO: Wait for jqm to add a wrapper for select sliders **/
     xit('should be removable', function () {
         var d = compileInPage('<div ng-init="list=[1,2]">' +
             '<select data-role="slider" ng-repeat="l in list"><option value="v1" default="true">v1</option></select>' +

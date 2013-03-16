@@ -387,9 +387,11 @@ Note: `pagerId.cache` stores the last result that was returns for a `list | page
 
 ### widget `slider` in a `<select>`
 
-jQuery Mobile does not yet support refreshing a `slider` widget when child `<option>` elements have changed. As a consequence, using `<select data-role="slider">` with `ng-options` only uses
+- jQuery Mobile does not yet support refreshing a `slider` widget when child `<option>` elements have changed. As a consequence, using `<select data-role="slider">` with `ng-options` only uses
 the initial state of the `ng-options` collection. Chaning the `ng-options` collection will not
 update the widget.
+- `ng-repeat` is not supported on a `<select data-role="slider">` yet, as jqm 
+  creates a sibling element to the select, instead of a wrapper (like in all other cases).
 
 ### widget `table`
 

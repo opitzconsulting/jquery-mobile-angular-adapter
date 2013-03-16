@@ -222,7 +222,7 @@
         if (!widgetInstance) {
             return;
         }
-        if (widgetInstance.disable && widgetInstance.enable) {
+        if (widgetInstance.disable && widgetInstance.enable && (iAttrs.disabled || iAttrs.ngDisabled)) {
             bindDisabledAttribute(widgetName, iElement, iAttrs);
         }
         if (widgetInstance.refresh) {

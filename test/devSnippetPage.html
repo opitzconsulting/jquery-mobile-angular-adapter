@@ -15,19 +15,15 @@ Test page during development.
 
 <script>
     var mod = angular.module("ngm", []);
-    mod.config(function($routeProvider) {
-        $routeProvider.when('/devSnippetPage.html', {
-            templateUrl: 'ui/fixtures/page1.html'
-        });
-    });
 </script>
 
 </head>
 <body ng-app="ngm">
-​   <div data-role="page">
+    <div data-role="page" id="main">
+        <div ng-init="list=[1,2]">
+            <select data-role="slider" ng-repeat="l in list"><option value="v1" default="true">v1</option></select>
+            </div>
     </div>
-
-
 </body>
 
 

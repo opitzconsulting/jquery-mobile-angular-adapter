@@ -112,4 +112,12 @@
         // recreate
         this._create();
     };
+    // rangeslider enable/disable throws
+    // TypeError: Function.prototype.apply: Arguments list has wrong type
+    $.mobile.rangeslider.prototype._setOption = function( options ) {
+        // Old: this._superApply(options);
+        $.Widget.prototype._setOption.apply(this, arguments);
+        this.refresh();
+    };
+
 })(window.jQuery);

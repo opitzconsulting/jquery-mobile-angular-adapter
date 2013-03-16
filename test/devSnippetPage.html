@@ -5,8 +5,8 @@ Test page during development.
 -->
 <head>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
-
     <link rel="stylesheet" href="../lib/jquery.mobile.css"/>
+    <base href="/">
 
     <script src="../lib/jquery.js"></script>
     <script src="../lib/jquery.mobile.js"></script>
@@ -14,34 +14,41 @@ Test page during development.
     <script src="../compiled/jquery-mobile-angular-adapter.js"></script>
 
 <script>
-var myApp = angular.module('myApp',[]);
-
-myApp.directive('myWidget', function(){
-    return {
-        replace: true,
-        templateUrl: 'MyWidget.html',
-        link: function() {}
-    }
+var ngm = angular.module('ngm',[]);
+ngm.config(function($routeProvider) {
+    $routeProvider.when('/page1', {
+        templateUrl: '#page1'
+    });
+    $routeProvider.when('/someFolder/page2.html', {
+        templateUrl: '#page2'
+    });
 });
 
-function Controller ($scope) {
-    $scope.checked = true;
-}
 </script>
 
 </head>
-<body ng-app="myApp">
+<body ng-app="ngm">
 
-<script type="text/ng-template" id="MyWidget.html">
-    <div>
-        <input data-role="none" id="c" type="checkbox" name="c" ng-model="checked" ng-checked="checked"/><label for="c">Checkbox - globalCheck: {{checked}}</label>
-    </div>
-</script>
-
-<div data-role="page" ng-controller="Controller">
-    <div class="test-widget" my-widget></div>
-    <select data-role="none"></select>
+<div data-role="page">
+    <div data-role="content">
+        <a href="ui/fixtures/someFolder/externalPage.html?test#asdf">Test</a>
+        <a href="page1">Page1</a>
+    </div>    
 </div>
+
+<div data-role="page" id="page1">
+    <div data-role="header">
+        <h1>Page1</h1>
+        <a href="someFolder/page2.html">Page2</a>
+    </div>
+</div>    
+
+<div data-role="page" id="page2">
+    <div data-role="header">
+        <h1>Page2</h1>
+        <a href="page1">Page1</a>
+    </div>
+</div>    
 
 </body>
 

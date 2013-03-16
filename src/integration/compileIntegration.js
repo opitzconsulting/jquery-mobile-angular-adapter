@@ -12,7 +12,7 @@
     ng.config(["$precompileProvider", function($precompile) {
         $precompile.addHandler(["jqmNgWidget", "element", precompilePageAndWidgets]);
     }]);
-    ng.run(['$rootScope', '$compile', 'jqmNgWidget', initExternalJqmPagesOnLoad]);
+    ng.run(['$rootScope', '$compile', 'jqmNgWidget', '$browser', initExternalJqmPagesOnLoad]);
 
     ng.directive('ngmPage', ["jqmNgWidget", "$timeout", ngmPageDirective]);
 
@@ -187,7 +187,7 @@
     }
 
     // If jqm loads a page from an external source, angular needs to compile it too!
-    function initExternalJqmPagesOnLoad($rootScope, $compile, jqmNgWidget) {
+    function initExternalJqmPagesOnLoad($rootScope, $compile, jqmNgWidget, $browser) {
         jqmNgWidget.patchJq('page', function () {
             if (!jqmNgWidget.preventJqmWidgetCreation() && !this.data($.mobile.page.prototype.widgetFullName)) {
                 if (this.attr("data-" + $.mobile.ns + "external-page")) {
@@ -198,21 +198,24 @@
             return $.fn.orig.page.apply(this, arguments);
         });
 
-        var base = $.mobile.base.element.attr("href");
         function correctRelativeLinks(page) {
             // correct the relative links in this page relative
             // to the page url.
-            // Jqm does this when a link is clicked (using link.attr("href"),
-            // but we want to use link.prop("href")
-            var url = page.jqmData( "url" );
-            if ( !url || !$.mobile.path.isPath( url ) ) {
-                url = base;
-            }
-            var pageUrl = $.mobile.path.makeUrlAbsolute( url, base);
-            page.find( "a:not([rel='external'], [target])" ).each(function() {
+            // For external links, jqm already does this when
+            // the page is loaded. However, normal links
+            // are adjusted in jqm via their default jqm click handler.
+            // As we use our own default click handler (see ngmRouting.js),
+            // we need to adjust normal links ourselves.
+            var pageUrl = page.jqmData( "url" ),
+                pagePath = $.mobile.path.get(pageUrl),
+                ABSOULTE_URL_RE = /^(\w+:|#|\/)/;
+
+            page.find( "a" ).each(function() {
                 var $this = $(this),
-                    thisUrl = $this.attr( 'href' );
-                $this.attr('href', $.mobile.path.makeUrlAbsolute(thisUrl, pageUrl));
+                    thisUrl = $this.attr( "href" );
+                if ( !ABSOULTE_URL_RE.test( thisUrl ) ) {
+                    $this.attr( "href", pagePath + thisUrl );
+                }
             });
         }
     }

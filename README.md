@@ -155,6 +155,14 @@ The adapter integrates angular routes with jquery mobile in the following way:
            }
         }
 
+- relative links in pages are treated relative to the templateUrl of the route,
+  not the route path. E.g. given the mapping
+
+        $routeProvider.when('/someFolder/page1.html', { templateUrl:'#page1' });
+        $routeProvider.when('/someFolder/page2.html', { templateUrl:'/someTemplateFolder/page2.html' });
+
+  Page1 is embedded page, and therefore, all links within that page are relative to the initial url of the app. Page2 is an external page and all relative links in that page are relative to the folder `/someTemplateFolder`.
+
 - Please also look at the extensions to the `$location` service for controlling history and changing route params for just one route call.
 
 Default routing: `basePath+$location.url()`

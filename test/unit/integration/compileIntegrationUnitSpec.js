@@ -64,16 +64,36 @@ describe('compileIntegrationUnit', function () {
         expect(page.scope()).toBe(container.scope());
     });
 
-    it("should angular compile pages loaded by jquery from external sources", function() {
-        var container = testutils.compile("<div></div>");
-        var page = $('<div data-role="page">{{1+2}}</div>');
-        page.attr("data-" + $.mobile.ns + "external-page", "someUrl");
-        container.append(page);
-        page.page();
-        $.mobile.activePage = page;
-        page.scope().$root.$digest();
-        expect(page.text()).toBe('3');
-        expect(page.scope().$parent).toBe(container.scope());
+    describe('pages loaded by jquery from externa resources', function() {
+        var container, page;
+        function init(url, content) {
+            container = testutils.compile("<div></div>");
+            page = $('<div data-role="page">'+content+'</div>');
+            page.attr("data-" + $.mobile.ns + "external-page", url);
+            page.jqmData("url", url);
+            container.append(page);
+            page.page();
+            $.mobile.activePage = page;
+            page.scope().$root.$digest();
+        }
+
+        it("should angular compile", function() {
+            init('someUrl', '{{1+2}}');
+            expect(page.text()).toBe('3');
+            expect(page.scope().$parent).toBe(container.scope());
+        });
+
+        it("should adjust relative links", function() {
+            init('somePath/someUrl.html', '<a href="test.html">');
+            var link = page.find("a");
+            expect(link.attr("href")).toBe('somePath/test.html');
+        });
+
+        it("should not adjust absolute links", function() {
+            init('somePath/someUrl.html', '<a href="/test.html">');
+            var link = page.find("a");
+            expect(link.attr("href")).toBe('/test.html');
+        });
     });
 
     describe("partials loaded by angular", function() {
@@ -103,7 +123,6 @@ describe('compileIntegrationUnit', function () {
         it("should enhance the partial content", function() {
             var c = compileInPartialInPage('<a href="" data-role="button">Test</a>');
             expect(c.container.children(".ui-btn").length).toBe(1);
-
         });
 
         it("should stamp stateless markup without calling jqm", function () {

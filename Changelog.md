@@ -4,6 +4,7 @@ Changelog
 1.2.1-SNAPSHOT
 -----
 Features:
+- added a template in plnkr.co, useful for routing with external pages: http://plnkr.co/edit/ZrKB8H4fjnlak6WgKOTj
 - upgrade to angular 1.0.5, jqm 1.3 and jquery 1.9
   * `table` widget does not refresh if new rows are added. Jqm will add this in jqm 1.3.1 (https://github.com/jquery/jquery-mobile/issues/5570).
 - popup widget has bidi databinding for `data-opened` attribute.

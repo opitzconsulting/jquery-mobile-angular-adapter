@@ -13,29 +13,54 @@ Test page during development.
     <script src="../compiled/jquery-mobile-angular-adapter.js"></script>
 
 <script>
-var ngm = angular.module('ngm',[]);
-ngm.controller("Ctrl", function($scope, $location) {
-    $scope.goBack = function(url) {
-        $location.url(url);
-        $location.back();
-    };
-    $scope.go = function(url) {
-        $location.url(url);
-    };
+var mod = angular.module("ngm", []);
+
+mod.config(function($routeProvider) {
+    $routeProvider.when('/conferences/:day', {
+      templateUrl: '#conferences',
+      onActivate: 'setDay(day)'
+      // jqmOptions: {transition:'slide'}
+    });
 });
+
+mod.controller('MainController', function($scope) {
+    
+});
+
+mod.controller('ConfCtrl', function($scope) {
+    $scope.setDay = function(day) {
+        console.log("conf "+day);
+        $scope.day = day;
+    }
+});
+
+
 
 </script>
 
 </head>
-<body ng-app="ngm" ng-controller="Ctrl">
+<body ng-app="ngm">
 
-<div id="login" data-role="page">
-  <a href="#" ng-click="go('#page1')">To Page1</a>
+<div id="main" data-role="page" ng-controller="MainController">
+    <div data-role="content">
+        <a href="conferences/1">Conference 1</a>
+        <a href="conferences/2">Conference 2</a>
+    </div>
 </div>
 
-<div id="page1" data-role="page">
-  <a href="#" ng-click="goBack('#login')" id="click">To Start</a>
+
+<div id="conferences" data-role="page" ng-controller="ConfCtrl">
+    <div data-role="header">
+        <h1>Conference for day {{day}}
+    </div>
+    <div data-role="content">
+        <a href="conferences/1">Conference 1</a>
+        <a href="conferences/2">Conference 2</a>        
+    </div>
 </div>
+
+
+ 
 
 
 </body>

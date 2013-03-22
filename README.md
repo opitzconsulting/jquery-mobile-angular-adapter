@@ -26,7 +26,9 @@ If you are interested in how to build mobile web apps with this adapter, have a 
 
 ##Reporting Issues
 - Issues can be reported at the Github project.
-- Please provide a jsfiddle, using [this template](http://jsfiddle.net/tigbro/ZHKBA/).
+- Please provide a [JS-Fiddle](http://jsfiddle.net/tigbro/ZHKBA/) or a
+  [Plunk](http://plnkr.co/edit/ZrKB8H4fjnlak6WgKOTj). A plunk is great
+  if you have external jqm pages in your example.
 
 
 ##Usage

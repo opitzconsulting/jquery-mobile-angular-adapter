@@ -361,4 +361,19 @@ describe('compileIntegrationUnit', function () {
         });
     });
 
+    it('should not remove pages form page cache when navigating to the same page', function() {
+        var page = $('<div data-role="page" data-external-page="true"></div>');
+        $(document.body).append(page);
+        try {
+            page.one( 'pagecreate', $.mobile._bindPageRemove );
+            page.page();
+
+            $.mobile.activePage = page;
+            page.trigger("pagehide");
+            expect(page.parent().length).toBe(1);
+        } finally {
+            page.remove();
+        }
+    });
+
 });

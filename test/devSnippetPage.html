@@ -9,7 +9,6 @@ Test page during development.
 
     <script src="../lib/jquery.js"></script>
     <script src="../lib/jquery.mobile.js"></script>
-    <!--
     <script src="../lib/angular.js"></script>
 
     <script src="../compiled/jquery-mobile-angular-adapter.js"></script>
@@ -17,22 +16,20 @@ Test page during development.
 <script>
  
 var mod = angular.module('ngm', []); //setup angular app
-
+mod.config(function($routeProvider) {
+    $routeProvider.when('/form/:id',{
+        templateUrl:'form.html'
+    });
+});
 
 </script>
--->
 
 </head>
 <body ng-app="ngm">
 
     <div data-role="page" id="main">
         <div data-role="content">
-            <!--
-            <label class="ui-hidden-accessible" for="chk">
-                Hello</label>
-            -->    
-            <input type="checkbox" ng-model="test" id="chk" ng-repeat="l in [1,2]">
-            {{test}}
+            <a href="form/1">Form1</a>
         </div>
     </div>
 

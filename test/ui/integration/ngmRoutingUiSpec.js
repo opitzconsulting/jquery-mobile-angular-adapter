@@ -426,6 +426,46 @@ describe("ngmRouting", function () {
         });
     });
 
+    describe('navigation cases', function() {
+        uit.url(baseUrl);
+        it('should navigate between multiple routes with the same jqm page without removing the page from the dom', function() {
+            uit.append(function(window, $, angular) {
+                var ng = angular.module("ng");
+                ng.config(function($routeProvider) {
+                    $routeProvider.when('/page/:id',{
+                        templateUrl:'page1.html'
+                    });
+                });
+            });
+            uit.runs(function($location, $rootScope) {
+                $location.path("/page/1");
+                $rootScope.$apply();
+            });
+            uit.runs(function($location, $rootScope) {
+                $location.path("/page/2");
+                $rootScope.$apply();
+            });
+            uit.runs(function($) {
+                expect($(':jqmData(role="page")').length).toBe(3);
+                expect($.mobile.activePage.attr("id")).toBe('page1');
+            });
+        });
+        it('should navigate between multiple pages and remove the last page from the dom', function() {
+            uit.runs(function($location, $rootScope) {
+                $location.path("/page1.html");
+                $rootScope.$apply();
+            });
+            uit.runs(function($location, $rootScope) {
+                $location.path("/page2.html");
+                $rootScope.$apply();
+            });
+            uit.runs(function($) {
+                expect($(':jqmData(role="page")').length).toBe(3);
+                expect($.mobile.activePage.attr("id")).toBe('page2');
+            });
+        });
+    });
+
     describe('form with empty action', function() {
         it('allows to register a custom click handler', function() {
             var clickSpy, submit;

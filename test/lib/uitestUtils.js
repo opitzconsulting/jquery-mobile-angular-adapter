@@ -15,6 +15,13 @@
                 }
                 return oldTimeout.call(this, fn, delay);
             };
+            if (window.console && window.console.error) {
+                var _error = window.console.error;
+                window.console.error = function(msg) {
+                    errors.push(msg);
+                    return _error.apply(this, arguments);
+                };
+            }
             window.onerror = function (event) {
                 errors.push(event);
             };

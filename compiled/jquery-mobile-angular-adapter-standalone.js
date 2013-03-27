@@ -35500,6 +35500,14 @@ factory(window.jQuery, window.angular);
         }
     }
 
+    // if navigating from a jqm page to the same jqm page,
+    // never remove the page from the dom cache.
+    $(document).on("pageremove", "div", function(event) {
+        if ($.mobile.activePage && $.mobile.activePage[0]===this) {
+            event.preventDefault();
+        }
+    });
+
     // selectmenu may create parent elements and extra pages
     patch($.mobile.selectmenu.prototype, 'destroy', function (old, self, args) {
         old.apply(self, args);

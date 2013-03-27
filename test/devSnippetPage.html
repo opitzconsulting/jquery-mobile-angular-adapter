@@ -9,59 +9,32 @@ Test page during development.
 
     <script src="../lib/jquery.js"></script>
     <script src="../lib/jquery.mobile.js"></script>
+    <!--
     <script src="../lib/angular.js"></script>
+
     <script src="../compiled/jquery-mobile-angular-adapter.js"></script>
 
 <script>
-var mod = angular.module("ngm", []);
-
-mod.config(function($routeProvider) {
-    $routeProvider.when('/conferences/:day', {
-      templateUrl: '#conferences',
-      onActivate: 'setDay(day)'
-      // jqmOptions: {transition:'slide'}
-    });
-});
-
-mod.controller('MainController', function($scope) {
-    
-});
-
-mod.controller('ConfCtrl', function($scope) {
-    $scope.setDay = function(day) {
-        console.log("conf "+day);
-        $scope.day = day;
-    }
-});
-
+ 
+var mod = angular.module('ngm', []); //setup angular app
 
 
 </script>
+-->
 
 </head>
 <body ng-app="ngm">
 
-<div id="main" data-role="page" ng-controller="MainController">
-    <div data-role="content">
-        <a href="conferences/1">Conference 1</a>
-        <a href="conferences/2">Conference 2</a>
+    <div data-role="page" id="main">
+        <div data-role="content">
+            <!--
+            <label class="ui-hidden-accessible" for="chk">
+                Hello</label>
+            -->    
+            <input type="checkbox" ng-model="test" id="chk" ng-repeat="l in [1,2]">
+            {{test}}
+        </div>
     </div>
-</div>
-
-
-<div id="conferences" data-role="page" ng-controller="ConfCtrl">
-    <div data-role="header">
-        <h1>Conference for day {{day}}
-    </div>
-    <div data-role="content">
-        <a href="conferences/1">Conference 1</a>
-        <a href="conferences/2">Conference 2</a>        
-    </div>
-</div>
-
-
- 
-
 
 </body>
 

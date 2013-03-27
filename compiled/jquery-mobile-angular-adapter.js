@@ -1,4 +1,4 @@
-/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-16
+/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-27
 * https://github.com/tigbro/jquery-mobile-angular-adapter
 * Copyright (c) 2013 Tobias Bosch; Licensed MIT */
 (function(factory) {
@@ -979,7 +979,11 @@ factory(window.jQuery, window.angular);
             precompile: checkboxRadioPrecompile,
             link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl) {
                 var label = iElement.parent("label");
-                if (label.length===0) {
+                if (!iAttrs.ngmNoLabel && label.length===0) {
+                    // If two checkboxes are created by ng-repeat, and the
+                    // ng-repeat is on the checkbox and not on the label,
+                    // the first checkbox will be fine, but the second one
+                    // will be at an odd place in the dom...
                     throw new Error("Don't use ng-repeat or other conditional directives on checkboxes/radiobuttons directly. Instead, wrap the input into a label and put the directive on that input!");
                 }
                 jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
@@ -1008,7 +1012,7 @@ factory(window.jQuery, window.angular);
             }
             var label = parentLabel.length ? parentLabel : container.find("label").filter("[for='" + origElement[0].id + "']");
             if (label.length===0) {
-                origElement.attr("ng-non-bindable", "true");
+                origElement.attr("ngm-no-label", "true");
             } else {
                 label.append(origElement);
             }

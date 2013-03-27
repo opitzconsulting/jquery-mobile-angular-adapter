@@ -138,7 +138,7 @@ describe("checkbox", function () {
         expect(content.children('div.ui-checkbox').length).toEqual(1);
     });
 
-    it('should not allow ng-repeat on the checkbox', function() {
+    it('should not allow ng-repeat on the checkbox if it is linked to a label', function() {
         expect(function() {
             testutils.compileInPage(
                 '<div id="container"><input type="checkbox" id="check1" ng-repeat="l in [1,2]"><label for="check1">{{l}}</label></div>');
@@ -177,5 +177,21 @@ describe("checkbox", function () {
             expect(label.length).toBe(1);
             expect(label.find(".ui-btn-text").text()).toEqual(''+(i+1));
         }
+    });
+
+    describe('without label', function() {
+        it('should allow ng-repeat on the checkbox', function() {
+            var c = testutils.compileInPage(
+                    '<input type="checkbox" id="check1" ng-repeat="l in [1,2]">');
+            expect(c.page.find("input").length).toBe(2);
+        });
+        it('should allow angular-binding', function() {
+            var c = testutils.compileInPage(
+                    '<input type="checkbox" ng-model="value">');
+            var el = c.element.find("input"),
+                scope = el.scope();
+            el.click();
+            expect(scope.value).toBe(true);
+        });
     });
 });

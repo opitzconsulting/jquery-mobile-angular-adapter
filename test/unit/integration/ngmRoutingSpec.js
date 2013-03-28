@@ -37,6 +37,26 @@ describe('ngmRouting', function () {
             });
         });
 
+        it('should never modify the original jqmOptions of the route', function() {
+            var options = {};
+            module(function($routeProvider) {
+                $routeProvider.when('/path1', {
+                    jqmOptions: options,
+                    templateUrl: '/path1'
+                });
+            });
+            inject(function($location, $rootScope) {
+                $location.routeOverride({
+                    jqmOptions: {
+                        transition: 'slide'
+                    }
+                });
+                $location.path('/path1');
+                $rootScope.$apply();
+                expect(options.transition).toBeUndefined();
+            });
+        });
+
         it('should override the onActivate property', function () {
             inject(function ($location, $route, $rootScope) {
                 var overriddenValue = 'someActivateFn';

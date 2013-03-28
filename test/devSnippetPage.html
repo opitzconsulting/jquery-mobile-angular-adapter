@@ -16,27 +16,14 @@ Test page during development.
 <script>
  
 var mod = angular.module('ngm', []); //setup angular app
-      var options = {transition: "slide", speed: "fast"};
-mod.config(['$provide', function ($provide) {
-    $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
-        $sniffer.history = false;
-        return $sniffer;
-    }]);
-}]);
+var options = {transition: "slide", speed: "fast"};
 
 mod.config(function($routeProvider) {
       $routeProvider
-        .when("/devSnippetPage.html",
-            {jqmOptions: options, redirectTo: "/page1/"})
-        .when("/page1/", {jqmOptions: options, templateUrl: "#main"})
-        .when("/page2/", {jqmOptions: options, templateUrl: "form.html"});
+        .when("/page2", {jqmOptions: {transition: "slide", speed: "fast"}, templateUrl: "#page2"});
+      $routeProvider
+        .when("/page3", {jqmOptions: {transition: "slide", speed: "fast"}, templateUrl: "#page3"});
 });
-
-mod.run(function($browser) {
-    console.log($browser.baseHref());
-    console.log($browser.url());
-});
-
 
 </script>
 
@@ -45,10 +32,20 @@ mod.run(function($browser) {
 <div data-role="page" id="main">
     <div data-role="header">
         <h1>Main</h1>
-        <a href="page2/">Page2</a>
-        <a href="ui/fixtures/someFolder/externalPage.html">Ext Page</a>
+        <a href="page2">Page2</a>
     </div>    
-
+</div>
+<div data-role="page" id="page2">
+    <div data-role="header">
+        <h1>Page2</h1>
+        <a href="page3">Page3</a>
+    </div>    
+</div>
+<div data-role="page" id="page3">
+    <div data-role="header">
+        <h1>Page3</h1>
+        <a href="#" data-rel="back">Back</a>
+    </div>    
 </div>
 </body>
 </html>

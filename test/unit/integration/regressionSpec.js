@@ -136,6 +136,5 @@ describe('regression', function () {
 
         });
     });
-
 });
 

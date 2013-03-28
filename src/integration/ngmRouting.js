@@ -148,7 +148,9 @@
                 if (routeOverride.onActivate) {
                     newRoute.onActivate = routeOverride.onActivate;
                 }
-                newRoute.jqmOptions = newRoute.jqmOptions || {};
+                // always clone the original jqmOptions as we might modify them 
+                // afterwards...
+                newRoute.jqmOptions = angular.extend({}, newRoute.jqmOptions);
                 angular.extend(newRoute.jqmOptions, routeOverride.jqmOptions);
 
                 newRoute.resolve = newRoute.resolve || {};
@@ -242,6 +244,7 @@
             }
             url = $.mobile.path.makeUrlAbsolute(url, $browser.baseHref());
             var navConfig = newRoute.jqmOptions || {};
+            // var navConfig = angular.extend({}, newRoute.jqmOptions || {});
             restoreOrSaveTransitionForUrlChange(navConfig);
             navConfig.navByNg = true;
 

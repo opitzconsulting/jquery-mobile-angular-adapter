@@ -16,13 +16,11 @@ Test page during development.
 <script>
  
 var mod = angular.module('ngm', []); //setup angular app
-var options = {transition: "slide", speed: "fast"};
+var options = {transition: "none", speed: "fast"};
 
 mod.config(function($routeProvider) {
       $routeProvider
-        .when("/page2", {jqmOptions: options, templateUrl: "#page2"});
-      $routeProvider
-        .when("/page3", {jqmOptions: options, templateUrl: "#page3"});
+        .when("/page/:id", {jqmOptions: options, templateUrl: "#page2"});
 });
 
 </script>
@@ -32,19 +30,13 @@ mod.config(function($routeProvider) {
 <div data-role="page" id="main">
     <div data-role="header">
         <h1>Main</h1>
-        <a href="page2">Page2</a>
+        <a href="page/1">Page2:1</a>
     </div>    
 </div>
 <div data-role="page" id="page2">
     <div data-role="header">
         <h1>Page2</h1>
-        <a href="page3">Page3</a>
-    </div>    
-</div>
-<div data-role="page" id="page3">
-    <div data-role="header">
-        <h1>Page3</h1>
-        <a href="#" data-rel="back">Back</a>
+        <a href="page/2">Page2:2</a>
     </div>    
 </div>
 </body>

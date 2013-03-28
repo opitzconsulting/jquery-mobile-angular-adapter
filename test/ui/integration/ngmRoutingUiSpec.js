@@ -428,26 +428,80 @@ describe("ngmRouting", function () {
 
     describe('navigation cases', function() {
         uit.url(baseUrl);
-        it('should navigate between multiple routes with the same jqm page without removing the page from the dom', function() {
-            uit.append(function(window, $, angular) {
-                var ng = angular.module("ng");
-                ng.config(function($routeProvider) {
-                    $routeProvider.when('/page/:id',{
-                        templateUrl:'page1.html'
+        describe('from and to the same template url', function() {
+            function init(transition) {
+                uit.append(function(window, $, angular) {
+                    var ng = angular.module("ng");
+                    ng.config(function($routeProvider) {
+                        $routeProvider.when('/page/:id',{
+                            templateUrl:'page1.html',
+                            jqmOptions: {
+                                transition: transition,
+                                speed: "fast"
+                            }
+                        });
                     });
                 });
+            }
+            it('should navigate without removing the page from the dom', function() {
+                init('none');
+                uit.runs(function($location, $rootScope) {
+                    $location.path("/page/1");
+                    $rootScope.$apply();
+                });
+                uit.runs(function($location, $rootScope) {
+                    $location.path("/page/2");
+                    $rootScope.$apply();
+                });
+                uit.runs(function($) {
+                    expect($(':jqmData(role="page")').length).toBe(3);
+                    expect($.mobile.activePage.attr("id")).toBe('page1');
+                });
             });
-            uit.runs(function($location, $rootScope) {
-                $location.path("/page/1");
-                $rootScope.$apply();
+            it('should navigate and set the activePageClass correctly if using the slide transition', function() {
+                init('slide');
+                uit.runs(function($location, $rootScope) {
+                    $location.path("/page/1");
+                    $rootScope.$apply();
+                });
+                uit.runs(function($location, $rootScope) {
+                    $location.path("/page/2");
+                    $rootScope.$apply();
+                });
+                uit.runs(function($) {
+                    expect($.mobile.activePage.attr("id")).toBe('page1');
+                    expect($.mobile.activePage.hasClass($.mobile.activePageClass)).toBe(true);
+                });
             });
-            uit.runs(function($location, $rootScope) {
-                $location.path("/page/2");
-                $rootScope.$apply();
+            it('should fall back to fade transition for a not none transition', function() {
+                init('slide');
+                uit.runs(function($location, $rootScope) {
+                    $location.path("/page/1");
+                    $rootScope.$apply();
+                });
+                uit.runs(function($location, $rootScope, $) {
+                    expect($.mobile.activePage.data("lastNavProps").transition).toBe('slide');
+                    $location.path("/page/2");
+                    $rootScope.$apply();
+                });
+                uit.runs(function($) {
+                    expect($.mobile.activePage.data("lastNavProps").transition).toBe('fade');
+                });
             });
-            uit.runs(function($) {
-                expect($(':jqmData(role="page")').length).toBe(3);
-                expect($.mobile.activePage.attr("id")).toBe('page1');
+            it('should keep the none transition', function() {
+                init('none');
+                uit.runs(function($location, $rootScope) {
+                    $location.path("/page/1");
+                    $rootScope.$apply();
+                });
+                uit.runs(function($location, $rootScope, $) {
+                    expect($.mobile.activePage.data("lastNavProps").transition).toBe('none');
+                    $location.path("/page/2");
+                    $rootScope.$apply();
+                });
+                uit.runs(function($) {
+                    expect($.mobile.activePage.data("lastNavProps").transition).toBe('none');
+                });
             });
         });
         it('should navigate between multiple pages and remove the last page from the dom', function() {

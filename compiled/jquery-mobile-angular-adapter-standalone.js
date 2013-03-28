@@ -35508,6 +35508,18 @@ factory(window.jQuery, window.angular);
         }
     });
 
+    // if navigating from a jqm page ot the same jqm page,
+    // and a transition like 'slide' was specified,
+    // fall back to the sequential transition 'fade',
+    // as we are transitioning the same page twice!
+    $(document).on("pagebeforechange", function(event, triggerData) {
+        if ($.mobile.activePage && triggerData.toPage[0]===$.mobile.activePage[0]) {
+            if (triggerData.options.transition !== 'none') {
+                triggerData.options.transition = 'fade';
+            }
+        }
+    });
+
     // selectmenu may create parent elements and extra pages
     patch($.mobile.selectmenu.prototype, 'destroy', function (old, self, args) {
         old.apply(self, args);

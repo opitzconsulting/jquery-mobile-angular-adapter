@@ -20,9 +20,9 @@ var options = {transition: "slide", speed: "fast"};
 
 mod.config(function($routeProvider) {
       $routeProvider
-        .when("/page2", {jqmOptions: {transition: "slide", speed: "fast"}, templateUrl: "#page2"});
+        .when("/page2", {jqmOptions: options, templateUrl: "#page2"});
       $routeProvider
-        .when("/page3", {jqmOptions: {transition: "slide", speed: "fast"}, templateUrl: "#page3"});
+        .when("/page3", {jqmOptions: options, templateUrl: "#page3"});
 });
 
 </script>

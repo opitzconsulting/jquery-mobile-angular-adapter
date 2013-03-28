@@ -36943,15 +36943,15 @@ factory(window.jQuery, window.angular);
 
     function applyRouteOverrideOnRouteChangeStart($rootScope, $location) {
         $rootScope.$on('$routeChangeStart', function(event, newRoute) {
+            // always clone the original jqmOptions as we might modify them 
+            // afterwards...
+            newRoute.jqmOptions = angular.extend({}, newRoute.jqmOptions);
             var routeOverride = $location.$$routeOverride;
             delete $location.$$routeOverride;
             if (routeOverride) {
                 if (routeOverride.onActivate) {
                     newRoute.onActivate = routeOverride.onActivate;
                 }
-                // always clone the original jqmOptions as we might modify them 
-                // afterwards...
-                newRoute.jqmOptions = angular.extend({}, newRoute.jqmOptions);
                 angular.extend(newRoute.jqmOptions, routeOverride.jqmOptions);
 
                 newRoute.resolve = newRoute.resolve || {};

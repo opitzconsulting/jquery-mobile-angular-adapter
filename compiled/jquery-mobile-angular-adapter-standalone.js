@@ -35434,7 +35434,7 @@ var styleDirective = valueFn({
 
 })(window, document);
 angular.element(document).find('head').append('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak{display:none;}ng\\:form{display:block;}</style>');
-/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-28
+/*! jquery-mobile-angular-adapter - v1.3.0 - 2013-03-28
 * https://github.com/tigbro/jquery-mobile-angular-adapter
 * Copyright (c) 2013 Tobias Bosch; Licensed MIT */
 (function(factory) {
@@ -36754,6 +36754,9 @@ factory(window.jQuery, window.angular);
             // This is required as firefox and IE10 trigger the popstate event
             // in sync. By using a setTimeout we have the same behaviour everywhere.
             // Don't use $defer here as we don't want to trigger another digest cycle.
+            // Note that we need at least 20ms to ensure that
+            // the hashchange/popstate event for the current page
+            // as been delivered (in IE this can take some time...).
             window.setTimeout(function() {
                 window.history.go(relativeIndex);
             },20);

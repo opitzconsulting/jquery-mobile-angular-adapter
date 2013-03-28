@@ -94,6 +94,18 @@ describe('compileIntegrationUnit', function () {
             var link = page.find("a");
             expect(link.attr("href")).toBe('/test.html');
         });
+
+        it("should not adjust empty links", function() {
+            init('somePath/someUrl.html', '<a href="">');
+            var link = page.find("a");
+            expect(link.attr("href")).toBe('#');
+        });
+
+        it("should not adjust empty hash links", function() {
+            init('somePath/someUrl.html', '<a href="#">');
+            var link = page.find("a");
+            expect(link.attr("href")).toBe('#');
+        });
     });
 
     describe("partials loaded by angular", function() {

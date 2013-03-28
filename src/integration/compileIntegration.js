@@ -208,12 +208,13 @@
             // we need to adjust normal links ourselves.
             var pageUrl = page.jqmData( "url" ),
                 pagePath = $.mobile.path.get(pageUrl),
-                ABSOULTE_URL_RE = /^(\w+:|#|\/)/;
+                ABSOULTE_URL_RE = /^(\w+:|#|\/)/,
+                EMPTY_RE = /^(\#|#|\/)/;
 
             page.find( "a" ).each(function() {
                 var $this = $(this),
                     thisUrl = $this.attr( "href" );
-                if ( !ABSOULTE_URL_RE.test( thisUrl ) ) {
+                if ( thisUrl.length > 0 && !ABSOULTE_URL_RE.test( thisUrl ) ) {
                     $this.attr( "href", pagePath + thisUrl );
                 }
             });

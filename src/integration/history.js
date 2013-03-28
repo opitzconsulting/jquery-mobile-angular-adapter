@@ -140,9 +140,12 @@
             // This is required as firefox and IE10 trigger the popstate event
             // in sync. By using a setTimeout we have the same behaviour everywhere.
             // Don't use $defer here as we don't want to trigger another digest cycle.
+            // Note that we need at least 20ms to ensure that
+            // the hashchange/popstate event for the current page
+            // as been delivered (in IE this can take some time...).
             window.setTimeout(function() {
                 window.history.go(relativeIndex);
-            },0);
+            },20);
         }
 
         function goBack() {

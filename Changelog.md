@@ -1,7 +1,11 @@
 Changelog
 =====================
 
-1.2.1-SNAPSHOT
+1.3.1-SNAPSHOT
+-----
+
+
+1.3.0
 -----
 Features:
 - added a template in plnkr.co, useful for routing with external pages: http://plnkr.co/edit/ZrKB8H4fjnlak6WgKOTj

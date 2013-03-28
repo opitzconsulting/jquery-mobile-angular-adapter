@@ -24,7 +24,7 @@ describe('history', function () {
             // which gets us into trouble for $location.backMode().
             $history.go(10);
             expect(window.history.go).not.toHaveBeenCalled();
-            jasmine.Clock.tick(1);
+            jasmine.Clock.tick(50);
             expect(window.history.go).toHaveBeenCalledWith(10);
         }));
     });
@@ -169,7 +169,7 @@ describe('history', function () {
             expect(initialUrlStack.length).toBe(3);
 
             $history.removePastEntries(2);
-            jasmine.Clock.tick(10);
+            jasmine.Clock.tick(50);
             $browser.$$url = $history.urlStack[0].url;
             $browser.poll();
 
@@ -183,7 +183,7 @@ describe('history', function () {
             initialUrlStack = $history.urlStack.slice();
             $history.activeIndex = 1;
             $history.removePastEntries(1);
-            jasmine.Clock.tick(10);
+            jasmine.Clock.tick(50);
             $browser.$$url = $history.urlStack[0].url;
             $browser.poll();
 
@@ -193,7 +193,7 @@ describe('history', function () {
         it('should go back the given number of steps in history', inject(function($history) {
             createHistory(3);
             $history.removePastEntries(2);
-            jasmine.Clock.tick(1);
+            jasmine.Clock.tick(50);
             expect(window.history.go).toHaveBeenCalledWith(-2);
         }));
         it('should replace the location with the old location, keeping the history entry when going back to a different location', inject(function($browser, $history) {
@@ -203,7 +203,7 @@ describe('history', function () {
             initialUrlStack[2].test = true;
 
             $history.removePastEntries(2);
-            jasmine.Clock.tick(10);
+            jasmine.Clock.tick(50);
             $browser.$$url = initialUrlStack[0].url;
             $browser.poll();
 
@@ -221,7 +221,7 @@ describe('history', function () {
             initialUrlStack[2].test = true;
 
             $history.removePastEntries(2);
-            jasmine.Clock.tick(10);
+            jasmine.Clock.tick(50);
             $browser.$$url = initialUrlStack[0].url;
             $browser.poll();
 
@@ -235,7 +235,7 @@ describe('history', function () {
             createHistory(3);
 
             $history.removePastEntries(2);
-            jasmine.Clock.tick(10);
+            jasmine.Clock.tick(50);
             $browser.poll();
 
             expect(spy).not.toHaveBeenCalled();

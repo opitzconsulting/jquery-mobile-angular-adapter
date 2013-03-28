@@ -100,6 +100,10 @@ Notes:
 - Usage of manual bootstrap of angular does not work well with jquery-mobile, as jquery-mobile relies on the
   jQuery ready event to be fired at the right time.
 
+## Versioning
+The adapter always takes the major and minor version of jquery mobile, e.g. if you want to use jquery mobile 1.3.x, use the adapter version 1.3.x.
+The patch version is assigend incrementally.
+
 ## Build
 Directory structure
 

@@ -16,12 +16,29 @@ Test page during development.
 <script>
  
 var mod = angular.module('ngm', []); //setup angular app
-var options = {transition: "none", speed: "fast"};
+/*
+mod.run(function($location, $rootScope) {
 
-mod.config(function($routeProvider) {
-      $routeProvider
-        .when("/page/:id", {jqmOptions: options, templateUrl: "#page2"});
+    window.setTimeout(function() {
+        $location.hash("dialog");
+        $rootScope.$apply();
+    },1000);
+
+    window.setTimeout(function() {
+        $location.hash("page2");
+        $rootScope.$apply();
+    },2000);
+
 });
+*/
+            var ng = angular.module("ng");
+            ng.config(['$provide', function ($provide) {
+                $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
+                    $sniffer.history = false;
+                    return $sniffer;
+                }]);
+            }]);
+
 
 </script>
 
@@ -30,14 +47,8 @@ mod.config(function($routeProvider) {
 <div data-role="page" id="main">
     <div data-role="header">
         <h1>Main</h1>
-        <a href="page/1">Page2:1</a>
-    </div>    
-</div>
-<div data-role="page" id="page2">
-    <div data-role="header">
-        <h1>Page2</h1>
-        <a href="page/2">Page2:2</a>
-    </div>    
+        <a href="form.html">Form</a>
+    </div>
 </div>
 </body>
 </html>

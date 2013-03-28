@@ -35434,7 +35434,7 @@ var styleDirective = valueFn({
 
 })(window, document);
 angular.element(document).find('head').append('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak{display:none;}ng\\:form{display:block;}</style>');
-/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-27
+/*! jquery-mobile-angular-adapter - v1.2.1-SNAPSHOT - 2013-03-28
 * https://github.com/tigbro/jquery-mobile-angular-adapter
 * Copyright (c) 2013 Tobias Bosch; Licensed MIT */
 (function(factory) {
@@ -37029,22 +37029,19 @@ factory(window.jQuery, window.angular);
     function applyDefaultNavigationOnRouteChangeSuccess($rootScope, $route, $location, $browser, $history) {
         $rootScope.$on('$routeChangeSuccess', function() {
             var newRoute = $route.current;
+            if (newRoute.redirectTo) {
+                return;
+            }
             var $document = $(document);
 
             var url = newRoute.ngmTemplateUrl;
             if (url === DEFAULT_JQM_PAGE) {
                 url = $location.url();
-
-                var baseHref = $browser.baseHref();
-                if (url.indexOf('/') === -1) {
-                    url = baseHref + url;
-                } else {
-                    url = getBasePath(baseHref) + url;
-                }
             }
-            if (!url) {
-                return;
+            if (url && url.charAt(0)==='/') {
+                url = url.slice(1);
             }
+            url = $.mobile.path.makeUrlAbsolute(url, $browser.baseHref());
             var navConfig = newRoute.jqmOptions || {};
             restoreOrSaveTransitionForUrlChange(navConfig);
             navConfig.navByNg = true;

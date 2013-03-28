@@ -16,24 +16,39 @@ Test page during development.
 <script>
  
 var mod = angular.module('ngm', []); //setup angular app
+      var options = {transition: "slide", speed: "fast"};
+mod.config(['$provide', function ($provide) {
+    $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
+        $sniffer.history = false;
+        return $sniffer;
+    }]);
+}]);
+
 mod.config(function($routeProvider) {
-    $routeProvider.when('/form/:id',{
-        templateUrl:'form.html'
-    });
+      $routeProvider
+        .when("/devSnippetPage.html",
+            {jqmOptions: options, redirectTo: "/page1/"})
+        .when("/page1/", {jqmOptions: options, templateUrl: "#main"})
+        .when("/page2/", {jqmOptions: options, templateUrl: "form.html"});
 });
+
+mod.run(function($browser) {
+    console.log($browser.baseHref());
+    console.log($browser.url());
+});
+
 
 </script>
 
 </head>
 <body ng-app="ngm">
+<div data-role="page" id="main">
+    <div data-role="header">
+        <h1>Main</h1>
+        <a href="page2/">Page2</a>
+        <a href="ui/fixtures/someFolder/externalPage.html">Ext Page</a>
+    </div>    
 
-    <div data-role="page" id="main">
-        <div data-role="content">
-            <a href="form/1">Form1</a>
-        </div>
-    </div>
-
+</div>
 </body>
-
-
 </html>

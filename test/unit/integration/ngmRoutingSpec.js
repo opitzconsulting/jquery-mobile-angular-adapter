@@ -135,6 +135,21 @@ describe('ngmRouting', function () {
                 expect(event.isDefaultPrevented()).toBe(false);
                 expect(event.isPropagationStopped()).toBe(false);
             }));
+            it('should remove the base folder of absolute links and add it back in calls to $.mobile.changePage', function() {
+                module(function($provide) {
+                    $provide.decorator('$browser', function($delegate) {
+                        $delegate.$$baseHref = '/someBaseFolder/someBaseFile.html';
+                        $delegate.$$url = 'http://server'+$delegate.$$baseHref;
+                        return $delegate;
+                    });
+                });
+                inject(function($browser) {
+                    var c = testutils.compileInPage('<a href="http://server/someBaseFolder/someFolder/page.html"/>');
+                    c.element.click();
+                    var mostRecentCall = $.mobile.changePage.mostRecentCall;
+                    expect(mostRecentCall.args[0]).toBe('/someBaseFolder/someFolder/page.html');
+                });
+            });
         });
     });
 
@@ -288,24 +303,42 @@ describe('ngmRouting', function () {
             expect($route.current.ngmTemplateUrl).toBe('DEFAULT_JQM_PAGE');
         }));
 
-        it('should calculate the default page url using $browser.baseHref and $location.url', inject(function ($location, $rootScope, $browser) {
-            $browser.$$baseHref = 'http://server/somePage.html';
+        it('should ignore route redirects', function() {
+            module(function ($routeProvider) {
+                $routeProvider.when('/test', {redirectTo:'/page1', templateUrl:'/someNonExistentPage'});
+            });
+            inject(function ($route, $location, $rootScope, $http) {
+                $location.path("/test");
+                $rootScope.$apply();
+                expect($.mobile.changePage.callCount).toBe(1);
+                expect($.mobile.changePage).toHaveBeenCalledWith('/page1', {navByNg : true});
+            });
 
-            $location.path('/somePath');
-            $location.hash('someHash');
-            $rootScope.$apply();
-            expect($.mobile.changePage).toHaveBeenCalledWith(getBasePath($browser.baseHref()) + '/somePath#someHash', { navByNg : true });
+        });
 
-            $.mobile.changePage.reset();
-            // Note: In hashbang-mode, we initially have an empty path. However,
-            // this cannot be set my the application, as the $location.path()-setter always
-            // adds a leading slash. This is why we are using $$path here directly.
-            $location.$$path = '';
-            expect($location.path()).toBe('');
-            $location.hash('someHash');
-            $rootScope.$apply();
-            expect($.mobile.changePage).toHaveBeenCalledWith($browser.baseHref() + '#someHash', { navByNg : true });
-        }));
+        describe('resolve urls using the base tag', function() {
+            function execText(navUrl, expectedChangePageUrl) {
+                inject(function($browser, $location, $rootScope) {
+                    $browser.$$baseHref = '/someBaseFolder/someBasePage.html';
+                    $location.url(navUrl);
+                    $rootScope.$apply();
+                    expect($.mobile.changePage).toHaveBeenCalledWith(expectedChangePageUrl, { navByNg : true });
+                });
+            }
+
+            it('should add the folder of the base path to absolute urls', function() {
+                execText('/somePath#someHash', '/someBaseFolder/somePath#someHash');
+            });
+            it('should add the folder of the base path for relative urls', function() {
+                execText('somePath', '/someBaseFolder/somePath');
+            });
+            it('should use the base page for hash only urls', function() {
+                execText('#someHash', '/someBaseFolder/someBasePage.html#someHash');
+            });
+            it('should use the base page for empty urls', function() {
+                execText('/', '/someBaseFolder/someBasePage.html');
+            });
+        });
 
         it('should forward the jqmOptions to $.mobile.changePage', inject(function ($location, $rootScope, $browser) {
             var someOptions = {a:1};
@@ -365,7 +398,7 @@ describe('ngmRouting', function () {
                 $location.path("/test");
                 $rootScope.$apply();
                 expect($http).not.toHaveBeenCalled();
-                expect($.mobile.changePage).toHaveBeenCalledWith('someUrl', {navByNg : true});
+                expect($.mobile.changePage).toHaveBeenCalledWith('/someUrl', {navByNg : true});
             });
         });
     });

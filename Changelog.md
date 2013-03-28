@@ -12,6 +12,8 @@ Features:
 - Refactored build system to grunt.js, testacular and travis-ci.
 - Added provider `jqmNgWidget` to easily adapter new jqm plugins with angular.
   Also automatically detects widgets of jqm plugins and registers angular directives for them.
+- onActivate in routes: Now all properties of `$routeParams` can be accessed as local variables
+  in the expression.
 
 Breaking changes:
 - Does no more work with angular <1.0.5 or jqm <1.3
@@ -30,11 +32,14 @@ https://github.com/jquery/jquery-mobile/issues/5657).
 
 Internal changes:
 - Better and simpler history support.
+- Many bug fixes to the routing system.
 - Removed a lot of hacks as jqm is getting better in refreshing widgets.
 - Updated to angular 1.0.5, which helped in simplifying internal logic
 - dynamicBaseTag of jQuery mobile is now deactivated as it lead to problems with XHRs, ...
-- onActivate in routes: Now all properties of `$routeParams` can be accessed as local variables
-  in the expression.
+
+Known issues:
+- dynamic content in jqm tables (reflow table, ...) does not work, as 
+  jqm does not provide a correct refresh method for those widgets. This will not work until jqm 1.3.1 (https://github.com/jquery/jquery-mobile/issues/5570).
 
 
 1.2.0

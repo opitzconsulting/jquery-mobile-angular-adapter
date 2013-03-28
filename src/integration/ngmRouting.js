@@ -228,22 +228,19 @@
     function applyDefaultNavigationOnRouteChangeSuccess($rootScope, $route, $location, $browser, $history) {
         $rootScope.$on('$routeChangeSuccess', function() {
             var newRoute = $route.current;
+            if (newRoute.redirectTo) {
+                return;
+            }
             var $document = $(document);
 
             var url = newRoute.ngmTemplateUrl;
             if (url === DEFAULT_JQM_PAGE) {
                 url = $location.url();
-
-                var baseHref = $browser.baseHref();
-                if (url.indexOf('/') === -1) {
-                    url = baseHref + url;
-                } else {
-                    url = getBasePath(baseHref) + url;
-                }
             }
-            if (!url) {
-                return;
+            if (url && url.charAt(0)==='/') {
+                url = url.slice(1);
             }
+            url = $.mobile.path.makeUrlAbsolute(url, $browser.baseHref());
             var navConfig = newRoute.jqmOptions || {};
             restoreOrSaveTransitionForUrlChange(navConfig);
             navConfig.navByNg = true;

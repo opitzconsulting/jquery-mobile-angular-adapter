@@ -35434,7 +35434,7 @@ var styleDirective = valueFn({
 
 })(window, document);
 angular.element(document).find('head').append('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak{display:none;}ng\\:form{display:block;}</style>');
-/*! jquery-mobile-angular-adapter - v1.3.0 - 2013-03-28
+/*! jquery-mobile-angular-adapter - v1.3.1-SNAPSHOT - 2013-04-02
 * https://github.com/tigbro/jquery-mobile-angular-adapter
 * Copyright (c) 2013 Tobias Bosch; Licensed MIT */
 (function(factory) {
@@ -36660,6 +36660,7 @@ factory(window.jQuery, window.angular);
                 var res = _url.apply(this, arguments);
                 if (arguments.length===0) {
                     res = res.replace(/%23/g,'#');
+                    res = res.replace(/ /g,'%20');
                 }
                 return res;
             };

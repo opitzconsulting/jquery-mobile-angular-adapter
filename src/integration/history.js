@@ -46,6 +46,7 @@
                 var res = _url.apply(this, arguments);
                 if (arguments.length===0) {
                     res = res.replace(/%23/g,'#');
+                    res = res.replace(/ /g,'%20');
                 }
                 return res;
             };

@@ -3,9 +3,13 @@ describe('history', function () {
         jasmine.Clock.useMock();
     });
 
-    describe('misc', function() {
+    describe('$browser decorator', function() {
         it('should decode urls with %23 instead of hash for android', inject(function($browser) {
             expect($browser.url('a%23b').url()).toBe('a#b');
+        }));
+
+        it('should decode urls with blank instead of %20 for ios 5', inject(function($browser, $location) {
+            expect($browser.url('a b').url()).toBe('a%20b');
         }));
 
         it('should return the url without protocol for file urls when calling $browser.baseHref()', function () {

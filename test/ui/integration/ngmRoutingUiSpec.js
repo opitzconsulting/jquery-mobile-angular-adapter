@@ -1,4 +1,4 @@
-describe("ngmRouting", function () {
+ddescribe("ngmRouting", function () {
     var baseUrl = '../ui/fixtures/test-fixture.html';
 
     function initWithHistorySupport(historySupport) {
@@ -13,143 +13,151 @@ describe("ngmRouting", function () {
         });
     }
 
-    describe('history support true', function () {
-        initWithHistorySupport(true);
-
-        describe('initial page', function () {
-            it('should be able to start at an internal subpage without hashbang', function () {
-                uit.url(baseUrl+'#page2');
-                uit.runs(function ($, $location, location) {
-                    expect($.mobile.activePage.attr("id")).toBe("page2");
-                    expect($location.path()).toBe('/test-fixture.html');
-                    expect($location.hash()).toBe('page2');
-                    expect(location.pathname).toEndWith('/test-fixture.html');
-                });
-            });
-
-            it('should be able to start at an internal subpage with hashbang', function () {
-                uit.url(baseUrl+'#!/test-fixture.html?{now}#page2');
-                uit.runs(function ($, $location, location) {
-                    expect($.mobile.activePage.attr("id")).toBe("page2");
-                    expect($location.path()).toBe('/test-fixture.html');
-                    expect($location.hash()).toBe('page2');
-                    expect(location.pathname).toEndWith('/test-fixture.html');
-                });
-            });
-
-            it('should call $.mobile.changePage only once with the subpage if a subpage is given', function () {
-                uit.url(baseUrl+'#!/test-fixture.html#page2');
-                uit.runs(function ($) {
-                    expect($.mobile.changePage.callCount).toBe(2);
-                    var pageStr = $.mobile.changePage.argsForCall[0][0];
-                    expect(pageStr.indexOf('#page2')).not.toBe(-1);
-                });
-            });
-
-            it('should be able to start at an external subpage', function () {
-                uit.url(baseUrl+'#!/externalPage.html');
-                uit.runs(function ($, $location, location) {
-                    expect($.mobile.activePage.attr("id")).toBe("externalPage");
-                    expect($location.path()).toBe('/externalPage.html');
-                    expect($location.hash()).toBe('');
-                    expect(location.pathname).toEndWith('/externalPage.html');
-                });
-            });
-
-            it('should be able to start at an internal page when search parameters are used', function () {
-                uit.url(baseUrl+'?a=b#!/test-fixture.html?a=b&{now}#page2');
-                uit.runs(function ($) {
-                    expect($.mobile.activePage.attr("id")).toBe("page2");
-                });
-            });
-
-        });
-
-        describe('navigation in the app', function () {
-            uit.url(baseUrl);
-
-            it('should be able to change to an internal page', function () {
-                uit.runs(function ($, $location, $rootScope) {
-                    expect($.mobile.activePage.attr("id")).toBe("start");
-                    $location.hash("page2");
-                    $rootScope.$apply();
-                });
-                uit.runs(function ($, $location, location) {
-                    expect($.mobile.activePage.attr("id")).toBe("page2");
-                    expect($location.path()).toBe('/test-fixture.html');
-                    expect($location.hash()).toBe('page2');
-                    expect(location.pathname).toEndWith('/test-fixture.html');
-                });
-            });
-            it('should be able to change to the active page again, calling $activate', function() {
-                var activateSpy;
-                uit.append(function(angular, $) {
-                    var ng = angular.module("ng");
-                    ng.config(['$routeProvider', function ($routeProvider) {
-                        $routeProvider.when('/hello/:name', {
-                            templateUrl: '#page2',
-                            onActivate: 'onActivate()'
-                        });
-                    }]);
-                    ng.controller("Page2Ctrl", function($scope) {
-                        $scope.onActivate = activateSpy = jasmine.createSpy('activateSpy');
-                    });
-                    $("#page2").attr("ng-controller", "Page2Ctrl");
-                });
-                uit.runs(function($location, $rootScope) {
-                    $location.path('/hello/page1');
-                    $rootScope.$apply();
-                    expect(activateSpy.callCount).toBe(1);
-                    $location.path('/hello/page2');
-                    $rootScope.$apply();
-                    expect(activateSpy.callCount).toBe(2);
-                });
-            });
-
-            it('should be able to change to external pages', function () {
-                uit.runs(function ($, $location, $rootScope) {
-                    expect($.mobile.activePage.attr("id")).toBe("start");
-                    $location.path("/externalPage.html");
-                    $rootScope.$apply();
-                });
-                uit.runs(function ($, $location, location) {
-                    expect($.mobile.activePage.attr("id")).toBe("externalPage");
-                    expect($location.path()).toBe('/externalPage.html');
-                    expect($location.hash()).toBe('');
-                    expect(location.pathname).toEndWith('/externalPage.html');
-                });
-            });
-
-            it('should be able to load external pages in a different folder, adjust the links in the page, go back again and the same again', function () {
-                var startUrl;
-                uit.runs(function (window, location, $, $location, $rootScope) {
-                    window.tag = true;
-                    startUrl = location.href.substring(0, location.href.indexOf('?'));
-                    expect($.mobile.activePage.attr("id")).toBe("start");
-                    $location.path("/someFolder/externalPage.html");
-                    $rootScope.$apply();
-                });
-                uit.runs(function (window, location, $) {
-                    expect(location.pathname).toEndWith('/externalPage.html');
-                    expect($("#basePageLink").prop("href")).toBe(startUrl);
-                    expect(window.tag).toBe(true);
-                    $("#basePageLink").click();
-                });
-                uit.runs(function (window, location) {
-                    expect(window.tag).toBe(true);
-                    expect(location.pathname).toEndWith('/test-fixture.html');
-                });
-                uit.runs(function ($location, $rootScope) {
-                    $location.path("/someFolder/externalPage.html");
-                    $rootScope.$apply();
-                });
-                uit.runs(function ($) {
-                    expect($.mobile.activePage.attr("id")).toBe("externalPage");
-                });
-
-            });
-        });
+    inject(function($sniffer) {
+        if ($sniffer.history) {
+            historySupportTrueSpecs();
+        }
     });
+
+    function historySupportTrueSpecs() {
+        describe('history support true', function () {
+            initWithHistorySupport(true);
+
+            describe('initial page', function () {
+                it('should be able to start at an internal subpage without hashbang', function () {
+                    uit.url(baseUrl+'#page2');
+                    uit.runs(function ($, $location, location) {
+                        expect($.mobile.activePage.attr("id")).toBe("page2");
+                        expect($location.path()).toBe('/test-fixture.html');
+                        expect($location.hash()).toBe('page2');
+                        expect(location.pathname).toEndWith('/test-fixture.html');
+                    });
+                });
+
+                it('should be able to start at an internal subpage with hashbang', function () {
+                    uit.url(baseUrl+'#!/test-fixture.html?{now}#page2');
+                    uit.runs(function ($, $location, location) {
+                        expect($.mobile.activePage.attr("id")).toBe("page2");
+                        expect($location.path()).toBe('/test-fixture.html');
+                        expect($location.hash()).toBe('page2');
+                        expect(location.pathname).toEndWith('/test-fixture.html');
+                    });
+                });
+
+                it('should call $.mobile.changePage only once with the subpage if a subpage is given', function () {
+                    uit.url(baseUrl+'#!/test-fixture.html#page2');
+                    uit.runs(function ($) {
+                        expect($.mobile.changePage.callCount).toBe(2);
+                        var pageStr = $.mobile.changePage.argsForCall[0][0];
+                        expect(pageStr.indexOf('#page2')).not.toBe(-1);
+                    });
+                });
+
+                it('should be able to start at an external subpage', function () {
+                    uit.url(baseUrl+'#!/externalPage.html');
+                    uit.runs(function ($, $location, location) {
+                        expect($.mobile.activePage.attr("id")).toBe("externalPage");
+                        expect($location.path()).toBe('/externalPage.html');
+                        expect($location.hash()).toBe('');
+                        expect(location.pathname).toEndWith('/externalPage.html');
+                    });
+                });
+
+                it('should be able to start at an internal page when search parameters are used', function () {
+                    uit.url(baseUrl+'?a=b#!/test-fixture.html?a=b&{now}#page2');
+                    uit.runs(function ($) {
+                        expect($.mobile.activePage.attr("id")).toBe("page2");
+                    });
+                });
+
+            });
+
+            describe('navigation in the app', function () {
+                uit.url(baseUrl);
+
+                it('should be able to change to an internal page', function () {
+                    uit.runs(function ($, $location, $rootScope) {
+                        expect($.mobile.activePage.attr("id")).toBe("start");
+                        $location.hash("page2");
+                        $rootScope.$apply();
+                    });
+                    uit.runs(function ($, $location, location) {
+                        expect($.mobile.activePage.attr("id")).toBe("page2");
+                        expect($location.path()).toBe('/test-fixture.html');
+                        expect($location.hash()).toBe('page2');
+                        expect(location.pathname).toEndWith('/test-fixture.html');
+                    });
+                });
+                it('should be able to change to the active page again, calling $activate', function() {
+                    var activateSpy;
+                    uit.append(function(angular, $) {
+                        var ng = angular.module("ng");
+                        ng.config(['$routeProvider', function ($routeProvider) {
+                            $routeProvider.when('/hello/:name', {
+                                templateUrl: '#page2',
+                                onActivate: 'onActivate()'
+                            });
+                        }]);
+                        ng.controller("Page2Ctrl", function($scope) {
+                            $scope.onActivate = activateSpy = jasmine.createSpy('activateSpy');
+                        });
+                        $("#page2").attr("ng-controller", "Page2Ctrl");
+                    });
+                    uit.runs(function($location, $rootScope) {
+                        $location.path('/hello/page1');
+                        $rootScope.$apply();
+                        expect(activateSpy.callCount).toBe(1);
+                        $location.path('/hello/page2');
+                        $rootScope.$apply();
+                        expect(activateSpy.callCount).toBe(2);
+                    });
+                });
+
+                it('should be able to change to external pages', function () {
+                    uit.runs(function ($, $location, $rootScope) {
+                        expect($.mobile.activePage.attr("id")).toBe("start");
+                        $location.path("/externalPage.html");
+                        $rootScope.$apply();
+                    });
+                    uit.runs(function ($, $location, location) {
+                        expect($.mobile.activePage.attr("id")).toBe("externalPage");
+                        expect($location.path()).toBe('/externalPage.html');
+                        expect($location.hash()).toBe('');
+                        expect(location.pathname).toEndWith('/externalPage.html');
+                    });
+                });
+
+                it('should be able to load external pages in a different folder, adjust the links in the page, go back again and the same again', function () {
+                    var startUrl;
+                    uit.runs(function (window, location, $, $location, $rootScope) {
+                        window.tag = true;
+                        startUrl = location.href.substring(0, location.href.indexOf('?'));
+                        expect($.mobile.activePage.attr("id")).toBe("start");
+                        $location.path("/someFolder/externalPage.html");
+                        $rootScope.$apply();
+                    });
+                    uit.runs(function (window, location, $) {
+                        expect(location.pathname).toEndWith('/externalPage.html');
+                        expect($("#basePageLink").prop("href")).toBe(startUrl);
+                        expect(window.tag).toBe(true);
+                        $("#basePageLink").click();
+                    });
+                    uit.runs(function (window, location) {
+                        expect(window.tag).toBe(true);
+                        expect(location.pathname).toEndWith('/test-fixture.html');
+                    });
+                    uit.runs(function ($location, $rootScope) {
+                        $location.path("/someFolder/externalPage.html");
+                        $rootScope.$apply();
+                    });
+                    uit.runs(function ($) {
+                        expect($.mobile.activePage.attr("id")).toBe("externalPage");
+                    });
+
+                });
+            });
+        });
+    }
 
     describe('history support false', function () {
         initWithHistorySupport(false);

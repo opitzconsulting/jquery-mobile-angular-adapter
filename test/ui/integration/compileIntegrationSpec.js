@@ -33,6 +33,9 @@ describe('compileIntegration', function () {
 
     it("should allow manual bootstrap using $compile on the document", function() {
         uit.url('../ui/fixtures/empty-fixture.html');
+        uit.append(function($) {
+            $("html").removeAttr("ng-app");
+        });
         uit.runs(function(window,$) {
             $("body").append('<div id="somePage" data-role="page"></div>');
             window.angular.bootstrap(window.document);

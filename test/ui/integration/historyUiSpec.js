@@ -18,7 +18,6 @@ describe('history', function() {
                 initialUrlStack = $history.urlStack.slice();
                 expect($history.activeIndex).toBe(3);
                 expect(initialUrlStack.length).toBe(4);
-
                 $history.removePastEntries(2);
             });
             uit.runs(function($history, location) {

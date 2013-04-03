@@ -16,39 +16,36 @@ Test page during development.
 <script>
  
 var mod = angular.module('ngm', []); //setup angular app
-/*
-mod.run(function($location, $rootScope) {
-
-    window.setTimeout(function() {
-        $location.hash("dialog");
-        $rootScope.$apply();
-    },1000);
-
-    window.setTimeout(function() {
-        $location.hash("page2");
-        $rootScope.$apply();
-    },2000);
+mod.controller("MainCtrl", function($scope, $location) {
+    $scope.back = function() {
+        window.top.history.back();
+    }
 
 });
-*/
-            var ng = angular.module("ng");
-            ng.config(['$provide', function ($provide) {
-                $provide.decorator("$sniffer", ['$delegate', function ($sniffer) {
-                    $sniffer.history = false;
-                    return $sniffer;
-                }]);
-            }]);
-
-
+window.setInterval(function() {
+    console.log(location.href);
+},500);
 </script>
 
 </head>
 <body ng-app="ngm">
-<div data-role="page" id="main">
+<div data-role="page" id="main"  ng-controller="MainCtrl">
     <div data-role="header">
         <h1>Main</h1>
-        <a href="form.html">Form</a>
+        <a href="#page2">Page2</a>
+    </div>
+    <div data-role="content">
     </div>
 </div>
+
+<div data-role="page" id="page2"  ng-controller="MainCtrl">
+   <div data-role="header">
+    <h1>Page2</h1>
+    <a href="#" ng-click="back()">Back</a>
+    </div>
+      <div data-role="content">
+    </div>
+</div>  
+
 </body>
 </html>

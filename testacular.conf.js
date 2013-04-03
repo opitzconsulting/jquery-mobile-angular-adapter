@@ -21,7 +21,7 @@ files = [
   'compiled/jquery-mobile-angular-adapter.js',
   'test/lib/unittestUtils.js',
   'test/lib/uitestUtils.js',
-  'test/ui/**/*Spec.js',
+  //'test/ui/**/*Spec.js',
   'test/unit/**/*Spec.js'
 ];
 

@@ -118,11 +118,24 @@
         element.trigger('change');
     }
 
+    function browserUrl(server, path) {
+        var res;
+        inject(function($sniffer) {
+            if ($sniffer.history) {
+                res = server+path;
+            } else {
+                res = server+"/#!"+path;
+            }
+        });
+        return res;
+    }
+
     // API
     window.testutils = {
         compile: compile,
         compileInPage: compileInPage,
         triggerInputEvent: triggerInputEvent,
-        spyOnJq: spyOnJq
+        spyOnJq: spyOnJq,
+        browserUrl: browserUrl
     };
 })(window.jQuery, window.angular, window);

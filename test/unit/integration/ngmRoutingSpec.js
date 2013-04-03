@@ -387,7 +387,7 @@ describe('ngmRouting', function () {
             $location.routeOverride({jqmOptions: someOptions});
             $rootScope.$apply();
             $.mobile.changePage.reset();
-            $browser.$$url = 'http://server/path1';
+            $browser.$$url = testutils.browserUrl('http://server','/path1');
             $browser.poll();
             expect($.mobile.changePage).toHaveBeenCalledWith('/path1', { transition : 'slide', reverse: true, navByNg : true });
         }));
@@ -399,10 +399,10 @@ describe('ngmRouting', function () {
             $location.path('/path2');
             $location.routeOverride({jqmOptions: someOptions});
             $rootScope.$apply();
-            $browser.$$url = 'http://server/path1';
+            $browser.$$url = testutils.browserUrl('http://server','/path1');
             $browser.poll();
             $.mobile.changePage.reset();
-            $browser.$$url = 'http://server/path2';
+            $browser.$$url = testutils.browserUrl('http://server','/path2');
             $browser.poll();
             expect($.mobile.changePage).toHaveBeenCalledWith('/path2', { transition : 'slide', navByNg : true });
         }));

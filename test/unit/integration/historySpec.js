@@ -50,8 +50,8 @@ describe('history', function () {
             $location.path("path2");
             $rootScope.$apply();
             expect($history.activeIndex).toBe(1);
-            expect($history.urlStack[0].url).toEqual('http://server/path1');
-            expect($history.urlStack[1].url).toEqual('http://server/path2');
+            expect($history.urlStack[0].url).toEqual(testutils.browserUrl('http://server','/path1'));
+            expect($history.urlStack[1].url).toEqual(testutils.browserUrl('http://server','/path2'));
             expect($history.urlStack.length).toBe(2);
         }));
 
@@ -65,14 +65,14 @@ describe('history', function () {
             $rootScope.$apply();
             expect($history.activeIndex).toBe(0);
 
-            expect($history.urlStack[0].url).toEqual('http://server/path2');
+            expect($history.urlStack[0].url).toEqual(testutils.browserUrl('http://server','/path2'));
             expect($history.urlStack.length).toBe(1);
         }));
 
         it('should record multiple url changes to the same url only once', inject(function ($history, $browser) {
-            $browser.url("http://server/url1");
-            $browser.url("http://server/url1");
-            expect($history.urlStack).toEqual([{url: 'http://server/url1'}]);
+            $browser.url(testutils.browserUrl("http://server","/url1"));
+            $browser.url(testutils.browserUrl("http://server", "/url1"));
+            expect($history.urlStack).toEqual([{url: testutils.browserUrl('http://server','/url1')}]);
         }));
 
         it('should not record url changes of aborted location changes', inject(function ($history, $location, $rootScope) {
@@ -92,7 +92,7 @@ describe('history', function () {
             $location.replace();
             $rootScope.$apply();
             expect($history.activeIndex).toBe(0);
-            expect($history.urlStack[0].url).toEqual('http://server/path2');
+            expect($history.urlStack[0].url).toEqual(testutils.browserUrl('http://server','/path2'));
             expect($history.urlStack.length).toBe(1);
         }));
 
@@ -108,7 +108,7 @@ describe('history', function () {
             $location.replace();
             $rootScope.$apply();
             expect($history.activeIndex).toBe(0);
-            expect($history.urlStack[0].url).toEqual('http://server/path3');
+            expect($history.urlStack[0].url).toEqual(testutils.browserUrl('http://server','/path3'));
             expect($history.urlStack.length).toBe(1);
         }));
 
@@ -128,18 +128,18 @@ describe('history', function () {
             $location.path("path2");
             $rootScope.$apply();
 
-            $browser.$$url = 'http://server/path1';
+            $browser.$$url = testutils.browserUrl('http://server','/path1');
             $browser.poll();
 
             expect($history.activeIndex).toBe(0);
         }));
 
         it('should append the url to the stack if the url is not know', inject(function ($browser, $history) {
-            $browser.$$url = 'http://server/path1';
+            $browser.$$url = testutils.browserUrl('http://server','/path1');
             $browser.poll();
 
             expect($history.activeIndex).toBe(0);
-            expect($history.urlStack[0].url).toBe('http://server/path1');
+            expect($history.urlStack[0].url).toBe(testutils.browserUrl('http://server','/path1'));
         }));
 
         it('should set lastIndexFromUrlChange to the last index before navigation', inject(function ($location, $rootScope, $browser, $history) {
@@ -148,7 +148,7 @@ describe('history', function () {
             $location.path("path2");
             $rootScope.$apply();
 
-            $browser.$$url = 'http://server/path1';
+            $browser.$$url = testutils.browserUrl('http://server', '/path1');
             $browser.poll();
 
             expect($history.lastIndexFromUrlChange).toBe(1);
@@ -243,7 +243,7 @@ describe('history', function () {
             $browser.poll();
 
             expect(spy).not.toHaveBeenCalled();
-            $browser.$$url = 'http://server/someOtherUrl';
+            $browser.$$url = testutils.browserUrl('http://server', '/someOtherUrl');
             $browser.poll();
             expect(spy).toHaveBeenCalled();
         }));
@@ -264,7 +264,7 @@ describe('history', function () {
                 $location.back();
                 $rootScope.$apply();
 
-                expect($browser.url()).toBe("http://server/path1");
+                expect($browser.url()).toBe(testutils.browserUrl("http://server", "/path1"));
             }));
 
             it('should call $history.removePastEntries', inject(function ($location, $rootScope, $history) {
@@ -307,7 +307,7 @@ describe('history', function () {
                 $location.back();
                 $rootScope.$apply();
 
-                expect($browser.url()).toBe('http://server/path2');
+                expect($browser.url()).toBe(testutils.browserUrl('http://server','/path2'));
                 expect($history.removePastEntries).not.toHaveBeenCalled();
             }));
         });
@@ -322,10 +322,10 @@ describe('history', function () {
                 });
             });
             inject(function ($location, $rootScope, $browser, $history) {
-                $history.urlStack = [{url: 'http://server/someUrl'}];
+                $history.urlStack = [{url: testutils.browserUrl('http://server','/someUrl')}];
                 $history.activeIndex = 0;
 
-                $browser.$$url = 'http://server/someUrl';
+                $browser.$$url = testutils.browserUrl('http://server','/someUrl');
                 $browser.poll();
                 expect($location.path()).toBe('/someRedirectUrl');
                 expect($history.lastIndexFromUrlChange).toBe(-1);
@@ -339,10 +339,10 @@ describe('history', function () {
                 });
             });
             inject(function ($location, $rootScope, $browser, $history) {
-                $history.urlStack = [{url: 'http://server/someUrl2'}, {url: 'http://server/someUrl'}];
+                $history.urlStack = [{url: testutils.browserUrl('http://server','/someUrl2')}, {url: testutils.browserUrl('http://server', '/someUrl')}];
                 $history.activeIndex = 0;
 
-                $browser.$$url = 'http://server/someUrl';
+                $browser.$$url = testutils.browserUrl('http://server', '/someUrl');
                 $browser.poll();
                 expect($location.path()).toBe('/someUrl');
                 expect($history.lastIndexFromUrlChange).toBe(0);

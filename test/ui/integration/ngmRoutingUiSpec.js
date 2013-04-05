@@ -1,4 +1,4 @@
-ddescribe("ngmRouting", function () {
+describe("ngmRouting", function () {
     var baseUrl = '../ui/fixtures/test-fixture.html';
 
     function initWithHistorySupport(historySupport) {

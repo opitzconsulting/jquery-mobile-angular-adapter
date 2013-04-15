@@ -238,9 +238,10 @@
             var url = newRoute.ngmTemplateUrl;
             if (url === DEFAULT_JQM_PAGE) {
                 url = $location.url();
-            }
-            if (url && url.charAt(0)==='/') {
-                url = url.slice(1);
+                // $location always yiels absolute urls...
+                if (url && url.charAt(0)==='/') {
+                    url = url.slice(1);
+                }
             }
             url = $.mobile.path.makeUrlAbsolute(url, $browser.baseHref());
             var navConfig = newRoute.jqmOptions || {};

@@ -3,7 +3,9 @@ Changelog
 
 1.3.1
 -----
-
+Breaking changes:
+- routes with absolute urls in `templateUrl` are not treated as real absolute urls,
+  and not prefixed with the base url of the document (#155);
 
 1.3.0
 -----

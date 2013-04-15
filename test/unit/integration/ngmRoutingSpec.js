@@ -336,6 +336,19 @@ describe('ngmRouting', function () {
 
         });
 
+        it('should allow absolute tempalte urls', function() {
+            module(function ($routeProvider) {
+                $routeProvider.when('/test', {templateUrl:'/somePage'});
+            });
+            inject(function ($route, $location, $rootScope, $http, $browser) {
+                $browser.$$baseHref = '/someBaseFolder/someBasePage.html';
+                $location.path("/test");
+                $rootScope.$apply();
+                expect($.mobile.changePage.callCount).toBe(1);
+                expect($.mobile.changePage).toHaveBeenCalledWith('/somePage', {navByNg : true});
+            });
+        });
+
         describe('resolve urls using the base tag', function() {
             function execText(navUrl, expectedChangePageUrl) {
                 inject(function($browser, $location, $rootScope) {

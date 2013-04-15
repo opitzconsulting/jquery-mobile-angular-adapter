@@ -7,45 +7,28 @@ Test page during development.
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
     <link rel="stylesheet" href="../lib/jquery.mobile.css"/>
 
+    <!--
     <script src="../lib/jquery.js"></script>
     <script src="../lib/jquery.mobile.js"></script>
     <script src="../lib/angular.js"></script>
 
     <script src="../compiled/jquery-mobile-angular-adapter.js"></script>
 
-<script>
- 
-var mod = angular.module('ngm', []); //setup angular app
-mod.controller("MainCtrl", function($scope, $location) {
-    $scope.back = function() {
-        window.top.history.back();
-    }
 
-});
-window.setInterval(function() {
-    console.log(location.href);
-},500);
+<script>
+    var mod = angular.module("ngm", []);
+
 </script>
+-->
 
 </head>
 <body ng-app="ngm">
-<div data-role="page" id="main"  ng-controller="MainCtrl">
-    <div data-role="header">
-        <h1>Main</h1>
-        <a href="#page2">Page2</a>
-    </div>
+<div id="main" data-role="page">
     <div data-role="content">
+        <input type="datetime">
     </div>
 </div>
 
-<div data-role="page" id="page2"  ng-controller="MainCtrl">
-   <div data-role="header">
-    <h1>Page2</h1>
-    <a href="#" ng-click="back()">Back</a>
-    </div>
-      <div data-role="content">
-    </div>
-</div>  
 
 </body>
 </html>

@@ -35434,7 +35434,7 @@ var styleDirective = valueFn({
 
 })(window, document);
 angular.element(document).find('head').append('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak{display:none;}ng\\:form{display:block;}</style>');
-/*! jquery-mobile-angular-adapter - v1.3.1-SNAPSHOT - 2013-04-03
+/*! jquery-mobile-angular-adapter - v1.3.1-SNAPSHOT - 2013-04-15
 * https://github.com/tigbro/jquery-mobile-angular-adapter
 * Copyright (c) 2013 Tobias Bosch; Licensed MIT */
 (function(factory) {
@@ -37056,9 +37056,10 @@ factory(window.jQuery, window.angular);
             var url = newRoute.ngmTemplateUrl;
             if (url === DEFAULT_JQM_PAGE) {
                 url = $location.url();
-            }
-            if (url && url.charAt(0)==='/') {
-                url = url.slice(1);
+                // $location always yiels absolute urls...
+                if (url && url.charAt(0)==='/') {
+                    url = url.slice(1);
+                }
             }
             url = $.mobile.path.makeUrlAbsolute(url, $browser.baseHref());
             var navConfig = newRoute.jqmOptions || {};

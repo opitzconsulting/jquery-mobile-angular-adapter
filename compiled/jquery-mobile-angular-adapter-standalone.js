@@ -35896,7 +35896,9 @@ factory(window.jQuery, window.angular);
             return callback();
         } finally {
             if (oldParentNode !== document) {
-                oldParentNode.appendChild(node);
+                if (oldParentNode) {
+                    oldParentNode.appendChild(node);
+                }
                 // Don't use remove, as this would destroy the page widget also,
                 // but we want to cache it!
                 emptyPage[0].parentNode.removeChild(emptyPage[0]);

@@ -549,7 +549,7 @@ describe("ngmRouting", function () {
     });
 
     describe('scroll position', function() {
-        var bottomScrollPos;
+        var bottomScrollPos, initScrollPos;
         uit.url(baseUrl+"#start");
         uit.append(function($) {
             var longText = new Array(500).join('<p>Hello</p>'),
@@ -572,6 +572,7 @@ describe("ngmRouting", function () {
         }
         beforeEach(function() {
             uit.runs(function($location,$rootScope) {
+                initScrollPos = scrollPos();
                 scrollDown();
                 bottomScrollPos = scrollPos();
             });
@@ -584,7 +585,7 @@ describe("ngmRouting", function () {
             uit.runs(function($, $location,$rootScope) {
                 $location.url("#start");
                 $rootScope.$apply();
-                expect(scrollPos()).toBe($.mobile.defaultHomeScroll);
+                expect(scrollPos()).toBe(initScrollPos);
             });
         });
         it('restores the scroll position when going back', function() {

@@ -34,6 +34,13 @@ describe('compileIntegrationUnit', function () {
         expect(spy.callCount).toBe(1);
     });
 
+    it("should allow to compile elements that have a parent that does not belong to the document nor document fragment", inject(function($compile, $rootScope) {
+        var el = $(document.createElement("div"));
+        el.html('<span></span>');
+        expect(el[0].parentNode).toBe(null);
+        $compile(el.contents())($rootScope);
+    }));
+
     it("should stamp stateful jqm widgets using the jqm widgets", function () {
         // Note: button is a stateful widget
         var spy = testutils.spyOnJq('button').andCallThrough();

@@ -12,43 +12,62 @@ Test page during development.
     <script src="../lib/angular.js"></script>
 
     <script src="../compiled/jquery-mobile-angular-adapter.js"></script>
+    <style>
+.map {
+    width: 400px;
+    height: 375px;
+    border: 1px solid #777777;
+}
+</style>
+<script src="https://raw.github.com/angular-ui/angular-ui/master/build/angular-ui.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
+</style>
 
 <script>
-    var mod = angular.module("ngm", []);
-    mod.controller("MainCtrl", function($scope, $location) {
-        $scope.click = function() {
-            $location.routeOverride({jqmOptions: {transition: 'pop'}});
-            $location.url('#page2');            
-        };
-    });
+var app = angular.module("app", ['ui']);
+
+app.controller("MapCtrl",function ($scope) {    
+    $scope.myMarkers = [];
+    $scope.addMarker = function($event) {
+      $scope.myMarkers.push(new google.maps.Marker({
+        map: $scope.myMap,
+        position: $event.latLng
+      }));
+    };
+    
+ 
+    $scope.mapOptions = {
+      center: new google.maps.LatLng(46.227638, 2.213749),
+      zoom: 5,
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+     
+    $scope.openMarkerInfo = function(marker) {
+      $scope.myInfoWindow.open($scope.myMap, marker);
+    };
+    
+    
+    
+});
 </script>
 
 </head>
-<body ng-app="ngm">
-<div id="main" data-role="page" ng-controller="MainCtrl">
-    <div data-role="header">
-        <h1>Page1</h1>
-    </div>    
+<body ng-app="app">
+<div id="main" data-role="page" ng-controller="MapCtrl">
     <div data-role="content">
-
-        <!--
-        <a id="test" href="#page2">Page2</a>
-        <a onclick="$('#test')[0].click()">Goto Page2 via Link before</a>
-    -->
-        <a ng-click="click()">Click me</a>
-
+        
+        <div ng-repeat="marker in myMarkers" ui-map-marker="myMarkers[$index]"
+              ui-event="{'map-click': 'openMarkerInfo(marker)'}">
+        </div>
+        
+        <div ui-map-info-window="myInfoWindow">Hello gentleman !</div>
+        
+        <div id="map_canvas" ui-map="myMap" class="map"
+        ui-options="mapOptions" ui-event="{'map-click': 'addMarker($event)'}"></div>    
+        
     </div>
 </div>
 
-<div data-role="page" id="page2">
-    <div data-role="header">
-        <h1>Page2</h1>
-    </div>    
-    <div data-role="content">
-     
-        <a href="#main">Page1</a>
-    </div>    
-</div>    
 
 </body>
 </html>

@@ -8,66 +8,55 @@ Test page during development.
     <link rel="stylesheet" href="../lib/jquery.mobile.css"/>
 
     <script src="../lib/jquery.js"></script>
+    <!--
     <script src="../lib/jquery.mobile.js"></script>
+  -->
     <script src="../lib/angular.js"></script>
 
+    <!--
     <script src="../compiled/jquery-mobile-angular-adapter.js"></script>
-    <style>
-.map {
-    width: 400px;
-    height: 375px;
-    border: 1px solid #777777;
-}
+  -->
 </style>
-<script src="https://raw.github.com/angular-ui/angular-ui/master/build/angular-ui.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
-</style>
+<base href="/test/devSnippetPage.html">
 
 <script>
-var app = angular.module("app", ['ui']);
+var mod = angular.module("ngm", []);
 
-app.controller("MapCtrl",function ($scope) {    
-    $scope.myMarkers = [];
-    $scope.addMarker = function($event) {
-      $scope.myMarkers.push(new google.maps.Marker({
-        map: $scope.myMap,
-        position: $event.latLng
-      }));
-    };
-    
- 
-    $scope.mapOptions = {
-      center: new google.maps.LatLng(46.227638, 2.213749),
-      zoom: 5,
-      mapTypeId: google.maps.MapTypeId.ROADMAP
-    };
-     
-    $scope.openMarkerInfo = function(marker) {
-      $scope.myInfoWindow.open($scope.myMap, marker);
-    };
-    
-    
-    
+mod.config(function($locationProvider) {
+  $locationProvider.html5Mode(true);
+  $locationProvider.hashPrefix('!');
+});
+mod.run(function($route) {
+
+});
+mod.config(['$routeProvider', function($routeProvider) {
+    $routeProvider
+        .when('/devSnippetPage.html', {templateUrl: 'PersonnList.html', jqmOptions: { transition: 'slide'}})
+        .when('/personns/:id', {templateUrl: 'PersonnDetail.html', jqmOptions: { transition: 'slide'}})
+        .when('/devSnippetPage.html#personns%2F:id', {templateUrl: 'PersonnDetail.html', jqmOptions: { transition: 'slide'}})
+        .when('/setting', {templateUrl: 'Setting.html', jqmOptions: { transition: 'slide'}})
+        ;
+}]);
+
+
+mod.controller('PersonnListController', function($scope, $location) {
+  
+  $scope.personnList = [{id:1, name:"Gerald"},{id:2, name:"Arnold"}];
+  
+  $scope.redirect = function () {
+      $location.hash('personns/1');
+  };
+});
+
+mod.controller('PersonnController', function($scope) {
+  $scope.personn = {id:1, name:"Gerald", birthday:"02/02/12"};
 });
 </script>
 
 </head>
-<body ng-app="app">
-<div id="main" data-role="page" ng-controller="MapCtrl">
-    <div data-role="content">
-        
-        <div ng-repeat="marker in myMarkers" ui-map-marker="myMarkers[$index]"
-              ui-event="{'map-click': 'openMarkerInfo(marker)'}">
-        </div>
-        
-        <div ui-map-info-window="myInfoWindow">Hello gentleman !</div>
-        
-        <div id="map_canvas" ui-map="myMap" class="map"
-        ui-options="mapOptions" ui-event="{'map-click': 'addMarker($event)'}"></div>    
-        
+<body ng-app="ngm">
+    <div data-role="page">
     </div>
-</div>
-
-
+    <ng-view></ng-view>
 </body>
 </html>

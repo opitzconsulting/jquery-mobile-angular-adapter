@@ -128,7 +128,15 @@ Auto-Run tests when file change: `./node_modules/.bin/grunt dev`
 
 The adapter integrates angular routes with jquery mobile in the following way:
 
-- If no route is defined, the default jquery mobile url handling applies:
+- We set `$locationProvider.html5Mode(true)`, `$locationProvider.hashPrefix('!')`
+  and add the tag `<base href="{address of your html file}">` to your header.
+    * See the [angular docs](http://docs.angularjs.org/guide/dev_guide.services.$location) on details about this!
+    * By this, we are compatible to the default jquery mobile url layout,
+  e.g. links like `<a href="somePage.html">` are possible and do not reload the whole page but use AJAX and result in modern browsers in a url of `/somePage.html` (via history API).
+    * The `<base>` tag is created by jquery mobile. For routes, this makes all routes relative
+  to the current page. E.g. if your page is under `/test/index.html`, and you want a route to
+  `/test/somePage.html` then your route would be `$routeProvider.when(`/somePage.html`).
+- Default routing: If no route is defined, the default jquery mobile url handling applies:
     * Navigation to a hash shows the page whose id is the same as the hash, e.g.
     `<a href="#somePage">`.
     * Navigation to a normal page loads that page using ajax and
@@ -183,19 +191,19 @@ Default routing: `basePath+$location.url()`
 
 Notes:
 
+- If you don't want `$locationProvider.html5Mode` you can disable it. 
+  By this, you get hash urls like `/index.html#!/somePath...` back. E.g.
+          
+           module.config(function($locationProvider) { $locationProvider.html5Mode(false) }));
+
 - Internally, we use jquery mobile to load the pages and do the transition between the pages.
   By this, we automatically support the prefetching and caching functionality for pages from jquery mobile (see their docs for details).
   E.g. use `<a href="prefetchThisPage.html" data-prefetch> ... </a>` in a parent page to prefetch a child page.
-- We always enable `$locationProvider.html5Mode` and set `$locationProvider.hashPrefix('!')`.
-  By this, we are compatible to the default jquery mobile behaviour,
-  e.g. links like `<a href="somePage.html">` are possible and do not reload the whole page but use AJAX.
 - If you want to start an app directly on a subpage, use the following url:
   * For an external page that should be loaded using ajax: `index.html#!/somePage.html`
   * For an internal page that is also contained in the `index.html`: `index.html#/!index.html#someOtherPage` (yes, this url contains
     2 hashes). If you are sure that all browsers that you use support the new history API, you can also use the url
     `index.html#someOtherPage` to start at an internal page.
-- jQuery mobile automatically creates a `<base>` tag for the main page and sets it's href-attribute to the main page.
-  There are some parts of angular that use this fact, so keep it in mind when debugging errors.
 
 
 Restrictions:

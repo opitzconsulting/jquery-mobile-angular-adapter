@@ -260,11 +260,10 @@ Usage: E.g. `<div ngm-if="myFlag">asdfasdf</div>`
 
 ### Service `$history`
 
-Note: This service is for internal purposes only (same level as `$browser`). Please use `$location.backMode()` or `$location.goBack()` instead.
-
 Methods and Properties:
 
 * `$history.go(relativeIndex)`: This will directly call `window.history.go(relativeIndex)`.
+* `$history.goBack()`: Calls `$history.go(-1)`.
 * `$history.urlStack`: This contains the list of visited urls
 * `$history.activeIndex`: This defines the currently active index in the `urlStack`
 * `$history.removePastEntries(number)`: This will remove the given number of history entries
@@ -299,8 +298,6 @@ Methods and Properties:
   to the current page is `page1->page2->page3` and we then call `$location.path('page1'); $location.backMode()` this will
   go two steps back in history.
   Note that this is in analogy to the already existing angular method `$location.replace`.
-- `location.goBack()`: This will go one step back in history: call `$location.backMode()` and fill the url of `$location` by the last
-  entry in the browser history.
 
 
 ### Service $waitDialog

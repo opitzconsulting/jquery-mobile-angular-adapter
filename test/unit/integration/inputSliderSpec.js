@@ -22,7 +22,7 @@ describe("inputSlider", function () {
         expect(textinputSpy).toHaveBeenCalled();
     });
 
-    it('should have pristine state after init at use the min value as initial value in the scope', function() {
+    it('should have pristine state after init and use the min value as initial value in the scope', function() {
         var d = testutils.compileInPage('<form name="form"><input type="number" data-type="range" name="s1" ng-model="s1" min="0" max="300">'+
             '<input type="number" data-type="range" name="s2" ng-model="s2" max="300"></form>');
         var scope = d.page.scope();
@@ -68,6 +68,16 @@ describe("inputSlider", function () {
         expect(input[0].value).toEqual("100");
         expect(container.find("a").eq(0).attr("aria-valuenow")).toBe("100");
     });
+
+    it('should save an initial model value into the ui and refresh', inject(function ($rootScope) {
+        var d = testutils.compileInPage('<div ng-init="mysel=15"><input type="number" data-type="range" ng-model="mysel" min="0" max="300"></div>');
+        $rootScope.$digest();
+        var input = d.page.find("input");
+        var container = input.parent();
+        var scope = input.scope();
+        expect(input[0].value).toEqual("15");
+        expect(container.find("a").eq(0).attr("aria-valuenow")).toBe("15");
+    }));
 
     it('should use the disabled attribute', function () {
         var d = testutils.compileInPage('<input type="number" data-type="range"  ng-model="mysel" value="150" min="0" max="300" ng-disabled="disabled">');

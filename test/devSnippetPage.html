@@ -22,18 +22,12 @@ var mod = angular.module("ngm", []);
 <div data-role="page" id="tableViewer">
     <div data-role="header"  data-theme="a">
         <h1>header</h1>
-        <div class="ui-btn-right" data-role="controlgroup" data-type="horizontal">
-            <a href="#Options" data-role="button" data-rel="popup" data-icon="gear" data-transition="pop">options</a>
-        </div>
-        <button>button</button>
+        <a href="form.html">Page2</a>
     </div>
     
-    <div data-role="content">
-        Hello mobile world!
-    </div>
-    
-    <div data-role="popup" id="Options">
-        <h2>options info</h2>
+    <div data-role="content" ng-init="number=15">
+      <input type="range" ng-model="number" min="1" max="100">
+        {{number}}
     </div>
 </div>
 </body>

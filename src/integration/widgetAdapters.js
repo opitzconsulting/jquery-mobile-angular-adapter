@@ -17,7 +17,7 @@
         jqmNgWidgetProvider.widget("dialog", ["jqmNgWidget", dialogWidget]);
         jqmNgWidgetProvider.widget("controlgroup", ["jqmNgWidget", controlgroupWidget]);
         jqmNgWidgetProvider.widget("textinput", ["jqmNgWidget", textinputWidget]);
-        jqmNgWidgetProvider.widget("slider", ["jqmNgWidget", "$timeout", sliderWidget]);
+        jqmNgWidgetProvider.widget("slider", ["jqmNgWidget", "$timeout", "$parse", sliderWidget]);
         jqmNgWidgetProvider.widget("popup", ["jqmNgWidget", "$parse", popupWidget]);
         jqmNgWidgetProvider.widget("panel", ["jqmNgWidget", "$parse", panelWidget]);
     }]);
@@ -108,7 +108,7 @@
         }
     }
 
-    function sliderWidget(jqmNgWidet, $timeout) {
+    function sliderWidget(jqmNgWidet, $timeout, $parse) {
         return {
             link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
                 if (selectCtrl) {
@@ -119,7 +119,13 @@
                         jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
                     });
                 } else {
-                    setMinValueInScopeIfNoValueInScopeAsJqmStartsWithMinValue(iAttrs, ngModelCtrl);
+                    var modelValue;
+                    if (ngModelCtrl) {
+                        // Note: ngModelCtrl.$modelValue is not filled yet,
+                        // so we need to evaluate the ng-model attribute ourselves...
+                        modelValue = $parse(iAttrs.ngModel)(scope);
+                    }
+                    setMinValueInScopeIfNoValueInScopeAsJqmStartsWithMinValue(iAttrs, ngModelCtrl, modelValue);
                     jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
                     jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
                 }
@@ -131,8 +137,8 @@
             $timeout(callback);
         }
 
-        function setMinValueInScopeIfNoValueInScopeAsJqmStartsWithMinValue(iAttrs, ngModelCtrl) {
-            if (ngModelCtrl && typeof iAttrs.min !== "undefined") {
+        function setMinValueInScopeIfNoValueInScopeAsJqmStartsWithMinValue(iAttrs, ngModelCtrl, modelValue) {
+            if (ngModelCtrl && typeof iAttrs.min !== "undefined" && modelValue===undefined) {
                 var _$pristine = ngModelCtrl.$pristine;
                 ngModelCtrl.$pristine = false;
                 ngModelCtrl.$setViewValue(iAttrs.min);

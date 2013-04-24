@@ -336,7 +336,7 @@ describe('ngmRouting', function () {
 
         });
 
-        it('should allow absolute tempalte urls', function() {
+        it('should allow absolute template urls', function() {
             module(function ($routeProvider) {
                 $routeProvider.when('/test', {templateUrl:'/somePage'});
             });
@@ -350,7 +350,7 @@ describe('ngmRouting', function () {
         });
 
         describe('resolve urls using the base tag', function() {
-            function execText(navUrl, expectedChangePageUrl) {
+            function execTest(navUrl, expectedChangePageUrl) {
                 inject(function($browser, $location, $rootScope) {
                     $browser.$$baseHref = '/someBaseFolder/someBasePage.html';
                     $location.url(navUrl);
@@ -360,16 +360,16 @@ describe('ngmRouting', function () {
             }
 
             it('should add the folder of the base path to absolute urls', function() {
-                execText('/somePath#someHash', '/someBaseFolder/somePath#someHash');
+                execTest('/somePath#someHash', '/someBaseFolder/somePath#someHash');
             });
             it('should add the folder of the base path for relative urls', function() {
-                execText('somePath', '/someBaseFolder/somePath');
+                execTest('somePath', '/someBaseFolder/somePath');
             });
             it('should use the base page for hash only urls', function() {
-                execText('#someHash', '/someBaseFolder/someBasePage.html#someHash');
+                execTest('#someHash', '/someBaseFolder/someBasePage.html#someHash');
             });
             it('should use the base page for empty urls', function() {
-                execText('/', '/someBaseFolder/someBasePage.html');
+                execTest('/', '/someBaseFolder/someBasePage.html');
             });
         });
 

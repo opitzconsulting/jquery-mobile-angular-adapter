@@ -214,7 +214,7 @@
             page.find( "a" ).each(function() {
                 var $this = $(this),
                     thisUrl = $this.attr( "href" );
-                if ( thisUrl.length > 0 && !ABSOULTE_URL_RE.test( thisUrl ) ) {
+                if ( thisUrl && thisUrl.length > 0 && !ABSOULTE_URL_RE.test( thisUrl ) ) {
                     $this.attr( "href", pagePath + thisUrl );
                 }
             });

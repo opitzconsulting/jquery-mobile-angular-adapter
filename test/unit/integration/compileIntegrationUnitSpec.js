@@ -64,7 +64,7 @@ describe('compileIntegrationUnit', function () {
         expect(page.scope()).toBe(container.scope());
     });
 
-    describe('pages loaded by jquery from externa resources', function() {
+    describe('pages loaded by jquery from external resources', function() {
         var container, page;
         function init(url, content) {
             container = testutils.compile("<div></div>");
@@ -87,6 +87,12 @@ describe('compileIntegrationUnit', function () {
             init('somePath/someUrl.html', '<a href="test.html">');
             var link = page.find("a");
             expect(link.attr("href")).toBe('somePath/test.html');
+        });
+
+        it("should allow anchors without a href", function() {
+            init('somePath/someUrl.html', '<a>');
+            var link = page.find("a");
+            expect(link.attr("href")).toBe('#');
         });
 
         it("should not adjust absolute links", function() {

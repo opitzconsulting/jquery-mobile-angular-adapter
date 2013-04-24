@@ -283,17 +283,17 @@ Methods and Properties:
 
      E.g.
 
-        $location.routeOverride({
-          locals: {someKey: 'someValue'},
-          jqmOptions: {transition: 'pop'}
-        });
-        $location.path('/someRoutePath');
+         $location.routeOverride({
+           locals: {someKey: 'someValue'},
+           jqmOptions: {transition: 'pop'}
+         });
+         $location.path('/someRoutePath');
 
-        function SomePageController($scope) {
-           $scope.someActivateFn = function(someKey) {
-              expect(someKey).toBe(someValue);
-           }
-        }
+         function SomePageController($scope) {
+            $scope.someActivateFn = function(someKey) {
+               expect(someKey).toBe(someValue);
+            }
+         }
 
 - `$location.backMode()`: This will try to go back in history to the url specified by `$location`. E.g. if the navigation path
   to the current page is `page1->page2->page3` and we then call `$location.path('page1'); $location.backMode()` this will

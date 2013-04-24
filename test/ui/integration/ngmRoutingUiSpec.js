@@ -481,7 +481,7 @@ describe("ngmRouting", function () {
                     expect($.mobile.activePage.hasClass($.mobile.activePageClass)).toBe(true);
                 });
             });
-            iit('should fall back to fade transition for a not none transition', function() {
+            it('should fall back to fade transition for a not none transition', function() {
                 init('slide');
                 uit.runs(function($location, $rootScope) {
                     $location.path("/page/1");

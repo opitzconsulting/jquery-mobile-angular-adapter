@@ -15,44 +15,27 @@ Test page during development.
 
 <script>
     var mod = angular.module("ngm", []);
-    // $.mobile.defaultHomeScroll by default
-    $.mobile.defaultPageTransition = "none";
-    $.mobile.defaultDialogTransition = "none";
-                var _scrollTo = window.scrollTo;
-                window.scrollTo = function(x,y) {
-                    window.top.console.log("scrolling to "+x+","+y);
-                    return _scrollTo.apply(this, arguments);
-                };
+    mod.controller("MainCtrl", function($scope, $location) {
+        $scope.click = function() {
+            $location.routeOverride({jqmOptions: {transition: 'pop'}});
+            $location.url('#page2');            
+        };
+    });
 </script>
 
 </head>
 <body ng-app="ngm">
-<div id="main" data-role="page">
+<div id="main" data-role="page" ng-controller="MainCtrl">
     <div data-role="header">
         <h1>Page1</h1>
     </div>    
     <div data-role="content">
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <p>Hello</p>
-        <a href="#page2">Page2</a>
+
+        <!--
+        <a id="test" href="#page2">Page2</a>
+        <a onclick="$('#test')[0].click()">Goto Page2 via Link before</a>
+    -->
+        <a ng-click="click()">Click me</a>
 
     </div>
 </div>
@@ -62,36 +45,7 @@ Test page during development.
         <h1>Page2</h1>
     </div>    
     <div data-role="content">
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
-        <p>Hello2</p>        
+     
         <a href="#main">Page1</a>
     </div>    
 </div>    

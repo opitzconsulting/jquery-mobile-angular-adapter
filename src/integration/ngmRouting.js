@@ -324,7 +324,13 @@
             $scope.$apply(function() {
                 var popup = $.mobile.activePage.find(iElement.attr('href'));
                 if (popup.length) {
-                    popup.popup("open");
+                    var offset = iElement.offset();
+                    popup.popup( "open", {
+                        x: offset.left + iElement.outerWidth() / 2,
+                        y: offset.top + iElement.outerHeight() / 2,
+                        transition: iElement.jqmData( "transition" ),
+                        positionTo: iElement.jqmData( "position-to" )
+                    });
                 }
             });
         } else if (isNoopLink(iElement)) {

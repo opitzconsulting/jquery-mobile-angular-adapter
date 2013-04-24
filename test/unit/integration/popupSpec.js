@@ -18,12 +18,21 @@ describe('popup', function () {
         expect(popup.data($.mobile.popup.prototype.widgetFullName)._isOpen).toBe(false);
     }));
 
-    it('should open popups when a link with data-rel="popup" is clicked, but not change the location', inject(function($browser) {
+    it('should open popups when a link with data-rel="popup" is clicked, but not change the location href', inject(function($browser) {
         var oldUrl = $browser.url();
-        var c = testutils.compileInPage('<div><a href="#popup1" data-rel="popup" id="link">Open</a><div data-role="popup" id="popup1">test</div></div>');
+        var c = testutils.compileInPage('<div><a href="#popup1" data-rel="popup" data-transition="pop" data-position-to="top" id="link">Open</a><div data-role="popup" id="popup1">test</div></div>');
         var popup = c.page.find("#popup1");
+        var popupWidget = popup.data("mobile-popup");
+        spyOn(popupWidget, 'open').andCallThrough();
         var link = c.page.find("#link");
         link.click();
+        var offset = link.offset();
+        expect(popupWidget.open).toHaveBeenCalledWith({
+            x: offset.left + link.outerWidth() / 2,
+            y: offset.top + link.outerHeight() / 2,
+            transition: "pop",
+            positionTo: "top"
+        });
         expect($browser.url()).toBe(oldUrl);
         expect($.mobile.popup.active).toBe(popup.data($.mobile.popup.prototype.widgetFullName));
     }));

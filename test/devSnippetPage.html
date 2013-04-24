@@ -8,55 +8,33 @@ Test page during development.
     <link rel="stylesheet" href="../lib/jquery.mobile.css"/>
 
     <script src="../lib/jquery.js"></script>
-    <!--
     <script src="../lib/jquery.mobile.js"></script>
-  -->
     <script src="../lib/angular.js"></script>
-
-    <!--
     <script src="../compiled/jquery-mobile-angular-adapter.js"></script>
-  -->
 </style>
-<base href="/test/devSnippetPage.html">
 
 <script>
 var mod = angular.module("ngm", []);
-
-mod.config(function($locationProvider) {
-  $locationProvider.html5Mode(true);
-  $locationProvider.hashPrefix('!');
-});
-mod.run(function($route) {
-
-});
-mod.config(['$routeProvider', function($routeProvider) {
-    $routeProvider
-        .when('/devSnippetPage.html', {templateUrl: 'PersonnList.html', jqmOptions: { transition: 'slide'}})
-        .when('/personns/:id', {templateUrl: 'PersonnDetail.html', jqmOptions: { transition: 'slide'}})
-        .when('/devSnippetPage.html#personns%2F:id', {templateUrl: 'PersonnDetail.html', jqmOptions: { transition: 'slide'}})
-        .when('/setting', {templateUrl: 'Setting.html', jqmOptions: { transition: 'slide'}})
-        ;
-}]);
-
-
-mod.controller('PersonnListController', function($scope, $location) {
-  
-  $scope.personnList = [{id:1, name:"Gerald"},{id:2, name:"Arnold"}];
-  
-  $scope.redirect = function () {
-      $location.hash('personns/1');
-  };
-});
-
-mod.controller('PersonnController', function($scope) {
-  $scope.personn = {id:1, name:"Gerald", birthday:"02/02/12"};
-});
 </script>
 
 </head>
 <body ng-app="ngm">
-    <div data-role="page">
+<div data-role="page" id="tableViewer">
+    <div data-role="header"  data-theme="a">
+        <h1>header</h1>
+        <div class="ui-btn-right" data-role="controlgroup" data-type="horizontal">
+            <a href="#Options" data-role="button" data-rel="popup" data-icon="gear" data-transition="pop">options</a>
+        </div>
+        <button>button</button>
     </div>
-    <ng-view></ng-view>
+    
+    <div data-role="content">
+        Hello mobile world!
+    </div>
+    
+    <div data-role="popup" id="Options">
+        <h2>options info</h2>
+    </div>
+</div>
 </body>
 </html>

@@ -191,7 +191,7 @@ Notes:
   e.g. links like `<a href="somePage.html">` are possible and do not reload the whole page but use AJAX.
 - If you want to start an app directly on a subpage, use the following url:
   * For an external page that should be loaded using ajax: `index.html#!/somePage.html`
-  * For an internal page that is also contained in the `index.html: `index.html#/!index.html#someOtherPage` (yes, this url contains
+  * For an internal page that is also contained in the `index.html`: `index.html#/!index.html#someOtherPage` (yes, this url contains
     2 hashes). If you are sure that all browsers that you use support the new history API, you can also use the url
     `index.html#someOtherPage` to start at an internal page.
 - jQuery mobile automatically creates a `<base>` tag for the main page and sets it's href-attribute to the main page.

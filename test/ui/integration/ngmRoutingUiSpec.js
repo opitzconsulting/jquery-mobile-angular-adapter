@@ -481,7 +481,7 @@ describe("ngmRouting", function () {
                     expect($.mobile.activePage.hasClass($.mobile.activePageClass)).toBe(true);
                 });
             });
-            it('should fall back to fade transition for a not none transition', function() {
+            iit('should fall back to fade transition for a not none transition', function() {
                 init('slide');
                 uit.runs(function($location, $rootScope) {
                     $location.path("/page/1");
@@ -544,6 +544,69 @@ describe("ngmRouting", function () {
             uit.runs(function() {
                 submit.click();
                 expect(clickSpy).toHaveBeenCalled();
+            });
+        });
+    });
+
+    describe('scroll position', function() {
+        var bottomScrollPos;
+        uit.url(baseUrl+"#start");
+        uit.append(function($) {
+            var longText = new Array(500).join('<p>Hello</p>'),
+                pageContent = '<div data-role="content">'+longText+'</div>';
+            $("#start").append(pageContent);
+            $("#page2").append(pageContent);
+        });
+        function scrollDown() {
+            uit.inject(function($, window, document) {
+                $(window).scrollTop($(document).height());
+                $(window).trigger("scrollstop");
+            });
+        }
+        function scrollPos() {
+            var res;
+            uit.inject(function($, window) {
+                res = $(window).scrollTop();
+            });
+            return res;
+        }
+        beforeEach(function() {
+            uit.runs(function($location,$rootScope) {
+                scrollDown();
+                bottomScrollPos = scrollPos();
+            });
+            uit.runs(function($location, $rootScope) {
+                $location.url("#page2");
+                $rootScope.$apply();
+            });
+        });
+        it('resets the scroll position when navigating using links', function() {
+            uit.runs(function($, $location,$rootScope) {
+                $location.url("#start");
+                $rootScope.$apply();
+                expect(scrollPos()).toBe($.mobile.defaultHomeScroll);
+            });
+        });
+        it('restores the scroll position when going back', function() {
+            uit.runs(function($,$location,$rootScope,$history) {
+                $history.goBack();
+            });
+            uit.runs(function($) {
+                expect($.mobile.activePage.attr("id")).toBe("start");
+                expect(scrollPos()).toBe(bottomScrollPos);
+            });
+        });
+        it('restores the scroll position when going forward', function() {
+            uit.runs(function($location,$rootScope,$history) {
+                scrollDown();
+                $history.goBack();
+            });
+            uit.runs(function($history) {
+                $history.go(1);
+            });
+            uit.runs(function($) {
+                expect($.mobile.activePage.attr("id")).toBe("page2");
+                expect(scrollPos()).toBe(bottomScrollPos);
             });
         });
     });

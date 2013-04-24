@@ -5,24 +5,32 @@ Test page during development.
 -->
 <head>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0"/>
-    <link rel="stylesheet" href="../lib/jquery.mobile.css"/>
 
     <script src="../lib/jquery.js"></script>
-    <script src="../lib/jquery.mobile.js"></script>
-    <script src="../lib/angular.js"></script>
-
-    <script src="../compiled/jquery-mobile-angular-adapter.js"></script>
 
 <script>
-    var mod = angular.module("ngm", []);
-    // $.mobile.defaultHomeScroll by default
-    $.mobile.defaultPageTransition = "none";
-    $.mobile.defaultDialogTransition = "none";
-                var _scrollTo = window.scrollTo;
-                window.scrollTo = function(x,y) {
-                    window.top.console.log("scrolling to "+x+","+y);
-                    return _scrollTo.apply(this, arguments);
-                };
+    $(function() {
+        $(window).on("popstate", function() {
+            console.log("now");
+            window.setTimeout(function() {
+            console.log(3);
+            window.scrollTo(0, 50);
+            // window.scrollTo(0, 300);
+            });
+        });        
+        window.setTimeout(function() {
+            // First scroll does not work in DOMContentLoaded.
+            // AND: Have to wait for first popstate in Chrome!
+            window.scrollTo(0,400);
+            history.pushState(null, "", '#page5');
+        },10);
+        window.setTimeout(function() {
+            window.scrollTo(0,0);
+        },20);
+        window.setTimeout(function() {
+            history.back();
+        },200);
+    });
 </script>
 
 </head>

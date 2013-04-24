@@ -1,4 +1,4 @@
-/*! jquery-mobile-angular-adapter - v1.3.1-SNAPSHOT - 2013-04-15
+/*! jquery-mobile-angular-adapter - v1.3.1-SNAPSHOT - 2013-04-24
 * https://github.com/tigbro/jquery-mobile-angular-adapter
 * Copyright (c) 2013 Tobias Bosch; Licensed MIT */
 (function(factory) {
@@ -1194,10 +1194,43 @@ factory(window.jQuery, window.angular);
     // implementation functions
 
     function registerBrowserDecorator($provide) {
+        $provide.decorator('$browser', ['$delegate', emitOnUrlChangeAsynchronously]);
         $provide.decorator('$browser', ['$delegate', browserHashReplaceDecorator]);
         $provide.decorator('$browser', ['$delegate', allowFileUrlsInBaseHref]);
         $provide.decorator('$browser', ['$delegate', '$history', '$rootScope', '$injector', browserHistoryDecorator]);
         $provide.decorator('$location', ['$delegate', '$history', locationBackDecorator]);
+
+        function emitOnUrlChangeAsynchronously($browser) {
+            // popstate also restores the scrolling position from the 
+            // corresponding pushState.
+            // By this, we are unable to change the scroll position in a popstate
+            // (e.g. browser back button), which we want to do as it's the 
+            // default behaviour of jquery mobile.
+            // jQuery Mobile also does a setTimout when a popstate is received...
+            var _onUrlChange = $browser.onUrlChange;
+            $browser.onUrlChange = function() {
+                var _bind = $.fn.bind;
+                $.fn.bind = function(eventName, listener) {
+                    if (this[0]===window) {
+                        listener = wrapListener(listener);
+                        return _bind.call(this, eventName, listener);
+                    }
+                    return _bind.apply(this, arguments);
+                };
+                try {
+                    return _onUrlChange.apply(this, arguments);
+                } finally {
+                    $.fn.bind = _bind;
+                }
+            };
+            return $browser;
+
+            function wrapListener(listener) {
+                return function() {
+                    window.setTimeout(listener,0);
+                };
+            }
+        }
 
         function locationBackDecorator($location, $history) {
             $location.back = function () {
@@ -1566,20 +1599,20 @@ factory(window.jQuery, window.angular);
             var activePage = $.mobile.activePage;
             var jqmNavInfo = activePage.data("lastNavProps");
             if (!jqmNavInfo || !jqmNavInfo.navByNg) {
-                // TODO do a unit-test for this:
-                // open a page manually without angular!
                 return;
             }
-            var current = $route.current,
-                onActivateParams;
+            var currentRoute = $route.current,
+                onActivateParams,
+                currentHistoryEntry = $history.urlStack[$history.activeIndex];
+            $.mobile.urlHistory.getActive().lastScroll = currentHistoryEntry.lastScroll;
             if (activePageIsDialog()) {
-                $history.urlStack[$history.activeIndex].tempUrl = true;
+                currentHistoryEntry.tempUrl = true;
             } else if (activePageIsNormalePage()) {
                 removePastTempPages($history);
             }
-            if (current && current.onActivate) {
-                onActivateParams = angular.extend({}, current.locals, $routeParams);
-                activePage.scope().$eval(current.onActivate, onActivateParams);
+            if (currentRoute && currentRoute.onActivate) {
+                onActivateParams = angular.extend({}, currentRoute.locals, $routeParams);
+                activePage.scope().$eval(currentRoute.onActivate, onActivateParams);
             }
         }
 
@@ -1627,7 +1660,6 @@ factory(window.jQuery, window.angular);
             }
             url = $.mobile.path.makeUrlAbsolute(url, $browser.baseHref());
             var navConfig = newRoute.jqmOptions || {};
-            // var navConfig = angular.extend({}, newRoute.jqmOptions || {});
             restoreOrSaveTransitionForUrlChange(navConfig);
             navConfig.navByNg = true;
 
@@ -1642,19 +1674,29 @@ factory(window.jQuery, window.angular);
             }
 
             function restoreOrSaveTransitionForUrlChange(navConfig) {
+                var lastEntry,
+                    currentEntry = $history.urlStack[$history.activeIndex];
                 if ($history.lastIndexFromUrlChange >=0 ) {
-                    var templateEntry;
+                    // Navigating in the history
+                    lastEntry = $history.urlStack[$history.lastIndexFromUrlChange];
+
+                    var transitionHistoryEntry;
                     if ($history.lastIndexFromUrlChange > $history.activeIndex) {
                         navConfig.reverse = true;
-                        templateEntry = $history.urlStack[$history.lastIndexFromUrlChange];
+                        transitionHistoryEntry = lastEntry;
                     } else {
-                        templateEntry = $history.urlStack[$history.activeIndex];
+                        transitionHistoryEntry = currentEntry;
                     }
-                    if (templateEntry && templateEntry.jqmOptions) {
-                        navConfig.transition = templateEntry.jqmOptions.transition;
+                    if (transitionHistoryEntry && transitionHistoryEntry.jqmOptions) {
+                        navConfig.transition = transitionHistoryEntry.jqmOptions.transition;
                     }
                 } else {
-                    $history.urlStack[$history.activeIndex].jqmOptions = navConfig;
+                    // Creating new history entries...
+                    lastEntry = $history.urlStack[$history.activeIndex - 1];
+                    currentEntry.jqmOptions = navConfig;
+                }
+                if (lastEntry) {
+                    lastEntry.lastScroll = $.mobile.urlHistory.getActive().lastScroll;
                 }
             }
         });

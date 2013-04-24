@@ -16,10 +16,43 @@
     // implementation functions
 
     function registerBrowserDecorator($provide) {
+        $provide.decorator('$browser', ['$delegate', emitOnUrlChangeAsynchronously]);
         $provide.decorator('$browser', ['$delegate', browserHashReplaceDecorator]);
         $provide.decorator('$browser', ['$delegate', allowFileUrlsInBaseHref]);
         $provide.decorator('$browser', ['$delegate', '$history', '$rootScope', '$injector', browserHistoryDecorator]);
         $provide.decorator('$location', ['$delegate', '$history', locationBackDecorator]);
+
+        function emitOnUrlChangeAsynchronously($browser) {
+            // popstate also restores the scrolling position from the 
+            // corresponding pushState.
+            // By this, we are unable to change the scroll position in a popstate
+            // (e.g. browser back button), which we want to do as it's the 
+            // default behaviour of jquery mobile.
+            // jQuery Mobile also does a setTimout when a popstate is received...
+            var _onUrlChange = $browser.onUrlChange;
+            $browser.onUrlChange = function() {
+                var _bind = $.fn.bind;
+                $.fn.bind = function(eventName, listener) {
+                    if (this[0]===window) {
+                        listener = wrapListener(listener);
+                        return _bind.call(this, eventName, listener);
+                    }
+                    return _bind.apply(this, arguments);
+                };
+                try {
+                    return _onUrlChange.apply(this, arguments);
+                } finally {
+                    $.fn.bind = _bind;
+                }
+            };
+            return $browser;
+
+            function wrapListener(listener) {
+                return function() {
+                    window.setTimeout(listener,0);
+                };
+            }
+        }
 
         function locationBackDecorator($location, $history) {
             $location.back = function () {

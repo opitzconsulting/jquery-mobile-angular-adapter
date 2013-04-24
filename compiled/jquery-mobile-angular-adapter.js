@@ -1678,6 +1678,11 @@ factory(window.jQuery, window.angular);
             function restoreOrSaveTransitionForUrlChange(navConfig) {
                 var lastEntry,
                     currentEntry = $history.urlStack[$history.activeIndex];
+                if (!currentEntry) {
+                    // In some Unit-Testcases, there is no active $history entry.
+                    // do nothing then...
+                    return;
+                }
                 if ($history.lastIndexFromUrlChange >=0 ) {
                     // Navigating in the history
                     lastEntry = $history.urlStack[$history.lastIndexFromUrlChange];

@@ -3,9 +3,14 @@ Changelog
 
 1.3.1
 -----
+Features:
+- upgrade to angular 1.0.6 and jqm 1.3.1.
+- `table` widget now fully working, as jqm added the refresh function.
+
 Breaking changes:
 - routes with absolute urls in `templateUrl` are not treated as real absolute urls,
   and not prefixed with the base url of the document (#155);
+
 
 1.3.0
 -----

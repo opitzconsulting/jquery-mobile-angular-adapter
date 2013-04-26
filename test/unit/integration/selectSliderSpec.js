@@ -40,7 +40,7 @@ describe("selectSlider", function () {
         // jquery mobile uses an anchor to simulate the select
         var anchor = d.page.find("a");
         expect(anchor.length).toEqual(1);
-        anchor.trigger('vmousedown');
+        anchor.trigger($.Event('vmousedown',{which: 0}));
         anchor.trigger('vmouseup');
         expect(scope.mysel).toEqual("v2");
     });

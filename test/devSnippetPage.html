@@ -15,19 +15,69 @@ Test page during development.
 
 <script>
 var mod = angular.module("ngm", []);
+mod.controller("MainCtrl", function($scope) {
+    $scope.rows = [];
+    var i;
+    for (i=0; i<10; i++) {
+        $scope.rows.push({
+            name: 'name'+i,
+            id: i,
+            rank: 'rank'+i
+        });
+    }
+});
 </script>
 
 </head>
 <body ng-app="ngm">
-<div data-role="page" id="tableViewer">
+<div data-role="page" id="tableViewer" ng-controller="MainCtrl">
     <div data-role="header"  data-theme="a">
         <h1>header</h1>
         <a href="form.html">Page2</a>
     </div>
     
     <div data-role="content" ng-init="number=15">
-      <input type="range" ng-model="number" min="1" max="100">
-        {{number}}
+    <!--
+    <table data-role="table" id="movie-table" data-mode="columntoggle">
+      <thead>
+        <tr>
+          <th data-priority="1">Rank</th>
+          <th data-priority="2">Movie Title</th>
+          <th data-priority="3">Year</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>1</th>
+          <td>Citizen Kane</td>
+          <td>1941</td>
+        </tr>
+        <tr>
+          <th>2</th>
+          <td>Casablanca</td>
+          <td>1942</td>
+        </tr>
+      </tbody>
+    </table>
+-->
+
+    <div>
+    <table data-role="table" id="my-table" data-mode="columntoggle">
+          <thead>
+            <tr>
+              <th data-priority="1">Id</th>
+              <th>Rank</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="row in rows">
+              <td>{{row.id}}</td>
+              <td>{{row.rank}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
     </div>
 </div>
 </body>

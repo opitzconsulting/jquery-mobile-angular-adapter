@@ -1,5 +1,6 @@
 /*
-* jQuery Mobile Git Build: SHA1: caa77b258660731d663844fe7867aa2c3a107ab1 <> Date: Wed Feb 20 15:03:27 2013 -0500
+* jQuery Mobile 1.3.1
+* Git HEAD hash: 74b4bec049fd93e4fe40205e6157de16eb64eb46 <> Date: Wed Apr 10 2013 21:57:23 UTC
 * http://jquerymobile.com
 *
 * Copyright 2010, 2013 jQuery Foundation, Inc. and other contributors
@@ -890,7 +891,7 @@ a.ui-link-inherit {
 		background-image: url(images/icons-36-black.png);
 	}
 	.ui-icon-plus {
-		background-position: 	0px 50%;
+		background-position: 	0 50%;
 	}
 	.ui-icon-minus {
 		background-position: 	-36px 50%;
@@ -1005,31 +1006,31 @@ a.ui-link-inherit {
 	height: 100%;
 }
 .ui-overlay-shadow {
-	-moz-box-shadow: 0px 0px 12px 			rgba(0,0,0,.6);
-	-webkit-box-shadow: 0px 0px 12px 		rgba(0,0,0,.6);
-	box-shadow: 0px 0px 12px 				rgba(0,0,0,.6);
+	-moz-box-shadow: 0 0 12px 			rgba(0,0,0,.6);
+	-webkit-box-shadow: 0 0 12px 		rgba(0,0,0,.6);
+	box-shadow: 0 0 12px 				rgba(0,0,0,.6);
 }
 .ui-shadow {
-	-moz-box-shadow: 0px 1px 3px /*{global-box-shadow-size}*/ 			rgba(0,0,0,.2) /*{global-box-shadow-color}*/;
-	-webkit-box-shadow: 0px 1px 3px /*{global-box-shadow-size}*/ 		rgba(0,0,0,.2) /*{global-box-shadow-color}*/;
-	box-shadow: 0px 1px 3px /*{global-box-shadow-size}*/ 				rgba(0,0,0,.2) /*{global-box-shadow-color}*/;
+	-moz-box-shadow: 0 1px 3px /*{global-box-shadow-size}*/ 			rgba(0,0,0,.2) /*{global-box-shadow-color}*/;
+	-webkit-box-shadow: 0 1px 3px /*{global-box-shadow-size}*/ 		rgba(0,0,0,.2) /*{global-box-shadow-color}*/;
+	box-shadow: 0 1px 3px /*{global-box-shadow-size}*/ 				rgba(0,0,0,.2) /*{global-box-shadow-color}*/
 }
 .ui-bar-a .ui-shadow,
 .ui-bar-b .ui-shadow ,
 .ui-bar-c .ui-shadow  {
-	-moz-box-shadow: 0px 1px 0 				rgba(255,255,255,.3);
-	-webkit-box-shadow: 0px 1px 0 			rgba(255,255,255,.3);
-	box-shadow: 0px 1px 0 					rgba(255,255,255,.3);
+	-moz-box-shadow: 0 1px 0 				rgba(255,255,255,.3);
+	-webkit-box-shadow: 0 1px 0 			rgba(255,255,255,.3);
+	box-shadow: 0 1px 0 					rgba(255,255,255,.3);
 }
 .ui-shadow-inset {
-	-moz-box-shadow: inset 0px 1px 4px 		rgba(0,0,0,.2);
-	-webkit-box-shadow: inset 0px 1px 4px 	rgba(0,0,0,.2);
-	box-shadow: inset 0px 1px 4px 			rgba(0,0,0,.2);
+	-moz-box-shadow: inset 0 1px 4px 		rgba(0,0,0,.2);
+	-webkit-box-shadow: inset 0 1px 4px 	rgba(0,0,0,.2);
+	box-shadow: inset 0 1px 4px 			rgba(0,0,0,.2);
 }
 .ui-icon-shadow {
-	-moz-box-shadow: 0px 1px 0 				rgba(255,255,255,.4) /*{global-icon-shadow}*/;
-	-webkit-box-shadow: 0px 1px 0 			rgba(255,255,255,.4) /*{global-icon-shadow}*/;
-	box-shadow: 0px 1px 0 					rgba(255,255,255,.4) /*{global-icon-shadow}*/;
+	-moz-box-shadow: 0 1px 0 				rgba(255,255,255,.4) /*{global-icon-shadow}*/;
+	-webkit-box-shadow: 0 1px 0 			rgba(255,255,255,.4) /*{global-icon-shadow}*/;
+	box-shadow: 0 1px 0 					rgba(255,255,255,.4) /*{global-icon-shadow}*/;
 }
 /* Focus state - set here for specificity (note: these classes are added by JavaScript)
 -----------------------------------------------------------------------------------------------------------*/
@@ -1041,15 +1042,15 @@ a.ui-link-inherit {
 }
 .ui-focus,
 .ui-btn:focus {
-	-moz-box-shadow: inset 0px 0px 3px 		#387bbe /*{global-active-background-color}*/, 0px 0px 9px 		#387bbe /*{global-active-background-color}*/;
-	-webkit-box-shadow: inset 0px 0px 3px 	#387bbe /*{global-active-background-color}*/, 0px 0px 9px 		#387bbe /*{global-active-background-color}*/;
-	box-shadow: inset 0px 0px 3px 			#387bbe /*{global-active-background-color}*/, 0px 0px 9px 		#387bbe /*{global-active-background-color}*/;
+	-moz-box-shadow: inset 0 0 3px 		#387bbe /*{global-active-background-color}*/, 0 0 9px 		#387bbe /*{global-active-background-color}*/;
+	-webkit-box-shadow: inset 0 0 3px 	#387bbe /*{global-active-background-color}*/, 0 0 9px 		#387bbe /*{global-active-background-color}*/;
+	box-shadow: inset 0 0 3px 			#387bbe /*{global-active-background-color}*/, 0 0 9px 		#387bbe /*{global-active-background-color}*/;
 }
 .ui-input-text.ui-focus,
 .ui-input-search.ui-focus {
-	-moz-box-shadow: 0px 0px 12px 			#387bbe /*{global-active-background-color}*/;
-	-webkit-box-shadow: 0px 0px 12px 		#387bbe /*{global-active-background-color}*/;
-	box-shadow: 0px 0px 12px 					#387bbe /*{global-active-background-color}*/;	
+	-moz-box-shadow: 0 0 12px 			#387bbe /*{global-active-background-color}*/;
+	-webkit-box-shadow: 0 0 12px 		#387bbe /*{global-active-background-color}*/;
+	box-shadow: 0 0 12px 					#387bbe /*{global-active-background-color}*/;	
 }
 /* unset box shadow in browsers that don't do it right
 -----------------------------------------------------------------------------------------------------------*/
@@ -1081,10 +1082,10 @@ div.ui-mobile-viewport { overflow-x: hidden; }
 .ui-page { outline: none; }
 /*orientations from js are available */
 @media screen and (orientation: portrait){
-.ui-mobile, .ui-mobile .ui-page { min-height: 420px; }
+.ui-mobile .ui-page { min-height: 420px; }
 }
 @media screen and (orientation: landscape){
-.ui-mobile, .ui-mobile .ui-page { min-height: 300px; }
+.ui-mobile .ui-page { min-height: 300px; }
 }
 /* loading screen */
 .ui-loading .ui-loader { display: block; }
@@ -1164,24 +1165,18 @@ div.ui-mobile-viewport { overflow-x: hidden; }
 	opacity: 0;
 }
 .in {
-	-webkit-animation-fill-mode: both;
 	-webkit-animation-timing-function: ease-out;
 	-webkit-animation-duration: 350ms;
-	-moz-animation-fill-mode: both;
 	-moz-animation-timing-function: ease-out;
 	-moz-animation-duration: 350ms;
-	animation-fill-mode: both;
 	animation-timing-function: ease-out;
 	animation-duration: 350ms;
 }
 .out {
-	-webkit-animation-fill-mode: both;
 	-webkit-animation-timing-function: ease-in;
 	-webkit-animation-duration: 225ms;
-	-moz-animation-fill-mode: both;
 	-moz-animation-timing-function: ease-in;
 	-moz-animation-duration: 225ms;
-	animation-fill-mode: both;
 	animation-timing-function: ease-in;
 	animation-duration: 225ms;
 }
@@ -1328,8 +1323,8 @@ div.ui-mobile-viewport { overflow-x: hidden; }
 }
 /* keyframes for slidein from sides */
 @-webkit-keyframes slideinfromright {
-    from { -webkit-transform: translateX(100%); }
-    to { -webkit-transform: translateX(0); }
+    from { -webkit-transform: translate3d(100%,0,0); }
+    to { -webkit-transform: translate3d(0,0,0); }
 }
 @-moz-keyframes slideinfromright {
     from { -moz-transform: translateX(100%); }
@@ -1340,8 +1335,8 @@ div.ui-mobile-viewport { overflow-x: hidden; }
     to { transform: translateX(0); }
 }
 @-webkit-keyframes slideinfromleft {
-    from { -webkit-transform: translateX(-100%); }
-    to { -webkit-transform: translateX(0); }
+    from { -webkit-transform: translate3d(-100%,0,0); }
+    to { -webkit-transform: translate3d(0,0,0); }
 }
 @-moz-keyframes slideinfromleft {
     from { -moz-transform: translateX(-100%); }
@@ -1353,8 +1348,8 @@ div.ui-mobile-viewport { overflow-x: hidden; }
 }
 /* keyframes for slideout to sides */
 @-webkit-keyframes slideouttoleft {
-    from { -webkit-transform: translateX(0); }
-    to { -webkit-transform: translateX(-100%); }
+    from { -webkit-transform: translate3d(0,0,0); }
+    to { -webkit-transform: translate3d(-100%,0,0); }
 }
 @-moz-keyframes slideouttoleft {
     from { -moz-transform: translateX(0); }
@@ -1365,8 +1360,8 @@ div.ui-mobile-viewport { overflow-x: hidden; }
     to { transform: translateX(-100%); }
 }
 @-webkit-keyframes slideouttoright {
-    from { -webkit-transform: translateX(0); }
-    to { -webkit-transform: translateX(100%); }
+    from { -webkit-transform: translate3d(0,0,0); }
+    to { -webkit-transform: translate3d(100%,0,0); }
 }
 @-moz-keyframes slideouttoright {
     from { -moz-transform: translateX(0); }
@@ -1385,7 +1380,7 @@ div.ui-mobile-viewport { overflow-x: hidden; }
 	animation-duration: 350ms;
 }
 .slide.out {
-	-webkit-transform: translateX(-100%);
+	-webkit-transform: translate3d(-100%,0,0);
 	-webkit-animation-name: slideouttoleft;
 	-moz-transform: translateX(-100%);
 	-moz-animation-name: slideouttoleft;
@@ -1393,7 +1388,7 @@ div.ui-mobile-viewport { overflow-x: hidden; }
 	animation-name: slideouttoleft;
 }
 .slide.in {
-	-webkit-transform: translateX(0);
+	-webkit-transform: translate3d(0,0,0);
 	-webkit-animation-name: slideinfromright;
 	-moz-transform: translateX(0);
 	-moz-animation-name: slideinfromright;
@@ -1401,7 +1396,7 @@ div.ui-mobile-viewport { overflow-x: hidden; }
 	animation-name: slideinfromright;
 }
 .slide.out.reverse {
-	-webkit-transform: translateX(100%);
+	-webkit-transform: translate3d(100%,0,0);
 	-webkit-animation-name: slideouttoright;
 	-moz-transform: translateX(100%);
 	-moz-animation-name: slideouttoright;
@@ -1409,7 +1404,7 @@ div.ui-mobile-viewport { overflow-x: hidden; }
 	animation-name: slideouttoright;
 }
 .slide.in.reverse {
-	-webkit-transform: translateX(0);
+	-webkit-transform: translate3d(0,0,0);
 	-webkit-animation-name: slideinfromleft;
 	-moz-transform: translateX(0);
 	-moz-animation-name: slideinfromleft;
@@ -2077,8 +2072,7 @@ div.ui-btn-text { width: auto; }
 .ui-mini.ui-btn-icon-bottom .ui-btn-inner,
 .ui-mini .ui-btn-icon-bottom .ui-btn-inner { padding-bottom: 30px; }
 /* Corner styling inheritance */
-.ui-btn-inner,
-.ui-btn-text {
+.ui-btn-inner {
 	-webkit-border-radius: inherit;	
 	border-radius: inherit;
 }
@@ -2132,10 +2126,10 @@ label.ui-submit { font-size: 16px; line-height: 1.4; font-weight: normal; margin
 .ui-collapsible-heading .ui-btn-icon-bottom .ui-btn-inner { text-align: center; }
 .ui-collapsible-heading .ui-btn-icon-left.ui-mini .ui-btn-inner { padding-left: 30px; }
 .ui-collapsible-heading .ui-btn-icon-right.ui-mini .ui-btn-inner { padding-right: 30px; }
-.ui-collapsible-heading .ui-btn span.ui-btn { position: absolute; left: 6px; top: 50%; margin: -12px 0 0 0; width: 20px; height: 20px; padding: 1px 0px 1px 2px; text-indent: -9999px; }
+.ui-collapsible-heading .ui-btn span.ui-btn { position: absolute; left: 6px; top: 50%; margin: -12px 0 0 0; width: 20px; height: 20px; padding: 1px 0 1px 2px; text-indent: -9999px; }
 .ui-collapsible-heading .ui-btn span.ui-btn .ui-btn-inner { padding: 10px 0; }
 .ui-collapsible-heading .ui-btn span.ui-btn .ui-icon { left: 0; margin-top: -10px; }
-.ui-collapsible-heading-status { position: absolute; top: -9999px; left:0px; }
+.ui-collapsible-heading-status { position: absolute; top: -9999px; left: 0; }
 .ui-collapsible-content {
 	display: block;
 	margin: 0 -15px;	
@@ -2296,9 +2290,9 @@ label.ui-submit { font-size: 16px; line-height: 1.4; font-weight: normal; margin
 }
 .ui-popup-screen {
 	background-image: url(data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==); /* Necessary to set some form of background to ensure element is clickable in IE6/7. While legacy IE won't understand the data-URI'd image, it ensures no additional requests occur in all other browsers with little overhead. */
-	top: 0px;
-	left: 0px;
-	right: 0px;
+	top: 0;
+	left: 0;
+	right: 0;
 	bottom: 1px;
 	position: absolute;
 	filter: Alpha(Opacity=0);
@@ -2513,7 +2507,7 @@ textarea.ui-input-text { height: 50px; -webkit-transition: height 200ms linear; 
 textarea.ui-mini { height: 45px; }
 .ui-icon-searchfield:after { position: absolute; left: 7px; top: 50%; margin-top: -9px; content: ""; width: 18px; height: 18px; opacity: .5; }
 .ui-input-search .ui-input-clear, .ui-input-text .ui-input-clear { position: absolute; right: 0; top: 50%; margin-top: -13px; }
-.ui-mini .ui-input-clear { margin-top: -14px; right: -3px; }
+.ui-mini .ui-input-clear { right: -3px; }
 .ui-input-search .ui-input-clear-hidden, .ui-input-text .ui-input-clear-hidden { display: none; }
 /* Resolves issue #5166: Added to support issue introduced in Firefox 15. We can likely remove this in the future. */
 input::-moz-placeholder, textarea::-moz-placeholder { color: #aaa; }
@@ -2655,6 +2649,10 @@ ol.ui-listview, ol.ui-listview .ui-li-divider { counter-reset: listnumbering; }
 .ui-li-divider { padding: .5em 15px; font-size: 14px; font-weight: bold; }
 ol.ui-listview .ui-link-inherit:before, ol.ui-listview .ui-li-static:before, .ui-li-dec { font-size: .8em; display: inline-block; padding-right: .3em; font-weight: normal; counter-increment: listnumbering; content: counter(listnumbering) ". "; }
 ol.ui-listview .ui-li-jsnumbering:before { content: "" !important; } /* to avoid chance of duplication */
+.ui-listview .ui-li > .ui-btn-text {
+	-webkit-border-radius: inherit;	
+	border-radius: inherit;
+}
 .ui-listview > .ui-li.ui-first-child,
 .ui-listview .ui-btn.ui-first-child > .ui-li > .ui-btn-text > .ui-link-inherit {
 	-webkit-border-top-right-radius: inherit;	
@@ -2696,6 +2694,8 @@ ol.ui-listview .ui-li-jsnumbering:before { content: "" !important; } /* to avoid
 .ui-li-has-arrow.ui-li-has-count .ui-btn-inner a.ui-link-inherit, .ui-li-static.ui-li-has-arrow.ui-li-has-count { padding-right: 75px; }
 .ui-li-heading { font-size: 16px; font-weight: bold; display: block; margin: .6em 0; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
 .ui-li-desc { font-size: 12px; font-weight: normal; display: block; margin: -.5em 0 .6em; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+ol.ui-listview > .ui-li .ui-li-heading { display: inline-block; width: 100%; margin-left: -1.3em; text-indent: 1.3em; vertical-align: middle; }
+ol.ui-listview > .ui-li .ui-li-desc:not(.ui-li-aside) { text-indent: 1.55em; }
 .ui-li-thumb, .ui-listview .ui-li-icon { position: absolute; left: 1px; top: 0; max-height: 80px; max-width: 80px; }
 .ui-listview .ui-li-icon { max-height: 16px; max-width: 16px; left: 10px; top: .9em; }
 .ui-li-thumb, .ui-listview .ui-li-icon, .ui-li-content { float: left; margin-right: 10px; }
@@ -2715,7 +2715,7 @@ ol.ui-listview .ui-li-jsnumbering:before { content: "" !important; } /* to avoid
 .ui-li-link-alt .ui-btn-inner { padding: 0; height: 100%; position: absolute; width: 100%; top: 0; left: 0;}
 .ui-li-link-alt .ui-btn .ui-icon { right: 50%; margin-right: -9px; }
 .ui-li-link-alt .ui-btn-icon-notext .ui-btn-inner .ui-icon { position: absolute; top: 50%; margin-top: -9px; }
-.ui-listview * .ui-btn-inner > .ui-btn > .ui-btn-inner { border-top: 0px; }
+.ui-listview * .ui-btn-inner > .ui-btn > .ui-btn-inner { border-top: 0; }
 .ui-listview-filter { border-width: 0; overflow: hidden; margin: -15px -15px 15px -15px; }
 .ui-collapsible-content .ui-listview-filter { margin: -10px -15px 10px -15px; border-bottom: inherit; }
 .ui-listview-filter-inset { margin: -15px -5px; background: transparent; }
@@ -2765,7 +2765,7 @@ input.ui-input-text.ui-slider-input {
 	height: 22px;
 	line-height: 22px;
 	font-size: 14px;
-	border: none;
+	border-width: 0;
 	background-image: none;
 	font-weight: bold;
 	text-align: center;
@@ -2833,6 +2833,11 @@ div.ui-slider-switch {
 	width: 5.8em;
 	margin: .5em 0;
 	top: 0;
+}
+/* reset the clearfix */
+div.ui-slider-switch:before, div.ui-slider-switch:after {
+	display: none;
+	clear: none;
 }
 div.ui-slider-switch.ui-mini {
 	width: 5em;
@@ -3137,6 +3142,7 @@ div.ui-slider-switch.ui-mini {
 .ui-panel {
 	width: 17em;
 	min-height: 100%;
+	max-height: none;
 	border-width: 0;
 	position: absolute;
 	top: 0;
@@ -3144,7 +3150,9 @@ div.ui-slider-switch.ui-mini {
 }
 .ui-panel-closed {
 	width: 0;
+	max-height: 100%;
 	overflow: hidden;
+	visibility: hidden;
 }
 .ui-panel-fixed {
 	position: fixed;
@@ -3195,9 +3203,10 @@ div.ui-slider-switch.ui-mini {
 	-moz-transition: -moz-transform 350ms ease;
 	transition: transform 350ms ease;
 }
-/* hardware acceleration for smoother transitions */
+/* hardware acceleration for smoother transitions on WebKit browsers */
 .ui-panel-animate.ui-panel:not(.ui-panel-display-reveal),
 .ui-panel-animate.ui-panel:not(.ui-panel-display-reveal) > div,
+.ui-panel-animate.ui-panel-closed.ui-panel-display-reveal > div,
 .ui-panel-animate.ui-panel-content-wrap,
 .ui-panel-animate.ui-panel-content-fixed-toolbar {
 	-webkit-backface-visibility: hidden;
@@ -3225,8 +3234,8 @@ div.ui-slider-switch.ui-mini {
 .ui-panel-animate.ui-panel-position-left.ui-panel-open.ui-panel-display-overlay,
 .ui-panel-animate.ui-panel-position-left.ui-panel-open.ui-panel-display-push {
 	-webkit-transform: translate3d(0,0,0);
-	-moz-transform: translate3d(0,0,0);
 	transform: translate3d(0,0,0);
+	-moz-transform: none;
 }
 /* panel right */
 .ui-panel-position-right {
@@ -3249,8 +3258,8 @@ div.ui-slider-switch.ui-mini {
 .ui-panel-animate.ui-panel-position-right.ui-panel-open.ui-panel-display-overlay,
 .ui-panel-animate.ui-panel-position-right.ui-panel-open.ui-panel-display-push {
 	-webkit-transform: translate3d(0,0,0);
-	-moz-transform: translate3d(0,0,0);
 	transform: translate3d(0,0,0);
+	-moz-transform: none;
 }
 /* positioning: content wrap, fixed toolbars and dismiss */
 /* panel left open */
@@ -3309,15 +3318,15 @@ div.ui-slider-switch.ui-mini {
 	-moz-box-shadow: inset 5px 0 5px rgba(0,0,0,.15);
 	box-shadow: inset 5px 0 5px rgba(0,0,0,.15);
 }
-.ui-panel-position-right.ui-panel-display-overlay {
-	-webkit-box-shadow: -5px 0px 5px rgba(0,0,0,.15);
-	-moz-box-shadow: -5px 0px 5px rgba(0,0,0,.15);
-	box-shadow: -5px 0px 5px rgba(0,0,0,.15);
+.ui-panel-display-overlay {
+	-webkit-box-shadow: 5px 0 5px rgba(0,0,0,.15);
+	-moz-box-shadow: 5px 0 5px rgba(0,0,0,.15);
+	box-shadow: 5px 0 5px rgba(0,0,0,.15);
 }
-.ui-panel-position-left.ui-panel-display-overlay {
-	-webkit-box-shadow: 5px 0px 5px rgba(0,0,0,.15);
-	-moz-box-shadow: 5px 0px 5px rgba(0,0,0,.15);
-	box-shadow: 5px 0px 5px rgba(0,0,0,.15);
+.ui-panel-position-right.ui-panel-display-overlay {
+	-webkit-box-shadow: -5px 0 5px rgba(0,0,0,.15);
+	-moz-box-shadow: -5px 0 5px rgba(0,0,0,.15);
+	box-shadow: -5px 0 5px rgba(0,0,0,.15);
 }
 .ui-panel-display-push.ui-panel-open.ui-panel-position-left {
 	border-right-width: 1px;

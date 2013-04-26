@@ -13,9 +13,9 @@ If you are interested in how to build mobile web apps with this adapter, have a 
 
 
 ##Dependencies
-- angular 1.0.5
-- jquery 1.9
-- jquery mobile 1.3.0 Final
+- angular 1.0.6
+- jquery 1.8+
+- jquery mobile 1.3.1 Final
 
 ##Examples
 - See the [wiki page](wiki/Projects-using-the-adapter)

@@ -39,6 +39,7 @@ describe("navbar", function () {
         var addClassSpy = spyOn($.fn, "addClass").andCallThrough();
         navbar.find("a").trigger("vclick");
         expect(addClassSpy.callCount).toBe(1);
+        navbar.find("a").removeClass("ui-btn-active");
         navbar.navbar("refresh");
         addClassSpy.reset();
         navbar.find("a").trigger("vclick");

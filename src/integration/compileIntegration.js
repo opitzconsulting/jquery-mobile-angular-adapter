@@ -13,6 +13,7 @@
         $precompile.addHandler(["jqmNgWidget", "element", precompilePageAndWidgets]);
     }]);
     ng.run(['$rootScope', '$compile', 'jqmNgWidget', '$browser', initExternalJqmPagesOnLoad]);
+    ng.run(['$rootScope', digestOnPageBeforeShow]);
 
     ng.directive('ngmPage', ["jqmNgWidget", "$timeout", ngmPageDirective]);
 
@@ -46,14 +47,14 @@
                     // Needed so that only $.mobile.activePage gets digested when rootScope.$digest
                     // is called.
                     // However, allow one digest to process every page
-                    // so that we can use ng-repeat also for jqm pages!
+                    // so that we can use databinding for ids, ... in 
+                    // ng-repeats for jqm pages.
                     pageScope.$disconnect();
                 }
                 if (hasPages && !jqmInitialized) {
                     jqmInitialized = true;
                     var _changePage = $.mobile.changePage;
                     $.mobile.changePage = function () {};
-                    //$.mobile.changePage.defaults = _changePage.defaults;
                     try {
                         $.mobile.initializePage();
                     } finally {
@@ -66,6 +67,19 @@
             return res;
         };
         return $rootScope;
+    }
+
+    function digestOnPageBeforeShow($rootScope) {
+        $(document).on("pagebeforeshow", function(e) {
+            $rootScope.$broadcast("pagebeforeshow", e);
+            // The page may not be connected until the call
+            // of $digest. So fire the event directly on the page scope.
+            var pageScope = $(e.target).scope();
+            if (pageScope && pageScope.$$disconnected) {
+                pageScope.$broadcast("pagebeforeshow", e);
+            }
+            $rootScope.$digest();
+        });
     }
 
     /**
@@ -166,13 +180,6 @@
                         // This does no dom transformation, so it's safe to call this in the prelink function.
                         createPagesWithoutPageCreateEvent(jqmNgWidget, iElement);
                         lastCreatedPages.push(scope);
-                        iElement.bind('pagebeforeshow', function (event) {
-                            var page = $(event.target);
-                            // do a digest using $timeout,
-                            // so that other pagebeforeshow handlers have a chance
-                            // to react on this!
-                            $timeout(angular.noop);
-                        });
                     }
                 };
             }

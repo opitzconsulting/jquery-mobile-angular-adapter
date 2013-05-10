@@ -336,6 +336,7 @@ factory(window.jQuery, window.angular);
         $precompile.addHandler(["jqmNgWidget", "element", precompilePageAndWidgets]);
     }]);
     ng.run(['$rootScope', '$compile', 'jqmNgWidget', '$browser', initExternalJqmPagesOnLoad]);
+    ng.run(['$rootScope', digestOnPageBeforeShow]);
 
     ng.directive('ngmPage', ["jqmNgWidget", "$timeout", ngmPageDirective]);
 
@@ -369,14 +370,14 @@ factory(window.jQuery, window.angular);
                     // Needed so that only $.mobile.activePage gets digested when rootScope.$digest
                     // is called.
                     // However, allow one digest to process every page
-                    // so that we can use ng-repeat also for jqm pages!
+                    // so that we can use databinding for ids, ... in 
+                    // ng-repeats for jqm pages.
                     pageScope.$disconnect();
                 }
                 if (hasPages && !jqmInitialized) {
                     jqmInitialized = true;
                     var _changePage = $.mobile.changePage;
                     $.mobile.changePage = function () {};
-                    //$.mobile.changePage.defaults = _changePage.defaults;
                     try {
                         $.mobile.initializePage();
                     } finally {
@@ -389,6 +390,19 @@ factory(window.jQuery, window.angular);
             return res;
         };
         return $rootScope;
+    }
+
+    function digestOnPageBeforeShow($rootScope) {
+        $(document).on("pagebeforeshow", function(e) {
+            $rootScope.$broadcast("pagebeforeshow", e);
+            // The page may not be connected until the call
+            // of $digest. So fire the event directly on the page scope.
+            var pageScope = $(e.target).scope();
+            if (pageScope && pageScope.$$disconnected) {
+                pageScope.$broadcast("pagebeforeshow", e);
+            }
+            $rootScope.$digest();
+        });
     }
 
     /**
@@ -489,13 +503,6 @@ factory(window.jQuery, window.angular);
                         // This does no dom transformation, so it's safe to call this in the prelink function.
                         createPagesWithoutPageCreateEvent(jqmNgWidget, iElement);
                         lastCreatedPages.push(scope);
-                        iElement.bind('pagebeforeshow', function (event) {
-                            var page = $(event.target);
-                            // do a digest using $timeout,
-                            // so that other pagebeforeshow handlers have a chance
-                            // to react on this!
-                            $timeout(angular.noop);
-                        });
                     }
                 };
             }
@@ -1615,18 +1622,9 @@ factory(window.jQuery, window.angular);
     function onPageShowEvalOnActivateAndUpdateDialogUrls($rootScope, $route, $routeParams, $location, $history) {
         $(document).on("pagebeforechange", saveLastNavInfoIntoActivePage);
 
-        // Note: We need to attach our event handler
-        // directly to the page widget, 
-        // so that we are the first who get the event!
-        var pageProto = $.mobile.page.prototype;
-        pageProto._oldHandlePageBeforeShow = pageProto._oldHandlePageBeforeShow || pageProto._handlePageBeforeShow;
-        pageProto._handlePageBeforeShow = function() {
-            var res = pageProto._oldHandlePageBeforeShow.apply(this, arguments);
-            pageBeforeShowHandler();
-            return res;
-        };
-        function pageBeforeShowHandler() {
-            var activePage = $.mobile.activePage;
+        $rootScope.$on("pagebeforeshow", pageBeforeShowHandler);
+        function pageBeforeShowHandler(scope, event) {
+            var activePage = $(event.target);
             var jqmNavInfo = activePage.data("lastNavProps");
             if (!jqmNavInfo || !jqmNavInfo.navByNg) {
                 return;
@@ -1635,9 +1633,9 @@ factory(window.jQuery, window.angular);
                 onActivateParams,
                 currentHistoryEntry = $history.urlStack[$history.activeIndex];
             $.mobile.urlHistory.getActive().lastScroll = currentHistoryEntry.lastScroll;
-            if (activePageIsDialog()) {
+            if (isDialog(activePage)) {
                 currentHistoryEntry.tempUrl = true;
-            } else if (activePageIsNormalePage()) {
+            } else if (isNormalPage(activePage)) {
                 removePastTempPages($history);
             }
             if (currentRoute && currentRoute.onActivate) {
@@ -1664,12 +1662,12 @@ factory(window.jQuery, window.angular);
         }
     }
 
-    function activePageIsDialog() {
-        return $.mobile.activePage && $.mobile.activePage.jqmData("role") === "dialog";
+    function isDialog(page) {
+        return page && page.jqmData("role") === "dialog";
     }
 
-    function activePageIsNormalePage() {
-        return $.mobile.activePage && $.mobile.activePage.jqmData("role") === "page";
+    function isNormalPage(page) {
+        return page && page.jqmData("role") === "page";
     }
 
     function applyDefaultNavigationOnRouteChangeSuccess($rootScope, $route, $location, $browser, $history) {
@@ -2204,29 +2202,6 @@ factory(window.jQuery, window.angular);
 (function (angular) {
     var mod = angular.module('ng');
 
-    function registerEventHandler(scope, $parse, element, eventType, handler) {
-        var fn = $parse(handler);
-        element.bind(eventType, function (event) {
-            scope.$apply(function() {
-                fn(scope, {$event:event});
-            });
-            if (eventType.charAt(0) === 'v') {
-                // This is required to prevent a second
-                // click event, see
-                // https://github.com/jquery/jquery-mobile/issues/1787
-                event.preventDefault();
-            }
-        });
-    }
-
-    function createEventDirective(directive, eventType) {
-        mod.directive(directive, ['$parse', function ($parse) {
-            return function (scope, element, attrs) {
-                var eventHandler = attrs[directive];
-                registerEventHandler(scope, $parse, element, eventType, eventHandler);
-            };
-        }]);
-    }
 
     // See http://jquerymobile.com/demos/1.2.0/docs/api/events.html
     var jqmEvents = ['tap', 'taphold', 'swipe', 'swiperight', 'swipeleft', 'vmouseover',
@@ -2244,11 +2219,42 @@ factory(window.jQuery, window.angular);
         'pageshow',
         'pagehide'
     ];
+    var ngEvents = {'pagebeforeshow': true};
     var event, directive, i;
     for (i=0; i<jqmEvents.length; i++) {
         event = jqmEvents[i];
         directive = 'ngm' + event.substring(0, 1).toUpperCase() + event.substring(1);
-        createEventDirective(directive, event);
+        createEventDirective(directive, event, ngEvents[event]);
+    }
+
+    function registerEventHandler(scope, $parse, element, eventType, ngEvent, handler) {
+        var fn = $parse(handler);
+        if (ngEvent) {
+            scope.$on(eventType, function(ngEvent, jqEvent) {
+                fn(ngEvent.currentScope, {$event:jqEvent});
+            });
+        } else {
+            element.bind(eventType, function (event) {
+                scope.$apply(function() {
+                    fn(scope, {$event:event});
+                });
+                if (eventType.charAt(0) === 'v') {
+                    // This is required to prevent a second
+                    // click event, see
+                    // https://github.com/jquery/jquery-mobile/issues/1787
+                    event.preventDefault();
+                }
+            });
+        }
+    }
+
+    function createEventDirective(directive, eventType, ngEvent) {
+        mod.directive(directive, ['$parse', function ($parse) {
+            return function (scope, element, attrs) {
+                var eventHandler = attrs[directive];
+                registerEventHandler(scope, $parse, element, eventType, ngEvent, eventHandler);
+            };
+        }]);
     }
 
 })(angular);

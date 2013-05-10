@@ -16,70 +16,27 @@ Test page during development.
 <script>
 var mod = angular.module("ngm", []);
 mod.controller("MainCtrl", function($scope) {
-    $scope.rows = [];
-    var i;
-    for (i=0; i<10; i++) {
-        $scope.rows.push({
-            name: 'name'+i,
-            id: i,
-            rank: 'rank'+i
-        });
-    }
+
+});
+
+$(document).on("pagebeforeshow", function() {
+  console.log("now");
 });
 </script>
 
 </head>
 <body ng-app="ngm">
-<div data-role="page" id="tableViewer" ng-controller="MainCtrl">
-    <div data-role="header"  data-theme="a">
-        <h1>header</h1>
-        <a href="form.html">Page2</a>
+<div data-role="page" ng-controller="MainCtrl" id="page1">
+    <div data-role="header">
+        <h1>Page1</h1>
+        <a href="form.html" data-transition="none">Page2</a>
     </div>
     
-    <div data-role="content" ng-init="number=15">
-    <!--
-    <table data-role="table" id="movie-table" data-mode="columntoggle">
-      <thead>
-        <tr>
-          <th data-priority="1">Rank</th>
-          <th data-priority="2">Movie Title</th>
-          <th data-priority="3">Year</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>1</th>
-          <td>Citizen Kane</td>
-          <td>1941</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>Casablanca</td>
-          <td>1942</td>
-        </tr>
-      </tbody>
-    </table>
--->
-    <div>
-    <table data-role="table" id="my-table" data-mode="columntoggle">
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th data-priority="1">Id</th>
-              <th data-priority="2">Name</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr ng-repeat="row in rows">
-              <td>{{row.rank}}</td>
-              <td>{{row.id}}</td>
-              <td>{{row.name}}</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-
+    <div data-role="content">
+      {{1+1}}
     </div>
 </div>
+
+
 </body>
 </html>

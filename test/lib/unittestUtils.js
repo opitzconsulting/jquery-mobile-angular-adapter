@@ -95,7 +95,7 @@
         return {
             page: page,
             element: container.children()
-        }
+        };
     }
 
     function compile(html) {

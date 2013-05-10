@@ -170,18 +170,9 @@
     function onPageShowEvalOnActivateAndUpdateDialogUrls($rootScope, $route, $routeParams, $location, $history) {
         $(document).on("pagebeforechange", saveLastNavInfoIntoActivePage);
 
-        // Note: We need to attach our event handler
-        // directly to the page widget, 
-        // so that we are the first who get the event!
-        var pageProto = $.mobile.page.prototype;
-        pageProto._oldHandlePageBeforeShow = pageProto._oldHandlePageBeforeShow || pageProto._handlePageBeforeShow;
-        pageProto._handlePageBeforeShow = function() {
-            var res = pageProto._oldHandlePageBeforeShow.apply(this, arguments);
-            pageBeforeShowHandler();
-            return res;
-        };
-        function pageBeforeShowHandler() {
-            var activePage = $.mobile.activePage;
+        $rootScope.$on("pagebeforeshow", pageBeforeShowHandler);
+        function pageBeforeShowHandler(scope, event) {
+            var activePage = $(event.target);
             var jqmNavInfo = activePage.data("lastNavProps");
             if (!jqmNavInfo || !jqmNavInfo.navByNg) {
                 return;
@@ -190,9 +181,9 @@
                 onActivateParams,
                 currentHistoryEntry = $history.urlStack[$history.activeIndex];
             $.mobile.urlHistory.getActive().lastScroll = currentHistoryEntry.lastScroll;
-            if (activePageIsDialog()) {
+            if (isDialog(activePage)) {
                 currentHistoryEntry.tempUrl = true;
-            } else if (activePageIsNormalePage()) {
+            } else if (isNormalPage(activePage)) {
                 removePastTempPages($history);
             }
             if (currentRoute && currentRoute.onActivate) {
@@ -219,12 +210,12 @@
         }
     }
 
-    function activePageIsDialog() {
-        return $.mobile.activePage && $.mobile.activePage.jqmData("role") === "dialog";
+    function isDialog(page) {
+        return page && page.jqmData("role") === "dialog";
     }
 
-    function activePageIsNormalePage() {
-        return $.mobile.activePage && $.mobile.activePage.jqmData("role") === "page";
+    function isNormalPage(page) {
+        return page && page.jqmData("role") === "page";
     }
 
     function applyDefaultNavigationOnRouteChangeSuccess($rootScope, $route, $location, $browser, $history) {

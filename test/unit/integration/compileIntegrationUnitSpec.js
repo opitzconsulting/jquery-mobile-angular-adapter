@@ -346,7 +346,7 @@ describe('compileIntegrationUnit', function () {
             expect(c.scope()).toBe(c.scope().$root);
         });
 
-        it("should digest on pagebeforeshow after timeout", inject(function($timeout) {
+        it("should digest on pagebeforeshow", inject(function() {
             var c = testutils.compileInPage('<div></div>');
             var scope = c.page.scope();
             var counter = 0;
@@ -354,10 +354,40 @@ describe('compileIntegrationUnit', function () {
                 counter++;
             });
             c.page.trigger("pagebeforeshow");
-            expect(counter).toBe(0);
-            $timeout.flush();
             expect(counter).toBe(2);
         }));
+        it("should $emit pagebeforeshow on the page and the root scope", function() {
+            var c = testutils.compileInPage('<div></div>');
+            var scope = c.page.scope();
+            scope.$reconnect();
+            var pageCounter = 0,
+                rootCounter = 0;
+            scope.$on("pagebeforeshow", function() {
+                pageCounter++;
+            });
+            scope.$root.$on("pagebeforeshow", function() {
+                rootCounter++;
+            });
+            c.page.trigger("pagebeforeshow");
+            expect(pageCounter).toBe(1);
+            expect(rootCounter).toBe(1);
+        });
+        it("should $emit pagebeforeshow on the page and the root scope even if the page is disconnected", function() {
+            var c = testutils.compileInPage('<div></div>');
+            var scope = c.page.scope();
+            scope.$disconnect();
+            var pageCounter = 0,
+                rootCounter = 0;
+            scope.$on("pagebeforeshow", function() {
+                pageCounter++;
+            });
+            scope.$root.$on("pagebeforeshow", function() {
+                rootCounter++;
+            });
+            c.page.trigger("pagebeforeshow");
+            expect(pageCounter).toBe(1);
+            expect(rootCounter).toBe(1);
+        });
 
         it("should digest only the $.mobile.activePage and no other pages when rootScope.$digest is called", function() {
             var c = testutils.compile('<div data-role="page" id="page1"></div><div data-role="page" id="page2"></div>');

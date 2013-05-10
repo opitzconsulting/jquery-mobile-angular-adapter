@@ -16,11 +16,16 @@ describe('events', function () {
                 'pageshow',
                 'pagehide'
             ];
-            var i,event;
+            var i, event, pageEvent, element;
             for (i=0; i<jqmEvents.length; i++) {
                 event = jqmEvents[i];
-                var d = testutils.compileInPage('<span ngm-' + event + '="check($event)"></span>');
-                var element = d.element;
+                pageEvent = event.substring(0,4)==="page";
+                if (pageEvent) {
+                    element = testutils.compile('<div data-role="page" ngm-' + event + '="check($event)"></div>');
+                } else {
+                    var d = testutils.compileInPage('<span ngm-' + event + '="check($event)"></span>');
+                    element = d.element;
+                }
                 var scope = element.scope();
                 scope.check = jasmine.createSpy('checkEvent');
                 var eventObj = $.Event(event);

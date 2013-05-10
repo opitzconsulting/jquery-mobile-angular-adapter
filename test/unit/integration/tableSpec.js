@@ -35,13 +35,16 @@ describe("table", function () {
             $rootScope.$apply();
         }));
         it('should add the data-priority and the ui-table-cell-visible / ui-table-cell-hidden depending on which cells are visible', inject(function($rootScope) {
-            $('#table-popup input[type="checkbox"]').eq(0).prop("checked", true).trigger("change");
-            $('#table-popup input[type="checkbox"]').eq(1).prop("checked", false).trigger("change");
-
+            $('#table-popup input[type="checkbox"]').eq(0).click();
             expect(c.page.find("td").eq(0).prop("className")).toBe('ng-binding ui-table-priority-1 ui-table-cell-visible');
             expect(c.page.find("td").eq(1).prop("className")).toBe('ng-binding ui-table-priority-2 ui-table-cell-hidden');
             expect(c.page.find("td").eq(2).prop("className")).toBe('ng-binding ui-table-priority-1 ui-table-cell-visible');
             expect(c.page.find("td").eq(3).prop("className")).toBe('ng-binding ui-table-priority-2 ui-table-cell-hidden');
         }));
+        it('should enhance the popup', function() {
+            var popup = c.page.find("#table-popup");
+            var fieldset = popup.children("fieldset");
+            expect(fieldset.hasClass("ui-controlgroup")).toBe(true);
+        });
     });
 });

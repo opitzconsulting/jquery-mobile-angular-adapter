@@ -20,6 +20,7 @@
         jqmNgWidgetProvider.widget("slider", ["jqmNgWidget", "$timeout", "$parse", sliderWidget]);
         jqmNgWidgetProvider.widget("popup", ["jqmNgWidget", "$parse", popupWidget]);
         jqmNgWidgetProvider.widget("panel", ["jqmNgWidget", "$parse", panelWidget]);
+        jqmNgWidgetProvider.widget("table", ["jqmNgWidget", tableWidget]);
     }]);
 
     function defaultWidget(jqmNgWidet) {
@@ -343,4 +344,25 @@
             }
         };
     }
+
+    function tableWidget(jqmNgWidet) {
+        return {
+            link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
+                var widget, popupId, popup;
+                jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
+                widget = iElement.data($.mobile[widgetName].prototype.widgetFullName);
+                // The column-toggle widget creates a popup with a no enhanced controlgroup
+                // and relies on the order in which jqm enhances the widgets.
+                // However, this order is different in the adapter,
+                // so we need to make sure that the popup is properly enhanced.
+                if (widget && widget.options.mode==='columntoggle') {
+                    popupId = ( iElement.attr( "id" ) || widget.options.classes.popup ) + "-popup";
+                    popup = $("#"+popupId);
+                    popup.trigger("create");
+                }
+                jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
+            }
+        };
+    }
+
 })(angular, $);

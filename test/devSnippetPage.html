@@ -60,19 +60,20 @@ mod.controller("MainCtrl", function($scope) {
       </tbody>
     </table>
 -->
-
     <div>
     <table data-role="table" id="my-table" data-mode="columntoggle">
           <thead>
             <tr>
-              <th data-priority="1">Id</th>
               <th>Rank</th>
+              <th data-priority="1">Id</th>
+              <th data-priority="2">Name</th>
             </tr>
           </thead>
           <tbody>
             <tr ng-repeat="row in rows">
-              <td>{{row.id}}</td>
               <td>{{row.rank}}</td>
+              <td>{{row.id}}</td>
+              <td>{{row.name}}</td>
             </tr>
             </tbody>
         </table>

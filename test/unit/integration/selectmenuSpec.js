@@ -158,14 +158,14 @@ describe("selectmenu", function () {
             var options = select.children("option");
             expect(options.length).toBe(0);
             scope.list = [1, 2];
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(1);
             options = select.children("option");
             expect(options.length).toBe(2);
         });
 
         it("should not refresh if nothing changes", function () {
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(0);
         });
     });
@@ -184,7 +184,7 @@ describe("selectmenu", function () {
         it("should refresh when the value changes", function () {
             var option = select.children("option");
             scope.v = 'v1';
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(1);
             expect(option.val()).toBe('v1');
         });
@@ -192,13 +192,13 @@ describe("selectmenu", function () {
         it("should refresh when the text changes", function () {
             var option = select.children("option");
             scope.l = 'l1';
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(1);
             expect(option.text()).toBe('l1');
         });
 
         it("should not refresh if nothing changes", function () {
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(0);
         });
     });
@@ -216,7 +216,7 @@ describe("selectmenu", function () {
         it("should refresh only once when child entries are added", function () {
             var options = select.children("option");
             scope.list = [{l:1, v:1, g:1}, {l:2, v:2, g:2}, {l:3, v:3, g:3}];
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(1);
             options = select.find("option");
             expect(options.length).toBe(3);
@@ -224,11 +224,11 @@ describe("selectmenu", function () {
         it("should refresh only once when child entries are removed", function () {
             var options = select.children("option");
             scope.list = [{l:1, v:1, g:1}, {l:2, v:2, g:2}, {l:3, v:3, g:3}];
-            scope.$digest();
+            scope.$root.$digest();
             selectmenu.refresh.reset();
             scope.list.pop();
             scope.list.pop();
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(1);
             options = select.find("option");
             expect(options.length).toBe(1);
@@ -236,45 +236,45 @@ describe("selectmenu", function () {
         it("should refresh only once if child entries are reordered", function () {
             var options = select.children("option");
             scope.list = [{l:1, v:1, g:1}, {l:2, v:2, g:2}, {l:3, v:3, g:3}];
-            scope.$digest();
+            scope.$root.$digest();
             selectmenu.refresh.reset();
             var e1 = scope.list[0];
             scope.list[0] = scope.list[1];
             scope.list[1] = e1;
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(1);
             options = select.find("option");
             expect(options.length).toBe(3);
         });
         it("should refresh if the option label changes", function() {
             scope.list = [{l:1, v:1, g:1}];
-            scope.$digest();
+            scope.$root.$digest();
             selectmenu.refresh.reset();
             scope.list[0].l = 2;
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(1);
         });
         it("should refresh if the option group changes", function() {
             scope.list = [{l:1, v:1, g:1}];
-            scope.$digest();
+            scope.$root.$digest();
             selectmenu.refresh.reset();
             scope.list[0].g = 2;
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(1);
         });
         it("should not refresh if the option value changes", function() {
             scope.list = [{l:1, v:1, g:1}];
-            scope.$digest();
+            scope.$root.$digest();
             selectmenu.refresh.reset();
             scope.list[0].v = 2;
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(0);
         });
         it("should not refresh if nothing changes", function () {
             scope.list = [{l:1, v:1, g:1}, {l:2, v:2, g:2}, {l:3, v:3, g:3}];
-            scope.$digest();
+            scope.$root.$digest();
             selectmenu.refresh.reset();
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(0);
         });
 
@@ -293,7 +293,7 @@ describe("selectmenu", function () {
         it("should refresh only once when child entries are added", function () {
             var options = select.children("option");
             scope.list = {a:{l:1, v:1, g:1}, b:{l:2, v:2, g:2}, c:{l:3, v:3, g:3}};
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(1);
             options = select.find("option");
             expect(options.length).toBe(3);
@@ -301,44 +301,44 @@ describe("selectmenu", function () {
         it("should refresh only once when child entries are removed", function () {
             var options = select.children("option");
             scope.list = {a:{l:1, v:1, g:1}, b:{l:2, v:2, g:2}, c:{l:3, v:3, g:3}};
-            scope.$digest();
+            scope.$root.$digest();
             selectmenu.refresh.reset();
             delete scope.list.b;
             delete scope.list.c;
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(1);
             options = select.find("option");
             expect(options.length).toBe(1);
         });
         it("should refresh if the option label changes", function() {
             scope.list = {a: {l:1, v:1, g:1}};
-            scope.$digest();
+            scope.$root.$digest();
             selectmenu.refresh.reset();
             scope.list.a.l = 2;
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(1);
         });
         it("should refresh if the option group changes", function() {
             scope.list = {a: {l:1, v:1, g:1}};
-            scope.$digest();
+            scope.$root.$digest();
             selectmenu.refresh.reset();
             scope.list.a.g = 2;
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(1);
         });
         it("should not refresh if the option value changes", function() {
             scope.list = {a: {l:1, v:1, g:1}};
-            scope.$digest();
+            scope.$root.$digest();
             selectmenu.refresh.reset();
             scope.list.a.v = 2;
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(0);
         });
         it("should not refresh if nothing changes", function () {
             scope.list = {a: {l:1, v:1, g:1}};
-            scope.$digest();
+            scope.$root.$digest();
             selectmenu.refresh.reset();
-            scope.$digest();
+            scope.$root.$digest();
             expect(selectmenu.refresh.callCount).toBe(0);
         });
 

@@ -35807,11 +35807,13 @@ factory(window.jQuery, window.angular);
     }
 
 })($, angular);
-(function (angular) {
+(function(angular) {
 
     var ng = angular.module('ng');
     ng.config(['$provide', function($provide) {
         $provide.decorator('$rootScope', ['$delegate', scopeReconnectDecorator]);
+        $provide.decorator('$rootScope', ['$delegate', scopePostDigestDecorator]);
+        $provide.decorator('$rootScope', ['$delegate', scopeReentranceDecorator]);
     }]);
 
     function scopeReconnectDecorator($rootScope) {
@@ -35858,23 +35860,71 @@ factory(window.jQuery, window.angular);
         };
         return $rootScope;
     }
-})(angular);
-(function (angular) {
-    var ng = angular.module('ng');
-    ng.config(['$provide', function ($provide) {
-        $provide.decorator('$rootScope', ['$delegate', scopeReentranceDecorator]);
-    }]);
+
+    function scopePostDigestDecorator($rootScope) {
+        var preListeners = [],
+            postOneListeners = [],
+            postAlwaysListeners = [],
+            _digest = $rootScope.$digest;
+        $rootScope.$preDigest = function(callback) {
+            addListener(this, '$$preDigestListeners', callback);
+        };
+        $rootScope.$postDigestOne = function(callback) {
+            addListener(this, '$$postDigestOneListeners', callback);
+        };
+        $rootScope.$postDigestAlways = function(callback) {
+            addListener(this, '$$postDigestAlwaysListeners', callback);
+        };
+        $rootScope.$digest = function() {
+            var i, res,
+                redigest = true;
+            while (redigest) {
+                redigest = false;
+                loopListeners(this, '$$preDigestListeners');
+                res = _digest.apply(this, arguments);
+                loopListeners(this, '$$postDigestOneListeners', [requireRedigest], true);
+                loopListeners(this, '$$postDigestAlwaysListeners', [requireRedigest]);
+            }
+            return res;
+
+            function requireRedigest() {
+                redigest = true;
+            }
+        };
+        return $rootScope;
+
+        function addListener(self, property, listener) {
+            var id, listeners;
+            if (!self.hasOwnProperty(property)) {
+                self[property] = [];
+            }
+            self[property].push(listener);
+        }
+
+        function loopListeners(self, property, args, clearAfterCalling) {
+            var i, listeners;
+            if (self.hasOwnProperty(property)) {
+                listeners = self[property];
+                for (i=0; i<listeners.length; i++) {
+                    listeners[i].apply(null, args);
+                }
+                if (clearAfterCalling) {
+                    self[property] = [];
+                }
+            }
+        }
+    }
 
     function scopeReentranceDecorator($rootScope) {
         var _apply = $rootScope.$apply;
-        $rootScope.$apply = function () {
+        $rootScope.$apply = function() {
             if ($rootScope.$$phase) {
                 return $rootScope.$eval.apply(this, arguments);
             }
             return _apply.apply(this, arguments);
         };
         var _digest = $rootScope.$digest;
-        $rootScope.$digest = function () {
+        $rootScope.$digest = function() {
             if ($rootScope.$$phase) {
                 return;
             }
@@ -35883,20 +35933,17 @@ factory(window.jQuery, window.angular);
         return $rootScope;
     }
 })(angular);
-(function ($, angular) {
+(function($, angular) {
     var ng = angular.module('ng'),
         jqmInitialized = false,
         lastCreatedPages = [];
 
     $.mobile.autoInitializePage = false;
 
-    ng.config(['$provide', function ($provide) {
-        $provide.decorator('$rootScope', ['$delegate', digestOnlyCurrentScopeDecorator]);
-    }]);
-
     ng.config(["$precompileProvider", function($precompile) {
         $precompile.addHandler(["jqmNgWidget", "element", precompilePageAndWidgets]);
     }]);
+    ng.run(['$rootScope', digestOnlyCurrentScope]);
     ng.run(['$rootScope', '$compile', 'jqmNgWidget', '$browser', initExternalJqmPagesOnLoad]);
     ng.run(['$rootScope', digestOnPageBeforeShow]);
 
@@ -35908,50 +35955,44 @@ factory(window.jQuery, window.angular);
     // implementation functions
 
     // Only digest the $.mobile.activePage when rootScope.$digest is called.
-    function digestOnlyCurrentScopeDecorator($rootScope) {
-        var _$digest = $rootScope.$digest;
-        var lastActiveScope;
-        $rootScope.$digest = function () {
-            if (this === $rootScope) {
-                var p = $.mobile.activePage;
-                var activeScope = p && p.scope();
-                if (lastActiveScope && lastActiveScope !== activeScope) {
-                    lastActiveScope.$disconnect();
-                }
-                lastActiveScope = activeScope;
-                if (activeScope) {
-                    activeScope.$reconnect();
-                }
-            }
-            var res = _$digest.apply(this, arguments);
-            if (this === $rootScope) {
-                var hasPages = lastCreatedPages.length;
-                while (lastCreatedPages.length) {
-                    var pageScope = lastCreatedPages.shift();
-                    // Detach the scope of the created pages from the normal $digest cycle.
-                    // Needed so that only $.mobile.activePage gets digested when rootScope.$digest
-                    // is called.
-                    // However, allow one digest to process every page
-                    // so that we can use databinding for ids, ... in 
-                    // ng-repeats for jqm pages.
-                    pageScope.$disconnect();
-                }
-                if (hasPages && !jqmInitialized) {
-                    jqmInitialized = true;
-                    var _changePage = $.mobile.changePage;
-                    $.mobile.changePage = function () {};
-                    try {
-                        $.mobile.initializePage();
-                    } finally {
-                        $.mobile.changePage = _changePage;
-                    }
-                    $rootScope.$broadcast("jqmInit");
-                }
-            }
 
-            return res;
-        };
-        return $rootScope;
+    function digestOnlyCurrentScope($rootScope) {
+        var lastActiveScope;
+        $rootScope.$preDigest(function() {
+            var p = $.mobile.activePage;
+            var activeScope = p && p.scope();
+            if (lastActiveScope && lastActiveScope !== activeScope) {
+                lastActiveScope.$disconnect();
+            }
+            lastActiveScope = activeScope;
+            if (activeScope) {
+                activeScope.$reconnect();
+            }
+        });
+        $rootScope.$postDigestAlways(function() {
+            var hasPages = lastCreatedPages.length;
+            while (lastCreatedPages.length) {
+                var pageScope = lastCreatedPages.shift();
+                // Detach the scope of the created pages from the normal $digest cycle.
+                // Needed so that only $.mobile.activePage gets digested when rootScope.$digest
+                // is called.
+                // However, allow one digest to process every page
+                // so that we can use databinding for ids, ... in 
+                // ng-repeats for jqm pages.
+                pageScope.$disconnect();
+            }
+            if (hasPages && !jqmInitialized) {
+                jqmInitialized = true;
+                var _changePage = $.mobile.changePage;
+                $.mobile.changePage = function() {};
+                try {
+                    $.mobile.initializePage();
+                } finally {
+                    $.mobile.changePage = _changePage;
+                }
+                $rootScope.$broadcast("jqmInit");
+            }
+        });
     }
 
     function digestOnPageBeforeShow($rootScope) {
@@ -35972,6 +36013,7 @@ factory(window.jQuery, window.angular);
      * with non widget markup. This will also mark elements that contain
      * jqm widgets.
      */
+
     function precompilePageAndWidgets(jqmNgWidget, element) {
         var pageSelector = ':jqmData(role="page"), :jqmData(role="dialog")';
         // save the old parent
@@ -35991,13 +36033,14 @@ factory(window.jQuery, window.angular);
         return element;
 
         // --------------
+
         function markPagesAndWidgetsAndApplyNonWidgetMarkup() {
             var pages = element.find(pageSelector).add(element.filter(pageSelector));
             pages.attr("ngm-page", "true");
 
             // enhance non-widgets markup.
-            jqmNgWidget.markJqmWidgetCreation(function () {
-                jqmNgWidget.preventJqmWidgetCreation(function () {
+            jqmNgWidget.markJqmWidgetCreation(function() {
+                jqmNgWidget.preventJqmWidgetCreation(function() {
                     if (pages.length > 0) {
                         // element contains pages.
                         // create temporary pages for the non widget markup, that we destroy afterwards.
@@ -36015,6 +36058,7 @@ factory(window.jQuery, window.angular);
     }
 
     var emptyPage;
+
     function connectToDocumentAndPage(jqmNgWidget, node, callback) {
         if (!node.parentNode) {
             return callback();
@@ -36049,14 +36093,15 @@ factory(window.jQuery, window.angular);
     /**
      * Special directive for pages, as they need an own scope.
      */
+
     function ngmPageDirective(jqmNgWidget, $timeout) {
         return {
-            restrict:'A',
-            scope:true,
-            compile:function (tElement, tAttrs) {
+            restrict: 'A',
+            scope: true,
+            compile: function(tElement, tAttrs) {
                 tElement.removeAttr("ngm-page");
                 return {
-                    pre:function (scope, iElement, iAttrs) {
+                    pre: function(scope, iElement, iAttrs) {
                         if (!$.mobile.pageContainer) {
                             $.mobile.pageContainer = iElement.parent().addClass("ui-mobile-viewport");
                         }
@@ -36072,7 +36117,7 @@ factory(window.jQuery, window.angular);
     }
 
     function createPagesWithoutPageCreateEvent(jqmNgWidget, pages) {
-        jqmNgWidget.preventJqmWidgetCreation(function () {
+        jqmNgWidget.preventJqmWidgetCreation(function() {
             var oldPrefix = $.mobile.page.prototype.widgetEventPrefix;
             $.mobile.page.prototype.widgetEventPrefix = 'noop';
             pages.page();
@@ -36081,8 +36126,9 @@ factory(window.jQuery, window.angular);
     }
 
     // If jqm loads a page from an external source, angular needs to compile it too!
+
     function initExternalJqmPagesOnLoad($rootScope, $compile, jqmNgWidget, $browser) {
-        jqmNgWidget.patchJq('page', function () {
+        jqmNgWidget.patchJq('page', function() {
             if (!jqmNgWidget.preventJqmWidgetCreation() && !this.data($.mobile.page.prototype.widgetFullName)) {
                 if (this.attr("data-" + $.mobile.ns + "external-page")) {
                     correctRelativeLinks(this);
@@ -36100,16 +36146,16 @@ factory(window.jQuery, window.angular);
             // are adjusted in jqm via their default jqm click handler.
             // As we use our own default click handler (see ngmRouting.js),
             // we need to adjust normal links ourselves.
-            var pageUrl = page.jqmData( "url" ),
+            var pageUrl = page.jqmData("url"),
                 pagePath = $.mobile.path.get(pageUrl),
                 ABSOULTE_URL_RE = /^(\w+:|#|\/)/,
                 EMPTY_RE = /^(\#|#|\/)/;
 
-            page.find( "a" ).each(function() {
+            page.find("a").each(function() {
                 var $this = $(this),
-                    thisUrl = $this.attr( "href" );
-                if ( thisUrl && thisUrl.length > 0 && !ABSOULTE_URL_RE.test( thisUrl ) ) {
-                    $this.attr( "href", pagePath + thisUrl );
+                    thisUrl = $this.attr("href");
+                if (thisUrl && thisUrl.length > 0 && !ABSOULTE_URL_RE.test(thisUrl)) {
+                    $this.attr("href", pagePath + thisUrl);
                 }
             });
         }
@@ -36397,7 +36443,7 @@ factory(window.jQuery, window.angular);
         var prop = "_refresh" + widgetName;
         var refreshId = (iElement.data(prop) || 0) + 1;
         iElement.data(prop, refreshId);
-        scope.$evalAsync(function() {
+        scope.$root.$postDigestOne(function() {
             if (iElement.data(prop) === refreshId) {
                 iElement[widgetName](options);
             }
@@ -36426,7 +36472,7 @@ factory(window.jQuery, window.angular);
         jqmNgWidgetProvider.widget("dialog", ["jqmNgWidget", dialogWidget]);
         jqmNgWidgetProvider.widget("controlgroup", ["jqmNgWidget", controlgroupWidget]);
         jqmNgWidgetProvider.widget("textinput", ["jqmNgWidget", textinputWidget]);
-        jqmNgWidgetProvider.widget("slider", ["jqmNgWidget", "$timeout", "$parse", sliderWidget]);
+        jqmNgWidgetProvider.widget("slider", ["jqmNgWidget", "$parse", sliderWidget]);
         jqmNgWidgetProvider.widget("popup", ["jqmNgWidget", "$parse", popupWidget]);
         jqmNgWidgetProvider.widget("panel", ["jqmNgWidget", "$parse", panelWidget]);
         jqmNgWidgetProvider.widget("table", ["jqmNgWidget", tableWidget]);
@@ -36518,12 +36564,11 @@ factory(window.jQuery, window.angular);
         }
     }
 
-    function sliderWidget(jqmNgWidet, $timeout, $parse) {
+    function sliderWidget(jqmNgWidet, $parse) {
         return {
             link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
                 if (selectCtrl) {
-                    // Note: scope.$evalAsync is not enough here :-(
-                    waitForNgOptionsAndNgRepeatToCreateOptions(function() {
+                    waitForNgOptionsAndNgRepeatToCreateOptions(scope, function() {
                         selectSecondOptionIfFirstIsUnknownOptionToRemoveUnkownOption(iElement, ngModelCtrl);
                         jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
                         jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
@@ -36542,9 +36587,13 @@ factory(window.jQuery, window.angular);
             }
         };
 
-        function waitForNgOptionsAndNgRepeatToCreateOptions(callback) {
-            // Note: scope.$evalAsync is not enough here :-(
-            $timeout(callback);
+        function waitForNgOptionsAndNgRepeatToCreateOptions(scope, callback) {
+            // Note: scope.$evalAsync does not work here, as it 
+            // could get executed not until the next $digest, which would be too late!
+            scope.$root.$postDigestOne(function(requireDigest) {
+                requireDigest();
+                callback();
+            });
         }
 
         function setMinValueInScopeIfNoValueInScopeAsJqmStartsWithMinValue(iAttrs, ngModelCtrl, modelValue) {

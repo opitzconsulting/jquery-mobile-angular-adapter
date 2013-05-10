@@ -15,25 +15,21 @@ Test page during development.
 
 <script>
 var mod = angular.module("ngm", []);
-mod.controller("MainCtrl", function($scope) {
-
-});
-
-$(document).on("pagebeforeshow", function() {
-  console.log("now");
+mod.controller('MainController', function ($scope) {
+    $scope.options = [1,2];
+    $scope.mysel = 2;
 });
 </script>
 
 </head>
 <body ng-app="ngm">
-<div data-role="page" ng-controller="MainCtrl" id="page1">
-    <div data-role="header">
-        <h1>Page1</h1>
-        <a href="form.html" data-transition="none">Page2</a>
-    </div>
-    
+<div id="main" data-role="page" ng-controller="MainController">
     <div data-role="content">
-      {{1+1}}
+        <form name="myform">
+            <select name="mysel" ng-model="mysel" data-role="slider" ng-options="o for o in options">                
+            </select>
+            Option: {{mysel}}
+        </form>
     </div>
 </div>
 

@@ -26,7 +26,7 @@ describe("controlgroup", function () {
         var scope = d.element.scope();
         var spy = testutils.spyOnJq('controlgroup').andCallThrough();
         scope.list = [1, 2];
-        scope.$digest();
+        scope.$root.$digest();
         expect(spy.callCount).toBe(1);
         buttons = list.children("div").children("a");
         expect(buttons.length).toBe(2);
@@ -46,7 +46,7 @@ describe("controlgroup", function () {
         var scope = d.element.scope();
         var spy = testutils.spyOnJq('controlgroup').andCallThrough();
         scope.list = [1];
-        scope.$digest();
+        scope.$root.$digest();
         expect(spy.callCount).toBe(1);
         buttons = list.children("div").children("a");
         expect(buttons.length).toBe(1);

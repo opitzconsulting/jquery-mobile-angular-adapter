@@ -20,7 +20,7 @@ describe("listview", function () {
         var listview = list.data($.mobile.listview.prototype.widgetFullName);
         spyOn(listview, 'refresh').andCallThrough();
         scope.list = [1, 2];
-        scope.$digest();
+        scope.$root.$digest();
         expect(listview.refresh.callCount).toBe(1);
         lis = list.children("li");
         expect(lis.length).toBe(2);
@@ -41,7 +41,7 @@ describe("listview", function () {
         scope.list = [1];
         var listview = list.data($.mobile.listview.prototype.widgetFullName);
         spyOn(listview, 'refresh').andCallThrough();
-        scope.$digest();
+        scope.$root.$digest();
         expect(listview.refresh.callCount).toBe(1);
         lis = list.children("li");
         expect(lis.length).toBe(1);

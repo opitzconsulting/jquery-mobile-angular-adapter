@@ -20,7 +20,7 @@ describe("collapsibleset", function () {
         var collapsibleset = list.data($.mobile.collapsibleset.prototype.widgetFullName);
         spyOn(collapsibleset, 'refresh').andCallThrough();
         scope.list = [1,2];
-        scope.$digest();
+        scope.$root.$digest();
         expect(collapsibleset.refresh.callCount).toBe(1);
         entries = list.children("div");
         expect(entries.length).toBe(2);
@@ -41,7 +41,7 @@ describe("collapsibleset", function () {
         scope.list = [1];
         var collapsibleset = list.data($.mobile.collapsibleset.prototype.widgetFullName);
         spyOn(collapsibleset, 'refresh').andCallThrough();
-        scope.$digest();
+        scope.$root.$digest();
         expect(collapsibleset.refresh.callCount).toBe(1);
         lis = list.children("div");
         expect(lis.length).toBe(1);

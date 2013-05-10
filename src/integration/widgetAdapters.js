@@ -17,7 +17,7 @@
         jqmNgWidgetProvider.widget("dialog", ["jqmNgWidget", dialogWidget]);
         jqmNgWidgetProvider.widget("controlgroup", ["jqmNgWidget", controlgroupWidget]);
         jqmNgWidgetProvider.widget("textinput", ["jqmNgWidget", textinputWidget]);
-        jqmNgWidgetProvider.widget("slider", ["jqmNgWidget", "$timeout", "$parse", sliderWidget]);
+        jqmNgWidgetProvider.widget("slider", ["jqmNgWidget", "$parse", sliderWidget]);
         jqmNgWidgetProvider.widget("popup", ["jqmNgWidget", "$parse", popupWidget]);
         jqmNgWidgetProvider.widget("panel", ["jqmNgWidget", "$parse", panelWidget]);
         jqmNgWidgetProvider.widget("table", ["jqmNgWidget", tableWidget]);
@@ -109,12 +109,11 @@
         }
     }
 
-    function sliderWidget(jqmNgWidet, $timeout, $parse) {
+    function sliderWidget(jqmNgWidet, $parse) {
         return {
             link: function(widgetName, scope, iElement, iAttrs, ngModelCtrl, selectCtrl) {
                 if (selectCtrl) {
-                    // Note: scope.$evalAsync is not enough here :-(
-                    waitForNgOptionsAndNgRepeatToCreateOptions(function() {
+                    waitForNgOptionsAndNgRepeatToCreateOptions(scope, function() {
                         selectSecondOptionIfFirstIsUnknownOptionToRemoveUnkownOption(iElement, ngModelCtrl);
                         jqmNgWidet.createWidget(widgetName, iElement, iAttrs);
                         jqmNgWidet.bindDefaultAttrsAndEvents(widgetName, scope, iElement, iAttrs, ngModelCtrl);
@@ -133,9 +132,13 @@
             }
         };
 
-        function waitForNgOptionsAndNgRepeatToCreateOptions(callback) {
-            // Note: scope.$evalAsync is not enough here :-(
-            $timeout(callback);
+        function waitForNgOptionsAndNgRepeatToCreateOptions(scope, callback) {
+            // Note: scope.$evalAsync does not work here, as it 
+            // could get executed not until the next $digest, which would be too late!
+            scope.$root.$postDigestOne(function(requireDigest) {
+                requireDigest();
+                callback();
+            });
         }
 
         function setMinValueInScopeIfNoValueInScopeAsJqmStartsWithMinValue(iAttrs, ngModelCtrl, modelValue) {

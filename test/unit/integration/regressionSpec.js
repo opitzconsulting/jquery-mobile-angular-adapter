@@ -112,7 +112,7 @@ describe('regression', function () {
 
             var scope = element.scope();
             scope.model1 = scope.model2 = true;
-            scope.$digest();
+            scope.$root.$digest();
 
             expect(chk1Label.hasClass('ui-checkbox-on')).toBeTruthy();
             expect(chk2Label.hasClass('ui-checkbox-on')).toBeTruthy();

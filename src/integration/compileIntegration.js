@@ -1,17 +1,14 @@
-(function ($, angular) {
+(function($, angular) {
     var ng = angular.module('ng'),
         jqmInitialized = false,
         lastCreatedPages = [];
 
     $.mobile.autoInitializePage = false;
 
-    ng.config(['$provide', function ($provide) {
-        $provide.decorator('$rootScope', ['$delegate', digestOnlyCurrentScopeDecorator]);
-    }]);
-
     ng.config(["$precompileProvider", function($precompile) {
         $precompile.addHandler(["jqmNgWidget", "element", precompilePageAndWidgets]);
     }]);
+    ng.run(['$rootScope', digestOnlyCurrentScope]);
     ng.run(['$rootScope', '$compile', 'jqmNgWidget', '$browser', initExternalJqmPagesOnLoad]);
     ng.run(['$rootScope', digestOnPageBeforeShow]);
 
@@ -23,50 +20,44 @@
     // implementation functions
 
     // Only digest the $.mobile.activePage when rootScope.$digest is called.
-    function digestOnlyCurrentScopeDecorator($rootScope) {
-        var _$digest = $rootScope.$digest;
-        var lastActiveScope;
-        $rootScope.$digest = function () {
-            if (this === $rootScope) {
-                var p = $.mobile.activePage;
-                var activeScope = p && p.scope();
-                if (lastActiveScope && lastActiveScope !== activeScope) {
-                    lastActiveScope.$disconnect();
-                }
-                lastActiveScope = activeScope;
-                if (activeScope) {
-                    activeScope.$reconnect();
-                }
-            }
-            var res = _$digest.apply(this, arguments);
-            if (this === $rootScope) {
-                var hasPages = lastCreatedPages.length;
-                while (lastCreatedPages.length) {
-                    var pageScope = lastCreatedPages.shift();
-                    // Detach the scope of the created pages from the normal $digest cycle.
-                    // Needed so that only $.mobile.activePage gets digested when rootScope.$digest
-                    // is called.
-                    // However, allow one digest to process every page
-                    // so that we can use databinding for ids, ... in 
-                    // ng-repeats for jqm pages.
-                    pageScope.$disconnect();
-                }
-                if (hasPages && !jqmInitialized) {
-                    jqmInitialized = true;
-                    var _changePage = $.mobile.changePage;
-                    $.mobile.changePage = function () {};
-                    try {
-                        $.mobile.initializePage();
-                    } finally {
-                        $.mobile.changePage = _changePage;
-                    }
-                    $rootScope.$broadcast("jqmInit");
-                }
-            }
 
-            return res;
-        };
-        return $rootScope;
+    function digestOnlyCurrentScope($rootScope) {
+        var lastActiveScope;
+        $rootScope.$preDigest(function() {
+            var p = $.mobile.activePage;
+            var activeScope = p && p.scope();
+            if (lastActiveScope && lastActiveScope !== activeScope) {
+                lastActiveScope.$disconnect();
+            }
+            lastActiveScope = activeScope;
+            if (activeScope) {
+                activeScope.$reconnect();
+            }
+        });
+        $rootScope.$postDigestAlways(function() {
+            var hasPages = lastCreatedPages.length;
+            while (lastCreatedPages.length) {
+                var pageScope = lastCreatedPages.shift();
+                // Detach the scope of the created pages from the normal $digest cycle.
+                // Needed so that only $.mobile.activePage gets digested when rootScope.$digest
+                // is called.
+                // However, allow one digest to process every page
+                // so that we can use databinding for ids, ... in 
+                // ng-repeats for jqm pages.
+                pageScope.$disconnect();
+            }
+            if (hasPages && !jqmInitialized) {
+                jqmInitialized = true;
+                var _changePage = $.mobile.changePage;
+                $.mobile.changePage = function() {};
+                try {
+                    $.mobile.initializePage();
+                } finally {
+                    $.mobile.changePage = _changePage;
+                }
+                $rootScope.$broadcast("jqmInit");
+            }
+        });
     }
 
     function digestOnPageBeforeShow($rootScope) {
@@ -87,6 +78,7 @@
      * with non widget markup. This will also mark elements that contain
      * jqm widgets.
      */
+
     function precompilePageAndWidgets(jqmNgWidget, element) {
         var pageSelector = ':jqmData(role="page"), :jqmData(role="dialog")';
         // save the old parent
@@ -106,13 +98,14 @@
         return element;
 
         // --------------
+
         function markPagesAndWidgetsAndApplyNonWidgetMarkup() {
             var pages = element.find(pageSelector).add(element.filter(pageSelector));
             pages.attr("ngm-page", "true");
 
             // enhance non-widgets markup.
-            jqmNgWidget.markJqmWidgetCreation(function () {
-                jqmNgWidget.preventJqmWidgetCreation(function () {
+            jqmNgWidget.markJqmWidgetCreation(function() {
+                jqmNgWidget.preventJqmWidgetCreation(function() {
                     if (pages.length > 0) {
                         // element contains pages.
                         // create temporary pages for the non widget markup, that we destroy afterwards.
@@ -130,6 +123,7 @@
     }
 
     var emptyPage;
+
     function connectToDocumentAndPage(jqmNgWidget, node, callback) {
         if (!node.parentNode) {
             return callback();
@@ -164,14 +158,15 @@
     /**
      * Special directive for pages, as they need an own scope.
      */
+
     function ngmPageDirective(jqmNgWidget, $timeout) {
         return {
-            restrict:'A',
-            scope:true,
-            compile:function (tElement, tAttrs) {
+            restrict: 'A',
+            scope: true,
+            compile: function(tElement, tAttrs) {
                 tElement.removeAttr("ngm-page");
                 return {
-                    pre:function (scope, iElement, iAttrs) {
+                    pre: function(scope, iElement, iAttrs) {
                         if (!$.mobile.pageContainer) {
                             $.mobile.pageContainer = iElement.parent().addClass("ui-mobile-viewport");
                         }
@@ -187,7 +182,7 @@
     }
 
     function createPagesWithoutPageCreateEvent(jqmNgWidget, pages) {
-        jqmNgWidget.preventJqmWidgetCreation(function () {
+        jqmNgWidget.preventJqmWidgetCreation(function() {
             var oldPrefix = $.mobile.page.prototype.widgetEventPrefix;
             $.mobile.page.prototype.widgetEventPrefix = 'noop';
             pages.page();
@@ -196,8 +191,9 @@
     }
 
     // If jqm loads a page from an external source, angular needs to compile it too!
+
     function initExternalJqmPagesOnLoad($rootScope, $compile, jqmNgWidget, $browser) {
-        jqmNgWidget.patchJq('page', function () {
+        jqmNgWidget.patchJq('page', function() {
             if (!jqmNgWidget.preventJqmWidgetCreation() && !this.data($.mobile.page.prototype.widgetFullName)) {
                 if (this.attr("data-" + $.mobile.ns + "external-page")) {
                     correctRelativeLinks(this);
@@ -215,16 +211,16 @@
             // are adjusted in jqm via their default jqm click handler.
             // As we use our own default click handler (see ngmRouting.js),
             // we need to adjust normal links ourselves.
-            var pageUrl = page.jqmData( "url" ),
+            var pageUrl = page.jqmData("url"),
                 pagePath = $.mobile.path.get(pageUrl),
                 ABSOULTE_URL_RE = /^(\w+:|#|\/)/,
                 EMPTY_RE = /^(\#|#|\/)/;
 
-            page.find( "a" ).each(function() {
+            page.find("a").each(function() {
                 var $this = $(this),
-                    thisUrl = $this.attr( "href" );
-                if ( thisUrl && thisUrl.length > 0 && !ABSOULTE_URL_RE.test( thisUrl ) ) {
-                    $this.attr( "href", pagePath + thisUrl );
+                    thisUrl = $this.attr("href");
+                if (thisUrl && thisUrl.length > 0 && !ABSOULTE_URL_RE.test(thisUrl)) {
+                    $this.attr("href", pagePath + thisUrl);
                 }
             });
         }

@@ -277,7 +277,7 @@
         var prop = "_refresh" + widgetName;
         var refreshId = (iElement.data(prop) || 0) + 1;
         iElement.data(prop, refreshId);
-        scope.$evalAsync(function() {
+        scope.$root.$postDigestOne(function() {
             if (iElement.data(prop) === refreshId) {
                 iElement[widgetName](options);
             }

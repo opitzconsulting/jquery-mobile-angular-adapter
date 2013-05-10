@@ -126,7 +126,7 @@ Auto-Run tests when file change: `./node_modules/.bin/grunt dev`
 
 ##Navigation and routes
 
-The adapter integrates angular routes with jquery mobile in the following way:
+The adapter integrates angular routes with jquery mobile:
 
 - We set `$locationProvider.html5Mode(true)`, `$locationProvider.hashPrefix('!')`
   and add the tag `<base href="{address of your html file}">` to your header.
@@ -191,6 +191,7 @@ Default routing: `basePath+$location.url()`
 
 Notes:
 
+- Using `$.mobile.changePage` directly is not recommended. It still works, but it will no more update the browser location.href.
 - If you don't want `$locationProvider.html5Mode` you can disable it. 
   By this, you get hash urls like `/index.html#!/somePath...` back. E.g.
           

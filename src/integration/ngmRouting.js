@@ -180,7 +180,9 @@
             var currentRoute = $route.current,
                 onActivateParams,
                 currentHistoryEntry = $history.urlStack[$history.activeIndex];
-            $.mobile.urlHistory.getActive().lastScroll = currentHistoryEntry.lastScroll;
+            if (currentHistoryEntry) {
+                $.mobile.urlHistory.getActive().lastScroll = currentHistoryEntry.lastScroll;
+            }
             if (isDialog(activePage)) {
                 currentHistoryEntry.tempUrl = true;
             } else if (isNormalPage(activePage)) {

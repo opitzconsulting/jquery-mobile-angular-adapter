@@ -157,6 +157,15 @@ describe('scopeDigestExtension', function() {
                 scope.$digest();
                 expect(watch.callCount).toBe(3);
             });
+            it('should redigest if required', function() {
+                var watch = jasmine.createSpy('watch');
+                scope.$postDigestOne(function(requireRedigest) {
+                    requireRedigest();
+                });
+                scope.$watch(watch);
+                scope.$digest();
+                expect(watch.callCount).toBe(3);
+            });
         });
         describe('$postDigestAlways', function() {
             it('should execute the callback after $digest always', function() {

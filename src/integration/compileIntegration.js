@@ -69,7 +69,18 @@
             if (pageScope && pageScope.$$disconnected) {
                 pageScope.$broadcast("pagebeforeshow", e);
             }
-            $rootScope.$digest();
+            if ($rootScope.$$phase) {
+                // If we are already digesting,
+                // we need to force another digest,
+                // as we are changing the scope structure on
+                // page change (disconnect the scope of the old page
+                // and reconnect the scope of the new page).
+                $rootScope.$postDigestOne(function(requireRedigest) {
+                    requireRedigest();
+                });
+            } else {
+                $rootScope.$digest();
+            }
         });
     }
 

@@ -130,4 +130,21 @@ describe("regression", function () {
         });
     });
 
+    describe('digest on page change', function() {
+        it("should digest watchers on next page", function() {
+            uit.url("../ui/fixtures/test-fixture.html");
+            uit.append(function($) {
+                $("#page2").append('<span id="someFlag">{{someFlag}}</span>');
+            });
+            uit.runs(function($location, $rootScope) {
+                $location.url("#page2");
+                $rootScope.someFlag = "ok";
+                $rootScope.$apply();
+            });
+            uit.runs(function($) {
+                expect($("#someFlag").text()).toBe("ok");
+            });
+        });
+    });
+
 });

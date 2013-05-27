@@ -35560,8 +35560,8 @@ var styleDirective = valueFn({
 
 })(window, document);
 angular.element(document).find('head').append('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak{display:none;}ng\\:form{display:block;}</style>');
-/*! jquery-mobile-angular-adapter - v1.3.1 - 2013-05-10
-* https://github.com/tigbro/jquery-mobile-angular-adapter
+/*! jquery-mobile-angular-adapter - v1.3.2-SNAPSHOT - 2013-05-27
+* https://github.com/opitzconsulting/jquery-mobile-angular-adapter
 * Copyright (c) 2013 Tobias Bosch; Licensed MIT */
 (function(factory) {
 if (typeof define === "function" && define.amd) {
@@ -35905,11 +35905,11 @@ factory(window.jQuery, window.angular);
             var i, listeners;
             if (self.hasOwnProperty(property)) {
                 listeners = self[property];
-                for (i=0; i<listeners.length; i++) {
-                    listeners[i].apply(null, args);
-                }
                 if (clearAfterCalling) {
                     self[property] = [];
+                }
+                for (i=0; i<listeners.length; i++) {
+                    listeners[i].apply(null, args);
                 }
             }
         }
@@ -36004,7 +36004,18 @@ factory(window.jQuery, window.angular);
             if (pageScope && pageScope.$$disconnected) {
                 pageScope.$broadcast("pagebeforeshow", e);
             }
-            $rootScope.$digest();
+            if ($rootScope.$$phase) {
+                // If we are already digesting,
+                // we need to force another digest,
+                // as we are changing the scope structure on
+                // page change (disconnect the scope of the old page
+                // and reconnect the scope of the new page).
+                $rootScope.$postDigestOne(function(requireRedigest) {
+                    requireRedigest();
+                });
+            } else {
+                $rootScope.$digest();
+            }
         });
     }
 
@@ -37243,7 +37254,9 @@ factory(window.jQuery, window.angular);
             var currentRoute = $route.current,
                 onActivateParams,
                 currentHistoryEntry = $history.urlStack[$history.activeIndex];
-            $.mobile.urlHistory.getActive().lastScroll = currentHistoryEntry.lastScroll;
+            if (currentHistoryEntry) {
+                $.mobile.urlHistory.getActive().lastScroll = currentHistoryEntry.lastScroll;
+            }
             if (isDialog(activePage)) {
                 currentHistoryEntry.tempUrl = true;
             } else if (isNormalPage(activePage)) {
@@ -37486,6 +37499,7 @@ factory(window.jQuery, window.angular);
 
 
 })(angular, $);
+
 (function ($, angular) {
     // Patch for ng-repeat to fire an event whenever the children change.
     // Only watching Scope create/destroy is not enough here, as ng-repeat

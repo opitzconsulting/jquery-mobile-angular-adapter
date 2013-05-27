@@ -96,11 +96,11 @@
             var i, listeners;
             if (self.hasOwnProperty(property)) {
                 listeners = self[property];
-                for (i=0; i<listeners.length; i++) {
-                    listeners[i].apply(null, args);
-                }
                 if (clearAfterCalling) {
                     self[property] = [];
+                }
+                for (i=0; i<listeners.length; i++) {
+                    listeners[i].apply(null, args);
                 }
             }
         }

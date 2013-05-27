@@ -11,28 +11,35 @@ Test page during development.
     <script src="../lib/jquery.mobile.js"></script>
     <script src="../lib/angular.js"></script>
     <script src="../compiled/jquery-mobile-angular-adapter.js"></script>
-</style>
 
 <script>
-var mod = angular.module("ngm", []);
-mod.controller('MainController', function ($scope) {
-    $scope.options = [1,2];
-    $scope.mysel = 2;
-});
+    var mod = angular.module("ngm", []);
+    mod.controller("MainCtrl", function($scope, $location) {
+      $scope.flag = false;
+      $scope.test = function() {
+        $scope.flag = true;
+        $location.url('#page2');
+      };      
+    });
+
+
 </script>
 
 </head>
-<body ng-app="ngm">
-<div id="main" data-role="page" ng-controller="MainController">
-    <div data-role="content">
-        <form name="myform">
-            <select name="mysel" ng-model="mysel" data-role="slider" ng-options="o for o in options">                
-            </select>
-            Option: {{mysel}}
-        </form>
-    </div>
+<body ng-app="ngm" ng-controller="MainCtrl">
+
+<div id="main" data-role="page" >
+  <div data-role="content">
+    <a href="#" ng-click="test()">Page2</a>
+  </div>
 </div>
 
+<div id="page2" data-role="page" >
+  <div data-role="content">
+    Flag: {{flag}}
+    <a href="" ng-click="flag2=true">Test</a>
+  </div>
+</div>
 
 </body>
 </html>

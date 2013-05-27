@@ -202,6 +202,48 @@ describe("selectmenu", function () {
             expect(selectmenu.refresh.callCount).toBe(0);
         });
     });
+    
+    describe('options without ng-repeat and static value', function () {
+        var c, select, selectmenu, scope;
+        beforeEach(function () {
+            c = testutils.compileInPage(
+                '<select data-native-menu="false"><option value="v">{{l}}</option></select>');
+            select = c.element.find('select');
+            selectmenu = select.data($.mobile.selectmenu.prototype.widgetFullName);
+            spyOn(selectmenu, 'refresh').andCallThrough();
+            scope = c.element.scope();
+        });
+        
+        it("should refresh when the text changes", function () {
+            var option = select.children("option");
+            scope.l = 'l1';
+            scope.$root.$digest();
+            expect(selectmenu.refresh.callCount).toBe(1);
+            expect(option.text()).toBe('l1');
+            expect(option.val()).toBe('v');
+        });
+    });
+    
+    describe('options without ng-repeat and no value', function () {
+        var c, select, selectmenu, scope;
+        beforeEach(function () {
+            c = testutils.compileInPage(
+                '<select data-native-menu="false"><option>{{l}}</option></select>');
+            select = c.element.find('select');
+            selectmenu = select.data($.mobile.selectmenu.prototype.widgetFullName);
+            spyOn(selectmenu, 'refresh').andCallThrough();
+            scope = c.element.scope();
+        });
+        
+        it("should refresh when the text changes", function () {
+            var option = select.children("option");
+            scope.l = 'l1';
+            scope.$root.$digest();
+            expect(selectmenu.refresh.callCount).toBe(1);
+            expect(option.text()).toBe('l1');
+            expect(option.val()).toBe('l1');
+        });
+    });
 
     describe('options with ng-options for list datasource', function () {
         var c, select, selectmenu, scope;

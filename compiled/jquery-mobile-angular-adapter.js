@@ -2093,7 +2093,10 @@ factory(window.jQuery, window.angular);
             restrict:'E',
             compile:function (tElement, tAttrs) {
                 var textInterpolateFn = $interpolate(tElement.text(), true);
-                var valueInterpolateFn = $interpolate(tElement.attr('value'), true);
+                var valueInterpolateFn = tElement.attr('value');
+                if (valueInterpolateFn !== false && typeof valueInterpolateFn !== 'undefined') {
+                    valueInterpolateFn = $interpolate(tElement.attr('value'), true);
+                }
                 return function (scope, iElement, iAttrs) {
                     scope.$watch(textInterpolateFn, function () {
                         iElement.trigger("$childrenChanged");
@@ -2106,6 +2109,7 @@ factory(window.jQuery, window.angular);
         };
     }]);
 })(angular);
+
 (function (angular) {
     var ng = angular.module("ng");
     ng.directive('li', function() {

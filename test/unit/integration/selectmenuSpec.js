@@ -202,7 +202,7 @@ describe("selectmenu", function () {
             expect(selectmenu.refresh.callCount).toBe(0);
         });
     });
-    
+
     describe('options without ng-repeat and static value', function () {
         var c, select, selectmenu, scope;
         beforeEach(function () {
@@ -213,7 +213,7 @@ describe("selectmenu", function () {
             spyOn(selectmenu, 'refresh').andCallThrough();
             scope = c.element.scope();
         });
-        
+
         it("should refresh when the text changes", function () {
             var option = select.children("option");
             scope.l = 'l1';
@@ -223,7 +223,7 @@ describe("selectmenu", function () {
             expect(option.val()).toBe('v');
         });
     });
-    
+
     describe('options without ng-repeat and no value', function () {
         var c, select, selectmenu, scope;
         beforeEach(function () {
@@ -234,7 +234,7 @@ describe("selectmenu", function () {
             spyOn(selectmenu, 'refresh').andCallThrough();
             scope = c.element.scope();
         });
-        
+
         it("should refresh when the text changes", function () {
             var option = select.children("option");
             scope.l = 'l1';

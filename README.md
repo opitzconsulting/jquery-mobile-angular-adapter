@@ -25,8 +25,8 @@ If you are interested in how to build mobile web apps with this adapter, have a 
 
 ##Reporting Issues
 - Issues can be reported at the Github project.
-- Please provide a [JS-Fiddle](http://jsfiddle.net/mAxhX/) or a
-  [Plunk](http://plnkr.co/edit/gAROPg3zuGpvXc45OG2r). A plunk is great
+- Please provide a [JS-Fiddle](http://jsfiddle.net/jsBZh/) or a
+  [Plunk](http://plnkr.co/edit/iKRaageOffYy3J9stfnZ). A plunk is great
   if you have external jqm pages in your example.
 
 

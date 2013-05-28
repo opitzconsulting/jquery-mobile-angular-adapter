@@ -5,7 +5,7 @@ just released version 1.3.1 of jquery-mobile-angular adapter. This works with an
 * Download: [https://github.com/opitzconsulting/jquery-mobile-angular-adapter/tree/1.3.1](https://github.com/opitzconsulting/jquery-mobile-angular-adapter/tree/1.3.1) 
 * Changelog: [https://github.com/opitzconsulting/jquery-mobile-angular-adapter/blob/master/Changelog.md](https://github.com/opitzconsulting/jquery-mobile-angular-adapter/blob/master/Changelog.md)
 * Todo-App: [http://jsfiddle.net/UbTmM/](http://jsfiddle.net/UbTmM/)
-* Template for submitting issues: [http://jsfiddle.net/mAxhX/](http://jsfiddle.net/mAxhX/) (inline pages) and [http://plnkr.co/edit/ZrKB8H4fjnlak6WgKOTj](http://plnkr.co/edit/ZrKB8H4fjnlak6WgKOTj) (external pages)
+* Template for submitting issues: [http://jsfiddle.net/jsBZh/](http://jsfiddle.net/jsBZh/) (inline pages) and [http://plnkr.co/edit/iKRaageOffYy3J9stfnZ](http://plnkr.co/edit/iKRaageOffYy3J9stfnZ) (external pages)
 
 Thanks all who provided feedback and submitted issues!
 

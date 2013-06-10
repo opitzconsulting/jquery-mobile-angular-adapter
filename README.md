@@ -19,14 +19,14 @@ If you are interested in how to build mobile web apps with this adapter, have a 
 
 ##Examples
 - See the [wiki page](wiki/Projects-using-the-adapter)
-- [Todo mobile](http://jsfiddle.net/UbTmM/): JsFiddle
+- [Todo mobile](http://jsfiddle.net/ocdemo/UM5Mr/): JsFiddle
 - [Rent Your Legacy Car](https://github.com/mjswa/rylc-html5): A more complex example from the german book [Mobile Web-Apps mit JavaScript](http://www.opitz-consulting.com/go_javascriptbuch).
 
 
 ##Reporting Issues
 - Issues can be reported at the Github project.
-- Please provide a [JS-Fiddle](http://jsfiddle.net/jsBZh/) or a
-  [Plunk](http://plnkr.co/edit/iKRaageOffYy3J9stfnZ). A plunk is great
+- Please provide a [JS-Fiddle](http://jsfiddle.net/ocdemo/4AEQK/) or a
+  [Plunk](http://plnkr.co/edit/M4WTl9moMl2z8B9Mc0b2). A plunk is great
   if you have external jqm pages in your example.
 
 

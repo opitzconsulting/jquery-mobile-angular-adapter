@@ -71,7 +71,7 @@
                 redigest = true;
             while (redigest) {
                 redigest = false;
-                loopListeners(this, '$$preDigestListeners');
+                loopListeners(this, '$$preDigestListeners', []);
                 res = _digest.apply(this, arguments);
                 loopListeners(this, '$$postDigestOneListeners', [requireRedigest], true);
                 loopListeners(this, '$$postDigestAlwaysListeners', [requireRedigest]);

@@ -172,13 +172,17 @@
         return execWithFlag('markJqmWidgetCreation', fn);
     }
 
+    function preventDomManipWrapper(fn) {
+        return execWithFlag('preventDomManipWrapper', fn);
+    }
+
     function delegateDomManipToWrapper(origCreate, element) {
         var oldParents = Array.prototype.slice.call(element.parents()),
             newParents,
             i, oldParent, newParent;
 
         oldParents.unshift(element[0]);
-        origCreate();
+        preventDomManipWrapper(origCreate);
         newParents = Array.prototype.slice.call(element.parents());
         newParents.unshift(element[0]);
 
@@ -195,7 +199,7 @@
     function enableDomManipDelegate(fnName, callFilter) {
         var old = $.fn[fnName];
         $.fn[fnName] = function() {
-            if (enableDomManipDelegate.recurse || (callFilter && !callFilter.apply(this, arguments))) {
+            if (enableDomManipDelegate.recurse || preventDomManipWrapper() || (callFilter && !callFilter.apply(this, arguments))) {
                 return old.apply(this, arguments);
             }
             try {

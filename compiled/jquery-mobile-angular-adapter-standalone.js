@@ -35560,7 +35560,7 @@ var styleDirective = valueFn({
 
 })(window, document);
 angular.element(document).find('head').append('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak{display:none;}ng\\:form{display:block;}</style>');
-/*! jquery-mobile-angular-adapter - v1.3.2-SNAPSHOT - 2013-05-27
+/*! jquery-mobile-angular-adapter - v1.3.2-SNAPSHOT - 2013-06-14
 * https://github.com/opitzconsulting/jquery-mobile-angular-adapter
 * Copyright (c) 2013 Tobias Bosch; Licensed MIT */
 (function(factory) {
@@ -36349,13 +36349,17 @@ factory(window.jQuery, window.angular);
         return execWithFlag('markJqmWidgetCreation', fn);
     }
 
+    function preventDomManipWrapper(fn) {
+        return execWithFlag('preventDomManipWrapper', fn);
+    }
+
     function delegateDomManipToWrapper(origCreate, element) {
         var oldParents = Array.prototype.slice.call(element.parents()),
             newParents,
             i, oldParent, newParent;
 
         oldParents.unshift(element[0]);
-        origCreate();
+        preventDomManipWrapper(origCreate);
         newParents = Array.prototype.slice.call(element.parents());
         newParents.unshift(element[0]);
 
@@ -36372,7 +36376,7 @@ factory(window.jQuery, window.angular);
     function enableDomManipDelegate(fnName, callFilter) {
         var old = $.fn[fnName];
         $.fn[fnName] = function() {
-            if (enableDomManipDelegate.recurse || (callFilter && !callFilter.apply(this, arguments))) {
+            if (enableDomManipDelegate.recurse || preventDomManipWrapper() || (callFilter && !callFilter.apply(this, arguments))) {
                 return old.apply(this, arguments);
             }
             try {

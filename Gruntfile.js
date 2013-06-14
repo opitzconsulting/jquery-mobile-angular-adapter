@@ -1,5 +1,7 @@
 module.exports = function(grunt) {
 
+  // needed for karma to locate phantomjs correctly.
+  process.env.PHANTOMJS_BIN = './node_modules/.bin/phantomjs';
   // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),

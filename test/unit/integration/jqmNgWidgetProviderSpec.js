@@ -36,6 +36,19 @@ describe('jqmNgWidgetProvider', function () {
                 expect(root.children().length).toBe(1);
                 expect(root.children().eq(0).filter(".sibling").length).toBe(1);
             }));
+            it('should allow after and before during widget creation without delegating to the wrapper when two widgets are created for the same element',inject(function(jqmNgWidget) {
+                var root = $('<div class="root"><div class="el"></div>');
+                var el = root.children(".el");
+                $.fn.orig.someWidget = function() {
+                    this.wrap('<div class="wrapper"></div>');
+                };
+                $.fn.orig.someWidget2 = function() {
+                    this.after('<div class="after"></div>');
+                };
+                jqmNgWidget.createWidget('someWidget', el, {ngmSomeWidget: "[]"});
+                jqmNgWidget.createWidget('someWidget2', el, {ngmSomeWidget2: "[]"});
+                expect(el.next().hasClass('after')).toBe(true);
+            }));
 
             describe('elements that unwrap themselves during destroy', function() {
                 var root, el, removeCounter;

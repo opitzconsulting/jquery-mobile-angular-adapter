@@ -9,37 +9,36 @@ Test page during development.
 
     <script src="../lib/jquery.js"></script>
     <script src="../lib/jquery.mobile.js"></script>
+<link rel="stylesheet" type="text/css" href="http://dev.jtsage.com/cdn/datebox/latest/jqm-datebox.min.css" /> 
+
+<script type="text/javascript" src="http://dev.jtsage.com/cdn/datebox/latest/jqm-datebox.core.js"></script>
+<script type="text/javascript" src="http://dev.jtsage.com/cdn/datebox/latest/jqm-datebox.mode.calbox.js"></script>
+<script type="text/javascript" src="http://dev.jtsage.com/cdn/datebox/i18n/jquery.mobile.datebox.i18n.en_US.utf8.js"></script>
+
     <script src="../lib/angular.js"></script>
     <script src="../compiled/jquery-mobile-angular-adapter.js"></script>
 
 <script>
     var mod = angular.module("ngm", []);
     mod.controller("MainCtrl", function($scope, $location) {
-      $scope.flag = false;
-      $scope.test = function() {
-        $scope.flag = true;
-        $location.url('#page2');
-      };      
     });
-
-
 </script>
 
 </head>
 <body ng-app="ngm" ng-controller="MainCtrl">
 
-<div id="main" data-role="page" >
-  <div data-role="content">
-    <a href="#" ng-click="test()">Page2</a>
-  </div>
-</div>
+<div id="main" data-role="page">
+    <div data-role="content">
+        <!--
+        <input id="claimpoint-date" type="date" ng-model="MainController.date" data-role="datebox" data-options='{"mode": "calbox", "useNewStyle":true}' class="ui-icon-datebox" required>
+        </input>
+                -->
 
-<div id="page2" data-role="page" >
-  <div data-role="content">
-    Flag: {{flag}}
-    <a href="" ng-click="flag2=true">Test</a>
-  </div>
+                <input id="claimpoint-date" type="date" ng-model="MainController.date" data-role="datebox" data-options='{"mode": "calbox"}' required>
+        </input>
+    </div>
 </div>
+ 
 
 </body>
 </html>

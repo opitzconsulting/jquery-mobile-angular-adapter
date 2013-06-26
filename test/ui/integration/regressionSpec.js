@@ -147,4 +147,19 @@ describe("regression", function () {
         });
     });
 
+    describe('selectmenu', function() {
+        it("should open a non-native selectmenu popup on an external page on first click", function() {
+            uit.url("../ui/fixtures/test-fixture.html");
+            uit.runs(function($location, $rootScope) {
+                $location.url("pageWithSelect.html");
+                $rootScope.$apply();
+            });
+            uit.runs(function($) {
+                var select = $("#mysel");
+                select.parent().find("a").click();
+                expect(select.data("mobileSelectmenu").isOpen).toBe(true);
+            });
+        });
+    });
+
 });

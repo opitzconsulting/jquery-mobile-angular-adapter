@@ -35560,7 +35560,7 @@ var styleDirective = valueFn({
 
 })(window, document);
 angular.element(document).find('head').append('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak{display:none;}ng\\:form{display:block;}</style>');
-/*! jquery-mobile-angular-adapter - v1.3.2-SNAPSHOT - 2013-06-14
+/*! jquery-mobile-angular-adapter - v1.3.2-SNAPSHOT - 2013-06-26
 * https://github.com/opitzconsulting/jquery-mobile-angular-adapter
 * Copyright (c) 2013 Tobias Bosch; Licensed MIT */
 (function(factory) {
@@ -35880,7 +35880,7 @@ factory(window.jQuery, window.angular);
                 redigest = true;
             while (redigest) {
                 redigest = false;
-                loopListeners(this, '$$preDigestListeners');
+                loopListeners(this, '$$preDigestListeners', []);
                 res = _digest.apply(this, arguments);
                 loopListeners(this, '$$postDigestOneListeners', [requireRedigest], true);
                 loopListeners(this, '$$postDigestAlwaysListeners', [requireRedigest]);
@@ -37460,9 +37460,16 @@ factory(window.jQuery, window.angular);
                 function () {
                     return $injector.invoke(orig$get, $locationProvider);
                 });
+            // register our default click handler always at the document
+            // and in a setTimeout, so that we are always later than
+            // vclicks by jquery mobile. Needed e.g. for selectmenu popups
+            // who change the link in a vclick.
+            $(function() {
+                $(document).bind('click', checkAndCallDefaultClickHandler);
+            });
             // Note: Some of this click handler was copied from the original
             // default click handler in angular.
-            $rootElement.bind('click', function (event) {
+            function checkAndCallDefaultClickHandler(event) {
                 // TODO(vojta): rewrite link when opening in new tab/window (in legacy browser)
                 // currently we open nice url link and redirect then
 
@@ -37480,7 +37487,7 @@ factory(window.jQuery, window.angular);
                     }
                 }
                 defaultClickHandler(event, elm, $rootScope, $location, $history);
-            });
+            }
             return $location;
         }];
     }

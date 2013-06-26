@@ -37,9 +37,12 @@ describe("selectmenu", function () {
             });
         });
         it('should save the ui value into the model', function () {
+            var dialog;
             uit.runs(function ($) {
-                var dialog = $(".ui-dialog");
+                dialog = $(".ui-dialog");
                 dialog.find('li a').eq(1).trigger('click');
+            });
+            uit.runs(function($) {
                 expect(scope.mysel).toEqual("v2");
                 expect(dialogOpen()).toBe(false);
                 expect($.mobile.activePage.attr('id')).toBe('start');
@@ -47,9 +50,12 @@ describe("selectmenu", function () {
         });
 
         it('should close the popup when the cancel button is hit', function () {
+            var dialog;
             uit.runs(function ($) {
-                var dialog = $(".ui-dialog");
+                dialog = $(".ui-dialog");
                 dialog.find(':jqmData(role="header") a').trigger('click');
+            });
+            uit.runs(function ($) {
                 expect(scope.mysel).toEqual("v1");
                 expect($.mobile.activePage.attr('id')).toBe('start');
             });

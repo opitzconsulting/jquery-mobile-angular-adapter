@@ -8,37 +8,30 @@ Test page during development.
     <link rel="stylesheet" href="../lib/jquery.mobile.css"/>
 
     <script src="../lib/jquery.js"></script>
-    <script src="../lib/jquery.mobile.js"></script>
-<link rel="stylesheet" type="text/css" href="http://dev.jtsage.com/cdn/datebox/latest/jqm-datebox.min.css" /> 
-
-<script type="text/javascript" src="http://dev.jtsage.com/cdn/datebox/latest/jqm-datebox.core.js"></script>
-<script type="text/javascript" src="http://dev.jtsage.com/cdn/datebox/latest/jqm-datebox.mode.calbox.js"></script>
-<script type="text/javascript" src="http://dev.jtsage.com/cdn/datebox/i18n/jquery.mobile.datebox.i18n.en_US.utf8.js"></script>
-
     <script src="../lib/angular.js"></script>
+    <script src="../lib/jquery.mobile.js"></script>
     <script src="../compiled/jquery-mobile-angular-adapter.js"></script>
 
-<script>
-    var mod = angular.module("ngm", []);
-    mod.controller("MainCtrl", function($scope, $location) {
-    });
-</script>
+    <script>
+        var mod = angular.module("ngm", []);
+        mod.controller("MainCtrl", function ($scope, $location) {
+        });
+        mod.config(['$routeProvider', function ($routeProvider) {
+
+            $routeProvider
+                    .when('/select', { templateUrl: 'form.html'  });
+        }]);
+    </script>
 
 </head>
-<body ng-app="ngm" ng-controller="MainCtrl">
+<body ng-app="ngm">
 
 <div id="main" data-role="page">
     <div data-role="content">
-        <!--
-        <input id="claimpoint-date" type="date" ng-model="MainController.date" data-role="datebox" data-options='{"mode": "calbox", "useNewStyle":true}' class="ui-icon-datebox" required>
-        </input>
-                -->
-
-                <input id="claimpoint-date" type="date" ng-model="MainController.date" data-role="datebox" data-options='{"mode": "calbox"}' required>
-        </input>
+        <a href="form.html">Form</a>
     </div>
 </div>
- 
+
 
 </body>
 </html>

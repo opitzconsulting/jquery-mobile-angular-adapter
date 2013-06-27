@@ -8,6 +8,14 @@
         if (!!collection1 ^ !!collection2) {
             return false;
         }
+        if (!collection1) {
+            return true;
+        }
+        if (angular.isArray(collection1)) {
+            if (collection1.length !== collection2.length) {
+                return false;
+            }
+        }
         for (x in collection1) {
             if (collection2[x] !== collection1[x]) {
                 return false;
@@ -26,7 +34,7 @@
             return collection;
         }
         var res;
-        if (collection.length) {
+        if (angular.isArray(collection)) {
             res = [];
         } else {
             res = {};

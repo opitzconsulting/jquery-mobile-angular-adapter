@@ -49,6 +49,15 @@ describe('ng-repeat', function () {
             expect(eventSpy.callCount).toBe(1);
         });
 
+        it("should fire the event when and undefined child is added", function () {
+            scope.list = [];
+            scope.$root.$digest();
+            eventSpy.reset();
+            scope.list.push(undefined);
+            scope.$root.$digest();
+            expect(eventSpy.callCount).toBe(1);
+        });
+
         it("should fire the event when children are removed", function () {
             scope.list = [1, 2, 3];
             scope.$root.$digest();

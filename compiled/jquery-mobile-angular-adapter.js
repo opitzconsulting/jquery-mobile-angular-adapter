@@ -1,4 +1,4 @@
-/*! jquery-mobile-angular-adapter - v1.3.2-SNAPSHOT - 2013-06-26
+/*! jquery-mobile-angular-adapter - v1.3.2-SNAPSHOT - 2013-06-27
 * https://github.com/opitzconsulting/jquery-mobile-angular-adapter
 * Copyright (c) 2013 Tobias Bosch; Licensed MIT */
 (function(factory) {
@@ -1959,6 +1959,14 @@ factory(window.jQuery, window.angular);
         if (!!collection1 ^ !!collection2) {
             return false;
         }
+        if (!collection1) {
+            return true;
+        }
+        if (angular.isArray(collection1)) {
+            if (collection1.length !== collection2.length) {
+                return false;
+            }
+        }
         for (x in collection1) {
             if (collection2[x] !== collection1[x]) {
                 return false;
@@ -1977,7 +1985,7 @@ factory(window.jQuery, window.angular);
             return collection;
         }
         var res;
-        if (collection.length) {
+        if (angular.isArray(collection)) {
             res = [];
         } else {
             res = {};

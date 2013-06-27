@@ -8,13 +8,17 @@ Test page during development.
     <link rel="stylesheet" href="../lib/jquery.mobile.css"/>
 
     <script src="../lib/jquery.js"></script>
-    <script src="../lib/angular.js"></script>
     <script src="../lib/jquery.mobile.js"></script>
+    <script src="../lib/angular.js"></script>
     <script src="../compiled/jquery-mobile-angular-adapter.js"></script>
 
     <script>
         var mod = angular.module("ngm", []);
         mod.controller("MainCtrl", function ($scope, $location) {
+            $scope.list = [];
+            $scope.add = function(name) {
+                this.list.push(name);
+            };
         });
         mod.config(['$routeProvider', function ($routeProvider) {
 
@@ -22,13 +26,19 @@ Test page during development.
                     .when('/select', { templateUrl: 'form.html'  });
         }]);
     </script>
-
 </head>
 <body ng-app="ngm">
 
-<div id="main" data-role="page">
+<div id="main" data-role="page" ng-controller="MainCtrl">
     <div data-role="content">
-        <a href="form.html">Form</a>
+        <div>
+            Name: <input type="text" ng-model="name" id="name"><button id="add" ng-click="add(name)">Add</button>
+
+        </div>
+        <ul data-role="listview" data-filter="true">
+            <li ng-repeat="l in list">{{l}}</li>
+
+        </ul>
     </div>
 </div>
 

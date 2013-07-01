@@ -18,7 +18,7 @@ If you are interested in how to build mobile web apps with this adapter, have a 
 - jquery mobile 1.3.1 Final
 
 ##Examples
-- See the [wiki page](wiki/Projects-using-the-adapter)
+- See the [wiki page](https://github.com/opitzconsulting/jquery-mobile-angular-adapter/wiki)
 - [Todo mobile](http://jsfiddle.net/ocdemo/UM5Mr/): JsFiddle
 - [Rent Your Legacy Car](https://github.com/mjswa/rylc-html5): A more complex example from the german book [Mobile Web-Apps mit JavaScript](http://www.opitz-consulting.com/go_javascriptbuch).
 

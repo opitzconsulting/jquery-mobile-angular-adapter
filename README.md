@@ -1,3 +1,10 @@
+# PROJECT IS IN MAINTENANCE MODE. 
+# NEW PROJECT [angular-jqm](https://github.com/opitzconsulting/angular-jqm)#
+Newer versions of jqm will be integrated using angular-jqm and not this project.
+
+Background: See the post in the angular mailing list: [https://groups.google.com/d/msg/angular/qG8YRwVaL_g/zgKAvaArmB0J](https://groups.google.com/d/msg/angular/qG8YRwVaL_g/zgKAvaArmB0J)
+
+
 [![Build Status](https://travis-ci.org/opitzconsulting/jquery-mobile-angular-adapter.png)](https://travis-ci.org/opitzconsulting/jquery-mobile-angular-adapter)
 #JQuery Mobile Angular Adapter
 

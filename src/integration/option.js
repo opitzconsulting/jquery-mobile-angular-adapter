@@ -10,12 +10,17 @@
                     valueInterpolateFn = $interpolate(tElement.attr('value'), true);
                 }
                 return function (scope, iElement, iAttrs) {
-                    scope.$watch(textInterpolateFn, function () {
-                        iElement.trigger("$childrenChanged");
-                    });
-                    scope.$watch(valueInterpolateFn, function () {
-                        iElement.trigger("$childrenChanged");
-                    });
+                    if (textInterpolateFn != null) {
+                        scope.$watch(textInterpolateFn, function () {
+                            iElement.trigger("$childrenChanged");
+                        });
+                    }
+
+                    if (valueInterpolateFn != null) {
+                        scope.$watch(valueInterpolateFn, function () {
+                            iElement.trigger("$childrenChanged");
+                        });
+                    }
                 };
             }
         };
